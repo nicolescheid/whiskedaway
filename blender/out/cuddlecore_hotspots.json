@@ -1,0 +1,100 @@
+{
+  "window": {
+    "label": "The rain",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": 0.0,
+    "pitch": 1.16
+  },
+  "cauldron": {
+    "label": "Find Comfort",
+    "overlay": null,
+    "type": "submit",
+    "yaw": 0.6,
+    "pitch": -15.94
+  },
+  "locale-map": {
+    "label": "Location",
+    "overlay": "locale",
+    "type": "interactive",
+    "yaw": 31.93,
+    "pitch": 0.43
+  },
+  "plant": {
+    "label": "The plant",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": -39.13,
+    "pitch": -25.98
+  },
+  "symptom-jars": {
+    "label": "How you're feeling",
+    "overlay": "symptoms",
+    "type": "interactive",
+    "yaw": -81.91,
+    "pitch": 3.76
+  },
+  "energy-candles": {
+    "label": "Energy level",
+    "overlay": "energy",
+    "type": "interactive",
+    "yaw": -104.25,
+    "pitch": -13.75
+  },
+  "cutting-board": {
+    "label": "Chopping board",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": -76.45,
+    "pitch": -19.18
+  },
+  "bowl": {
+    "label": "The bowl",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": -66.03,
+    "pitch": -17.09
+  },
+  "basket": {
+    "label": "The basket",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": 59.21,
+    "pitch": -9.16
+  },
+  "oil-lamp": {
+    "label": "The lamp",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": 68.96,
+    "pitch": -4.36
+  },
+  "pantry-cabinet": {
+    "label": "Your pantry",
+    "overlay": "pantry",
+    "type": "interactive",
+    "yaw": 65.78,
+    "pitch": -26.04
+  },
+  "dietary-shelf": {
+    "label": "Dietary needs",
+    "overlay": "dietary",
+    "type": "interactive",
+    "yaw": 114.78,
+    "pitch": -14.82
+  },
+  "exit-door": {
+    "label": "Back to the inn",
+    "overlay": null,
+    "type": "door",
+    "yaw": -153.64,
+    "pitch": -13.61
+  },
+  "armchair": {
+    "label": "The armchair",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": 156.85,
+    "pitch": -29.53
+  }
+}

@@ -6,5 +6,6 @@ worker/.wrangler/
 .env
 .dev.vars
 *.zip
-blender/out/
+blender/out/*.blend*
+blender/out/crop_*
 blender/assets/
