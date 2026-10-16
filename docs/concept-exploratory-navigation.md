@@ -117,6 +117,22 @@ One room, Cuddlecore, as a 360° panorama:
 - Does local theme-weighting already get 80% of the way, so the AI's value is the *language*
   (naming the pattern, the forks), or does the AI change *what* is served?
 
+### First findings (17 Oct 2026, four scripted wanders)
+
+| Wander | Local engine | AI navigator (Claude Opus 5.5, low effort) |
+|---|---|---|
+| Rain → armchair → jars | Forks between "warm and slow" and "rest" | Combines them: "something warm you don't have to stand up for"; serves honey-ginger tea and toast soldiers |
+| Rain + plant (ambiguous) | Forks, but still serves two pieces | Forks and serves nothing: "or you can just keep poking about" |
+| Chose fresh, then "not this" on cucumber water | Herb salt and congee | Reads the dismissal as "fresh, but not a cold drink"; serves herb salt and explains why |
+| Plant → chopping board | Herb salt and cucumber water | Same picks, with far more specific reasons |
+
+- **The AI changes *what* is served, not just the wording.** It combines readings that are
+  compatible, holds back when unsure, and treats "not this" as information.
+- **Latency is the cost:** 6–9 seconds per step, against instant for the local engine. The
+  prototype now runs as a hybrid: the room responds at once with the local reading (glow and
+  Gemma's line), then the AI refines it and serves. `NAVIGATOR_MODEL` on the Worker can trade
+  quality for speed (e.g. Claude Haiku 5.5) if the wait feels too long.
+
 ## Open questions
 
 - How should a trail carry from room to room? Should the hallway doors respond to it?

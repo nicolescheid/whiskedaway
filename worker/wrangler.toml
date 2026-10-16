@@ -1,5 +1,6 @@
 name = "whiskedaway-genie"
 main = "whiskedaway-worker.js"
+account_id = "413cb81347f3e89932f12e3ed9a6d062" # Nicole's Cloudflare account; never deploy elsewhere
 compatibility_date = "2024-01-01"
 
 # You'll need to add your API key as a secret:

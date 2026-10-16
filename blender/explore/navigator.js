@@ -107,7 +107,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [] } = {}
 }
 
 /** Ask the Worker. Anything off-list or malformed is dropped; any failure falls back to local. */
-export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 12000 } = {}) {
+export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20000 } = {}) {
   const local = localNavigate(trail, world, state);
   if (!trail.length) return local;
   const ctrl = new AbortController();

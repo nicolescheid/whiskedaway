@@ -296,11 +296,21 @@ function scheduleNavigate() {
 }
 async function navigate() {
   const seq = ++navSeq;
-  if (AI) $('bubble').classList.add('thinking');
   const opts = { served: state.served, dismissed: state.dismissed };
-  const r = AI ? await aiNavigate(AI, state.trail, world, opts) : localNavigate(state.trail, world, opts);
-  if (seq !== navSeq) return;                              // a newer event superseded this one
-  $('bubble').classList.remove('thinking');
+  const local = localNavigate(state.trail, world, opts);
+  let r = local;
+  if (AI) {
+    // Hybrid: the room responds at once with the local reading (glow + Gemma's line), then the
+    // AI refines it a few seconds later. Serving waits for the AI so cards don't arrive twice.
+    state.result = local;
+    applyReveal(local.reveal);
+    if (local.gemma) say(local.gemma.replace(" I've put something on the counter for you.", ' Let me think…'), local.fork);
+    $('bubble').classList.add('thinking');
+    renderNotes();
+    r = await aiNavigate(AI, state.trail, world, opts);
+    if (seq !== navSeq) return;                            // a newer event superseded this one
+    $('bubble').classList.remove('thinking');
+  }
   state.result = r;
   $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
   applyReveal(r.reveal);
