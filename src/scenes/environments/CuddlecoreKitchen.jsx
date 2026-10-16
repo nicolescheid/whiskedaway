@@ -104,8 +104,8 @@ export default function CuddlecoreKitchen({ layersRef }) {
           <circle cx="1160" cy="280" r="5" fill="#c4956a" />
           <circle cx="1178" cy="280" r="5" fill="#c4956a" />
 
-          {/* Map on wall */}
-          <rect x="615" y="50" width="60" height="45" rx="3" fill="#e8d5b8" stroke="#8b7050" strokeWidth="1.5" />
+          {/* Map on wall, left of the window below the candles (clear of the top UI bar) */}
+          <rect x="410" y="250" width="60" height="45" rx="3" fill="#e8d5b8" stroke="#8b7050" strokeWidth="1.5" />
 
           {/* Blanket on chair */}
           <g transform="translate(1000, 480)">

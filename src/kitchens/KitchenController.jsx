@@ -61,13 +61,13 @@ export default function KitchenController({
           sceneId={sceneId}
           onHotspotClick={handleHotspotClick}
           onSubmit={onSubmit}
+          stageContent={
+            <Gemma
+              sceneId={sceneId}
+              position={scene?.gemmaPosition}
+            />
+          }
         >
-          {/* Gemma NPC */}
-          <Gemma
-            sceneId={sceneId}
-            position={scene?.gemmaPosition}
-          />
-
           {/* Overlay panels rendered within the scene */}
           {overlayContent}
 

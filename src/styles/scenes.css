@@ -12,33 +12,56 @@
   background: var(--parchment);
 }
 
-/* Scene viewport — maintains aspect ratio, centered */
+/* Scene viewport — the visible window onto the stage */
 .scene-viewport {
   position: relative;
   width: 100%;
   height: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
   overflow: hidden;
+  container-type: size; /* cq units below resolve against this box */
 }
 
-/* Individual parallax layers */
+/*
+ * Stage — the scene's own coordinate space, fixed at 1400×800 (7:4, the SVG
+ * viewBox and the 1792×1024 painted-background size). It covers the viewport
+ * like background-size: cover, plus a small bleed so parallax never shows an
+ * edge. Art layers and hotspots both fill the stage, so a crop moves them
+ * together. No transform here: Gemma's mobile position: fixed needs that.
+ */
+.scene-stage {
+  --stage-aspect: 1.75;
+  --stage-bleed: 24px;
+  --stage-w: max(
+    calc(100cqw + var(--stage-bleed)),
+    calc((100cqh + var(--stage-bleed)) * var(--stage-aspect))
+  );
+  --stage-h: calc(var(--stage-w) / var(--stage-aspect));
+  position: absolute;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  left: calc((100cqw - var(--stage-w)) / 2);
+  top: calc((100cqh - var(--stage-h)) / 2);
+}
+
+/* Individual parallax layers — fill the stage exactly */
 .scene-layer {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 110%; /* Extra width for parallax movement */
-  height: 110%;
-  margin-left: -5%;
-  margin-top: -5%;
+  inset: 0;
   transition: transform 0.1s ease-out;
   will-change: transform;
   pointer-events: none;
 }
 
-.scene-layer svg {
+/* SVG art, or a painted background: <img class="scene-layer-image"> */
+.scene-layer svg,
+.scene-layer-image {
+  display: block;
   width: 100%;
   height: 100%;
+}
+
+.scene-layer-image {
+  object-fit: cover;
 }
 
 .scene-layer[data-depth="0"] {
@@ -53,17 +76,16 @@
   z-index: 3;
 }
 
-/* Hotspot layer — sits above all scene layers */
+/* Hotspot layer — sits above all scene layers, moves with the midground */
 .scene-hotspots {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   z-index: 10;
+  transition: transform 0.1s ease-out;
+  pointer-events: none;
 }
 
-/* Individual hotspot — positioned via percentage coords */
+/* Individual hotspot — % of the stage (= SVG viewBox units / 14 and / 8) */
 .scene-hotspot {
   position: absolute;
   cursor: pointer;
@@ -79,6 +101,7 @@
   padding: 0;
   font: inherit;
   color: inherit;
+  pointer-events: auto;
 }
 
 .scene-hotspot:hover {
@@ -194,7 +217,8 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .scene-layer {
+  .scene-layer,
+  .scene-hotspots {
     transition: none;
   }
   .scene-hotspot--active {

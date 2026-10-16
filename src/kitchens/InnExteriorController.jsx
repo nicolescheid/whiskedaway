@@ -47,12 +47,13 @@ export default function InnExteriorController() {
         <SceneRenderer
           sceneId="inn-exterior"
           onHotspotClick={handleHotspotClick}
-        >
-          <Gemma
-            sceneId="inn-exterior"
-            position={scene?.gemmaPosition}
-          />
-        </SceneRenderer>
+          stageContent={
+            <Gemma
+              sceneId="inn-exterior"
+              position={scene?.gemmaPosition}
+            />
+          }
+        />
       </SceneTransition>
     </>
   );

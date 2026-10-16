@@ -53,10 +53,10 @@ export default function InnExterior({ layersRef }) {
           ))}
 
           {/* Wall decorations — small frames */}
-          <rect x="120" y="260" width="60" height="80" rx="4" fill="none" stroke="#8b7050" strokeWidth="2" />
+          <rect x="80" y="260" width="60" height="80" rx="4" fill="none" stroke="#8b7050" strokeWidth="2" />
           <rect x="600" y="240" width="200" height="120" rx="4" fill="none" stroke="#8b7050" strokeWidth="2" />
           <text x="700" y="310" textAnchor="middle" fontFamily="Crimson Pro, serif" fontSize="18" fill="#8b7050" fontStyle="italic">WhiskedAway Inn</text>
-          <rect x="1220" y="260" width="60" height="80" rx="4" fill="none" stroke="#8b7050" strokeWidth="2" />
+          <rect x="1260" y="260" width="60" height="80" rx="4" fill="none" stroke="#8b7050" strokeWidth="2" />
         </svg>
       </div>
 
@@ -70,37 +70,38 @@ export default function InnExterior({ layersRef }) {
             </linearGradient>
           </defs>
 
-          {/* Six doors — positioned to match hotspots */}
+          {/* Six doors — 150 wide every 180, inside the middle ~76% so all six survive
+              a 4:3 crop. Hotspots in sceneData.js match these boxes. */}
           {[
-            { x: 70, color: '#8b4d5c', label: '🍵', name: 'Cuddlecore' },
-            { x: 280, color: '#d4a84b', label: '🌱', name: 'Flourish' },
-            { x: 504, color: '#7c5c8b', label: '🔮', name: 'Cravings' },
-            { x: 728, color: '#c27a8c', label: '🧁', name: 'Sweet Spells' },
-            { x: 952, color: '#5c7c5c', label: '🧪', name: 'Chiapothecary' },
-            { x: 1162, color: '#4a7c7c', label: '📚', name: 'Academy' },
+            { x: 175, color: '#8b4d5c', label: '🍵', name: 'Cuddlecore' },
+            { x: 355, color: '#d4a84b', label: '🌱', name: 'Flourish' },
+            { x: 535, color: '#7c5c8b', label: '🔮', name: 'Cravings' },
+            { x: 715, color: '#c27a8c', label: '🧁', name: 'Sweet Spells' },
+            { x: 895, color: '#5c7c5c', label: '🧪', name: 'Chiapothecary' },
+            { x: 1075, color: '#4a7c7c', label: '📚', name: 'Academy' },
           ].map((door, i) => (
             <g key={i}>
               {/* Door frame */}
-              <rect x={door.x} y="280" width="168" height="340" rx="6" fill="#5c4030" />
+              <rect x={door.x} y="280" width="150" height="340" rx="6" fill="#5c4030" />
               {/* Door surface */}
-              <rect x={door.x + 8} y="288" width="152" height="324" rx="4" fill={door.color} opacity="0.85" />
+              <rect x={door.x + 7} y="288" width="136" height="324" rx="4" fill={door.color} opacity="0.85" />
               {/* Door panels */}
-              <rect x={door.x + 18} y="300" width="132" height="120" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
-              <rect x={door.x + 18} y="440" width="132" height="140" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+              <rect x={door.x + 15} y="300" width="120" height="120" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+              <rect x={door.x + 15} y="440" width="120" height="140" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
               {/* Door handle */}
-              <circle cx={door.x + 138} cy="460" r="6" fill="#c4956a" />
+              <circle cx={door.x + 124} cy="460" r="6" fill="#c4956a" />
               {/* Door label sign */}
-              <rect x={door.x + 34} y="250" width="100" height="32" rx="6" fill="#f4efe4" stroke={door.color} strokeWidth="1.5" />
-              <text x={door.x + 84} y="271" textAnchor="middle" fontFamily="Quicksand, sans-serif" fontSize="12" fontWeight="600" fill={door.color}>
+              <rect x={door.x + 25} y="250" width="100" height="32" rx="6" fill="#f4efe4" stroke={door.color} strokeWidth="1.5" />
+              <text x={door.x + 75} y="271" textAnchor="middle" fontFamily="Quicksand, sans-serif" fontSize="12" fontWeight="600" fill={door.color}>
                 {door.name}
               </text>
               {/* Icon above door */}
-              <text x={door.x + 84} y="240" textAnchor="middle" fontSize="28">{door.label}</text>
+              <text x={door.x + 75} y="240" textAnchor="middle" fontSize="28">{door.label}</text>
             </g>
           ))}
 
           {/* Lanterns between doors */}
-          {[225, 440, 660, 880, 1100].map((x, i) => (
+          {[337, 517, 697, 877, 1057].map((x, i) => (
             <g key={`lantern-${i}`} className="ambient-candle">
               <rect x={x} y="230" width="6" height="30" fill="#8b7050" />
               <ellipse cx={x + 3} cy="225" rx="10" ry="14" fill="#e8b87a" opacity="0.6" />

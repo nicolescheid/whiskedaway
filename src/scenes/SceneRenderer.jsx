@@ -23,9 +23,24 @@ const environmentComponents = {
   'academy': NourishAcademyKitchen,
 };
 
-export default function SceneRenderer({ sceneId, onHotspotClick, onSubmit, children }) {
+// Parallax travel in px per depth layer. Hotspots ride with the midground,
+// where the clickable objects are drawn.
+const PARALLAX_STEP = 3;
+const HOTSPOT_DEPTH = 1;
+
+/**
+ * Renders a scene on a fixed-aspect "stage" (1400×800, the SVG viewBox and
+ * the painted-background size). The stage covers the viewport like
+ * background-size: cover, and the art layers, hotspots and stage content all
+ * live inside it, so cropping at any window size affects them equally.
+ *
+ * - children: viewport-anchored UI (overlay panels, results)
+ * - stageContent: things placed in the scene itself (Gemma)
+ */
+export default function SceneRenderer({ sceneId, onHotspotClick, onSubmit, stageContent, children }) {
   const viewportRef = useRef(null);
   const layersRef = useRef([]);
+  const hotspotsRef = useRef(null);
   const { activeOverlay } = useScene();
 
   // Parallax effect on mouse/touch movement
@@ -42,19 +57,22 @@ export default function SceneRenderer({ sceneId, onHotspotClick, onSubmit, child
     const x = e.clientX - rect.left - centerX;
     const y = e.clientY - rect.top - centerY;
 
-    layersRef.current.forEach((layer, index) => {
-      if (!layer) return;
-      const factor = (index + 1) * 3; // 3px, 6px, 9px per layer
+    const offset = (depth) => {
+      const factor = (depth + 1) * PARALLAX_STEP; // 3px, 6px, 9px per layer
       const moveX = (x / centerX) * factor;
       const moveY = (y / centerY) * factor * 0.5; // Less vertical movement
-      layer.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      return `translate(${moveX}px, ${moveY}px)`;
+    };
+
+    layersRef.current.forEach((layer, index) => {
+      if (layer) layer.style.transform = offset(index);
     });
+    if (hotspotsRef.current) hotspotsRef.current.style.transform = offset(HOTSPOT_DEPTH);
   }, []);
 
   const handlePointerLeave = useCallback(() => {
-    layersRef.current.forEach((layer) => {
-      if (!layer) return;
-      layer.style.transform = 'translate(0, 0)';
+    [...layersRef.current, hotspotsRef.current].forEach((el) => {
+      if (el) el.style.transform = 'translate(0, 0)';
     });
   }, []);
 
@@ -82,34 +100,38 @@ export default function SceneRenderer({ sceneId, onHotspotClick, onSubmit, child
       style={{ '--tome-accent': scene.accentColor }}
     >
       <div className="scene-viewport" ref={viewportRef}>
-        {/* SVG Environment Layers */}
-        {EnvironmentComponent && (
-          <EnvironmentComponent
-            layersRef={layersRef}
-          />
-        )}
-
-        {/* Interactive Hotspots */}
-        <div className="scene-hotspots">
-          {scene.hotspots.map((hotspot) => (
-            <InteractiveObject
-              key={hotspot.id}
-              hotspot={hotspot}
-              isActive={activeOverlay === hotspot.overlay}
-              onClick={() => {
-                if (hotspot.type === 'door') {
-                  onHotspotClick?.(hotspot);
-                } else if (hotspot.type === 'submit') {
-                  onSubmit?.();
-                } else {
-                  onHotspotClick?.(hotspot);
-                }
-              }}
+        <div className="scene-stage">
+          {/* Environment layers (SVG today, painted PNG later) */}
+          {EnvironmentComponent && (
+            <EnvironmentComponent
+              layersRef={layersRef}
             />
-          ))}
+          )}
+
+          {/* Interactive Hotspots — % of the stage, i.e. of the 1400×800 art */}
+          <div className="scene-hotspots" ref={hotspotsRef}>
+            {scene.hotspots.map((hotspot) => (
+              <InteractiveObject
+                key={hotspot.id}
+                hotspot={hotspot}
+                isActive={activeOverlay === hotspot.overlay}
+                onClick={() => {
+                  if (hotspot.type === 'door') {
+                    onHotspotClick?.(hotspot);
+                  } else if (hotspot.type === 'submit') {
+                    onSubmit?.();
+                  } else {
+                    onHotspotClick?.(hotspot);
+                  }
+                }}
+              />
+            ))}
+          </div>
+
+          {stageContent}
         </div>
 
-        {/* Overlay panels, Gemma, etc. rendered as children */}
+        {/* Overlay panels etc. stay anchored to the viewport */}
         {children}
       </div>
 
