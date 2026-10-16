@@ -1,0 +1,44 @@
+.quick-mode-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--parchment-dark);
+  background: var(--parchment);
+  cursor: pointer;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.quick-mode-toggle:hover {
+  background: var(--parchment-dark);
+  color: var(--ink);
+  border-color: var(--tome-accent, var(--amber));
+}
+
+.quick-mode-icon {
+  font-size: 1rem;
+}
+
+.quick-mode-label {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .quick-mode-toggle {
+    top: auto;
+    bottom: 68px; /* Above mobile object bar */
+    right: 8px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}

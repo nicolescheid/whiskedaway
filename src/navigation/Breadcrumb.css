@@ -1,0 +1,51 @@
+.breadcrumb {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--parchment) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--parchment-dark);
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+}
+
+.breadcrumb-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--tome-accent, var(--amber));
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  background: color-mix(in srgb, var(--tome-accent, var(--amber)) 12%, transparent);
+}
+
+.breadcrumb-separator {
+  color: var(--ink-soft);
+  font-size: 1.1em;
+}
+
+.breadcrumb-current {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .breadcrumb {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+}

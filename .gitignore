@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.wrangler/
+worker/.wrangler/
+.claude/settings.local.json
+.env
+.dev.vars
+*.zip

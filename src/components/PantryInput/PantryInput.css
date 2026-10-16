@@ -1,0 +1,72 @@
+/* PantryInput Component Styles */
+
+.pantry-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.pantry-input-row input {
+  flex: 1;
+}
+
+.add-pantry-btn {
+  padding: 0.75rem 1rem;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--tome-accent, var(--amber));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.add-pantry-btn:hover {
+  background: var(--tome-accent-soft, var(--amber-glow));
+}
+
+.pantry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.pantry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: color-mix(in srgb, var(--tome-accent, var(--amber)) 15%, white);
+  border: 1px solid var(--tome-accent, var(--amber));
+  border-radius: 20px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.remove-tag {
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.remove-tag:hover {
+  background: var(--danger);
+  color: white;
+}

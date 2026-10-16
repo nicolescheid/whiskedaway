@@ -1,0 +1,194 @@
+/* ShoppingScroll Component Styles */
+
+.shopping-scroll-container {
+  margin-top: 1.5rem;
+}
+
+/* Ingredient Checklist */
+.ingredient-checklist-section {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.ingredient-checklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ingredient-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--parchment-dark);
+}
+
+.ingredient-check-item:last-child {
+  border-bottom: none;
+}
+
+.ingredient-check-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--tome-accent, var(--amber));
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ingredient-check-item label {
+  flex: 1;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.ingredient-check-item.have-it label {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.ingredient-check-item .ing-amount {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.checklist-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Shopping Scroll */
+.shopping-scroll {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 2px dashed var(--parchment-dark);
+}
+
+.shopping-scroll h3 {
+  font-size: 1.1rem;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.shopping-scroll-subtitle {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.shopping-scroll-subtitle.all-done {
+  color: var(--herb);
+  font-style: normal;
+  margin-bottom: 0;
+}
+
+.shopping-bucket {
+  margin-bottom: 1rem;
+}
+
+.shopping-bucket:last-of-type {
+  margin-bottom: 0;
+}
+
+.shopping-bucket h4 {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--tome-accent, var(--amber));
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--parchment-dark);
+}
+
+.shopping-bucket ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.shopping-bucket li {
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.shopping-bucket li::before {
+  content: '○';
+  color: var(--tome-accent, var(--amber));
+  font-size: 0.6rem;
+}
+
+.ingredient-amount {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  min-width: 60px;
+}
+
+/* Copy Button */
+.copy-btn {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: var(--tome-accent, var(--amber));
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.copy-btn:hover {
+  opacity: 0.9;
+}
+
+.copy-btn.copied {
+  background: var(--herb);
+}
+
+/* Export Buttons */
+.export-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.75rem 1rem;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--tome-accent, var(--amber)) 15%, transparent);
+  color: var(--tome-accent, var(--amber));
+  border: 2px solid var(--tome-accent, var(--amber));
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.export-btn:hover {
+  background: var(--tome-accent, var(--amber));
+  color: white;
+}
+
+.export-btn.success {
+  background: var(--herb);
+  border-color: var(--herb);
+  color: white;
+}

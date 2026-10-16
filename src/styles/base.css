@@ -1,0 +1,122 @@
+/* ============================================
+   WHISKEDAWAY - BASE STYLES
+   Global variables, typography, and foundations
+   ============================================ */
+
+/* Color Palette - The WhiskedAway soul */
+:root {
+  /* Core parchment tones */
+  --parchment: #f4efe4;
+  --parchment-dark: #e8e0d0;
+  
+  /* Ink for text */
+  --ink: #2c2416;
+  --ink-soft: #5c5040;
+  
+  /* Accent colors */
+  --amber: #c4956a;
+  --amber-glow: #e8b87a;
+  --herb: #5c7c5c;
+  
+  /* Tome-specific accents (used as --tome-accent in each tome) */
+  --berry: #8b4d5c;
+  --berry-soft: #a86875;
+  --golden: #d4a84b;
+  --golden-soft: #e8c87a;
+  --rose: #c27a8c;
+  --rose-soft: #d4a0ac;
+  --purple: #7c5c8b;
+  --purple-soft: #9c7caa;
+  --teal: #4a7c7c;
+  --teal-soft: #6a9c9c;
+  
+  /* Functional colors */
+  --danger: #c25a5a;
+  --success: var(--herb);
+  
+  /* Shadows */
+  --shadow: rgba(44, 36, 22, 0.1);
+  --shadow-medium: rgba(44, 36, 22, 0.15);
+}
+
+/* Reset */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Base typography */
+body {
+  font-family: 'Crimson Pro', Georgia, serif;
+  background: linear-gradient(to bottom, var(--parchment) 0%, var(--parchment-dark) 100%);
+  min-height: 100vh;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+/* Parchment texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Links */
+a {
+  color: var(--amber);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--amber-glow);
+}
+
+/* Helper text */
+.helper-text {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-bottom: 0.6rem;
+}
+
+/* Subsection titles (for form groupings) */
+.subsection-title {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 1rem 0 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--parchment-dark);
+}
+
+/* Focus states for accessibility */
+:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,41 @@
+/* Interactive object — extends scene hotspot styles from scenes.css */
+
+.scene-hotspot-icon {
+  font-size: 1.8rem;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.2s ease;
+}
+
+.scene-hotspot:hover .scene-hotspot-icon {
+  transform: scale(1.15);
+}
+
+.scene-hotspot--submit .scene-hotspot-icon {
+  font-size: 2.2rem;
+}
+
+.scene-hotspot--door .scene-hotspot-icon {
+  font-size: 2rem;
+}
+
+/* Subtle idle animation to hint interactivity */
+.scene-hotspot--interactive .scene-hotspot-icon {
+  animation: object-idle-bob 3s ease-in-out infinite;
+}
+
+@keyframes object-idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.scene-hotspot--active .scene-hotspot-icon {
+  animation: none;
+  transform: scale(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-hotspot--interactive .scene-hotspot-icon {
+    animation: none;
+  }
+}

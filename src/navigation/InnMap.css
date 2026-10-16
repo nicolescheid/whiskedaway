@@ -1,0 +1,132 @@
+.inn-map-toggle {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 85;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--parchment-dark);
+  background: var(--parchment);
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.inn-map-toggle:hover {
+  background: var(--parchment-dark);
+  transform: scale(1.05);
+}
+
+.inn-map-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  background: rgba(44, 36, 22, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.inn-map {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 201;
+  background: var(--parchment);
+  border: 2px solid var(--amber);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 480px;
+  width: calc(100% - 32px);
+  box-shadow: 0 8px 32px rgba(44, 36, 22, 0.3);
+}
+
+.inn-map-title {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.3rem;
+  color: var(--ink);
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+.inn-map-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.inn-map-room {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 2px solid var(--parchment-dark);
+  background: none;
+  cursor: pointer;
+  font-family: 'Quicksand', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.inn-map-room:hover:not(:disabled) {
+  border-color: var(--room-color);
+  background: color-mix(in srgb, var(--room-color) 10%, transparent);
+}
+
+.inn-map-room--current {
+  border-color: var(--room-color);
+  background: color-mix(in srgb, var(--room-color) 15%, transparent);
+  cursor: default;
+}
+
+.inn-map-room-icon {
+  font-size: 1.5rem;
+}
+
+.inn-map-room-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.inn-map-room-here {
+  font-size: 0.65rem;
+  color: var(--room-color);
+  font-weight: 600;
+}
+
+.inn-map-lobby {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--parchment-dark);
+  background: none;
+  cursor: pointer;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  transition: all 0.2s ease;
+}
+
+.inn-map-lobby:hover {
+  background: var(--parchment-dark);
+  color: var(--ink);
+}
+
+@media (max-width: 400px) {
+  .inn-map-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

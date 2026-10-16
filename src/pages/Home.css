@@ -1,0 +1,171 @@
+/* Home Page Styles */
+
+.home-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Header */
+.home-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.site-title {
+  font-size: 2.5rem;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.site-tagline {
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+}
+
+/* Gemma Intro */
+.gemma-intro {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.gemma-avatar {
+  font-size: 3rem;
+  flex-shrink: 0;
+}
+
+.gemma-greeting h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.gemma-greeting p {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+/* Tomes Section */
+.tomes-section h3 {
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.tomes-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 600px) {
+  .tomes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .tomes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tome Cards */
+.tome-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid var(--parchment-dark);
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s;
+  min-height: 180px;
+}
+
+.tome-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--shadow);
+}
+
+.tome-sigil {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tome-name {
+  font-size: 1.1rem;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.tome-description {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  flex-grow: 1;
+  margin-bottom: 0.75rem;
+}
+
+.tome-cta {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Tome Theme Colors */
+.tome-card.berry:hover { border-color: var(--berry); }
+.tome-card.berry .tome-cta { color: var(--berry); }
+
+.tome-card.golden:hover { border-color: var(--golden); }
+.tome-card.golden .tome-cta { color: var(--golden); }
+
+.tome-card.purple:hover { border-color: var(--purple); }
+.tome-card.purple .tome-cta { color: var(--purple); }
+
+.tome-card.rose:hover { border-color: var(--rose); }
+.tome-card.rose .tome-cta { color: var(--rose); }
+
+.tome-card.teal:hover { border-color: var(--teal); }
+.tome-card.teal .tome-cta { color: var(--teal); }
+
+.tome-card.herb:hover { border-color: var(--herb); }
+.tome-card.herb .tome-cta { color: var(--herb); }
+
+/* Footer */
+.home-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--parchment-dark);
+  text-align: center;
+}
+
+.home-footer p {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+}
+
+.home-footer .gemma-note {
+  font-style: italic;
+  font-size: 0.8rem;
+  max-width: 400px;
+  margin: 0.75rem auto;
+}
+
+.home-footer .support-link {
+  margin-top: 1rem;
+}
+
+.home-footer a {
+  color: var(--amber);
+}
+
+.home-footer a:hover {
+  text-decoration: underline;
+}

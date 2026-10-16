@@ -1,0 +1,87 @@
+/* ============================================
+   SCENE TRANSITIONS
+   Animated transitions between scenes
+   ============================================ */
+
+.scene-transition-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fade transition */
+.scene-enter {
+  opacity: 0;
+}
+
+.scene-enter-active {
+  opacity: 1;
+  transition: opacity 0.4s ease-in;
+}
+
+.scene-exit {
+  opacity: 1;
+}
+
+.scene-exit-active {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Door zoom transition — entering a kitchen */
+.scene-door-enter {
+  opacity: 0;
+  transform: scale(1.1);
+}
+
+.scene-door-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.scene-door-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.scene-door-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.3s ease-in;
+}
+
+/* Return to inn — zoom out */
+.scene-return-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.scene-return-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.scene-return-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.scene-return-exit-active {
+  opacity: 0;
+  transform: scale(1.1);
+  transition: all 0.3s ease-in;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .scene-enter-active,
+  .scene-exit-active,
+  .scene-door-enter-active,
+  .scene-door-exit-active,
+  .scene-return-enter-active,
+  .scene-return-exit-active {
+    transition-duration: 0.01s;
+  }
+}

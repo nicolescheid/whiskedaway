@@ -1,0 +1,112 @@
+.gemma-npc {
+  position: absolute;
+  z-index: 20;
+  transform: translate(-50%, -50%);
+}
+
+.gemma-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--amber-glow);
+  background: color-mix(in srgb, var(--parchment) 90%, transparent);
+  cursor: pointer;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(196, 149, 106, 0.3);
+  transition: all 0.2s ease;
+}
+
+.gemma-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 20px rgba(196, 149, 106, 0.5);
+}
+
+/* Speech bubble */
+.gemma-speech-bubble {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--parchment);
+  border: 2px solid var(--amber);
+  border-radius: 14px;
+  padding: 12px 16px;
+  min-width: 200px;
+  max-width: 300px;
+  box-shadow: 0 4px 16px rgba(44, 36, 22, 0.15);
+  animation: bubble-appear 0.3s ease;
+}
+
+@keyframes bubble-appear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.gemma-speech-bubble p {
+  margin: 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink);
+  font-style: italic;
+}
+
+.gemma-speech-tail {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 14px;
+  height: 14px;
+  background: var(--parchment);
+  border-right: 2px solid var(--amber);
+  border-bottom: 2px solid var(--amber);
+}
+
+/* Mobile — fixed bottom-right */
+@media (max-width: 600px) {
+  .gemma-npc {
+    position: fixed;
+    left: auto !important;
+    top: auto !important;
+    right: 12px;
+    bottom: 72px; /* Above object bar */
+    transform: none;
+  }
+
+  .gemma-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.6rem;
+  }
+
+  .gemma-speech-bubble {
+    right: 0;
+    left: auto;
+    transform: none;
+    bottom: calc(100% + 8px);
+    min-width: 180px;
+    max-width: 250px;
+  }
+
+  .gemma-speech-tail {
+    right: 16px;
+    left: auto;
+    transform: rotate(45deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gemma-speech-bubble {
+    animation: none;
+  }
+}

@@ -1,0 +1,232 @@
+/* Cravings Decoded Tome Styles */
+
+.cravings-theme {
+  --tome-accent: var(--purple);
+  --tome-accent-soft: var(--purple-soft);
+}
+
+/* Craving Tags */
+.craving-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.craving-tag {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid var(--parchment-dark);
+  border-radius: 25px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.craving-tag:hover {
+  border-color: var(--purple);
+}
+
+.craving-tag.selected {
+  border-color: var(--purple);
+  background: rgba(124, 92, 139, 0.15);
+}
+
+/* Context Tags */
+.context-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.context-tag {
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--parchment-dark);
+  border-radius: 20px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.context-tag:hover {
+  border-color: var(--purple-soft);
+}
+
+.context-tag.selected {
+  border-color: var(--purple);
+  background: rgba(124, 92, 139, 0.15);
+}
+
+/* Insight Card */
+.insight-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--purple);
+}
+
+.insight-card h3 {
+  font-size: 1.3rem;
+  color: var(--purple);
+  margin-bottom: 0.75rem;
+}
+
+.insight-explanation {
+  color: var(--ink-soft);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.insight-verdict {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border: 2px solid;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+}
+
+.verdict-label {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.what-body-wants {
+  background: rgba(124, 92, 139, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.what-body-wants strong {
+  font-size: 0.85rem;
+  color: var(--purple);
+}
+
+.what-body-wants p {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+}
+
+/* Recipe Suggestions */
+.recipe-suggestions h4 {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 1rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.75rem;
+}
+
+.recipe-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.recipe-card.expanded {
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.recipe-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.recipe-emoji {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.recipe-info {
+  flex: 1;
+}
+
+.recipe-info strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.recipe-info p {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin-top: 0.2rem;
+}
+
+.expand-icon {
+  font-size: 1.5rem;
+  color: var(--purple);
+  font-weight: 300;
+}
+
+.recipe-details {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--parchment-dark);
+}
+
+.why-it-works {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: rgba(124, 92, 139, 0.1);
+  border-radius: 8px;
+}
+
+.why-it-works strong {
+  color: var(--purple);
+}
+
+.recipe-details h5 {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+  color: var(--purple);
+  margin: 1rem 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.recipe-details ul,
+.recipe-details ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.recipe-details li {
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.gemma-closing {
+  margin-top: 1.5rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Error Message */
+.error-message {
+  background: #fff9f0;
+  border: 1px solid var(--amber);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Icon in section headers */
+.form-section h2 .icon {
+  margin-right: 0.3rem;
+}

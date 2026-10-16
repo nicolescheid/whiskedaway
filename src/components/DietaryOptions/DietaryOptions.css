@@ -1,0 +1,6 @@
+/* DietaryOptions Component Styles */
+/* Inherits from components.css - only overrides/additions here */
+
+.dietary-section .option-group {
+  margin-bottom: 0.5rem;
+}

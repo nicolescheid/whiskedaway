@@ -1,0 +1,309 @@
+/* ============================================
+   WHISKEDAWAY - COMPONENT STYLES
+   Reusable UI components
+   ============================================ */
+
+/* ============================================
+   LAYOUT: Tome Container
+   ============================================ */
+.tome-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+@media (min-width: 600px) {
+  .tome-container {
+    padding: 2rem 1.5rem 4rem;
+  }
+}
+
+/* ============================================
+   HEADER: Tome Header
+   ============================================ */
+.tome-header {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 0.5rem;
+  margin: -0.5rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  transition: color 0.2s;
+  min-height: 44px;
+}
+
+.back-link:hover {
+  color: var(--tome-accent, var(--amber));
+}
+
+.tome-sigil {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.tome-title {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.tome-subtitle {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+
+/* ============================================
+   GEMMA MESSAGE BOX
+   ============================================ */
+.gemma-message {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(196, 149, 106, 0.1);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(196, 149, 106, 0.3);
+}
+
+.gemma-message.tome-themed {
+  background: color-mix(in srgb, var(--tome-accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--tome-accent) 30%, transparent);
+}
+
+.gemma-message .avatar {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.gemma-message p {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+/* ============================================
+   FORM SECTION
+   ============================================ */
+.form-section {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border-left: 3px solid var(--tome-accent, var(--amber));
+}
+
+.form-section h2 {
+  font-size: 1rem;
+  color: var(--tome-accent, var(--amber));
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ============================================
+   FORM INPUTS
+   ============================================ */
+input[type="text"],
+input[type="email"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.75rem;
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 16px; /* Prevents iOS zoom */
+  border: 1px solid var(--parchment-dark);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--tome-accent, var(--amber));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tome-accent, var(--amber)) 20%, transparent);
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+label {
+  display: block;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.4rem;
+}
+
+/* ============================================
+   OPTION GROUPS (Checkboxes & Radios)
+   ============================================ */
+.option-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+}
+
+.option-item input[type="checkbox"],
+.option-item input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--tome-accent, var(--amber));
+  cursor: pointer;
+}
+
+.option-item label {
+  margin: 0;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+/* Primary action button (conjure/submit) */
+.btn-primary {
+  width: 100%;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, var(--tome-accent, var(--amber)) 0%, var(--tome-accent-soft, var(--amber-glow)) 100%);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--tome-accent, var(--amber)) 30%, transparent);
+  min-height: 56px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--tome-accent, var(--amber)) 40%, transparent);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary.loading {
+  position: relative;
+  color: transparent;
+}
+
+.btn-primary.loading::after {
+  content: attr(data-loading-text);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@media (min-width: 600px) {
+  .btn-primary {
+    width: auto;
+    min-width: 250px;
+    margin: 0 auto;
+    display: block;
+  }
+}
+
+/* Secondary button */
+.btn-secondary {
+  padding: 0.75rem 1rem;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--tome-accent, var(--amber));
+  border: 2px solid var(--tome-accent, var(--amber));
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.btn-secondary:hover {
+  background: var(--tome-accent, var(--amber));
+  color: white;
+}
+
+/* Small action button */
+.btn-small {
+  padding: 0.4rem 0.8rem;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--tome-accent, var(--amber)) 15%, transparent);
+  border: 1px solid var(--tome-accent, var(--amber));
+  border-radius: 15px;
+  color: var(--tome-accent, var(--amber));
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-small:hover {
+  background: color-mix(in srgb, var(--tome-accent, var(--amber)) 25%, transparent);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.tome-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--parchment-dark);
+  text-align: center;
+}
+
+.tome-footer p {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.tome-footer a {
+  color: var(--amber);
+}
+
+.tome-footer a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,241 @@
+/* Cuddlecore Tome Styles */
+
+.cuddlecore-theme {
+  --tome-accent: var(--berry);
+  --tome-accent-soft: var(--berry-soft);
+}
+
+/* Symptom Grid */
+.symptom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 500px) {
+  .symptom-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.symptom-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid var(--parchment-dark);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 70px;
+}
+
+.symptom-card:hover {
+  border-color: var(--berry);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.symptom-card.selected {
+  border-color: var(--berry);
+  background: rgba(139, 77, 92, 0.15);
+}
+
+.symptom-card input {
+  position: absolute;
+  opacity: 0;
+}
+
+.symptom-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.symptom-label {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Spoon Selector */
+.spoon-selector {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.spoon-option {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid var(--parchment-dark);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.spoon-option:hover {
+  border-color: var(--berry);
+}
+
+.spoon-option.selected {
+  border-color: var(--berry);
+  background: rgba(139, 77, 92, 0.15);
+}
+
+.spoon-option input {
+  position: absolute;
+  opacity: 0;
+}
+
+.spoon-icons {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.spoon-label {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* Recipe Cards */
+.recipe-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid var(--berry);
+}
+
+.recipe-tier {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  background: var(--berry);
+  color: white;
+  border-radius: 12px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.recipe-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.recipe-description {
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.recipe-section-title {
+  font-size: 0.9rem;
+  color: var(--berry);
+  margin: 1rem 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ingredients-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.ingredients-list li {
+  margin-bottom: 0.3rem;
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.steps-list li {
+  margin-bottom: 0.5rem;
+}
+
+.alternative-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(139, 77, 92, 0.1);
+  border-radius: 10px;
+  border-left: 3px solid var(--berry-soft);
+}
+
+.alternative-box h4 {
+  font-size: 0.9rem;
+  color: var(--berry);
+  margin-bottom: 0.5rem;
+}
+
+.alternative-box p {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+/* Safety Banner */
+.safety-banner {
+  background: linear-gradient(135deg, #fff9f0 0%, #fff5e6 100%);
+  border: 1px solid var(--amber);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.safety-banner p {
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+/* Avoid List */
+.avoid-list {
+  background: rgba(194, 90, 90, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.avoid-list h4 {
+  font-size: 0.9rem;
+  color: var(--danger);
+  margin-bottom: 0.5rem;
+}
+
+.avoid-list p {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.gemma-closing {
+  margin-top: 1.5rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Error Message */
+.error-message {
+  background: #fff9f0;
+  border: 1px solid var(--amber);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Icon in section headers */
+.form-section h2 .icon {
+  margin-right: 0.3rem;
+}

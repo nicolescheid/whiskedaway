@@ -1,0 +1,255 @@
+/* Sweet Spells Tome Styles */
+
+.sweetspells-theme {
+  --tome-accent: var(--rose);
+  --tome-accent-soft: var(--rose-soft);
+}
+
+/* Craving Grid */
+.craving-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 500px) {
+  .craving-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.craving-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid var(--parchment-dark);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 80px;
+}
+
+.craving-card:hover {
+  border-color: var(--rose);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.craving-card.selected {
+  border-color: var(--rose);
+  background: rgba(194, 122, 140, 0.15);
+}
+
+.craving-card input {
+  position: absolute;
+  opacity: 0;
+}
+
+.craving-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.craving-label {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Occasion Pills */
+.occasion-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.occasion-pill {
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid var(--parchment-dark);
+  border-radius: 25px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.occasion-pill:hover {
+  border-color: var(--rose);
+}
+
+.occasion-pill.selected {
+  border-color: var(--rose);
+  background: rgba(194, 122, 140, 0.15);
+}
+
+.occasion-pill input {
+  position: absolute;
+  opacity: 0;
+}
+
+/* Effort Slider */
+.effort-slider-container {
+  padding: 0 0.5rem;
+}
+
+.effort-slider {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--parchment-dark);
+  appearance: none;
+  cursor: pointer;
+}
+
+.effort-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--rose);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.effort-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.effort-current {
+  font-weight: 600;
+  color: var(--rose);
+}
+
+/* Recipe Cards */
+.recipe-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.recipe-card.main-recipe {
+  border-left: 4px solid var(--rose);
+}
+
+.recipe-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  background: var(--rose);
+  color: white;
+  border-radius: 12px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.recipe-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.recipe-description {
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.recipe-section-title {
+  font-size: 0.9rem;
+  color: var(--rose);
+  margin: 1rem 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.steps-list li {
+  margin-bottom: 0.5rem;
+}
+
+/* Guilt-free box */
+.guilt-free-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(194, 122, 140, 0.1);
+  border-radius: 10px;
+  border-left: 3px solid var(--rose);
+}
+
+.guilt-free-box h4 {
+  font-size: 0.9rem;
+  color: var(--rose);
+  margin-bottom: 0.5rem;
+}
+
+.guilt-free-box p {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+/* Enchantments */
+.enchantments-title {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 1rem;
+  color: var(--rose);
+  margin: 1.5rem 0 0.25rem;
+}
+
+.enchantments-subtitle {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+
+.enchantment-card {
+  padding: 1rem;
+}
+
+.enchantment-card strong {
+  color: var(--ink);
+}
+
+.enchantment-card p {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin-top: 0.25rem;
+}
+
+.gemma-closing {
+  margin-top: 1.5rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Error Message */
+.error-message {
+  background: #fff9f0;
+  border: 1px solid var(--amber);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Icon in section headers */
+.form-section h2 .icon {
+  margin-right: 0.3rem;
+}
