@@ -80,6 +80,7 @@ async function freshPass() {
   if (!res.ok) throw new Error(`session_${res.status}`);
   const { pass, expires_in } = await res.json();
   try {
+    sessionStorage.removeItem('wa-genie-error');
     sessionStorage.setItem(PASS_KEY, JSON.stringify({ pass, until: Date.now() + (expires_in - 60) * 1000 }));
   } catch { /* private mode: keep it in memory only */ }
   return pass;
@@ -97,6 +98,7 @@ export async function getPass({ renew = false } = {}) {
     return await pending;
   } catch (err) {
     console.warn('WhiskedAway: could not get a visitor pass', err);
+    try { sessionStorage.setItem('wa-genie-error', String(err.message || err)); } catch { /* ignore */ }
     return null;
   }
 }

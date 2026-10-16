@@ -399,7 +399,8 @@ function renderNotes() {
   try { pass = JSON.parse(sessionStorage.getItem('wa-genie-pass') || 'null'); } catch { /* ignore */ }
   $('visitor').textContent = !AI ? 'Not needed in local mode.'
     : pass && pass.until > Date.now() ? `Passed ✓ (good for ${Math.round((pass.until - Date.now()) / 60000)} more minutes)`
-    : 'Not passed yet. Gemma checks quietly the first time you wander.';
+    : (() => { try { const e = sessionStorage.getItem('wa-genie-error'); return e ? `Didn't pass: ${e}` : null; } catch { return null; } })()
+      || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
   const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose' };
