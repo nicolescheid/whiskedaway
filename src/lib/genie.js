@@ -40,12 +40,18 @@ async function solveChallenge() {
   try {
     return await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('turnstile_timeout')), 60000);
+      let errors = 0;
       const id = turnstile.render(box, {
         sitekey: SITEKEY,
         action: ACTION,
         appearance: 'interaction-only',   // invisible unless the visitor needs to tick a box
         callback: token => { clearTimeout(timer); resolve(token); },
-        'error-callback': code => { clearTimeout(timer); reject(new Error(`turnstile_error_${code}`)); },
+        // Turnstile retries by itself; only give up after repeated failures
+        'error-callback': code => {
+          if (++errors < 3) return;
+          clearTimeout(timer);
+          reject(new Error(`turnstile_error_${code}`));
+        },
       });
       box.dataset.widget = id;
     });

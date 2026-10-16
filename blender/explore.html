@@ -121,6 +121,8 @@
   <h3>My best guess</h3>
   <div id="guess" class="small">Nothing yet. Have a wander.</div>
   <div class="meter"><i id="conf" style="width:0"></i></div>
+  <h3>Visitor check</h3>
+  <div id="visitor" class="small">Not needed yet.</div>
   <h3>Your wander</h3>
   <ul class="trail" id="trail"></ul>
   <p><button class="link" id="forget">Forget this visit</button></p>
@@ -393,6 +395,11 @@ function fillMap() {
 }
 function renderNotes() {
   const r = state.result;
+  let pass = null;
+  try { pass = JSON.parse(sessionStorage.getItem('wa-genie-pass') || 'null'); } catch { /* ignore */ }
+  $('visitor').textContent = !AI ? 'Not needed in local mode.'
+    : pass && pass.until > Date.now() ? `Passed ✓ (good for ${Math.round((pass.until - Date.now()) / 60000)} more minutes)`
+    : 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
   const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose' };
