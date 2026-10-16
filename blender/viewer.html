@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuddlecore 360 test</title>
+<style>
+  :root { --berry: #8b4d5c; --parchment: #f4efe4; --ink: #2c2416; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #111; font-family: 'Quicksand', system-ui, sans-serif; }
+  #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; }
+  #stage.dragging { cursor: grabbing; }
+  .hotspot {
+    position: fixed; transform: translate(-50%, -50%); pointer-events: auto;
+    display: flex; align-items: center; gap: 8px; white-space: nowrap;
+    background: rgba(244, 239, 228, 0.88); color: var(--ink); border: 1px solid rgba(139, 77, 92, 0.4);
+    padding: 6px 12px 6px 8px; border-radius: 999px; font-size: 14px; cursor: pointer;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25); backdrop-filter: blur(6px);
+  }
+  .hotspot::before {
+    content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--berry);
+    box-shadow: 0 0 0 0 rgba(139, 77, 92, 0.6); animation: pulse 2s infinite;
+  }
+  .hotspot.submit { background: var(--berry); color: var(--parchment); }
+  .hotspot.submit::before { background: var(--parchment); }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(139, 77, 92, 0); } 100% { box-shadow: 0 0 0 0 rgba(139, 77, 92, 0); } }
+  #hint { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); color: #fff;
+          background: rgba(0,0,0,.45); padding: 6px 14px; border-radius: 999px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="hint">Drag to look around · scroll to zoom</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const params = new URLSearchParams(location.search);
+const pano = params.get('img') || 'out/cuddlecore_pano_preview.jpg';
+const spots = await fetch('out/cuddlecore_hotspots.json').then(r => r.json());
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
+
+const geo = new THREE.SphereGeometry(50, 96, 64);
+geo.scale(-1, 1, 1);
+const tex = new THREE.TextureLoader().load(pano, () => render());
+tex.colorSpace = THREE.SRGBColorSpace;
+tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+const sphere = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex }));
+sphere.rotation.y = -Math.PI / 2; // image centre (front wall) faces -Z
+scene.add(sphere);
+
+// yaw: 0 = front wall, + = right. pitch: + = up. Same convention as the Blender script.
+const dir = (yaw, pitch) => {
+  const y = THREE.MathUtils.degToRad(yaw), p = THREE.MathUtils.degToRad(pitch);
+  return new THREE.Vector3(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p));
+};
+
+const els = Object.entries(spots).map(([id, s]) => {
+  const el = document.createElement('button');
+  el.className = `hotspot ${s.type}`;
+  el.textContent = s.label;
+  el.onclick = () => { look.yaw = s.yaw; look.pitch = Math.max(-30, s.pitch); render(); };
+  document.body.appendChild(el);
+  return { el, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
+});
+
+const look = { yaw: 0, pitch: -5 };
+function render() {
+  const t = dir(look.yaw, look.pitch);
+  camera.lookAt(t);
+  renderer.render(scene, camera);
+  for (const h of els) {
+    const p = h.v.clone().project(camera);
+    const visible = p.z < 1 && Math.abs(p.x) < 1.1 && Math.abs(p.y) < 1.1;
+    h.el.style.display = visible ? '' : 'none';
+    h.el.style.left = `${(p.x + 1) / 2 * innerWidth}px`;
+    h.el.style.top = `${(1 - p.y) / 2 * innerHeight}px`;
+  }
+}
+function resize() {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  render();
+}
+addEventListener('resize', resize);
+
+let drag = null;
+stage.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ...look }; stage.classList.add('dragging'); stage.setPointerCapture(e.pointerId); });
+stage.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const k = camera.fov / innerHeight;
+  look.yaw = drag.yaw - (e.clientX - drag.x) * k;
+  look.pitch = THREE.MathUtils.clamp(drag.pitch + (e.clientY - drag.y) * k, -80, 80);
+  render();
+});
+stage.addEventListener('pointerup', () => { drag = null; stage.classList.remove('dragging'); });
+addEventListener('wheel', e => { camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 40, 95); camera.updateProjectionMatrix(); render(); });
+window.__look = (yaw, pitch) => { look.yaw = yaw; look.pitch = pitch; render(); };
+resize();
+</script>
+</body>
+</html>

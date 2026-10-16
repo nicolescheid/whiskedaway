@@ -6,3 +6,5 @@ worker/.wrangler/
 .env
 .dev.vars
 *.zip
+blender/out/
+blender/assets/

@@ -1,158 +1,141 @@
-# WhiskedAway: art brief for ChatGPT (#1, Cuddlecore Kitchen + Gemma)
+# WhiskedAway: ChatGPT concept brief (#1, Cuddlecore Kitchen)
 
-**Goal:** replace the flat SVG shapes in the Inn with painted illustrations, so the site stops
-feeling like a prototype. ChatGPT paints the scenes. Claude places them in the code and lines the
-clickable hotspots up with whatever ChatGPT draws.
+**Direction (2026-10-17):** WhiskedAway should feel like a cross between a website and a small
+virtual world. Each kitchen is a **photoreal room you can look around in** (a 360° panorama),
+with glowing objects you click and doors that carry you to the next room.
 
-**Start with:** the Cuddlecore Kitchen background and a Gemma character sheet. Once the style is
-locked, the other five kitchens and the Inn hallway reuse the same style prompt.
+**Who does what:**
 
----
-
-## How the art gets used (read this before prompting)
-
-- **One painted background per kitchen**, shown full-screen behind the UI. Visitors click
-  objects in the painting (the jars, the candles, the pot…), and each one opens a small form panel.
-- **The painting is the interface.** Every clickable object has to be clearly separate and easy to
-  spot, and nothing can overlap it. A pretty but cluttered painting will fail.
-- **Don't chase exact positions.** ChatGPT is bad at placing things precisely, and it doesn't need
-  to. Claude measures where each object ended up and moves the hotspots to match. Just make
-  sure every required object is in the painting and easy to see.
-- **No text in the images.** No labels, signs, book titles or jar labels with lettering. ChatGPT's
-  text comes out garbled, and the UI adds real labels anyway.
-- **No people in the backgrounds.** Gemma is a separate image placed on top.
-
-## Technical spec
-
-| | |
+| | Role |
 |---|---|
-| Aspect ratio | **16:9 landscape** (ask for 1792×1024 or the widest landscape option, then upscale if needed) |
-| Format | PNG |
-| Safe zone | Keep every clickable object inside the **middle 80% horizontally and the top 80% vertically**. Phones and narrow windows crop the edges. |
-| Background | Full opaque painting (no transparency) |
-| Gemma | Separate PNG, **transparent background**, full body, about 1024 tall |
+| **ChatGPT** | Concept artist and art director. Makes photoreal *concept frames* that set the look: mood, light, materials, props. Also makes small in-world artwork (a framed print, the map, quilt and rug patterns). |
+| **Claude + Blender** | Builds the real room in 3D to match the concept frames, using free CC0 Poly Haven models, materials and lighting. Renders photoreal 360° panoramas with Cycles. |
+| **Claude (code)** | Puts the panoramas in the browser with look-around, hotspots and room-to-room transitions. |
 
-Save files into `whiskedaway-react/art-inbox/` (Claude will move them into `src/assets/`):
-
-```
-cuddlecore-bg-v1.png, cuddlecore-bg-v2.png …
-gemma-idle-v1.png, gemma-talking-v1.png, gemma-thinking-v1.png
-```
+Why not use ChatGPT images directly as the rooms? A single image can't be looked around, each
+render invents a slightly different room, and the clickable objects end up wherever ChatGPT
+puts them. A real 3D room fixes all three. ChatGPT's job is to make it *beautiful*.
 
 ---
 
-## Prompt 1: style lock (paste this first, in a fresh ChatGPT conversation)
+## What to bring back
 
-> I'm art-directing a set of illustrations for a cosy cooking website called WhiskedAway. The
-> whole site is a magical old inn, and each room is a different kitchen. A kind kitchen genie
-> called Gemma helps visitors work out what to eat based on how they feel. Every image we make in
-> this conversation should share one consistent style. Please lock it in:
->
-> - **Medium:** hand-painted storybook illustration in soft gouache and watercolour, with visible
->   brush texture, gentle edges, and no hard vector outlines. It should feel warm and handmade,
->   not 3D-rendered, not photographic, and not flat vector.
-> - **Mood:** cosy, safe, unhurried. Like a rainy afternoon wrapped in a blanket.
-> - **Light:** warm candle and lamp light, soft long shadows, slight golden haze. Cool blue-grey
->   daylight from windows as a contrast.
-> - **Base palette:** parchment cream (#f4efe4), warm amber (#c4956a), honey glow (#e8b87a),
->   deep ink brown (#2c2416), aged wood browns. Each kitchen adds one accent colour.
-> - **Camera:** straight-on, eye-level view into the room, like a stage set or a dollhouse cut-away.
->   Wide 16:9. No dramatic perspective, no fisheye.
-> - **Readability:** the room's important objects must be distinct, uncluttered, and easy to
->   pick out at a glance, because visitors will click on them.
-> - **Never include:** any text, letters, numbers or labels; people or characters (unless I ask);
->   logos; watermarks; borders.
->
-> Reply with a one-paragraph summary of the style so we can refer back to it. Don't make an
-> image yet.
+Save into `whiskedaway-react/art-inbox/cuddlecore/`:
 
-## Prompt 2: Cuddlecore Kitchen background
+| File | What |
+|---|---|
+| `concept-front.png` | Main view: the stove and pot wall |
+| `concept-left.png`, `concept-right.png`, `concept-back.png` | The other three walls, same room |
+| `concept-detail-*.png` | Close-ups: the jar shelf, the candles, the pot, the pantry |
+| `moodboard.png` | Materials and palette board |
+| `print.png`, `map.png`, `quilt-pattern.png` | In-world artwork (see Prompt 4) |
 
-> Using our locked style, paint the **Cuddlecore Kitchen**: the softest, most comforting room in
-> the inn, for someone who's unwell, exhausted, or just having a hard day. Accent colour: dusty
-> berry (#8b4d5c) in curtains, a knitted blanket and ceramic jars.
->
-> Straight-on view of the back wall, 16:9 landscape. It's raining outside. These objects must all
-> be clearly visible, separate from each other, and not overlapping. **Each one is something
-> visitors click:**
->
-> 1. **A shelf of glass and ceramic jars** (upper left area): five or six jars with cork or cloth
->    lids, some berry-tinted. No writing on them.
-> 2. **Three candles of different heights** (upper left-centre): short, medium and tall, lit and
->    clearly separate. They represent how much energy you have.
-> 3. **A small hand-drawn map pinned to the wall** (top centre, above or beside the window). It
->    should be small, with no readable text.
-> 4. **A rain-streaked window** (centre) with soft berry curtains. This is decoration, not clickable.
-> 5. **A bookshelf of well-loved cookbooks and recipe cards** (upper right-centre). No titles on
->    the spines.
-> 6. **A tall wooden pantry cupboard** (right side) with its doors slightly ajar and a warm glimpse
->    of food inside.
-> 7. **A big cast-iron pot simmering on a small stove** (centre, lower half). **This is the hero
->    object.** It's the most prominent thing in the room, with gentle steam curling up. Clicking it
->    "cooks" the recipe.
-> 8. **A small wooden door** at the far left edge, leading back to the inn hallway.
->
-> Fill the lower third with something cosy rather than bare floor: a worn rug, an armchair with
-> a berry-coloured knitted blanket, perhaps a sleeping cat curled on a cushion. Leave a clear,
-> uncluttered spot on the floor to the **right of the pot**, about one-sixth of the image wide.
-> Gemma will be placed standing there later.
-
-**Iterate in the same conversation.** Useful follow-ups:
-- "Make the pot bigger and more central; it's the main thing people click."
-- "The candles are blending into the window. Separate them and give them more contrast."
-- "Too busy. Remove the small clutter between the objects and keep only the numbered items."
-- "Same scene at dusk, rain heavier, candlelight stronger." (A night variant is a nice later touch.)
-
-## Prompt 3: Gemma character sheet
-
-> Using our locked style, design **Gemma, the kitchen genie** who runs the inn's kitchens. Full
-> body, standing, facing the viewer, on a **transparent background**.
->
-> She's a warm, quietly funny host who's seen every kind of bad day and always has soup on. She
-> could be anywhere from her 30s to her 50s: kind eyes, an easy smile, a little mischief.
-> She wears a practical apron over soft layered clothes, sleeves rolled up, with a tea towel over
-> one shoulder. Her genie magic shows up as a soft swirl of warm, steam-like mist around her feet
-> and a faint golden glow at her fingertips. **Please avoid "Arabian Nights" costume clichés**
-> (no harem pants, bra tops, turbans or lamps). She's a genie of the kitchen, not a fantasy
-> stereotype.
->
-> Keep the design simple enough to read at small sizes (she'll often appear only 150px tall), with
-> a distinctive silhouette and colours that stand out against warm wood and cream walls.
-
-Then, **in the same conversation** so she stays consistent:
-- "Same Gemma, same outfit, **talking**: one hand gesturing warmly, mouth open mid-sentence."
-- "Same Gemma, **thinking/cooking**: stirring a wooden spoon in the air, mist swirling, eyes half-closed." (shown while recipes load)
-- "Same Gemma, **head-and-shoulders portrait**, circular crop friendly." (used as the small avatar)
-
-> **Nicole to decide:** what Gemma looks like is a brand decision. The current emoji (🧞‍♀️) has
-> no real identity yet. Generate a few versions before choosing.
+Also paste ChatGPT's **props & materials list** (Prompt 3) into `art-inbox/cuddlecore/notes.md`.
+It becomes the Blender shopping list.
 
 ---
 
-## Review checklist (before handing art back)
+## Prompt 1: look lock (paste first, in a fresh ChatGPT conversation)
 
-- [ ] All 8 required objects present and easy to find in under 3 seconds
-- [ ] No garbled text anywhere (zoom in on jars, books and the map)
-- [ ] The pot is clearly the focal point
-- [ ] Nothing important in the outer 10% of the left and right edges
-- [ ] A clear floor spot for Gemma
-- [ ] Gemma: no extra fingers, the transparent background really is transparent, consistent across poses
+> I'm art-directing a photoreal 3D environment for a cooking website called WhiskedAway. The
+> site is an old countryside inn, and each room is a different kitchen that visitors can look
+> around in 360°. A kind kitchen genie called Gemma helps visitors decide what to eat based on how
+> they feel. We'll build the final rooms in Blender; your images are the **concept frames** that
+> define the look. Please lock in this look for every image in this conversation:
+>
+> - **Photographic realism:** like an interiors photograph for a cookbook or a cosy-living
+>   magazine. Real materials, real light, natural imperfections: worn wood, chipped enamel,
+>   linen with creases, steam catching light. Not CGI-glossy, not illustration.
+> - **Camera:** full-frame, 24mm lens, eye-level (about 1.6m), straight-on to the wall,
+>   level verticals, f/4 with the whole room reasonably sharp. 16:9 landscape.
+> - **Light:** late-afternoon rainy day. Cool, soft daylight from the windows, warm candlelight
+>   and a small brass lamp inside. Gentle contrast, warm shadows. No harsh flash look.
+> - **Era and place:** a lived-in English/Kiwi country inn kitchen, timber beams, limewashed
+>   plaster, worn wide-plank floor. Timeless, not themed or kitsch.
+> - **Base palette:** cream plaster (#f4efe4), honeyed oak, aged brass, deep brown (#2c2416).
+>   Each kitchen adds one accent colour.
+> - **Never include:** people, text, readable labels, logos, watermarks, modern appliances or
+>   screens.
+>
+> Reply with a short summary of the look. Don't make an image yet.
 
-## What Claude does with it
+## Prompt 2: Cuddlecore Kitchen concept frames
 
-1. Replace the SVG in `src/scenes/environments/CuddlecoreKitchen.jsx` with the painting.
-2. Fix hotspot alignment: put the painting and the hotspots in one fixed 16:9 "stage" so the
-   icons stay on their objects at every window size. Today they drift, because the SVG crops but
-   the hotspots don't.
-3. Re-measure the hotspot boxes in `src/scenes/sceneData.js` against the painting.
-4. Swap Gemma's emoji for the illustrated poses (idle, talking while she speaks, thinking while
-   loading).
-5. Optional: a subtle parallax layer (steam and rain over the painting) so it feels alive.
+> Using our locked look: the **Cuddlecore Kitchen**, the softest room in the inn, for someone
+> who's unwell, exhausted, or having a hard day. Accent colour: **dusty berry (#8b4d5c)** in the
+> curtains, a hand-knitted blanket, and some glazed ceramic jars. It's raining outside.
+>
+> The room is a small square kitchen, about 4.5m × 4.5m. Here's what's on each wall. These
+> objects are what visitors click, so each must be distinct and uncluttered:
+>
+> - **Front wall:** a **cast-iron pot simmering on a small enamel range**, steam curling up. This
+>   is the hero object: central and the most inviting thing in the room. A rain-streaked
+>   window above, with berry linen curtains. A **small hand-drawn map** pinned beside the window.
+> - **Left wall:** an open **shelf of glass and ceramic jars** (dried herbs, ginger, oats, honey,
+>   lentils), five or six of them, cork and cloth lids. Below it, a worn butcher-block counter with
+>   **three beeswax candles of different heights**, lit.
+> - **Right wall:** a tall **painted pantry cupboard**, one door ajar showing a warm glimpse of
+>   food, and beside it a **small bookshelf of well-worn cookbooks and recipe cards** (no
+>   readable titles).
+> - **Back wall:** a deep, low **armchair with a berry knitted blanket**, a cat asleep on a
+>   cushion, a rag rug, and the **old wooden door** back to the inn's hallway.
+>
+> First, make the **front wall** view.
+
+Then, in the same conversation:
+- "Now the **left wall** of the same room, same light, same moment."
+- "Now the **right wall**." / "Now the **back wall**."
+- "Close-up of the jar shelf, shallow depth of field." (repeat for the candles, the pot and the pantry)
+- "A materials moodboard for this room: swatches of the plaster, floorboards, oak, the berry
+  linen, the knitted wool, the enamel, the brass, arranged on a linen background, photographed
+  from above."
+
+**Keep pushing on:** consistency between walls ("the window and range must match the front-wall
+image"), realism ("less polished, more lived-in, add natural wear"), and readability ("the
+candles are getting lost; make them a clear group of three").
+
+## Prompt 3: the Blender shopping list
+
+> Looking at all the images we made, write a props and materials list I can use to build this
+> room in Blender. Group it as: **structure** (walls, beams, floor, window); **furniture**;
+> **hero objects** (the pot and range, jar shelf, three candles, map, cookbook shelf, pantry,
+> door); **set dressing** (small objects); **materials** (each with colour, roughness, how worn);
+> **lighting** (each light source, colour temperature, rough brightness). Mark anything that's
+> essential to the mood with ★.
+
+## Prompt 4: in-world artwork (flat images, used as textures inside the 3D room)
+
+These are flat images, not photos of a room:
+- "A small hand-drawn pen-and-watercolour map of a fictional coastal countryside, on aged paper,
+  no text or lettering, square, flat scan."
+- "A small framed botanical watercolour of ginger root and lemon, on cream paper, no text, flat
+  scan, portrait 4:5."
+- "A seamless repeating pattern of a chunky berry-and-cream cable knit, top-down, evenly lit, square, tileable."
+- "A seamless repeating rag-rug pattern in berry, cream and faded blue, top-down, tileable, square."
+
+## Gemma (later, needs a decision)
+
+Photoreal rooms change what Gemma should be. A photoreal human genie risks looking uncanny, and
+a cartoon emoji will look pasted on. Options to explore in ChatGPT when you're ready:
+1. **A stylised character lit to match the room**, like an animated film character composited
+   into a real set.
+2. **A presence rather than a person:** a warm glow or a curl of golden steam that speaks, which
+   lets the rooms carry the realism.
+3. **Photoreal, in soft focus at the edge of the frame**, mostly heard rather than seen.
+
+---
+
+## Review checklist
+
+- [ ] The four walls look like the same room (window, range, colours and light all match)
+- [ ] Every hero object is easy to spot in under 3 seconds
+- [ ] No readable text or garbled lettering anywhere
+- [ ] It feels lived-in and cosy, not like a showroom or a CGI render
+- [ ] The rain, steam and candlelight read clearly; they're the soul of this room
 
 ## After Cuddlecore
 
-Same style-lock conversation, one prompt per room: **Flourish** (golden #d4a84b, sunny
-greenhouse kitchen), **Cravings Decoded** (purple #7c5c8b, mysterious fortune-teller pantry),
-**Sweet Spells** (rose #c27a8c, bakery), **Chiapothecary** (herb green #5c7c5c, potion lab),
-**Nourish Academy** (teal #4a7c7c, library-classroom kitchen), and the **Inn hallway** with six
-doors. Claude will draft each room's object list from its hotspots when we get there.
+Same look-lock conversation, one room at a time: **Flourish** (golden #d4a84b, sunlit
+greenhouse kitchen), **Cravings Decoded** (purple #7c5c8b, moody candlelit larder), **Sweet
+Spells** (rose #c27a8c, bakery), **Chiapothecary** (herb green #5c7c5c, apothecary still-room),
+**Nourish Academy** (teal #4a7c7c, library kitchen), and the **inn hallway** with six doors.
