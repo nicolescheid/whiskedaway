@@ -522,6 +522,11 @@ export default {
       });
     }
 
+    // Exploratory navigation (docs/concept-exploratory-navigation.md)
+    if (new URL(request.url).pathname === '/navigate') {
+      return handleNavigate(request, env);
+    }
+
     try {
       const payload = await request.json();
       
@@ -752,4 +757,108 @@ function buildUserMessage(payload) {
   }
   
   return parts.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Exploratory navigation: reads a visitor's trail through a room and decides what the
+// room reveals, what Gemma says, and which content atoms to serve. The model can only
+// pick from the IDs the page sends (enforced by the JSON schema, then re-checked).
+// ---------------------------------------------------------------------------
+
+const NAVIGATOR_SYSTEM = `You are the navigator for WhiskedAway, an experimental website where a visitor explores a photoreal kitchen instead of clicking a menu. Gemma, a warm kitchen genie, is their host.
+
+You receive the visitor's trail for this visit only: objects they touched, objects they held their gaze on ("linger"), content they opened or set aside, and forks they chose. Read the trail as a hypothesis about what this wander is about. It is not a profile of the person, and it may change direction.
+
+Decide:
+- hypothesis: a short, plain-language reading of the wander (e.g. "something warm you don't have to stand up for").
+- cluster: the closest cluster id.
+- confidence: 0 to 1, how clear the reading is.
+- gemma_line: one or two sentences in Gemma's voice that name the pattern softly and leave an easy way out. Warm, practical, never saccharine. No medical claims, no diagnosing, never imply food cures anything.
+- fork: if the trail genuinely points two incompatible ways, give exactly two cluster ids so Gemma can ask; otherwise an empty array. If two readings combine naturally (warm AND restful), don't fork: say both in the hypothesis.
+- reveal: up to two untouched objects that are the natural next step, each with a short reason.
+- serve: up to two content atoms that fit the wander, each with a "why" that starts "Because you" and refers to what they actually did. Never serve something already served or set aside. Respect effort: if the trail suggests low energy, prefer atoms with fewer spoons.
+
+Prefer fewer, better choices. Serving nothing is fine when nothing fits.`;
+
+async function handleNavigate(request, env) {
+  const json = (body, status = 200) => new Response(JSON.stringify(body), {
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+  try {
+    const p = await request.json();
+    const objects = (p.objects || []).slice(0, 40);
+    const atoms = (p.atoms || []).slice(0, 60);
+    const clusters = (p.clusters || []).slice(0, 12);
+    const trail = (p.trail || []).slice(-30).map(({ kind, id, atom, cluster }) => ({ kind, id, atom, cluster }));
+    if (!objects.length || !atoms.length || !clusters.length || !trail.length) {
+      return json({ error: 'objects, atoms, clusters and trail are required' }, 400);
+    }
+    const objectIds = objects.map(o => String(o.id));
+    const atomIds = atoms.map(a => String(a.id));
+    const clusterIds = clusters.map(c => String(c.id));
+
+    const schema = {
+      type: 'object',
+      properties: {
+        hypothesis: { type: 'string' },
+        cluster: { type: 'string', enum: clusterIds },
+        confidence: { type: 'number' },
+        gemma_line: { type: 'string' },
+        fork: { type: 'array', items: { type: 'string', enum: clusterIds } },
+        reveal: { type: 'array', items: {
+          type: 'object',
+          properties: { object_id: { type: 'string', enum: objectIds }, reason: { type: 'string' } },
+          required: ['object_id', 'reason'], additionalProperties: false } },
+        serve: { type: 'array', items: {
+          type: 'object',
+          properties: { atom_id: { type: 'string', enum: atomIds }, why: { type: 'string' } },
+          required: ['atom_id', 'why'], additionalProperties: false } },
+      },
+      required: ['hypothesis', 'cluster', 'confidence', 'gemma_line', 'fork', 'reveal', 'serve'],
+      additionalProperties: false,
+    };
+
+    const userMessage = JSON.stringify({
+      room: p.room, clusters, objects, atoms, trail,
+      already_served: (p.already_served || []).slice(0, 60),
+      set_aside: (p.dismissed || []).slice(0, 60),
+    });
+
+    const res = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'server-side-fallback-2026-07-01',
+      },
+      body: JSON.stringify({
+        model: env.NAVIGATOR_MODEL || 'claude-opus-5-5',
+        max_tokens: 4000,
+        fallbacks: 'default',
+        output_config: { effort: 'low', format: { type: 'json_schema', schema } },
+        system: NAVIGATOR_SYSTEM,
+        messages: [{ role: 'user', content: userMessage }],
+      }),
+    });
+    if (!res.ok) {
+      console.error('Navigator API error:', await res.text());
+      return json({ error: `navigator upstream ${res.status}` }, 502);
+    }
+    const data = await res.json();
+    if (data.stop_reason === 'refusal' || data.stop_reason === 'max_tokens') {
+      return json({ error: `navigator stopped: ${data.stop_reason}` }, 502);
+    }
+    const text = data.content.find(c => c.type === 'text');
+    const out = JSON.parse(text.text);
+
+    // Belt and braces: keep only known IDs, cap the counts.
+    out.fork = (out.fork || []).filter(id => clusterIds.includes(id)).slice(0, 2);
+    out.reveal = (out.reveal || []).filter(r => objectIds.includes(r.object_id)).slice(0, 2);
+    out.serve = (out.serve || []).filter(s => atomIds.includes(s.atom_id)).slice(0, 2);
+    return json(out);
+  } catch (error) {
+    console.error('Navigator error:', error);
+    return json({ error: 'navigator failed' }, 500);
+  }
 }

@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuddlecore Explore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --berry: #8b4d5c; --berry-soft: #a86875; --parchment: #f4efe4; --parchment-90: rgba(244, 239, 228, 0.92);
+    --ink: #2c2416; --ink-soft: #5c5040; --amber: #c4956a; --amber-glow: #e8b87a; --line: rgba(139, 77, 92, 0.25);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1410; color: var(--ink);
+               font-family: 'Quicksand', system-ui, sans-serif; }
+  #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; }
+  #stage.dragging { cursor: grabbing; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* Hotspots */
+  .spot { position: fixed; transform: translate(-50%, -50%); border: 0; background: none; padding: 0;
+          display: flex; align-items: center; gap: 8px; z-index: 5; }
+  .spot .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(244, 239, 228, 0.7);
+               box-shadow: 0 0 0 3px rgba(244, 239, 228, 0.18); transition: all .4s; flex: none; }
+  .spot .name { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 999px;
+                padding: 5px 12px; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.25);
+                opacity: 0; transform: translateX(-4px); transition: all .25s; pointer-events: none; }
+  .spot:hover .name, .spot:focus-visible .name, .spot.tool .name, .spot.revealed .name { opacity: 1; transform: none; }
+  .spot.tool .dot { background: var(--berry); }
+  .spot.submit .name { background: var(--berry); color: var(--parchment); }
+  .spot.ambient .dot { width: 9px; height: 9px; }
+  .spot.revealed .dot { background: var(--amber-glow); width: 14px; height: 14px; animation: glow 1.8s ease-in-out infinite; }
+  .spot.revealed .name { border-color: var(--amber); }
+  .spot.revealed .name::before { content: '✦ '; color: var(--amber); }
+  @keyframes glow { 50% { box-shadow: 0 0 0 10px rgba(232, 184, 122, 0), 0 0 22px 6px rgba(232, 184, 122, .7); } }
+
+  /* Top bar */
+  .bar { position: fixed; top: 12px; left: 16px; right: 16px; display: flex; gap: 8px; align-items: center; z-index: 20; pointer-events: none; }
+  .bar > * { pointer-events: auto; }
+  .bar h1 { margin: 0 auto 0 0; font: 600 15px 'Quicksand'; color: var(--parchment); text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+  .chip { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 13px; }
+  .chip.on { background: var(--berry); color: var(--parchment); }
+  .mode { font-size: 12px; color: var(--parchment); opacity: .85; }
+
+  /* Panels */
+  .panel { position: fixed; top: 56px; left: 16px; width: min(320px, calc(100vw - 32px)); max-height: calc(100vh - 220px); overflow: auto;
+           background: var(--parchment-90); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; z-index: 19;
+           box-shadow: 0 10px 30px rgba(0,0,0,.3); display: none; }
+  .panel.open { display: block; }
+  .panel h2 { margin: 0 0 8px; font: 600 14px 'Quicksand'; color: var(--berry); text-transform: uppercase; letter-spacing: .06em; }
+  .panel h3 { margin: 12px 0 4px; font: 600 12px 'Quicksand'; color: var(--ink-soft); }
+  .panel ul { list-style: none; margin: 0; padding: 0; }
+  .panel li button { width: 100%; text-align: left; background: none; border: 0; padding: 6px 4px; border-radius: 8px; font-size: 14px; }
+  .panel li button:hover { background: rgba(139, 77, 92, .08); }
+  .trail li { font-size: 13px; padding: 3px 0; color: var(--ink-soft); }
+  .meter { height: 6px; border-radius: 3px; background: rgba(139,77,92,.15); overflow: hidden; margin: 4px 0 2px; }
+  .meter i { display: block; height: 100%; background: var(--berry); transition: width .4s; }
+  .small { font-size: 12px; color: var(--ink-soft); }
+  .link { background: none; border: 0; color: var(--berry); text-decoration: underline; padding: 0; font-size: 13px; }
+
+  /* Gemma */
+  .gemma { position: fixed; left: 16px; bottom: 16px; width: min(440px, calc(100vw - 32px)); display: flex; gap: 12px; align-items: flex-end; z-index: 15; }
+  .gemma .face { flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--parchment); display: grid; place-items: center;
+                 font-size: 28px; box-shadow: 0 4px 16px rgba(0,0,0,.35); border: 2px solid var(--berry-soft); }
+  .gemma .bubble { background: var(--parchment-90); border-radius: 16px 16px 16px 4px; padding: 12px 14px; box-shadow: 0 6px 22px rgba(0,0,0,.3);
+                   font: italic 17px/1.4 'Crimson Pro', Georgia, serif; }
+  .gemma .bubble.thinking { opacity: .75; }
+  .forks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-style: normal; }
+  .forks button { font: 500 13px 'Quicksand'; background: #fff; border: 1px solid var(--berry); color: var(--berry); border-radius: 999px; padding: 5px 12px; }
+
+  /* Served */
+  .counter { position: fixed; right: 16px; bottom: 16px; top: 64px; width: min(340px, calc(100vw - 32px)); display: flex; flex-direction: column;
+             gap: 10px; justify-content: flex-end; z-index: 14; pointer-events: none; }
+  .card { pointer-events: auto; background: var(--parchment-90); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+          box-shadow: 0 8px 24px rgba(0,0,0,.28); animation: arrive .5s ease-out; }
+  @keyframes arrive { from { opacity: 0; transform: translateY(12px); } }
+  .card .kind { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--berry); }
+  .card h4 { margin: 2px 0 4px; font: 600 19px/1.2 'Crimson Pro', Georgia, serif; }
+  .card .why { font: italic 14px 'Crimson Pro', Georgia, serif; color: var(--ink-soft); margin: 0 0 6px; }
+  .card .body { font: 16px/1.45 'Crimson Pro', Georgia, serif; margin: 6px 0; display: none; }
+  .card.opened .body { display: block; }
+  .card .actions { display: flex; gap: 12px; }
+  .card.faded { opacity: .55; }
+
+  /* Fixed tool stub */
+  .tool { position: fixed; inset: 0; display: none; place-items: center; z-index: 30; background: rgba(20, 14, 10, .35); }
+  .tool.open { display: grid; }
+  .tool .box { background: var(--parchment); border-radius: 16px; padding: 20px 22px; width: min(380px, calc(100vw - 32px)); box-shadow: 0 20px 50px rgba(0,0,0,.4); }
+  .tool h2 { margin: 0 0 6px; font: 600 22px 'Crimson Pro', Georgia, serif; }
+  .tool p { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
+  .tool .ok { background: var(--berry); color: var(--parchment); border: 0; border-radius: 999px; padding: 8px 18px; }
+
+  @media (max-width: 720px) {
+    .counter { top: auto; height: 46vh; left: 16px; width: auto; bottom: 120px; }
+    .gemma .bubble { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div class="bar">
+  <h1>Cuddlecore Kitchen</h1>
+  <span class="mode" id="mode"></span>
+  <button class="chip" id="btn-map" aria-expanded="false">Map</button>
+  <button class="chip" id="btn-notes" aria-expanded="false">Gemma's notebook</button>
+</div>
+
+<aside class="panel" id="map" aria-label="Map">
+  <h2>Map</h2>
+  <p class="small">Everything in this room, always in the same place.</p>
+  <h3>Tools</h3><ul id="map-tools"></ul>
+  <h3>In the room</h3><ul id="map-room"></ul>
+</aside>
+
+<aside class="panel" id="notes" aria-label="Gemma's notebook">
+  <h2>Gemma's notebook</h2>
+  <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave.</p>
+  <h3>My best guess</h3>
+  <div id="guess" class="small">Nothing yet. Have a wander.</div>
+  <div class="meter"><i id="conf" style="width:0"></i></div>
+  <h3>Your wander</h3>
+  <ul class="trail" id="trail"></ul>
+  <p><button class="link" id="forget">Forget this visit</button></p>
+</aside>
+
+<div class="gemma">
+  <div class="face" aria-hidden="true">🧞‍♀️</div>
+  <div class="bubble" id="bubble" aria-live="polite">This is the softest kitchen in the inn. Have a look around. Touch whatever catches your eye.</div>
+</div>
+
+<div class="counter" id="counter" aria-label="On the counter"></div>
+
+<div class="tool" id="tool" role="dialog" aria-modal="true">
+  <div class="box">
+    <h2 id="tool-title"></h2>
+    <p id="tool-text"></p>
+    <button class="ok" id="tool-ok">Back to the room</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { localNavigate, aiNavigate } from './explore/navigator.js';
+
+const params = new URLSearchParams(location.search);
+const AI = params.get('ai');                 // e.g. ?ai=https://whiskedaway-genie.<acct>.workers.dev/navigate
+const [world, spots] = await Promise.all([
+  fetch('explore/cuddlecore-world.json').then(r => r.json()),
+  fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
+]);
+const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---------- state (session only)
+const store = {
+  load() { try { return JSON.parse(sessionStorage.getItem('wa-explore') || 'null'); } catch { return null; } },
+  save(s) { try { sessionStorage.setItem('wa-explore', JSON.stringify(s)); } catch { /* private mode */ } },
+  clear() { try { sessionStorage.removeItem('wa-explore'); } catch { /* ignore */ } },
+};
+const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null }, store.load() || {});
+$('mode').textContent = AI ? 'AI navigator' : 'Local navigator';
+
+// ---------- panorama
+const stage = $('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(72, 1, 0.1, 100);
+const geo = new THREE.SphereGeometry(50, 96, 64);
+geo.scale(-1, 1, 1);
+const sphere = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x2a2018 }));
+sphere.rotation.y = -Math.PI / 2;                       // image centre (front wall) faces -Z
+scene.add(sphere);
+const loader = new THREE.TextureLoader();
+const useFull = renderer.capabilities.maxTextureSize >= 8192;
+const setPano = t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                       sphere.material = new THREE.MeshBasicMaterial({ map: t }); render(); };
+loader.load('out/cuddlecore_pano_preview.jpg', t => { if (!sphere.material.map) setPano(t); });
+if (useFull) loader.load('out/cuddlecore_pano.jpg', setPano);
+
+// yaw: 0 = front wall, + = right; pitch: + = up (same convention as the Blender export)
+const dir = (yaw, pitch) => {
+  const y = THREE.MathUtils.degToRad(yaw), p = THREE.MathUtils.degToRad(pitch);
+  return new THREE.Vector3(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p));
+};
+const look = { yaw: 0, pitch: -6 };
+
+// ---------- hotspots
+const hotspots = Object.entries(spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
+  const obj = world.objects[id];
+  const el = document.createElement('button');
+  el.className = `spot ${obj.type === 'ambient' ? 'ambient' : 'tool'} ${obj.type}`;
+  el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}</span>`;
+  el.setAttribute('aria-label', obj.label);
+  el.addEventListener('click', e => { e.stopPropagation(); touch(id); });
+  document.body.appendChild(el);
+  return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
+});
+
+function render() {
+  camera.lookAt(dir(look.yaw, look.pitch));
+  renderer.render(scene, camera);
+  for (const h of hotspots) {
+    const p = h.v.clone().project(camera);
+    const vis = p.z < 1 && Math.abs(p.x) < 1.05 && Math.abs(p.y) < 1.05;
+    h.el.style.display = vis ? '' : 'none';
+    h.el.style.left = `${(p.x + 1) / 2 * innerWidth}px`;
+    h.el.style.top = `${(1 - p.y) / 2 * innerHeight}px`;
+  }
+}
+function resize() {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = innerWidth < 720 ? 82 : 72;
+  camera.updateProjectionMatrix();
+  render();
+}
+addEventListener('resize', resize);
+
+let drag = null, lastMove = performance.now(), hasLooked = false;   // no lingering until the visitor has looked around
+stage.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ...look }; stage.classList.add('dragging'); stage.setPointerCapture(e.pointerId); });
+stage.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const k = camera.fov / innerHeight;
+  look.yaw = drag.yaw - (e.clientX - drag.x) * k;
+  look.pitch = THREE.MathUtils.clamp(drag.pitch + (e.clientY - drag.y) * k, -75, 75);
+  lastMove = performance.now();
+  hasLooked = true;
+  render();
+});
+stage.addEventListener('pointerup', () => { drag = null; stage.classList.remove('dragging'); });
+addEventListener('wheel', e => { camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 40, 95); camera.updateProjectionMatrix(); render(); }, { passive: true });
+
+function lookTo(yaw, pitch) {
+  const from = { ...look };
+  let dy = ((yaw - from.yaw + 540) % 360) - 180;          // shortest way round
+  const t0 = performance.now(), dur = 700;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) ** 3;
+    look.yaw = from.yaw + dy * e;
+    look.pitch = from.pitch + (Math.max(-30, pitch) - from.pitch) * e;
+    lastMove = now;
+    render();
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// ---------- trail + lingering
+const label = id => world.objects[id]?.label || id;
+const lingered = {};
+function record(e) {
+  state.trail.push({ ...e, t: Date.now() });
+  state.trail = state.trail.slice(-40);
+  store.save(state);
+  renderNotes();
+  scheduleNavigate();
+}
+setInterval(() => {
+  if (!hasLooked || drag || document.hidden || performance.now() - lastMove < 2000) return;
+  const centre = dir(look.yaw, look.pitch);
+  for (const h of hotspots) {
+    const ang = THREE.MathUtils.radToDeg(centre.angleTo(h.v.clone().normalize()));
+    if (ang < 11 && (!lingered[h.id] || Date.now() - lingered[h.id] > 30000)) {
+      lingered[h.id] = Date.now();
+      record({ kind: 'linger', id: h.id });
+    }
+  }
+}, 300);
+
+function touch(id) {
+  const obj = world.objects[id];
+  record({ kind: 'touch', id });
+  if (obj.type === 'ambient') {
+    say(obj.moment, [], true);
+  } else if (obj.type === 'door') {
+    openTool('Back to the inn', 'In the full site this door takes you back to the hallway. Your wander would come with you.');
+  } else if (obj.type === 'submit') {
+    openTool('Find Comfort', 'In the full site, the pot cooks up a full recipe with Gemma, using everything you\'ve told her.');
+  } else {
+    openTool(obj.label, `This is one of the room's fixed tools. In the full site it opens the "${obj.label}" panel, exactly as it always does. Touching it still counts as part of your wander.`);
+  }
+}
+
+// ---------- navigator
+let navTimer, navSeq = 0;
+function scheduleNavigate() {
+  clearTimeout(navTimer);
+  navTimer = setTimeout(navigate, AI ? 700 : 350);
+}
+async function navigate() {
+  const seq = ++navSeq;
+  if (AI) $('bubble').classList.add('thinking');
+  const opts = { served: state.served, dismissed: state.dismissed };
+  const r = AI ? await aiNavigate(AI, state.trail, world, opts) : localNavigate(state.trail, world, opts);
+  if (seq !== navSeq) return;                              // a newer event superseded this one
+  $('bubble').classList.remove('thinking');
+  state.result = r;
+  $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
+  applyReveal(r.reveal);
+  if (r.gemma) say(r.gemma, r.fork);
+  // One new piece per step (two to start), so the counter fills at the pace of the wander
+  r.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(serve);
+  store.save(state);
+  renderNotes();
+}
+
+function applyReveal(reveal) {
+  const ids = new Set(reveal.map(r => r.object));
+  for (const h of hotspots) h.el.classList.toggle('revealed', ids.has(h.id));
+}
+
+let sayTimer;
+function say(text, fork = [], brief = false) {
+  clearTimeout(sayTimer);
+  const b = $('bubble');
+  b.innerHTML = esc(text) + (fork.length
+    ? `<div class="forks">${fork.map(c => `<button data-c="${esc(c)}">${esc(world.clusters[c].label.replace(/^./, x => x.toUpperCase()))}</button>`).join('')}</div>`
+    : '');
+  b.querySelectorAll('button').forEach(btn => btn.onclick = () => record({ kind: 'choose', cluster: btn.dataset.c }));
+  if (brief && state.result?.gemma) sayTimer = setTimeout(() => say(state.result.gemma, state.result.fork), 4500);
+}
+
+function serve({ atom, why }) {
+  const a = atomsById[atom];
+  if (!a || state.served.includes(atom)) return;
+  state.served.push(atom);
+  state.cards.unshift({ atom, why });
+  state.cards = state.cards.slice(0, 4);
+  renderCards();
+}
+function renderCards() {
+  const c = $('counter');
+  c.innerHTML = '';
+  state.cards.slice().reverse().forEach(({ atom, why, opened }, i, arr) => {
+    const a = atomsById[atom];
+    const card = document.createElement('article');
+    card.className = `card${opened ? ' opened' : ''}${i < arr.length - 2 ? ' faded' : ''}`;
+    const spoons = a.spoons ? '🥄'.repeat(a.spoons) : 'no spoons needed';
+    card.innerHTML = `<div class="kind">${esc(a.kind)} · ${spoons}</div><h4>${esc(a.title)}</h4>
+      <p class="why">${esc(why)}</p><p class="body">${esc(a.body)}</p>
+      <div class="actions"><button class="link" data-act="open">${opened ? 'Close' : 'Open'}</button><button class="link" data-act="no">Not this</button></div>`;
+    card.querySelector('[data-act=open]').onclick = () => {
+      const entry = state.cards.find(x => x.atom === atom);
+      entry.opened = !entry.opened;
+      if (entry.opened) record({ kind: 'open', atom });
+      renderCards();
+      store.save(state);
+    };
+    card.querySelector('[data-act=no]').onclick = () => {
+      state.cards = state.cards.filter(x => x.atom !== atom);
+      state.dismissed.push(atom);
+      record({ kind: 'dismiss', atom });
+      renderCards();
+    };
+    c.appendChild(card);
+  });
+}
+
+// ---------- map + notebook (the fixed navigation)
+function fillMap() {
+  const item = id => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.textContent = label(id);
+    b.onclick = () => { const s = spots[id]; hasLooked = true; lookTo(s.yaw, s.pitch); record({ kind: 'map', id }); };
+    li.appendChild(b);
+    return li;
+  };
+  Object.entries(world.objects).forEach(([id, o]) => {
+    if (!spots[id]) return;
+    $(o.type === 'ambient' ? 'map-room' : 'map-tools').appendChild(item(id));
+  });
+}
+function renderNotes() {
+  const r = state.result;
+  $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
+  $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose' };
+  $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).map(e =>
+    `<li>${verbs[e.kind]} ${esc(e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
+}
+function togglePanel(id, btn) {
+  const p = $(id), open = !p.classList.contains('open');
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('open'));
+  document.querySelectorAll('.bar .chip').forEach(x => { x.classList.remove('on'); x.setAttribute('aria-expanded', 'false'); });
+  if (open) { p.classList.add('open'); btn.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); }
+}
+$('btn-map').onclick = e => togglePanel('map', e.currentTarget);
+$('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
+$('forget').onclick = () => {
+  store.clear();
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null });
+  renderCards(); renderNotes(); applyReveal([]);
+  say('Forgotten. Fresh start. Have a wander.');
+};
+
+function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; $('tool').classList.add('open'); $('tool-ok').focus(); }
+$('tool-ok').onclick = () => $('tool').classList.remove('open');
+addEventListener('keydown', e => { if (e.key === 'Escape') $('tool').classList.remove('open'); });
+
+// Test hooks for scripted checks
+window.__explore = { state, touch, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+
+fillMap();
+renderCards();
+renderNotes();
+if (state.result) { applyReveal(state.result.reveal); if (state.result.gemma) say(state.result.gemma, state.result.fork); }
+resize();
+</script>
+</body>
+</html>

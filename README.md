@@ -288,3 +288,10 @@ Now you can speak their language:
 ---
 
 ## Made with 💛 by Gemma & Claude
+
+## Exploratory navigation prototype
+
+See [docs/concept-exploratory-navigation.md](docs/concept-exploratory-navigation.md) for the idea.
+Run `npm run dev` and open `/blender/explore.html` (local navigator), or
+`/blender/explore.html?ai=<worker-url>/navigate` once the Worker's `/navigate` route is deployed.
+The panorama is built by `blender/cuddlecore_build.py` (assets: `python -I blender/fetch_assets.py`).

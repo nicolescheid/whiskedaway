@@ -4,7 +4,7 @@ and writes hotspot angles (yaw/pitch) for the browser viewer.
 
 Needs the CC0 Poly Haven assets first:  python -I blender/fetch_assets.py
 Then run headless:
-  blender -b --factory-startup --python blender/cuddlecore_build.py -- [--preview]
+  blender -b --factory-startup --python blender/cuddlecore_build.py -- [--preview] [--no-render]
 
 Room axes: X = left/right, Y = forward (front wall = +Y), Z = up. Metres.
 The camera stands in the middle of the room at eye height, looking at the front wall.
@@ -20,6 +20,7 @@ from mathutils import Vector
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
+NO_RENDER = "--no-render" in ARGS   # rebuild .blend + hotspots only
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "assets")
@@ -311,7 +312,8 @@ def build():
         box(f"frame_{side}", (x, HY + 0.2, (win_b + win_t) / 2), (0.05, 0.07, win_t - win_b), worktop)
     box("frame_t", (0, HY + 0.2, win_t - 0.02), (win_r - win_l, 0.07, 0.05), worktop)
     box("frame_b", (0, HY + 0.2, win_b + 0.02), (win_r - win_l, 0.07, 0.05), worktop)
-    box("glass", (0, HY + 0.21, (win_b + win_t) / 2), (win_r - win_l, 0.006, win_t - win_b), rain_glass, bevel=0)
+    pane = box("glass", (0, HY + 0.21, (win_b + win_t) / 2), (win_r - win_l, 0.006, win_t - win_b), rain_glass, bevel=0)
+    hotspot("window", "The rain", None, pane, kind="ambient")
 
     for side, x in (("l", win_l - 0.2), ("r", win_r + 0.2)):
         bpy.ops.mesh.primitive_plane_add(size=1, location=(x, HY - 0.1, (win_b + win_t) / 2 + 0.08),
@@ -381,6 +383,7 @@ def build():
     box("map_pin", (1.4, HY - 0.008, 1.74), (0.012, 0.01, 0.012), brass, bevel=0)
     hotspot("locale-map", "Location", "locale", m)
     plant = model("potted_plant_02", (-1.45, HY - 0.45, 0), rot_z=20, scale=1.0)
+    hotspot("plant", "The plant", None, plant, kind="ambient")
 
     # ---- Left wall: counter, jar shelf, candles, cutting board
     box("counter_base", (-HX + 0.32, 0.1, 0.43), (0.62, 1.9, 0.86), dark_wood, bevel=0.01)
@@ -414,13 +417,16 @@ def build():
         f.data.materials.append(flame)
         point_light(f"candle_light_{i}", (x + 0.02, y, top + h + 0.035), 4, (1.0, 0.55, 0.22), radius=0.012)
     hotspot("energy-candles", "Energy level", "energy", candle_objs)
-    model("wooden_cutting_board", (-HX + 0.38, 0.45, 0.91), rot_z=95)
+    board = model("wooden_cutting_board", (-HX + 0.38, 0.45, 0.91), rot_z=95)
+    hotspot("cutting-board", "Chopping board", None, board, kind="ambient")
     model("wooden_spoon", (-HX + 0.4, 0.15, 0.93), rot_z=70)
-    model("wooden_bowl_01", (-HX + 0.34, 0.85, 0.91))
+    bowl = model("wooden_bowl_01", (-HX + 0.34, 0.85, 0.91))
+    hotspot("bowl", "The bowl", None, bowl, kind="ambient")
 
     # ---- Right wall: painted cabinet (pantry) with an oil lamp, worn bookshelf of cookbooks
     pantry = model("painted_wooden_cabinet", (HX - 0.34, 0.85, 0), rot_z=-90)
-    model("wicker_basket_01", (HX - 0.32, 1.15, 1.18), rot_z=-80)
+    basket = model("wicker_basket_01", (HX - 0.32, 1.15, 1.18), rot_z=-80)
+    hotspot("basket", "The basket", None, basket, kind="ambient")
     model("ceramic_vase_01", (HX - 0.3, 0.45, 1.18), scale=0.7)
     lamp = model("vintage_oil_lamp", (HX - 0.3, 0.75, 1.18), scale=0.65)
     for o in meshes_of(lamp):
@@ -428,6 +434,7 @@ def build():
             o.data.materials.clear()
             o.data.materials.append(flame)
     point_light("lamp_light", (HX - 0.3, 0.75, 1.18 + 0.35), 18, (1.0, 0.62, 0.3), radius=0.03)
+    hotspot("oil-lamp", "The lamp", None, lamp, kind="ambient")
     hotspot("pantry-cabinet", "Your pantry", "pantry", pantry)
 
     shelf_x, shelf_y = HX - 0.3, -0.9
@@ -459,7 +466,8 @@ def build():
     bpy.context.active_object.data.materials.append(brass)
     hotspot("exit-door", "Back to the inn", None, door, kind="door")
 
-    model("ArmChair_01", (0.75, -HY + 0.55, 0), rot_z=165)
+    chair = model("ArmChair_01", (0.75, -HY + 0.55, 0), rot_z=165)
+    hotspot("armchair", "The armchair", None, chair, kind="ambient")
     throw = box("throw", (0.75, -HY + 0.6, 0.5), (0.42, 0.36, 0.07), berry_knit, bevel=0.03)
     throw.rotation_euler = (math.radians(3), math.radians(-4), math.radians(-12))
     cyl("rug", (0.2, -0.45, 0.006), 0.95, 0.012, rug_mat, verts=128, bevel=0.004)
@@ -532,6 +540,9 @@ def main():
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "cuddlecore.blend"))
     with open(os.path.join(OUT, "cuddlecore_hotspots.json"), "w") as fh:
         json.dump(HOTSPOTS, fh, indent=2)
+    if NO_RENDER:
+        print("[whisked] done (no render)", json.dumps(HOTSPOTS))
+        return
     bpy.context.scene.render.filepath = os.path.join(OUT, f"cuddlecore_pano{suffix}.jpg")
     bpy.ops.render.render(write_still=True)
     print("[whisked] done", json.dumps(HOTSPOTS))

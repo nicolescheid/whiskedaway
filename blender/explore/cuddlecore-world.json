@@ -1,0 +1,500 @@
+{
+  "room": "cuddlecore",
+  "name": "Cuddlecore Kitchen",
+  "clusters": {
+    "warm-slow": {
+      "label": "something warm and slow",
+      "themes": [
+        "warming",
+        "broth",
+        "rain",
+        "slow",
+        "cosy"
+      ]
+    },
+    "rest": {
+      "label": "rest, with as little effort as possible",
+      "themes": [
+        "rest",
+        "no-cook",
+        "low-spoons",
+        "calm"
+      ]
+    },
+    "fresh": {
+      "label": "something fresh and bright",
+      "themes": [
+        "fresh",
+        "green",
+        "herbs",
+        "citrus"
+      ]
+    },
+    "hands-on": {
+      "label": "actually cooking something, with your hands busy",
+      "themes": [
+        "cooking",
+        "hands-on",
+        "knife"
+      ]
+    },
+    "sweet": {
+      "label": "a little sweetness, an evening kind of comfort",
+      "themes": [
+        "sweet",
+        "honey",
+        "evening",
+        "tea"
+      ]
+    },
+    "why": {
+      "label": "understanding the why of it",
+      "themes": [
+        "learning",
+        "why"
+      ]
+    },
+    "pantry": {
+      "label": "making do with what's already in the cupboard",
+      "themes": [
+        "pantry",
+        "simple",
+        "what-you-have",
+        "bread",
+        "oats"
+      ]
+    }
+  },
+  "objects": {
+    "window": {
+      "label": "The rain",
+      "ref": "the rain at the window",
+      "type": "ambient",
+      "themes": [
+        "rain",
+        "slow",
+        "warming",
+        "broth",
+        "cosy"
+      ],
+      "moment": "It's properly coming down. The glass is all streaks."
+    },
+    "armchair": {
+      "label": "The armchair",
+      "ref": "the armchair",
+      "type": "ambient",
+      "themes": [
+        "rest",
+        "no-cook",
+        "low-spoons",
+        "cosy",
+        "calm"
+      ],
+      "moment": "Sagging in exactly the right places. The blanket's still warm."
+    },
+    "plant": {
+      "label": "The plant",
+      "ref": "the plant",
+      "type": "ambient",
+      "themes": [
+        "fresh",
+        "green",
+        "herbs"
+      ],
+      "moment": "Somebody's been talking to it. It's doing well."
+    },
+    "oil-lamp": {
+      "label": "The lamp",
+      "ref": "the lamp",
+      "type": "ambient",
+      "themes": [
+        "evening",
+        "calm",
+        "tea",
+        "slow"
+      ],
+      "moment": "A small, steady light. The kind you read by."
+    },
+    "cutting-board": {
+      "label": "Chopping board",
+      "ref": "the chopping board",
+      "type": "ambient",
+      "themes": [
+        "cooking",
+        "hands-on",
+        "fresh",
+        "knife"
+      ],
+      "moment": "Knife marks from a thousand onions."
+    },
+    "bowl": {
+      "label": "The bowl",
+      "ref": "the bowl",
+      "type": "ambient",
+      "themes": [
+        "broth",
+        "oats",
+        "simple",
+        "warming"
+      ],
+      "moment": "A wide, heavy bowl. Holds warmth well."
+    },
+    "basket": {
+      "label": "The basket",
+      "ref": "the bread basket",
+      "type": "ambient",
+      "themes": [
+        "bread",
+        "pantry",
+        "simple"
+      ],
+      "moment": "Half a loaf, wrapped in a tea towel."
+    },
+    "symptom-jars": {
+      "label": "How you're feeling",
+      "ref": "the jars",
+      "type": "interactive",
+      "tool": "symptoms",
+      "themes": [
+        "ginger",
+        "honey",
+        "oats",
+        "pantry",
+        "warming"
+      ]
+    },
+    "energy-candles": {
+      "label": "Energy level",
+      "ref": "the candles",
+      "type": "interactive",
+      "tool": "energy",
+      "themes": [
+        "low-spoons",
+        "calm",
+        "evening"
+      ]
+    },
+    "dietary-shelf": {
+      "label": "Dietary needs",
+      "ref": "the cookbooks",
+      "type": "interactive",
+      "tool": "dietary",
+      "themes": [
+        "learning",
+        "why"
+      ]
+    },
+    "pantry-cabinet": {
+      "label": "Your pantry",
+      "ref": "the pantry",
+      "type": "interactive",
+      "tool": "pantry",
+      "themes": [
+        "pantry",
+        "simple",
+        "what-you-have"
+      ]
+    },
+    "locale-map": {
+      "label": "Location",
+      "ref": "the map",
+      "type": "interactive",
+      "tool": "locale",
+      "themes": [
+        "pantry"
+      ]
+    },
+    "cauldron": {
+      "label": "Find Comfort",
+      "ref": "the pot",
+      "type": "submit",
+      "tool": "generate",
+      "themes": [
+        "cooking",
+        "broth",
+        "warming"
+      ]
+    },
+    "exit-door": {
+      "label": "Back to the inn",
+      "ref": "the door",
+      "type": "door",
+      "themes": []
+    }
+  },
+  "atoms": [
+    {
+      "id": "honey-ginger-lemon",
+      "kind": "ritual",
+      "spoons": 0,
+      "title": "Honey, ginger and lemon in a mug",
+      "themes": [
+        "warming",
+        "tea",
+        "honey",
+        "ginger",
+        "citrus",
+        "calm"
+      ],
+      "body": "A few slices of ginger, a squeeze of lemon, a spoon of honey, hot (not boiling) water. Wrap both hands round it. That's the whole recipe."
+    },
+    {
+      "id": "five-minute-miso",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Five-minute miso broth",
+      "themes": [
+        "broth",
+        "warming",
+        "simple",
+        "low-spoons"
+      ],
+      "body": "Stir a spoon of miso into a mug of hot water off the boil. Add whatever's soft and easy: tofu cubes, a handful of spinach, leftover rice. Sip it slowly."
+    },
+    {
+      "id": "toast-soldiers",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Buttered toast, cut into soldiers",
+      "themes": [
+        "bread",
+        "simple",
+        "cosy",
+        "low-spoons"
+      ],
+      "body": "Toast counts. You're eating, and that's the win. Cutting it into strips somehow makes it feel like someone's looking after you."
+    },
+    {
+      "id": "overnight-oats",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Overnight oats for tomorrow-you",
+      "themes": [
+        "oats",
+        "no-cook",
+        "simple",
+        "sweet",
+        "honey"
+      ],
+      "body": "Half a cup of oats, the same of milk, a spoon of honey, into a jar and into the fridge. Future-you wakes up to breakfast already made."
+    },
+    {
+      "id": "congee",
+      "kind": "recipe idea",
+      "spoons": 2,
+      "title": "Slow rice congee",
+      "themes": [
+        "broth",
+        "warming",
+        "slow",
+        "rain",
+        "cosy"
+      ],
+      "body": "A little rice, a lot of stock, a low heat and an hour of the house smelling wonderful. Ginger and spring onion on top. Perfect for a rainy afternoon when you can potter."
+    },
+    {
+      "id": "story-ginger",
+      "kind": "ingredient story",
+      "spoons": 0,
+      "title": "Why ginger feels warming",
+      "themes": [
+        "ginger",
+        "warming",
+        "learning",
+        "why"
+      ],
+      "body": "That gentle heat comes from compounds like gingerol, the same family of molecules behind chilli's kick, just softer. It's why a ginger tea feels like it warms you from the middle out."
+    },
+    {
+      "id": "why-warm-food",
+      "kind": "why it works",
+      "spoons": 0,
+      "title": "Why warm food feels like comfort",
+      "themes": [
+        "warming",
+        "why",
+        "learning",
+        "cosy",
+        "broth"
+      ],
+      "body": "Warm, soft, salty food is easy to eat when your appetite is low, and the steam and smell do half the work before you've taken a spoonful. Comfort is a real thing, not a weakness."
+    },
+    {
+      "id": "rain-soup-ritual",
+      "kind": "ritual",
+      "spoons": 2,
+      "title": "The rainy-day soup pot",
+      "themes": [
+        "rain",
+        "slow",
+        "broth",
+        "cosy",
+        "hands-on",
+        "cooking"
+      ],
+      "body": "Onion, carrot and celery, slowly softened in butter, then whatever vegetables need using and enough stock to cover. Let it tick over while the rain does its thing."
+    },
+    {
+      "id": "spoons",
+      "kind": "why it works",
+      "spoons": 0,
+      "title": "What \"spoons\" means",
+      "themes": [
+        "low-spoons",
+        "why",
+        "learning",
+        "rest"
+      ],
+      "body": "Spoon theory: on some days you only have a few units of energy to spend. Knowing your count is how you choose a meal that doesn't cost more than you've got."
+    },
+    {
+      "id": "pantry-pasta",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "No-chop pantry pasta",
+      "themes": [
+        "pantry",
+        "simple",
+        "what-you-have",
+        "low-spoons"
+      ],
+      "body": "Pasta, a tin of tomatoes, a glug of oil, salt, and a pinch of dried herbs. Nothing to chop, one pot, fifteen minutes."
+    },
+    {
+      "id": "herb-salt",
+      "kind": "technique",
+      "spoons": 1,
+      "title": "Green herb salt",
+      "themes": [
+        "herbs",
+        "fresh",
+        "green",
+        "knife",
+        "hands-on"
+      ],
+      "body": "Chop a big handful of soft herbs with flaky salt until it's bright green and damp. A pinch of it wakes up eggs, rice, anything plain."
+    },
+    {
+      "id": "cucumber-mint",
+      "kind": "ritual",
+      "spoons": 0,
+      "title": "Cucumber and mint water",
+      "themes": [
+        "fresh",
+        "green",
+        "herbs",
+        "no-cook",
+        "citrus"
+      ],
+      "body": "A jug of cold water, a few cucumber ribbons, a sprig of mint, a slice of lemon. It feels like more effort than it is."
+    },
+    {
+      "id": "gentle-knife",
+      "kind": "technique",
+      "spoons": 1,
+      "title": "Gentle knife skills: the claw",
+      "themes": [
+        "knife",
+        "hands-on",
+        "cooking",
+        "learning"
+      ],
+      "body": "Curl your fingertips under, knuckles forward, so the blade rides against your knuckles. Slow is fine. Chopping can be oddly calming once it feels safe."
+    },
+    {
+      "id": "evening-milk",
+      "kind": "ritual",
+      "spoons": 0,
+      "title": "Warm milk with cinnamon",
+      "themes": [
+        "evening",
+        "calm",
+        "warming",
+        "honey",
+        "sweet",
+        "tea"
+      ],
+      "body": "Milk (any kind) warmed in a pan with a pinch of cinnamon and a little honey. Drink it by lamplight. It's not magic, it's a signal to yourself that the day is done."
+    },
+    {
+      "id": "baked-apple",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "One baked apple",
+      "themes": [
+        "sweet",
+        "warming",
+        "slow",
+        "honey",
+        "evening"
+      ],
+      "body": "Core an apple, fill it with oats, butter and honey, and bake until it slumps. The kitchen smells like autumn for an hour."
+    },
+    {
+      "id": "bread-and-butter",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Good bread, good butter, a little salt",
+      "themes": [
+        "bread",
+        "simple",
+        "no-cook",
+        "cosy"
+      ],
+      "body": "Sometimes the best thing in the basket needs nothing doing to it. Thick slice, real butter, a few flakes of salt."
+    },
+    {
+      "id": "scrap-stock",
+      "kind": "technique",
+      "spoons": 2,
+      "title": "Stock from scraps",
+      "themes": [
+        "broth",
+        "slow",
+        "hands-on",
+        "pantry",
+        "what-you-have"
+      ],
+      "body": "Keep onion ends, carrot peels and herb stalks in a bag in the freezer. When it's full, cover with water and simmer for an hour. Free broth, and nothing wasted."
+    },
+    {
+      "id": "story-lemon",
+      "kind": "ingredient story",
+      "spoons": 0,
+      "title": "What a squeeze of lemon does",
+      "themes": [
+        "citrus",
+        "fresh",
+        "learning",
+        "why"
+      ],
+      "body": "Acid makes flavours taste brighter and more distinct, which is why a squeeze of lemon can rescue a flat soup. Add it at the end, off the heat."
+    },
+    {
+      "id": "armchair-plate",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "An armchair plate",
+      "themes": [
+        "no-cook",
+        "rest",
+        "low-spoons",
+        "simple"
+      ],
+      "body": "Crackers, a bit of cheese, apple slices, a few nuts. Nothing cooked, nothing to wash but one plate, and you can eat it with a blanket over your knees."
+    },
+    {
+      "id": "story-honey",
+      "kind": "ingredient story",
+      "spoons": 0,
+      "title": "A note on honey",
+      "themes": [
+        "honey",
+        "sweet",
+        "learning",
+        "why"
+      ],
+      "body": "Honey's flavour changes with whatever the bees were visiting: clover is mild, mānuka is deep and bitter-edged. One firm rule: never give honey to babies under a year old."
+    }
+  ]
+}
