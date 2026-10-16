@@ -8,7 +8,7 @@ import {
 } from '../components';
 import './Cuddlecore.css';
 
-const WORKER_URL = 'https://whiskedaway-genie.nicole-scheid.workers.dev';
+import { genieFetch } from '../lib/genie';
 
 export default function Cuddlecore() {
   // Form state
@@ -64,11 +64,7 @@ export default function Cuddlecore() {
     };
 
     try {
-      const response = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const response = await genieFetch('/', payload);
 
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       

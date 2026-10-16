@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
 
-const WORKER_URL = 'https://whiskedaway-genie.nicole-scheid.workers.dev';
+import { genieFetch } from '../lib/genie';
 
 /**
  * Shared hook for submitting kitchen forms to the Cloudflare Worker.
@@ -18,11 +18,7 @@ export default function useKitchenSubmit(kitchenId) {
     setError(null);
 
     try {
-      const response = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const response = await genieFetch('/', payload);
 
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
 

@@ -500,32 +500,49 @@ You MUST respond with valid JSON only. No markdown, no explanations outside the 
 - Always ends with warmth — a "💛" or gentle encouragement
 - When using pantry ingredients, acknowledge it: "I've worked in that salmon you mentioned..."`;
 
-// CORS headers
+// CORS headers. Access-Control-Allow-Origin is set per request by withCors() (see bot guard below).
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-WA-Pass',
 };
 
 export default {
   async fetch(request, env) {
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+      return withCors(new Response(null, { headers: corsHeaders }), request, env);
     }
 
     // Only accept POST
     if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      return withCors(new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      }), request, env);
     }
 
-    // Exploratory navigation (docs/concept-exploratory-navigation.md)
-    if (new URL(request.url).pathname === '/navigate') {
-      return handleNavigate(request, env);
+    const path = new URL(request.url).pathname;
+
+    // Turnstile token in, signed visitor pass out
+    if (path === '/session') {
+      return withCors(await handleSession(request, env), request, env);
     }
+
+    // Everything else costs money: check the visitor before doing any work
+    const blocked = await guard(request, env, path === '/navigate' ? 'navigate' : 'recipe');
+    if (blocked) return withCors(blocked, request, env);
+
+    // Exploratory navigation (docs/concept-exploratory-navigation.md)
+    if (path === '/navigate') {
+      return withCors(await handleNavigate(request, env), request, env);
+    }
+
+    return withCors(await handleRecipe(request, env), request, env);
+  }
+};
+
+async function handleRecipe(request, env) {
+  {
 
     try {
       const payload = await request.json();
@@ -609,7 +626,7 @@ export default {
       });
     }
   }
-};
+}
 
 // Build a natural language message from the structured intake
 function buildUserMessage(payload) {
@@ -861,4 +878,140 @@ async function handleNavigate(request, env) {
     console.error('Navigator error:', error);
     return json({ error: 'navigator failed' }, 500);
   }
+}
+
+
+// ---------------------------------------------------------------------------
+// Bot guard. Keeps scripted and AI-bot traffic off the paid routes without
+// getting in the way of people browsing.
+//
+//   1. The browser solves a Turnstile challenge (invisible for nearly everyone)
+//      and trades the token at POST /session for a signed visitor pass (30 min).
+//   2. Paid routes need the pass (X-WA-Pass header) and an allowed Origin.
+//   3. Rate limits per pass, plus a per-IP backstop and a global ceiling.
+//
+// BOT_GUARD = "log" records what would be blocked but lets it through (for the
+// rollout, while the live frontend doesn't send passes yet); "enforce" blocks.
+// ---------------------------------------------------------------------------
+
+const PASS_TTL_SECONDS = 30 * 60;
+const TURNSTILE_ACTION = 'whiskedaway-session';
+
+function allowedOrigins(env) {
+  return (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function enforcing(env) {
+  return env.BOT_GUARD === 'enforce';
+}
+
+function withCors(response, request, env) {
+  const origin = request.headers.get('Origin');
+  const res = new Response(response.body, response);
+  if (origin && allowedOrigins(env).includes(origin)) {
+    res.headers.set('Access-Control-Allow-Origin', origin);
+  } else if (!enforcing(env)) {
+    res.headers.set('Access-Control-Allow-Origin', '*');
+  }
+  res.headers.set('Vary', 'Origin');
+  return res;
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+}
+
+const b64url = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes)))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64urlDecode = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+
+async function hmacKey(env) {
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(env.PASS_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+}
+
+async function signPass(env, sid) {
+  const payload = b64url(new TextEncoder().encode(JSON.stringify({ sid, exp: Math.floor(Date.now() / 1000) + PASS_TTL_SECONDS })));
+  const sig = await crypto.subtle.sign('HMAC', await hmacKey(env), new TextEncoder().encode(payload));
+  return `${payload}.${b64url(sig)}`;
+}
+
+async function verifyPass(env, pass) {
+  if (!pass || !env.PASS_SECRET) return null;
+  const [payload, sig] = pass.split('.');
+  if (!payload || !sig) return null;
+  try {
+    const ok = await crypto.subtle.verify('HMAC', await hmacKey(env), b64urlDecode(sig), new TextEncoder().encode(payload));
+    if (!ok) return null;
+    const data = JSON.parse(new TextDecoder().decode(b64urlDecode(payload)));
+    return data.exp > Math.floor(Date.now() / 1000) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+async function underLimit(limiter, key) {
+  if (!limiter) return true;                  // binding missing (e.g. local dev): don't block
+  const { success } = await limiter.limit({ key });
+  return success;
+}
+
+async function handleSession(request, env) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const origin = request.headers.get('Origin') || '';
+  if (!(await underLimit(env.SESSION_LIMIT, `ip:${ip}`))) {
+    return jsonResponse({ error: 'slow_down' }, 429);
+  }
+  if (!allowedOrigins(env).includes(origin)) {
+    console.log(JSON.stringify({ guard: 'session_bad_origin', origin }));
+    return jsonResponse({ error: 'bot_check' }, 403);
+  }
+  if (!env.TURNSTILE_SECRET_KEY || !env.PASS_SECRET) {
+    console.error('Bot guard not configured: TURNSTILE_SECRET_KEY / PASS_SECRET missing');
+    return jsonResponse({ error: 'not_configured' }, 503);
+  }
+  let token;
+  try { ({ token } = await request.json()); } catch { /* handled below */ }
+  if (!token || typeof token !== 'string' || token.length > 2048) {
+    return jsonResponse({ error: 'bot_check' }, 403);
+  }
+  const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: ip }),
+  }).then(r => r.json()).catch(() => ({ success: false, 'error-codes': ['siteverify-unreachable'] }));
+
+  const hostOk = allowedOrigins(env).some(o => { try { return new URL(o).hostname === verify.hostname; } catch { return false; } });
+  if (!verify.success || !hostOk || (verify.action && verify.action !== TURNSTILE_ACTION)) {
+    console.log(JSON.stringify({ guard: 'session_rejected', codes: verify['error-codes'], hostname: verify.hostname, action: verify.action }));
+    return jsonResponse({ error: 'bot_check' }, 403);
+  }
+  const pass = await signPass(env, crypto.randomUUID());
+  return jsonResponse({ pass, expires_in: PASS_TTL_SECONDS });
+}
+
+/** Returns a Response to send instead of doing the work, or null to carry on. */
+async function guard(request, env, route) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const origin = request.headers.get('Origin') || '';
+  const pass = await verifyPass(env, request.headers.get('X-WA-Pass'));
+  const limiter = route === 'navigate' ? env.NAVIGATE_LIMIT : env.RECIPE_LIMIT;
+
+  let problem = null, status = 403;
+  if (!allowedOrigins(env).includes(origin)) problem = 'bad_origin';
+  else if (!pass) problem = 'no_pass';
+  else if (!(await underLimit(limiter, `${route}:${pass.sid}`))) { problem = 'visitor_rate'; status = 429; }
+
+  // Backstops apply to everyone, pass or not
+  if (!problem && !(await underLimit(env.IP_LIMIT, `ip:${ip}`))) { problem = 'ip_rate'; status = 429; }
+  if (!problem && !(await underLimit(env.GLOBAL_LIMIT, 'all'))) { problem = 'global_rate'; status = 429; }
+
+  if (!problem) return null;
+  console.log(JSON.stringify({ guard: problem, route, enforce: enforcing(env), origin: origin || null }));
+  if (!enforcing(env)) return null;
+  return jsonResponse(status === 429
+    ? { error: 'slow_down', message: "Gemma needs a moment to catch up. Try again in a minute? 💛" }
+    : { error: 'bot_check' }, status);
 }

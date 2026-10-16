@@ -293,5 +293,5 @@ Now you can speak their language:
 
 See [docs/concept-exploratory-navigation.md](docs/concept-exploratory-navigation.md) for the idea.
 Run `npm run dev` and open `/blender/explore.html` (local navigator), or
-`/blender/explore.html?ai=<worker-url>/navigate` once the Worker's `/navigate` route is deployed.
+`/blender/explore.html?ai=1` for the AI navigator (uses the live Worker with a visitor pass).
 The panorama is built by `blender/cuddlecore_build.py` (assets: `python -I blender/fetch_assets.py`).

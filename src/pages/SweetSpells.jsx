@@ -7,7 +7,7 @@ import {
 } from '../components';
 import './SweetSpells.css';
 
-const WORKER_URL = 'https://whiskedaway-genie.nicole-scheid.workers.dev';
+import { genieFetch } from '../lib/genie';
 
 export default function SweetSpells() {
   // Form state
@@ -60,11 +60,7 @@ export default function SweetSpells() {
     };
 
     try {
-      const response = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const response = await genieFetch('/', payload);
 
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
       

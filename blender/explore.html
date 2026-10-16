@@ -144,9 +144,12 @@
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate, aiNavigate } from './explore/navigator.js';
+import { genieFetch } from '../src/lib/genie.js';
 
 const params = new URLSearchParams(location.search);
-const AI = params.get('ai');                 // e.g. ?ai=https://whiskedaway-genie.<acct>.workers.dev/navigate
+// ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
+const aiParam = params.get('ai');
+const AI = !aiParam ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
 const [world, spots] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),

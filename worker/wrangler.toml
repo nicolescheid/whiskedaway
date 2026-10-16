@@ -5,3 +5,48 @@ compatibility_date = "2024-01-01"
 
 # You'll need to add your API key as a secret:
 # wrangler secret put ANTHROPIC_API_KEY
+
+# Bot guard (see the bottom of whiskedaway-worker.js).
+# Secrets, set with `wrangler secret put`: TURNSTILE_SECRET_KEY, PASS_SECRET
+[vars]
+BOT_GUARD = "log"   # "log" while rolling out; "enforce" once the live frontend sends passes
+ALLOWED_ORIGINS = "https://whiskedaway.com,https://www.whiskedaway.com,http://localhost:5173,http://localhost:5174,http://localhost:4173"
+
+# Per visitor pass: 6 recipes and 30 navigation steps a minute is far more than a person needs
+[[ratelimits]]
+name = "RECIPE_LIMIT"
+namespace_id = "4201"
+  [ratelimits.simple]
+  limit = 6
+  period = 60
+
+[[ratelimits]]
+name = "NAVIGATE_LIMIT"
+namespace_id = "4202"
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
+# Per IP backstop across paid routes, generous enough for a shared household or office
+[[ratelimits]]
+name = "IP_LIMIT"
+namespace_id = "4203"
+  [ratelimits.simple]
+  limit = 60
+  period = 60
+
+# Turnstile exchanges per IP
+[[ratelimits]]
+name = "SESSION_LIMIT"
+namespace_id = "4204"
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+# Ceiling on paid calls per minute per Cloudflare location, whoever is calling
+[[ratelimits]]
+name = "GLOBAL_LIMIT"
+namespace_id = "4205"
+  [ratelimits.simple]
+  limit = 120
+  period = 60
