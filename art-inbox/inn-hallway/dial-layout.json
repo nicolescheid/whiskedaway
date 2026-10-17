@@ -1,0 +1,120 @@
+{
+  "units": "millimeters",
+  "plate": {
+    "diameter": 200,
+    "thickness_proposed": 3,
+    "station_radius": 75,
+    "blank_nameplate_proposed_size": [
+      28,
+      19
+    ],
+    "spindle": {
+      "center": [
+        0,
+        0
+      ],
+      "diameter_proposed": 12
+    }
+  },
+  "geometry_rule": "Nine equal stations at 40-degree spacing. Star at top; eight blank plaques. Labels are metadata for later Blender engraving and MUST NOT appear in concept textures. Proposed clockwise name order follows the brief's list; change order consistently if the application already defines one.",
+  "pointer": {
+    "length_spindle_to_tip_proposed": 75,
+    "own_mesh": true,
+    "rotation_pivot": [
+      0,
+      0
+    ]
+  },
+  "stations": [
+    {
+      "index": 0,
+      "angle_clockwise_from_top_deg": 0,
+      "label": null,
+      "symbol": "star",
+      "center_mm_from_spindle": {
+        "right": 0,
+        "up": 75
+      }
+    },
+    {
+      "index": 1,
+      "angle_clockwise_from_top_deg": 40,
+      "label": "Cuddlecore",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": 48.209,
+        "up": 57.453
+      }
+    },
+    {
+      "index": 2,
+      "angle_clockwise_from_top_deg": 80,
+      "label": "Flourish",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": 73.861,
+        "up": 13.024
+      }
+    },
+    {
+      "index": 3,
+      "angle_clockwise_from_top_deg": 120,
+      "label": "Sweet Spells",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": 64.952,
+        "up": -37.5
+      }
+    },
+    {
+      "index": 4,
+      "angle_clockwise_from_top_deg": 160,
+      "label": "Chiapothecary",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": 25.652,
+        "up": -70.477
+      }
+    },
+    {
+      "index": 5,
+      "angle_clockwise_from_top_deg": 200,
+      "label": "Glasshouse",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": -25.652,
+        "up": -70.477
+      }
+    },
+    {
+      "index": 6,
+      "angle_clockwise_from_top_deg": 240,
+      "label": "Nourish Academy",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": -64.952,
+        "up": -37.5
+      }
+    },
+    {
+      "index": 7,
+      "angle_clockwise_from_top_deg": 280,
+      "label": "Cravings Decoded",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": -73.861,
+        "up": 13.024
+      }
+    },
+    {
+      "index": 8,
+      "angle_clockwise_from_top_deg": 320,
+      "label": "The Hall",
+      "symbol": null,
+      "center_mm_from_spindle": {
+        "right": -48.209,
+        "up": 57.453
+      }
+    }
+  ]
+}

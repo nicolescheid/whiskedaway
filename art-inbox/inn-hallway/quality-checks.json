@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-18",
+  "images": 10,
+  "dimensions": {
+    "01-entrance-hall.png": [
+      1672,
+      941
+    ],
+    "02-hallway-to-sea.png": [
+      1672,
+      941
+    ],
+    "03-hallway-to-front-door.png": [
+      1672,
+      941
+    ],
+    "04-cuddlecore-door-dial.png": [
+      1672,
+      941
+    ],
+    "05-dial-plate-flat.png": [
+      1254,
+      1254
+    ],
+    "06-dial-pointer-flat.png": [
+      1254,
+      1254
+    ],
+    "07-magic-door-glasshouse.png": [
+      1672,
+      941
+    ],
+    "08-grandfather-clock-face.png": [
+      1254,
+      1254
+    ],
+    "09-notice-board.png": [
+      1672,
+      941
+    ],
+    "10-materials-moodboard.png": [
+      1672,
+      941
+    ]
+  },
+  "visual_review": {
+    "forward_corridor_room_doors": 4,
+    "forward_corridor_dials": 4,
+    "reverse_corridor_room_doors": 4,
+    "reverse_corridor_dials": 4,
+    "stairs_left_facing_sea_right_in_reverse": true,
+    "clock_left_facing_sea_right_in_reverse": true,
+    "flat_dial_blank_plaques": 8,
+    "flat_dial_top_stars": 1,
+    "flat_dial_pointer_absent": true,
+    "separate_pointer_points_up": true,
+    "clock_face_hour_marks": 12,
+    "clock_face_numerals_absent": true,
+    "notice_board_paper_pieces": 6,
+    "no_readable_or_garbled_text_observed": true
+  },
+  "geometric_spec_checks": {
+    "dial_stations": 9,
+    "station_spacing_deg": 40,
+    "star_at_top": true,
+    "room_name_entries": 8
+  },
+  "gallery_local_refs_checked": 17,
+  "limits": "Visual review records the selected final images. Generative perspective views are concept references rather than registered 360 faces; use the existing project floorplan, layout.json and a shared Blender scene for geometry. The plate/pointer are RGB reference textures with neutral background, not alpha/PBR map sets.",
+  "supplied_floorplan_review": {
+    "file": "source-floorplan.md",
+    "matches_project_floorplan": true,
+    "room_map_confirmed": true,
+    "glasshouse_off_chiapothecary_confirmed": true,
+    "image_changes_required": false
+  }
+}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="760" viewBox="0 0 900 760" role="img" aria-labelledby="title desc">
+<title id="title">WhiskedAway hallway layout — facing sea</title><desc id="desc">Four room doors, two per side, with dials on the front-door side. Cuddlecore is back left, Flourish back right, Sweet Spells front left and Chiapothecary front right. Stairs and cellar are on the left of the entrance hall, notice board to right of hallway opening.</desc>
+<style>text{font-family:system-ui,sans-serif;fill:#2c2416}.room{fill:#fbf8f1;stroke:#5e4a34;stroke-width:3}.hall{fill:#e7dbc5;stroke:#5e4a34;stroke-width:3}.dial{fill:#b07f52;stroke:#573e25;stroke-width:1}.name{font-size:22px;font-weight:600}.small{font-size:14px}.label{font-size:16px}</style>
+<rect width="900" height="760" fill="#f4efe4"/><text x="450" y="35" text-anchor="middle" class="name">The hallway: layout authority</text><text x="450" y="62" text-anchor="middle" class="small">Facing the sea · hill side left · garden side right</text>
+<rect x="180" y="90" width="540" height="64" fill="#c9d6d8"/><text x="450" y="127" text-anchor="middle" class="label">Sea · tall rear sash window</text>
+<rect x="180" y="160" width="225" height="200" class="room"/><rect x="495" y="160" width="225" height="200" class="room"/>
+<rect x="180" y="360" width="225" height="200" class="room"/><rect x="495" y="360" width="225" height="200" class="room"/>
+<rect x="405" y="160" width="90" height="400" class="hall"/><rect x="180" y="560" width="540" height="110" class="hall"/>
+<text x="292" y="252" text-anchor="middle" class="name">Cuddlecore</text><text x="292" y="278" text-anchor="middle" class="small">back · hill side</text><text x="607" y="252" text-anchor="middle" class="name">Flourish</text><text x="607" y="278" text-anchor="middle" class="small">back · garden side</text>
+<text x="292" y="452" text-anchor="middle" class="name">Sweet Spells</text><text x="292" y="478" text-anchor="middle" class="small">front · hill side</text><text x="607" y="452" text-anchor="middle" class="name">Chiapothecary</text><text x="607" y="478" text-anchor="middle" class="small">front · garden side</text>
+<path d="M405 239v42 M405 439v42 M495 239v42 M495 439v42" stroke="#e7dbc5" stroke-width="8"/>
+<path d="M405 239l-31 30 M405 439l-31 30 M495 239l31 30 M495 439l31 30" stroke="#6c482c" stroke-width="3"/>
+<circle cx="412" cy="295" r="6" class="dial"/><circle cx="412" cy="495" r="6" class="dial"/><circle cx="488" cy="295" r="6" class="dial"/><circle cx="488" cy="495" r="6" class="dial"/>
+<path d="M425 160h50" stroke="#648f9b" stroke-width="8"/>
+<rect x="409" y="348" width="13" height="24" fill="#3b291d"/><text x="434" y="366" class="small" transform="rotate(-90 434 366)">clock</text>
+<text x="468" y="425" text-anchor="middle" class="small" transform="rotate(-90 468 425)">1.8 m × about 8 m</text>
+<rect x="194" y="574" width="180" height="66" fill="#cbb696" stroke="#6b4b31"/><path d="M212 574v66 M230 574v66 M248 574v66 M266 574v66 M284 574v66 M302 574v66 M320 574v66 M338 574v66 M356 574v66" stroke="#7b6148"/>
+<text x="284" y="602" text-anchor="middle" class="label" style="paint-order:stroke;stroke:#e7dbc5;stroke-width:4">Stairs up</text><text x="284" y="625" text-anchor="middle" class="small" style="paint-order:stroke;stroke:#e7dbc5;stroke-width:4">cellar door underneath</text>
+<rect x="521" y="555" width="24" height="9" fill="#a47743" stroke="#6b4b31"/><text x="603" y="600" text-anchor="middle" class="small">Notice board right of opening</text><text x="492" y="647" text-anchor="middle" class="small">Entrance hall · wide and shallow</text>
+<path d="M487 670h46" stroke="#f4efe4" stroke-width="7"/><path d="M487 670v-38" stroke="#6b4b31" stroke-width="3"/><text x="510" y="699" text-anchor="middle" class="label">Front door + fanlight · village lane</text>
+<circle cx="204" cy="730" r="6" class="dial"/><text x="220" y="735" class="small">Dial on entrance side of each room door · schematic, proposed dimensions</text>
+</svg>
