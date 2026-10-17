@@ -22,6 +22,7 @@ set -euo pipefail
 RPC="${RUNPODCTL:-$HOME/tools/runpodctl/runpodctl.exe}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BRANCH="$(git -C "$ROOT" branch --show-current)"
+IMAGE="runpod/pytorch:1.0.3-cu1281-torch291-ubuntu2404"   # Runpod's own CUDA image: plain ubuntu can't init CUDA
 BUILD="" JOBS="" OUT="$ROOT/blender/out" GPU="NVIDIA GeForce RTX 4090" CLOUD="COMMUNITY" MAX_MIN=120
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -59,8 +60,8 @@ print(d.get('$1', '') if isinstance(d, dict) else '')"; }
 echo "starting a $CLOUD $GPU pod to render $BUILD from $BRANCH"
 # Community machines come and go, so a "no resources" answer is worth a few more tries
 for attempt in 1 2 3 4 5 6; do
-  POD_JSON=$("$RPC" pod create --name "whiskedaway-render" --image ubuntu:22.04 --gpu-id "$GPU" --cloud-type "$CLOUD" \
-    --container-disk-in-gb 30 --ports "8000/http" --env "$ENV" --docker-args "$START" 2>&1 || true)
+  POD_JSON=$("$RPC" pod create --name "whiskedaway-render" --image "$IMAGE" --gpu-id "$GPU" --cloud-type "$CLOUD" \
+    --container-disk-in-gb 40 --ports "8000/http" --env "$ENV" --docker-args "$START" 2>&1 || true)
   POD=$(echo "$POD_JSON" | json id 2>/dev/null || true)
   [ -n "$POD" ] && break
   echo "no $GPU free yet (try $attempt): $(echo "$POD_JSON" | head -c 160)"
@@ -95,6 +96,7 @@ while :; do
   [ "$total" -gt "$shown" ] && printf '%s\n' "$log" | tail -n +$((shown + 1)) && shown=$total
   if printf '%s' "$log" | grep -q "FAILED"; then echo "the render failed (see above)" >&2; exit 1; fi
   if printf '%s' "$log" | grep -q "sending results"; then break; fi
+  if printf '%s' "$log" | grep -q "probe only: DONE"; then echo "probe passed"; exit 0; fi
 done
 
 TMP=$(mktemp -d)
