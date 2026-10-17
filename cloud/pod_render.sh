@@ -53,17 +53,36 @@ log "cloning ${WA_BRANCH}"
 git clone -q --depth 1 --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work || fail "git clone"
 cd /work
 log "fetching Poly Haven assets"
-python3 -I blender/fetch_assets.py >>"$LOG" 2>&1 || fail "fetch_assets"
-nvidia-smi --query-gpu=name,driver_version --format=csv,noheader >>"$LOG" 2>&1
+python3 -I blender/fetch_assets.py >assets.log 2>&1 || { tail -20 assets.log >>"$LOG"; fail "fetch_assets"; }
+log "assets ready ($(grep -c '^  got' assets.log) files)"
+log "GPU: $(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>&1)"
+ls /usr/lib/x86_64-linux-gnu/libnvoptix.so* >/dev/null 2>&1 && log "OptiX library present" || log "OptiX library missing"
 
 IFS=';' read -ra JOBS <<<"$WA_JOBS"
 for job in "${JOBS[@]}"; do
   log "rendering: ${job}"
   start=$(date +%s)
   # shellcheck disable=SC2086
-  "$BLENDER" -b --factory-startup --python "blender/${WA_BUILD}" -- $job >blender.log 2>&1 \
-    || { tail -30 blender.log >>"$LOG"; fail "Blender exited with an error on: ${job}"; }
-  grep -E "OPTIX|CUDA|\[whisked\]" blender.log | tail -5 >>"$LOG"
+  "$BLENDER" -b --factory-startup --python "blender/${WA_BUILD}" -- $job >blender.log 2>&1 &
+  pid=$!
+  gpu_checked=0 last=""
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 15
+    # Once sampling starts the GPU should be busy; an idle GPU means Cycles fell back to the CPU
+    if [ "$gpu_checked" -lt 2 ] && grep -q "Sample [0-9]" blender.log; then
+      util=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
+      if [ "${util:-0}" -ge 30 ]; then
+        log "GPU busy (${util}%): rendering on the GPU"; gpu_checked=2
+      elif [ "$gpu_checked" = 1 ]; then
+        kill "$pid"; grep -iE "optix|cuda|device" blender.log | tail -10 >>"$LOG"; fail "Blender is rendering on the CPU, not the GPU (GPU ${util}%)"
+      else
+        gpu_checked=1                                    # one more look before giving up
+      fi
+    fi
+    now=$(grep -oE "Sample [0-9]+/[0-9]+" blender.log | tail -1)
+    [ -n "$now" ] && [ "$now" != "$last" ] && [ $(( $(date +%s) % 60 )) -lt 15 ] && { log "  $now"; last=$now; }
+  done
+  wait "$pid" || { tail -30 blender.log >>"$LOG"; fail "Blender exited with an error on: ${job}"; }
   log "finished in $(( ($(date +%s) - start) / 60 )) min: ${job}"
 done
 

@@ -5,6 +5,7 @@
 #
 # Starts a pod, which runs cloud/pod_render.sh from GitHub (so commit and push first), shows its
 # progress, receives the renders into --out, and deletes the pod however this script ends.
+# (A hard kill skips that clean-up: then check `runpodctl pod list` and delete any whiskedaway-render pod.)
 #
 # Options:
 #   --branch B     branch to render from (default: the current branch; it must be pushed)
@@ -46,7 +47,8 @@ fi
 CODE="wa-$(date +%s)-$RANDOM-$RANDOM"
 RAW="https://raw.githubusercontent.com/nicolescheid/whiskedaway/${BRANCH}/cloud/pod_render.sh"
 START="bash -c 'apt-get update -qq && apt-get install -y -qq wget ca-certificates >/dev/null && wget -qO /pod_render.sh ${RAW} && bash /pod_render.sh'"
-ENV=$(python -c 'import json,sys; print(json.dumps(dict(WA_BRANCH=sys.argv[1], WA_BUILD=sys.argv[2], WA_JOBS=sys.argv[3], WA_CODE=sys.argv[4])))' \
+ENV=$(python -c 'import json,sys; print(json.dumps(dict(WA_BRANCH=sys.argv[1], WA_BUILD=sys.argv[2], WA_JOBS=sys.argv[3], WA_CODE=sys.argv[4],
+  NVIDIA_DRIVER_CAPABILITIES="all")))' \
   "$BRANCH" "$BUILD" "$JOBS" "$CODE")
 json() { python -c "import json,sys; d=json.load(sys.stdin); print(d.get('$1', '') if isinstance(d, dict) else '')"; }
 
