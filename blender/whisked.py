@@ -482,6 +482,48 @@ def use_gpu(scene):
             continue
 
 
+def key_rot_z(obj, frames_degrees, base=0.0):
+    """Keyframe an object's Z rotation: [(frame, degrees), ...], added to base degrees. Eased Bezier keys."""
+    for frame, deg in frames_degrees:
+        obj.rotation_euler.z = math.radians(base + deg)
+        obj.keyframe_insert("rotation_euler", index=2, frame=frame)
+
+
+def fly_camera(scene, keys, name="fly"):
+    """A moving perspective camera for video. keys: [(frame, location, look_at, lens_mm), ...].
+    The camera tracks an empty that moves on its own keys, so turns stay smooth."""
+    target = bpy.data.objects.new(f"{name}_target", None)
+    scene.collection.objects.link(target)
+    cam_data = bpy.data.cameras.new(name)
+    cam_data.sensor_width = 36
+    cam = bpy.data.objects.new(name, cam_data)
+    scene.collection.objects.link(cam)
+    track = cam.constraints.new("TRACK_TO")
+    track.target, track.track_axis, track.up_axis = target, "TRACK_NEGATIVE_Z", "UP_Y"
+    for frame, loc, at, lens in keys:
+        cam.location = loc
+        cam.keyframe_insert("location", frame=frame)
+        target.location = at
+        target.keyframe_insert("location", frame=frame)
+        cam_data.lens = lens
+        cam_data.keyframe_insert("lens", frame=frame)
+    scene.camera = cam
+    scene.frame_start, scene.frame_end = keys[0][0], keys[-1][0]
+    return cam
+
+
+def video_settings(scene, rough, out_prefix, frames_step=1):
+    """1080p video frames (rough: small, fast and noisy, every other frame, to check timing and moves)."""
+    scene.render.fps = 24
+    scene.render.resolution_x, scene.render.resolution_y = (640, 360) if rough else (1920, 1080)
+    scene.cycles.samples = 16 if rough else 128
+    scene.frame_step = 2 if rough else frames_step
+    scene.render.use_persistent_data = True
+    scene.render.image_settings.file_format = "JPEG" if rough else "PNG"
+    scene.render.image_settings.quality = 88
+    scene.render.filepath = out_prefix
+
+
 def pano_camera(scene, loc, yaw_deg=0.0):
     """360 equirectangular camera. yaw_deg 0 puts +Y in the middle of the image."""
     cam_data = bpy.data.cameras.new("pano")

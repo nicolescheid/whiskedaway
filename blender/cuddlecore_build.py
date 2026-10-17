@@ -5,6 +5,8 @@ and writes hotspot angles (yaw/pitch) for the browser viewer.
 Needs the CC0 Poly Haven assets first:  python -I blender/fetch_assets.py
 Then run headless:
   blender -b --factory-startup --python blender/cuddlecore_build.py -- [--preview] [--no-render]
+Fly-through video frames instead of the panorama (docs/flythrough-plan.md, shots 7 and 8):
+  blender -b --factory-startup --python blender/cuddlecore_build.py -- --flythrough [--rough]
 
 Room axes: X = left/right, Y = forward (front wall = +Y), Z = up. Metres.
 The camera stands in the middle of the room at eye height, looking at the front wall.
@@ -937,8 +939,28 @@ def build():
     scene.render.image_settings.quality = 90
 
 
+def flythrough(scene):
+    """Shots 7 and 8: in from the kitchen door, across the rug, up to the steaming pot."""
+    sys.path.insert(0, HERE)
+    from whisked import fly_camera, video_settings
+    rough = "--rough" in ARGS
+    pot = (0.24, HY - 0.34, 1.05)
+    fly_camera(scene, [
+        (1,   (-0.95, -1.9, 1.6), (0, 2.2, 1.0), 28),    # 7: just inside the door
+        (168, (0.1, 0.9, 1.5), (0.1, 2.2, 1.0), 28),     #    across the rug, past the armchair
+        (264, (0.2, 1.4, 1.35), pot, 35),                # 8: close on the pot, and hold
+    ])
+    out = os.path.join(OUT, "flythrough", "rough" if rough else "final", "kitchen_")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    video_settings(scene, rough, out)
+    bpy.ops.render.render(animation=True)
+    print("[whisked] fly-through frames done")
+
+
 def main():
     build()
+    if "--flythrough" in ARGS:
+        return flythrough(bpy.context.scene)
     suffix = "_preview" if PREVIEW else ""
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "cuddlecore.blend"))
     with open(os.path.join(OUT, "cuddlecore_hotspots.json"), "w") as fh:

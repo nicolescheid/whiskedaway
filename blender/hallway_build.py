@@ -7,6 +7,8 @@ Layout from docs/inn-floorplan.html (1 plan unit = 3 cm) and art-inbox/inn-hallw
 concept pack, notes.md, dial-layout.json). Needs the Poly Haven assets:  python -I blender/fetch_assets.py
 Then run headless:
   blender -b --factory-startup --python blender/hallway_build.py -- [--preview] [--no-render] [--stop=middle]
+Fly-through video frames instead of panoramas (docs/flythrough-plan.md, shots 2 to 6):
+  blender -b --factory-startup --python blender/hallway_build.py -- --flythrough [--rough]
 
 Axes: X = hill (-) to garden (+), Y = toward the sea, Z = up. Metres.
 The corridor runs from the entrance hall (y = 0) to the sea window (y = 7.8), walls at x = +-0.9.
@@ -22,13 +24,16 @@ from mathutils import Matrix, Vector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from whisked import (ART, OUT, area_light, blend_model, box, box_span, center_of, crop_image, curtain, cyl,  # noqa: E402
                      emission_mat, image_mat, look, mat, meshes_of, model, pano_camera, pbr, point_light, retint,
-                     sphere, srgb, text, use_gpu, window_glass)
+                     sphere, srgb, text, use_gpu, window_glass, fly_camera, key_rot_z, video_settings)
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
 WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")), "rain")
 ONLY_STOP = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--stop=")), None)
+FLY = "--flythrough" in ARGS
+ROUGH = "--rough" in ARGS
+ANIM = {}                    # the parts the fly-through moves: doors, the Cuddlecore dial pointer
 
 # The sea window shows the same coast as the Cuddlecore window (the two rooms sit either side of it)
 VIEWS = {"rain": "14-window-rain.png", "fair": "15-window-fair.png", "change": "16-window-change.png",
@@ -264,6 +269,7 @@ def build():
         mm = rot @ m
         mm.translation = hinge
         leaf_root = group(f"{key}_door", mm, parts)
+        ANIM[f"door-{key}"] = leaf_root
 
         # architrave on the corridor face
         fx0, fx1 = sorted((s * CW, s * CW - s * 0.025))
@@ -319,6 +325,7 @@ def build():
                        rot=(math.radians(90), 0, 0)))
         ptr.append(sphere(f"{key}_pointer_tail", (0, -0.026, 0.012), 0.006, brass_worn))
         pointer = group(f"{key}_pointer_set", Matrix.Rotation(-a, 4, "Z"), ptr)
+        ANIM[f"pointer-{key}"] = pointer
         parts.append(pointer)
         plate = group(f"{key}_dial", frame_matrix(origin, normal, right), parts)
         hotspot(f"dial-{key}", "The dial", [face], kind="dial", overlay="dial")
@@ -343,8 +350,15 @@ def build():
             room_stub(key, d["side"], d["y"])
 
     # ---- Grandfather clock against the hill-side wall, between its two doors (no hands: the viewer draws them)
-    clock = blend_model("vintage_grandfather_clock_01", (-CW + 0.19, 4.0, 0), rot_z=90,
-                        only=["vintage_grandfather_clock_01_Body"])
+    # The fly-through has no live browser hands to draw on it, so it keeps the model's own, set to 4:40
+    clock_parts = ["vintage_grandfather_clock_01_Body"] + (
+        ["vintage_grandfather_clock_01_HourHand", "vintage_grandfather_clock_01_MinuteHand"] if FLY else [])
+    clock = blend_model("vintage_grandfather_clock_01", (-CW + 0.19, 4.0, 0), rot_z=90, only=clock_parts)
+    for o in clock.children:
+        if o.name.endswith("HourHand"):
+            o.rotation_euler = (0, math.radians((4 + 40 / 60) / 12 * 360), 0)
+        elif o.name.endswith("MinuteHand"):
+            o.rotation_euler = (0, math.radians(40 / 60 * 360), 0)
     hotspot("grandfather-clock", "The clock", clock, kind="clock", overlay="time")
     HOTSPOTS["grandfather-clock"]["center"] = [-CW + 0.19 + 0.125, 4.0, 1.732]
     HOTSPOTS["grandfather-clock"]["face"] = {"center": [-CW + 0.19 + 0.125, 4.0, 1.732], "normal": [1, 0, 0], "radius": 0.12}
@@ -443,6 +457,15 @@ def build():
     fd_parts.append(cyl("front_knob", (0.38, FRONT - 0.12, 1.0), 0.03, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
     fd_parts.append(box("front_letter_plate", (0, FRONT - 0.138, 1.02), (0.26, 0.006, 0.07), brass, bevel=0.003))
     hotspot("front-door", "The front door", fd_parts, kind="door")
+    # Hinged on the side away from the knob, so the fly-through can swing it open into the hall
+    hinge = bpy.data.objects.new("front_door_hinge", None)
+    scene.collection.objects.link(hinge)
+    hinge.location = (-fd_w / 2 + 0.01, FRONT - 0.15, 0)
+    bpy.context.view_layer.update()
+    for part in fd_parts:
+        part.parent = hinge
+        part.matrix_parent_inverse = hinge.matrix_world.inverted()
+    ANIM["door-front"] = hinge
     box_span("door_mat", -0.6, 0.6, FRONT + 0.03, FRONT + 0.65, 0, 0.012, coir, bevel=0.004)
 
     # Stairs up along the back wall of the entrance hall, rising toward the hill side
@@ -594,8 +617,38 @@ def stop_hotspots(cam):
     return out
 
 
+def flythrough(scene):
+    """Shots 2 to 6 of docs/flythrough-plan.md: front door, entrance hall, down the hall, the dial, the door."""
+    E = (0, 8, 1.5)                          # straight down the hall to the sea window
+    fly_camera(scene, [
+        (1,   (0, -2.75, 1.55), E, 30),       # 2: the front door fills the frame
+        (36,  (0, -2.75, 1.55), E, 30),
+        (120, (0, -1.6, 1.6), E, 28),         #    ...and we step through
+        (150, (-0.4, -1.3, 1.6), (-2.5, -0.5, 1.3), 28),   # 3: a glance at the stairs
+        (216, (0, 0.4, 1.6), E, 28),          #    then down the hall
+        (330, (0.1, 3.4, 1.6), (0, 7.8, 1.5), 28),         # 4: the walk, the clock passing on the left
+        (384, (0.15, 4.7, 1.6), (-0.6, 6.2, 1.4), 28),
+        (430, (-0.45, 5.15, 1.4), (-0.9, 5.3, 1.3), 35),   # 5: close on the dial
+        (490, (-0.45, 5.15, 1.4), (-0.9, 5.3, 1.3), 35),
+        (530, (-0.2, 5.6, 1.6), (-0.9, 6.0, 1.1), 28),     # 6: ease back as the door opens
+        (600, (-0.85, 6.0, 1.6), (-3.0, 6.0, 1.5), 28),    #    and into the doorway
+    ])
+    key_rot_z(ANIM["door-front"], [(12, 0), (60, 95)])
+    # The Cuddlecore dial: from The Hall, a pause on the star, then on to Cuddlecore (clockwise = more negative)
+    key_rot_z(ANIM["pointer-cuddlecore"], [(430, -320), (455, -360), (465, -360), (485, -400)])
+    # The Cuddlecore door's root also carries the leaf's +90 degree turn onto the wall
+    key_rot_z(ANIM["door-cuddlecore"], [(510, 0), (546, 90)], base=90)
+    out = os.path.join(OUT, "flythrough", "rough" if ROUGH else "final", "hall_")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    video_settings(scene, ROUGH, out)
+    bpy.ops.render.render(animation=True)
+    print("[whisked] fly-through frames done")
+
+
 def main():
     build()
+    if FLY:
+        return flythrough(bpy.context.scene)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "hallway.blend"))
     scene = bpy.context.scene
     data = {"room": "hallway", "stops": {}}
