@@ -92,6 +92,23 @@ counts as lingering, which is quieter than a click. Photoreal rooms also make "u
 objects (the window, the cat, the armchair) feel natural to explore, and those are exactly the
 objects that carry mood rather than function.
 
+## Weather as a dial (Nicole, 17 Oct 2026)
+
+The view through the window colours what a visitor wants, so the visitor should be able to
+**change the weather** to match how they feel, not how it is outside.
+
+- **The control is in the world:** an old inn barometer on the wall, its dial reading *Stormy ·
+  Rain · Change · Fair · Very Dry*. Turning it changes the sky. The window stays a mood object.
+- **The whole room re-lights:** each weather is its own render (sun across the floor, a storm
+  with the candles carrying the room), cross-faded in the viewer. The window views come from
+  ChatGPT with identical framing (see `art-brief-cuddlecore-window.md`).
+- **It's a trail signal:** a weather choice is a strong, deliberate event. *Fair* leans to fresh,
+  bright and no-cook; *Stormy* to hearty, warming and slow; *Very Dry* to cooling and hydrating;
+  *Change* (mist) to gentle and quiet. Gemma names it lightly, and it never overrides what the
+  visitor does next.
+- **Mood, not forecast:** each room starts on its own weather. Using the visitor's real local
+  weather could come later, only as an explicit opt-in.
+
 ## The prototype (blender/explore.html)
 
 One room, Cuddlecore, as a 360° panorama:
