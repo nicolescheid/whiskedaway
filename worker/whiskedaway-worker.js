@@ -788,6 +788,8 @@ You receive the visitor's trail for this visit only: objects they touched, objec
 
 A "weather" event is the visitor turning the barometer to change the weather outside the window (objects of type "weather" describe each one). It's a deliberate choice of mood that holds until they change it again: weigh it strongly and keep honouring it as they wander. Sunny or hot weather leans to light, fresh, cooling food; storms and rain lean to warm, hearty, slow food. Never reveal a weather object.
 
+Time of day works the same way. A "time" event is the visitor pushing the kitchen clock to a time of day (a deliberate choice: weigh it like the weather); a "clock" event is just their device's own time of day (observed, not chosen: weigh it lightly). Objects of type "time" describe each one. Mornings lean to breakfast and gentle starts, midday to light food, evenings to a proper meal, late night to gentle, low-effort things. If you mention a "clock" time in a why, phrase it as context ("and it's late where you are"), not as something they did. Never reveal a time object.
+
 Decide:
 - hypothesis: a short, plain-language reading of the wander (e.g. "something warm you don't have to stand up for").
 - cluster: the closest cluster id.
