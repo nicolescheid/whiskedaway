@@ -1,5 +1,5 @@
 """
-Downloads the CC0 Poly Haven assets the Cuddlecore build uses into blender/assets/.
+Downloads the CC0 Poly Haven assets the room builds use into blender/assets/.
 Run with plain Python (not Blender):  python -I blender/fetch_assets.py
 Skips files already present. Poly Haven's API needs a User-Agent.
 """
@@ -17,7 +17,11 @@ MODELS = ["pot_enamel_01", "painted_wooden_cabinet", "wooden_bookshelf_worn", "A
           "wooden_cutting_board", "wooden_spoon", "potted_plant_02", "ceramic_vase_01",
           # Concept-pack pass (Oct 2026): tall pantry, framed print, kitchen dressing
           "painted_wooden_cabinet_02", "hanging_picture_frame_01", "jug_01", "food_apple_01",
-          "lemon", "yellow_onion", "throw_pillows_01", "wicker_basket_02"]
+          "lemon", "yellow_onion", "throw_pillows_01", "wicker_basket_02",
+          # Hallway (Oct 2026): clock, boot bench, boots, umbrella stand, entrance plant
+          "painted_wooden_bench", "rubber_boots", "antique_ceramic_vase_01", "potted_plant_04"]
+# Models whose glTF download is broken on Poly Haven (the .bin is short), fetched as .blend instead
+BLEND_MODELS = ["vintage_grandfather_clock_01"]
 TEXTURES = ["old_wooden_floor_01", "white_plaster_rough_01", "medieval_wood", "wood_table_worn",
             "rough_linen", "knitted_fleece"]
 HDRIS = ["kloofendal_overcast_puresky"]
@@ -46,6 +50,13 @@ def main():
         root = os.path.join(ASSETS, "models", aid)
         download(g["url"], os.path.join(root, f"{aid}.gltf"))
         for rel, inc in g.get("include", {}).items():
+            download(inc["url"], os.path.join(root, *rel.split("/")))
+    for aid in BLEND_MODELS:
+        print(aid)
+        b = api(f"files/{aid}")["blend"][RES]["blend"]
+        root = os.path.join(ASSETS, "models", aid)
+        download(b["url"], os.path.join(root, f"{aid}.blend"))
+        for rel, inc in b.get("include", {}).items():
             download(inc["url"], os.path.join(root, *rel.split("/")))
     for aid in TEXTURES:
         print(aid)

@@ -309,3 +309,7 @@ See [docs/concept-exploratory-navigation.md](docs/concept-exploratory-navigation
 Run `npm run dev` and open `/blender/explore.html` (local navigator), or
 `/blender/explore.html?ai=1` for the AI navigator (uses the live Worker with a visitor pass).
 The panorama is built by `blender/cuddlecore_build.py` (assets: `python -I blender/fetch_assets.py`).
+The hallway and entrance hall (two camera stops, `entrance` and `middle`) are built by
+`blender/hallway_build.py`, which shares its helpers in `blender/whisked.py`. It writes
+`blender/out/hallway_pano_<stop>_<weather>.jpg` and per-stop hotspots in `blender/out/hallway_hotspots.json`.
+The hallway is not wired into the explore page yet.
