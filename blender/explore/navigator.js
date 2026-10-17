@@ -12,6 +12,7 @@
  *   { kind: 'open',    atom }        opened a served piece
  *   { kind: 'dismiss', atom }        set a served piece aside ("not this")
  *   { kind: 'choose',  cluster }     picked one side of a fork
+ *   { kind: 'weather', id }          turned the barometer (id = a key of world.weathers)
  */
 
 const WEIGHTS = { touch: 3, linger: 1.5, map: 1, open: 2.5, dismiss: -2, choose: 4 };
@@ -19,6 +20,7 @@ const DECAY = 0.85;           // older events count for less, so a wander can ch
 const SERVE_MIN = 1.2;        // below this an atom isn't relevant enough to serve
 const REVEAL_MIN = 1.2;
 const FORK_BELOW = 0.2;       // confidence below which Gemma offers a fork instead of a guess
+const WEATHER_WEIGHT = 3;     // the chosen weather is a standing mood: it holds until changed, it doesn't fade
 
 export function themeWeights(trail, world) {
   const w = {};
@@ -31,7 +33,17 @@ export function themeWeights(trail, world) {
     if (e.atom && atoms[e.atom]) add(atoms[e.atom].themes, amount);
     if (e.cluster && world.clusters[e.cluster]) add(world.clusters[e.cluster].themes, amount);
   });
+  const weather = currentWeather(trail, world);
+  if (weather) add(world.weathers[weather].themes, WEATHER_WEIGHT);
   return w;
+}
+
+/** The weather the visitor last chose on the barometer, if any. */
+export function currentWeather(trail, world) {
+  for (let i = trail.length - 1; i >= 0; i--) {
+    if (trail[i].kind === 'weather' && world.weathers && world.weathers[trail[i].id]) return trail[i].id;
+  }
+  return null;
 }
 
 function clusterScores(weights, world) {
@@ -46,6 +58,10 @@ const score = (themes, weights) => themes.reduce((s, t) => s + (weights[t] || 0)
 function reasonsFor(themes, trail, world) {
   const seen = new Set();
   const why = [];
+  const weather = currentWeather(trail, world);
+  if (weather && world.weathers[weather].themes.some(t => themes.includes(t))) {
+    why.push(`turned the barometer to ${world.weathers[weather].label}`);
+  }
   for (let i = trail.length - 1; i >= 0 && why.length < 3; i--) {
     const e = trail[i];
     const obj = e.id && world.objects[e.id];
@@ -116,7 +132,8 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
     const payload = {
         room: world.name,
         trail: trail.slice(-30),
-        objects: Object.entries(world.objects).map(([id, o]) => ({ id, label: o.label, type: o.type, themes: o.themes })),
+        objects: Object.entries(world.objects).map(([id, o]) => ({ id, label: o.label, type: o.type, themes: o.themes }))
+          .concat(Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: `Weather: ${w.label}`, type: 'weather', themes: w.themes }))),
         atoms: world.atoms.map(({ id, title, kind, themes, spoons }) => ({ id, title, kind, themes, spoons })),
         clusters: Object.entries(world.clusters).map(([id, c]) => ({ id, label: c.label })),
         already_served: state.served || [],

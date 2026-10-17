@@ -9,7 +9,8 @@
         "broth",
         "rain",
         "slow",
-        "cosy"
+        "cosy",
+        "hearty"
       ]
     },
     "rest": {
@@ -27,7 +28,9 @@
         "fresh",
         "green",
         "herbs",
-        "citrus"
+        "citrus",
+        "light",
+        "sunny"
       ]
     },
     "hands-on": {
@@ -62,6 +65,15 @@
         "what-you-have",
         "bread",
         "oats"
+      ]
+    },
+    "cool": {
+      "label": "something cool and refreshing",
+      "themes": [
+        "cooling",
+        "hydrating",
+        "chilled",
+        "no-cook"
       ]
     }
   },
@@ -219,6 +231,13 @@
       "label": "Back to the inn",
       "ref": "the door",
       "type": "door",
+      "themes": []
+    },
+    "barometer": {
+      "label": "The weather",
+      "ref": "the barometer",
+      "type": "weather",
+      "tool": "weather",
       "themes": []
     }
   },
@@ -495,6 +514,180 @@
         "why"
       ],
       "body": "Honey's flavour changes with whatever the bees were visiting: clover is mild, mānuka is deep and bitter-edged. One firm rule: never give honey to babies under a year old."
+    },
+    {
+      "id": "watermelon-mint",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Watermelon with mint and lime",
+      "themes": [
+        "cooling",
+        "hydrating",
+        "fresh",
+        "no-cook",
+        "sunny",
+        "citrus"
+      ],
+      "body": "Cold watermelon in wedges, torn mint, a squeeze of lime and the tiniest pinch of salt. Mostly water, entirely refreshing, eaten with your fingers."
+    },
+    {
+      "id": "frozen-grapes",
+      "kind": "ritual",
+      "spoons": 0,
+      "title": "A bowl of frozen grapes",
+      "themes": [
+        "cooling",
+        "no-cook",
+        "sweet",
+        "hydrating",
+        "chilled"
+      ],
+      "body": "Pop a bunch of grapes in the freezer in the morning. By afternoon they're little sorbet bites. A cold, sweet thing that asks nothing of you."
+    },
+    {
+      "id": "cucumber-yoghurt",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Cool cucumber and yoghurt dip",
+      "themes": [
+        "cooling",
+        "fresh",
+        "herbs",
+        "no-cook",
+        "light"
+      ],
+      "body": "Grate half a cucumber, squeeze out the water, stir into thick yoghurt with garlic, mint and salt. Eat with crackers or warm flatbread, straight from the fridge."
+    },
+    {
+      "id": "iced-lemon-tea",
+      "kind": "ritual",
+      "spoons": 0,
+      "title": "Iced lemon and ginger tea",
+      "themes": [
+        "cooling",
+        "hydrating",
+        "citrus",
+        "ginger",
+        "tea",
+        "chilled"
+      ],
+      "body": "Brew ginger and lemon in hot water, let it cool, then pour over plenty of ice with a little honey. Keep a jug in the fridge for the rest of the day."
+    },
+    {
+      "id": "tomato-toast",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Sunny tomato toast",
+      "themes": [
+        "sunny",
+        "fresh",
+        "light",
+        "bread",
+        "simple",
+        "green"
+      ],
+      "body": "Ripe tomatoes, sliced thick on good toast with olive oil, salt and torn basil. Summer on a plate, ready in five minutes."
+    },
+    {
+      "id": "cheese-toastie",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "A proper cheese toastie",
+      "themes": [
+        "hearty",
+        "cosy",
+        "bread",
+        "warming",
+        "simple"
+      ],
+      "body": "Butter the outside, plenty of cheese inside, a low pan and patience until it's golden and oozing. Storm food, eaten while it rattles the windows."
+    },
+    {
+      "id": "lentil-soup",
+      "kind": "recipe idea",
+      "spoons": 2,
+      "title": "Red lentil and tomato soup",
+      "themes": [
+        "hearty",
+        "broth",
+        "warming",
+        "slow",
+        "pantry",
+        "what-you-have"
+      ],
+      "body": "Onion softened in oil, a cup of red lentils, a tin of tomatoes and stock. Simmer until the lentils collapse, then a squeeze of lemon. Thick, warm and cheap."
+    },
+    {
+      "id": "slow-porridge",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "A slow bowl of porridge",
+      "themes": [
+        "oats",
+        "warming",
+        "gentle",
+        "calm",
+        "simple"
+      ],
+      "body": "Oats, milk and a pinch of salt, stirred slowly over a low heat while the fog drifts past. A spoon of honey or a grated apple on top."
     }
-  ]
+  ],
+  "weathers": {
+    "rain": {
+      "label": "Rain",
+      "themes": [
+        "rain",
+        "warming",
+        "broth",
+        "slow",
+        "cosy"
+      ],
+      "moment": "Back to the rain. The kettle's always on in weather like this."
+    },
+    "fair": {
+      "label": "Fair",
+      "themes": [
+        "sunny",
+        "fresh",
+        "light",
+        "citrus",
+        "green"
+      ],
+      "moment": "Oh, look at that. Sunshine."
+    },
+    "change": {
+      "label": "Change",
+      "themes": [
+        "calm",
+        "gentle",
+        "simple",
+        "tea",
+        "slow"
+      ],
+      "moment": "Sea fog rolling in. A quiet, gentle sort of morning."
+    },
+    "stormy": {
+      "label": "Stormy",
+      "themes": [
+        "hearty",
+        "warming",
+        "broth",
+        "cosy",
+        "slow"
+      ],
+      "moment": "Listen to that wind. Glad you're in here with me."
+    },
+    "very-dry": {
+      "label": "Very Dry",
+      "themes": [
+        "cooling",
+        "hydrating",
+        "no-cook",
+        "fresh",
+        "citrus"
+      ],
+      "moment": "It's sweltering out there."
+    }
+  },
+  "default_weather": "rain"
 }

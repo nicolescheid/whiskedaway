@@ -92,6 +92,12 @@
   .tool p { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
   .tool .ok { background: var(--berry); color: var(--parchment); border: 0; border-radius: 999px; padding: 8px 18px; }
 
+  /* Barometer dial */
+  .dial { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .dial button { flex: 1 1 30%; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px;
+                 font: 600 13px 'Quicksand'; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+  .dial button.on { background: var(--berry); border-color: var(--berry); color: var(--parchment); }
+
   @media (max-width: 720px) {
     .counter { top: auto; height: 46vh; left: 16px; width: auto; bottom: 120px; }
     .gemma .bubble { font-size: 15px; }
@@ -135,6 +141,15 @@
 
 <div class="counter" id="counter" aria-label="On the counter"></div>
 
+<div class="tool" id="weather" role="dialog" aria-modal="true" aria-labelledby="weather-title">
+  <div class="box">
+    <h2 id="weather-title">The barometer</h2>
+    <p>Turn it to the weather you'd like outside. The room and Gemma will follow.</p>
+    <div class="dial" id="dial"></div>
+    <p style="margin:12px 0 0"><button class="ok" id="weather-ok">Done</button></p>
+  </div>
+</div>
+
 <div class="tool" id="tool" role="dialog" aria-modal="true">
   <div class="box">
     <h2 id="tool-title"></h2>
@@ -166,7 +181,8 @@ const store = {
   save(s) { try { sessionStorage.setItem('wa-explore', JSON.stringify(s)); } catch { /* private mode */ } },
   clear() { try { sessionStorage.removeItem('wa-explore'); } catch { /* ignore */ } },
 };
-const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null }, store.load() || {});
+const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
+state.weather = state.weather || world.default_weather || 'rain';
 $('mode').textContent = AI ? 'AI navigator' : 'Local navigator';
 
 // ---------- panorama
@@ -179,15 +195,54 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(72, 1, 0.1, 100);
 const geo = new THREE.SphereGeometry(50, 96, 64);
 geo.scale(-1, 1, 1);
+// Two spheres: the current weather, and the next one fading in over it
 const sphere = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x2a2018 }));
 sphere.rotation.y = -Math.PI / 2;                       // image centre (front wall) faces -Z
 scene.add(sphere);
+const fader = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+fader.rotation.y = -Math.PI / 2;
+fader.scale.setScalar(0.98);
+fader.visible = false;
+scene.add(fader);
 const loader = new THREE.TextureLoader();
 const useFull = renderer.capabilities.maxTextureSize >= 8192;
-const setPano = t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-                       sphere.material = new THREE.MeshBasicMaterial({ map: t }); render(); };
-loader.load('out/cuddlecore_pano_preview.jpg', t => { if (!sphere.material.map) setPano(t); });
-if (useFull) loader.load('out/cuddlecore_pano.jpg', setPano);
+const texCache = {};
+const prep = t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
+const loadTex = url => texCache[url] || (texCache[url] = new Promise(ok => loader.load(url, t => ok(prep(t)), undefined, () => ok(null))));
+const panoUrl = (w, full) => `out/cuddlecore_pano_${w}${full ? '' : '_preview'}.jpg`;
+
+let fadeSeq = 0;
+function crossFade(tex) {
+  const seq = ++fadeSeq;
+  fader.material.map = tex;
+  fader.material.opacity = 0;
+  fader.material.needsUpdate = true;
+  fader.visible = true;
+  const t0 = performance.now(), dur = matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 1400;
+  const step = now => {
+    if (seq !== fadeSeq) return;
+    const k = Math.min(1, (now - t0) / dur);
+    fader.material.opacity = k * k * (3 - 2 * k);
+    render();
+    if (k < 1) return requestAnimationFrame(step);
+    sphere.material = new THREE.MeshBasicMaterial({ map: tex });
+    fader.visible = false;
+    render();
+  };
+  requestAnimationFrame(step);
+}
+
+/** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
+async function showWeather(w, { fade = true } = {}) {
+  const preview = await loadTex(panoUrl(w, false));
+  if (w !== state.weather) return;
+  if (preview) fade && sphere.material.map ? crossFade(preview) : (sphere.material = new THREE.MeshBasicMaterial({ map: preview }), render());
+  if (useFull) {
+    const full = await loadTex(panoUrl(w, true));
+    if (full && w === state.weather) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
+  }
+}
+showWeather(state.weather, { fade: false });
 
 // yaw: 0 = front wall, + = right; pitch: + = up (same convention as the Blender export)
 const dir = (yaw, pitch) => {
@@ -284,6 +339,8 @@ function touch(id) {
   record({ kind: 'touch', id });
   if (obj.type === 'ambient') {
     say(obj.moment, [], true);
+  } else if (obj.type === 'weather') {
+    openWeather();
   } else if (obj.type === 'door') {
     openTool('Back to the inn', 'In the full site this door takes you back to the hallway. Your wander would come with you.');
   } else if (obj.type === 'submit') {
@@ -319,7 +376,12 @@ async function navigate() {
   state.result = r;
   $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
   applyReveal(r.reveal);
-  if (r.gemma) say(r.gemma, r.fork);
+  // Right after a barometer turn, Gemma reacts to the weather first, then says what she's put out
+  const last = state.trail[state.trail.length - 1];
+  const gemma = last?.kind === 'weather' && r.gemma
+    ? `${world.weathers[last.id].moment} ${r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase())}`
+    : r.gemma;
+  if (gemma) say(gemma, r.fork);
   // One new piece per step (two to start), so the counter fills at the pace of the wander
   r.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(serve);
   store.save(state);
@@ -403,9 +465,9 @@ function renderNotes() {
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose' };
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to' };
   $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).map(e =>
-    `<li>${verbs[e.kind]} ${esc(e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
+    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
 function togglePanel(id, btn) {
   const p = $(id), open = !p.classList.contains('open');
@@ -417,7 +479,8 @@ $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
 $('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
 $('forget').onclick = () => {
   store.clear();
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null });
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain' });
+  showWeather(state.weather);
   renderCards(); renderNotes(); applyReveal([]);
   say('Forgotten. Fresh start. Have a wander.');
 };
@@ -427,7 +490,27 @@ $('tool-ok').onclick = () => $('tool').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('tool').classList.remove('open'); });
 
 // Test hooks for scripted checks
-window.__explore = { state, touch, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+// ---------- barometer
+function openWeather() {
+  $('dial').innerHTML = Object.entries(world.weathers).map(([id, w]) =>
+    `<button data-w="${esc(id)}" class="${id === state.weather ? 'on' : ''}" aria-pressed="${id === state.weather}">${esc(w.label)}</button>`).join('');
+  $('dial').querySelectorAll('button').forEach(b => b.onclick = () => chooseWeather(b.dataset.w));
+  $('weather').classList.add('open');
+  $('dial').querySelector('.on')?.focus();
+}
+function chooseWeather(id) {
+  if (!world.weathers[id]) return;
+  $('dial').querySelectorAll('button').forEach(b => { const on = b.dataset.w === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  if (id === state.weather) return;
+  state.weather = id;
+  showWeather(id);
+  say(world.weathers[id].moment, [], true);
+  record({ kind: 'weather', id });
+}
+$('weather-ok').onclick = () => $('weather').classList.remove('open');
+addEventListener('keydown', e => { if (e.key === 'Escape') $('weather').classList.remove('open'); });
+
+window.__explore = { state, touch, chooseWeather, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 fillMap();
 renderCards();

@@ -21,6 +21,25 @@ from mathutils import Vector
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS   # rebuild .blend + hotspots only
+WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")), "rain")
+
+# One look per barometer reading. view: ChatGPT backdrop; sky: world strength and tint; sun: (watts/m2, colour,
+# elevation deg, azimuth deg) or None; bounce: cool window fill; flames: candles and lamp lit; dial: needle angle.
+WEATHERS = {
+    "rain":     dict(view="14-window-rain.png", dial=-30, sky=1.1, tint=(1.0, 1.0, 1.0), backdrop=0.7, sun=None,
+                     bounce=(70, (0.78, 0.86, 1.0)), wet=True, flames=1.0, fill=22, exposure=0.55),
+    "fair":     dict(view="15-window-fair.png", dial=30, sky=2.0, tint=(1.0, 0.97, 0.92), backdrop=1.1,
+                     sun=(9.0, (1.0, 0.93, 0.8), 32, 25), bounce=(110, (1.0, 0.97, 0.92)), wet=False, flames=0.0,
+                     fill=10, exposure=0.62),
+    "change":   dict(view="16-window-change.png", dial=0, sky=1.5, tint=(0.95, 0.98, 1.0), backdrop=0.85, sun=None,
+                     bounce=(105, (0.92, 0.95, 1.0)), wet=False, flames=0.7, fill=16, exposure=0.55),
+    "stormy":   dict(view="17-window-stormy.png", dial=-60, sky=0.5, tint=(0.85, 0.9, 1.0), backdrop=0.45, sun=None,
+                     bounce=(32, (0.7, 0.8, 1.0)), wet=True, flames=1.5, fill=18, exposure=0.62),
+    "very-dry": dict(view="18-window-very-dry.png", dial=60, sky=2.3, tint=(1.0, 0.92, 0.8), backdrop=1.2,
+                     sun=(10.0, (1.0, 0.86, 0.66), 24, -20), bounce=(100, (1.0, 0.92, 0.82)), wet=False, flames=0.0,
+                     fill=8, exposure=0.62),
+}
+WX = WEATHERS[WEATHER]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "assets")
@@ -466,7 +485,29 @@ def build():
     box("meeting_rail", (0, wy, zc), (win_r - win_l, 0.07, 0.05), paint)
     for x in (-0.258, 0.258):
         box(f"muntin_{x}", (x, wy, zc), (0.025, 0.05, win_t - win_b), paint)
-    pane = box("glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b), rain_glass, bevel=0)
+    pane = box("glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b), rain_glass if WX["wet"] else glass, bevel=0)
+    pane.visible_shadow = False                      # let sun and sky light through the pane
+
+    # The view outside: ChatGPT's backdrop for this weather, emissive, horizon at eye height
+    bd_w, bd_h, bd_y = 11.4, 3.8, HY + 4.2
+    bd_top = EYE + 0.58 * bd_h                        # the horizon sits 58% down the image
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, bd_y, bd_top - bd_h / 2), rotation=(math.radians(90), 0, 0))
+    backdrop = bpy.context.active_object
+    backdrop.name = "window_view"
+    backdrop.scale = (bd_w, bd_h, 1)
+    bpy.ops.object.transform_apply(scale=True)
+    backdrop.visible_shadow = False
+    bm = bpy.data.materials.new("window_view")
+    bm.use_nodes = True
+    bnt = bm.node_tree
+    bnt.nodes.remove(bnt.nodes["Principled BSDF"])
+    btex = bnt.nodes.new("ShaderNodeTexImage")
+    btex.image = bpy.data.images.load(os.path.join(CONCEPT, WX["view"]))
+    emis = bnt.nodes.new("ShaderNodeEmission")
+    emis.inputs["Strength"].default_value = WX["backdrop"]
+    bnt.links.new(btex.outputs["Color"], emis.inputs["Color"])
+    bnt.links.new(emis.outputs["Emission"], bnt.nodes["Material Output"].inputs["Surface"])
+    backdrop.data.materials.append(bm)
     hotspot("window", "The rain", None, pane, kind="ambient")
     box("curtain_rod", (0, HY - 0.12, win_t + 0.1), (2.3, 0.022, 0.022), cast_iron, bevel=0.009)
     curtain("curtain_l", win_l - 0.18, HY - 0.12, win_t + 0.08, 0.5, win_t - win_b + 0.32, berry_linen, seed=1)
@@ -530,8 +571,9 @@ def build():
     for o in meshes_of(lamp):
         if o.name.endswith("flame"):
             o.data.materials.clear()
-            o.data.materials.append(flame)
-    point_light("lamp_light", (1.55, HY - 0.3, top + 0.36), 22, (1.0, 0.64, 0.33), radius=0.03)
+            o.data.materials.append(flame if WX["flames"] else beeswax)
+    if WX["flames"]:
+        point_light("lamp_light", (1.55, HY - 0.3, top + 0.36), 22 * WX["flames"], (1.0, 0.64, 0.33), radius=0.03)
     hotspot("oil-lamp", "The lamp", None, lamp, kind="ambient")
     bowl = model("wooden_bowl_01", (1.0, HY - 0.33, top))
     for i, (dx, dy) in enumerate(((-0.05, 0.0), (0.05, 0.03), (0.0, -0.06))):
@@ -542,6 +584,41 @@ def build():
     for dx in (-0.16, 0.16):
         cyl(f"map_pin_{dx}", (1.5 + dx, HY - 0.008, 1.98), 0.006, 0.008, brass, rot=(math.radians(90), 0, 0))
     hotspot("locale-map", "Location", "locale", m)
+
+    # Barometer on the front wall: turning it changes the weather (and the room's light)
+    from mathutils import Matrix, Euler
+    bx_, bz_, face_y = -1.5, 1.62, HY - 0.05
+    cyl("baro_case", (bx_, HY - 0.025, bz_), 0.15, 0.05, oak, bevel=0.012, rot=(math.radians(90), 0, 0))
+    box("baro_neck", (bx_, HY - 0.025, bz_ + 0.27), (0.11, 0.045, 0.34), oak, bevel=0.012)
+    cyl("baro_finial", (bx_, HY - 0.025, bz_ + 0.46), 0.055, 0.045, oak, bevel=0.01, rot=(math.radians(90), 0, 0))
+    cyl("baro_hygro_face", (bx_, face_y + 0.002, bz_ + 0.46), 0.04, 0.004, card, rot=(math.radians(90), 0, 0))
+    cyl("baro_face", (bx_, face_y, bz_), 0.122, 0.004, card, rot=(math.radians(90), 0, 0))
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.124, minor_radius=0.008, location=(bx_, face_y - 0.002, bz_),
+                                     rotation=(math.radians(90), 0, 0))
+    bpy.context.active_object.data.materials.append(brass)
+    ink = mat("ink", srgb("#2c2416"), rough=0.6)
+
+    def on_face(angle_deg, radius, dy=0.0):
+        a = math.radians(angle_deg)
+        loc = (bx_ + radius * math.sin(a), face_y - 0.003 - dy, bz_ + radius * math.cos(a))
+        rot = (Matrix.Rotation(a, 4, "Y") @ Matrix.Rotation(math.radians(90), 4, "X")).to_euler()
+        return loc, rot
+
+    for word, ang in (("STORMY", -60), ("RAIN", -30), ("CHANGE", 0), ("FAIR", 30), ("VERY DRY", 60)):
+        curve = bpy.data.curves.new(f"baro_{word}", "FONT")
+        curve.body, curve.align_x, curve.align_y, curve.size = word, "CENTER", "CENTER", 0.016
+        t = bpy.data.objects.new(f"baro_{word}", curve)
+        t.location, t.rotation_euler = on_face(ang, 0.088)
+        t.data.materials.append(ink)
+        scene.collection.objects.link(t)
+        tick, trot = on_face(ang, 0.108)
+        tk = box(f"baro_tick_{word}", tick, (0.002, 0.002, 0.012), ink, bevel=0)
+        tk.rotation_euler = trot
+    needle_loc, needle_rot = on_face(WX["dial"], 0.045, dy=0.004)
+    needle = box("baro_needle", needle_loc, (0.004, 0.002, 0.095), cast_iron, bevel=0)
+    needle.rotation_euler = needle_rot
+    cyl("baro_pin", (bx_, face_y - 0.008, bz_), 0.008, 0.006, brass, rot=(math.radians(90), 0, 0))
+    hotspot("barometer", "The weather", "weather", [needle], kind="weather")
 
     # Front-left floor: basket beside the range; plant in the corner
     basket = model("wicker_basket_02", (-0.82, HY - 0.3, 0), rot_z=20, scale=1.6)
@@ -590,8 +667,12 @@ def build():
         bpy.ops.mesh.primitive_uv_sphere_add(radius=0.009, location=(x, y, 0.944 + h + 0.02))
         f = bpy.context.active_object
         f.scale = (1, 1, 2.3)
-        f.data.materials.append(flame)
-        point_light(f"candle_light_{i}", (x + 0.02, y, 0.944 + h + 0.035), 4, (1.0, 0.52, 0.2), radius=0.012)
+        if WX["flames"]:
+            f.data.materials.append(flame)
+            point_light(f"candle_light_{i}", (x + 0.02, y, 0.944 + h + 0.035), 4 * WX["flames"], (1.0, 0.52, 0.2), radius=0.012)
+        else:
+            f.scale = (0.4, 0.4, 0.5)                 # unlit: just a blackened wick
+            f.data.materials.append(cast_iron)
     hotspot("energy-candles", "Energy level", "energy", candle_objs)
     model("jug_01", (-HX + 0.38, 0.62, 0.93), rot_z=100)
     board = model("wooden_cutting_board", (-HX + 0.4, 1.02, 0.93), rot_z=95)
@@ -688,11 +769,29 @@ def build():
     wnt.links.new(wtc.outputs["Generated"], wmap.inputs["Vector"])
     wnt.links.new(wmap.outputs["Vector"], env.inputs["Vector"])
     wnt.links.new(env.outputs["Color"], wnt.nodes["Background"].inputs["Color"])
-    wnt.nodes["Background"].inputs["Strength"].default_value = 1.1
+    tint = wnt.nodes.new("ShaderNodeMix")
+    tint.data_type = "RGBA"
+    tint.blend_type = "MULTIPLY"
+    tint.inputs["Factor"].default_value = 1.0
+    tint.inputs[7].default_value = (*WX["tint"], 1)
+    wnt.links.new(env.outputs["Color"], tint.inputs[6])
+    wnt.links.new(tint.outputs[2], wnt.nodes["Background"].inputs["Color"])
+    wnt.nodes["Background"].inputs["Strength"].default_value = WX["sky"]
+    if WX["sun"]:
+        watts, colour, elev, azim = WX["sun"]
+        sun = bpy.data.lights.new("sun", "SUN")
+        sun.energy, sun.color, sun.angle = watts, colour, math.radians(1.5)
+        so = bpy.data.objects.new("sun", sun)
+        # shine in through the front window: from +Y (outside), down and slightly across
+        d = Vector((math.sin(math.radians(azim)), -math.cos(math.radians(azim)), -math.tan(math.radians(elev)))).normalized()
+        so.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+        scene.collection.objects.link(so)
 
     area_light("window_portal", (0, wy, zc), (math.radians(90), 0, 0), (win_r - win_l, win_t - win_b), 0, (1, 1, 1), portal=True)
-    area_light("window_bounce", (0, HY - 0.05, zc), (math.radians(90), 0, 0), (1.5, 1.3), 70, (0.78, 0.86, 1.0))
-    point_light("warm_fill", (0.3, -0.4, 2.3), 22, (1.0, 0.68, 0.4), radius=0.8)
+    bounce = area_light("window_bounce", (0, HY - 0.05, zc), (math.radians(90), 0, 0), (1.5, 1.3), WX["bounce"][0], WX["bounce"][1])
+    bounce.visible_camera = False                    # light the room, but don't hang a white sheet over the view
+    bounce.visible_glossy = False
+    point_light("warm_fill", (0.3, -0.4, 2.3), WX["fill"], (1.0, 0.68, 0.4), radius=0.8)
 
     # ---- Camera: 360 equirectangular from the middle of the room
     cam_data = bpy.data.cameras.new("pano")
@@ -730,7 +829,7 @@ def build():
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = 0.55
+    scene.view_settings.exposure = WX["exposure"]
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
 
@@ -744,7 +843,7 @@ def main():
     if NO_RENDER:
         print("[whisked] done (no render)", json.dumps(HOTSPOTS))
         return
-    bpy.context.scene.render.filepath = os.path.join(OUT, f"cuddlecore_pano{suffix}.jpg")
+    bpy.context.scene.render.filepath = os.path.join(OUT, f"cuddlecore_pano_{WEATHER}{suffix}.jpg")
     bpy.ops.render.render(write_still=True)
     print("[whisked] done", json.dumps(HOTSPOTS))
 
