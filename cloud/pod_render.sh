@@ -58,6 +58,8 @@ log "assets ready ($(grep -c '^  got' assets.log) files)"
 log "GPU: $(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>&1)"
 log "NVIDIA libraries: $(ls /usr/lib/x86_64-linux-gnu/ 2>/dev/null | grep -oE '^lib(cuda|nvoptix|nvidia-rtcore)\.so[.0-9]*' | sort -u | tr '\n' ' ')"
 log "driver capabilities: ${NVIDIA_DRIVER_CAPABILITIES:-unset}"
+log "device files: $(ls /dev/ | grep -E '^nvidia' | tr '\n' ' ')"
+command -v python >/dev/null && log "torch sees CUDA: $(python -c 'import torch; print(torch.cuda.is_available(), torch.version.cuda)' 2>&1 | tail -1)"
 
 # Ask Blender which GPUs it can use before spending time on a build
 cat >/tmp/probe.py <<'PY'
