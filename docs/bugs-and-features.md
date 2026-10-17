@@ -33,6 +33,15 @@
 | FEAT-011 | PWA support | Install as app on phone, offline access to saved recipes | Low |
 | FEAT-012 | Email recipes | Send recipe to yourself or others | Low |
 
+### Explore room (the Inn), agreed with Nicole 2026-10-18
+| ID | Feature | Description | Priority |
+|----|---------|-------------|----------|
+| FEAT-013 | Energy candles | Five real candles on the dresser (burnt out, low with pooled wax, half, three-quarters, full and bright). Click the one that matches your energy; it feeds the navigator and the recipes' "spoons", like the barometer does for weather | High (next) |
+| FEAT-014 | Books that open | Books on the shelf open as a two-page spread over the room (illustration left, text right, page turns): Gemma's recipe book (what she's served this visit), kitchen wisdom (Nourish Academy), Gemma's journal (today's notebook panel, moved into the world). Widget design still to agree | High |
+| FEAT-015 | Choose, don't chat | Gemma asks, the visitor picks 90s-style canned replies. No free-text chat: it keeps costs down and keeps Gemma different from a general chatbot (she reads what you do, not what you type) | High |
+| FEAT-016 | "What's in your cupboard?" | The one focused text box: list your ingredients and Gemma builds a recipe from them, in one AI call | High |
+| FEAT-017 | Your country and shops | Gemma asks (optional, and says why) which country you're in and where you shop, so shopping lists name things you'll actually find there. Defaults from the visit's country, always changeable; nothing stored after the visit | Medium |
+
 ---
 
 ## 📝 NOTES
