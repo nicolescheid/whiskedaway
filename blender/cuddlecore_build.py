@@ -39,7 +39,16 @@ WEATHERS = {
                      sun=(10.0, (1.0, 0.86, 0.66), 24, -20), bounce=(100, (1.0, 0.92, 0.82)), wet=False, flames=0.0,
                      fill=8, exposure=0.62),
 }
-WX = WEATHERS[WEATHER]
+WX = dict(WEATHERS[WEATHER])
+
+# Late night: the same weather after dark. ChatGPT's night view outside, a near-black sky with a
+# little cool moonlight at the window, and every candle and the lamp lit, whatever the weather.
+NIGHT = "--night" in ARGS
+NIGHT_VIEWS = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change": "21-night-change.png",
+               "stormy": "22-night-stormy.png", "very-dry": "23-night-very-dry.png"}
+if NIGHT:
+    WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
+              bounce=(5, (0.55, 0.62, 1.0)), flames=1.4, fill=7, exposure=0.85)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "assets")
@@ -743,6 +752,28 @@ def build():
     bpy.context.active_object.data.materials.append(brass)
     hotspot("exit-door", "Back to the inn", None, door, kind="door")
 
+    # Wall clock above the door. Position from the room data shared with the browser; no hands here,
+    # because the viewer draws them live to show whatever time the visitor has set.
+    world = json.load(open(os.path.join(HERE, "explore", "cuddlecore-world.json"), encoding="utf8"))
+    cfx = world["fixtures"]["clock"]
+    ccx, ccy, ccz = cfx["center"]
+    R = cfx["radius"]
+    rot_face = (math.radians(90), 0, 0)
+    cyl("clock_case", (ccx, -HY + 0.02, ccz), R + 0.022, 0.04, oak, bevel=0.01, rot=rot_face)
+    fy = -HY + 0.042                              # face just proud of the case front
+    cyl("clock_face", (ccx, fy, ccz), R, 0.004, card, rot=rot_face)
+    bpy.ops.mesh.primitive_torus_add(major_radius=R + 0.004, minor_radius=0.006, location=(ccx, fy + 0.002, ccz),
+                                     rotation=rot_face)
+    bpy.context.active_object.data.materials.append(brass)
+    clock_ink = mat("clock_ink", srgb("#2c2416"), rough=0.6)
+    for i in range(12):
+        a = math.radians(i * 30)
+        long = i % 3 == 0
+        tick = box(f"clock_tick_{i}", (ccx - R * 0.84 * math.sin(a), fy + 0.0025, ccz + R * 0.84 * math.cos(a)),
+                   (0.004 if not long else 0.007, 0.002, 0.012 if not long else 0.022), clock_ink, bevel=0)
+        tick.rotation_euler = (0, -a, 0)          # seen from the room (looking -Y), clockwise from 12
+    cyl("clock_pin", (ccx, fy + 0.005, ccz), 0.006, 0.006, brass, rot=rot_face)
+
     chair = model("ArmChair_01", (0.85, -HY + 0.62, 0), rot_z=180, scale=1.1)
     retint(chair, "#ded1b9", lo=0.6, hi=1.2)
     pillows = model("throw_pillows_01", (0.85, -HY + 0.62, 0.46), rot_z=180, scale=0.5)
@@ -844,7 +875,7 @@ def main():
     if NO_RENDER:
         print("[whisked] done (no render)", json.dumps(HOTSPOTS))
         return
-    bpy.context.scene.render.filepath = os.path.join(OUT, f"cuddlecore_pano_{WEATHER}{suffix}.jpg")
+    bpy.context.scene.render.filepath = os.path.join(OUT, f"cuddlecore_pano_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
     bpy.ops.render.render(write_still=True)
     print("[whisked] done", json.dumps(HOTSPOTS))
 
