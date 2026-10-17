@@ -50,7 +50,11 @@ START="bash -c 'apt-get update -qq && apt-get install -y -qq wget ca-certificate
 ENV=$(python -c 'import json,sys; print(json.dumps(dict(WA_BRANCH=sys.argv[1], WA_BUILD=sys.argv[2], WA_JOBS=sys.argv[3], WA_CODE=sys.argv[4],
   NVIDIA_DRIVER_CAPABILITIES="all")))' \
   "$BRANCH" "$BUILD" "$JOBS" "$CODE")
-json() { python -c "import json,sys; d=json.load(sys.stdin); print(d.get('$1', '') if isinstance(d, dict) else '')"; }
+json() { python -c "
+import json,sys
+try: d=json.load(sys.stdin)
+except ValueError: d={}
+print(d.get('$1', '') if isinstance(d, dict) else '')"; }
 
 echo "starting a $CLOUD $GPU pod to render $BUILD from $BRANCH"
 # Community machines come and go, so a "no resources" answer is worth a few more tries

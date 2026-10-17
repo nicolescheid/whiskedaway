@@ -56,7 +56,25 @@ log "fetching Poly Haven assets"
 python3 -I blender/fetch_assets.py >assets.log 2>&1 || { tail -20 assets.log >>"$LOG"; fail "fetch_assets"; }
 log "assets ready ($(grep -c '^  got' assets.log) files)"
 log "GPU: $(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>&1)"
-ls /usr/lib/x86_64-linux-gnu/libnvoptix.so* >/dev/null 2>&1 && log "OptiX library present" || log "OptiX library missing"
+log "NVIDIA libraries: $(ls /usr/lib/x86_64-linux-gnu/ 2>/dev/null | grep -oE '^lib(cuda|nvoptix|nvidia-rtcore)\.so[.0-9]*' | sort -u | tr '\n' ' ')"
+log "driver capabilities: ${NVIDIA_DRIVER_CAPABILITIES:-unset}"
+
+# Ask Blender which GPUs it can use before spending time on a build
+cat >/tmp/probe.py <<'PY'
+import bpy
+prefs = bpy.context.preferences.addons["cycles"].preferences
+for backend in ("OPTIX", "CUDA"):
+    try:
+        prefs.compute_device_type = backend
+        prefs.get_devices()
+        print("[probe]", backend, [d.name for d in prefs.devices if d.type == backend], flush=True)
+    except Exception as e:
+        print("[probe]", backend, "error:", e, flush=True)
+PY
+"$BLENDER" -b --factory-startup --python /tmp/probe.py >probe.log 2>&1
+grep -E "\[probe\]|cuda|optix|CUDA|OptiX" probe.log | head -12 >>"$LOG"
+grep -qE "\[probe\] (OPTIX|CUDA) \['" probe.log || fail "Blender can't see the GPU"
+[ "$WA_JOBS" = "probe" ] && { log "probe only: DONE"; exit 0; }
 
 IFS=';' read -ra JOBS <<<"$WA_JOBS"
 for job in "${JOBS[@]}"; do
@@ -68,6 +86,7 @@ for job in "${JOBS[@]}"; do
   gpu_checked=0 last=""
   while kill -0 "$pid" 2>/dev/null; do
     sleep 15
+    tail -c 6000 blender.log | tr '\r' '\n' | tail -40 >/srv/status/blender_tail.txt   # served beside log.txt
     # Once sampling starts the GPU should be busy; an idle GPU means Cycles fell back to the CPU
     if [ "$gpu_checked" -lt 2 ] && grep -q "Sample [0-9]" blender.log; then
       util=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
