@@ -1,0 +1,20 @@
+{
+  "method": "Read-only pixel comparison. Sample every fourth pixel of opposite edges; mean absolute RGB difference in 0–255 units. Neighbor values are adjacent-pixel comparisons near the same boundary, not a perceptual seam score.",
+  "status": "not_verified_seamless",
+  "results": [
+    {
+      "File": "12-cable-knit-tile.png",
+      "LeftRightMean": 31.6,
+      "TopBottomMean": 28.9,
+      "NeighborXMean": 5.3,
+      "NeighborYMean": 5.3
+    },
+    {
+      "File": "13-rag-rug-tile.png",
+      "LeftRightMean": 26.3,
+      "TopBottomMean": 36.3,
+      "NeighborXMean": 10.1,
+      "NeighborYMean": 8.8
+    }
+  ]
+}
