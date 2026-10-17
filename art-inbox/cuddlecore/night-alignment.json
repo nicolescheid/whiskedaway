@@ -1,0 +1,153 @@
+{
+  "master": "14-window-rain.png",
+  "size": [
+    2172,
+    724
+  ],
+  "aspect_ratio": 3.0,
+  "method": "Lanczos dimension normalization and small robust affine alignment to high-pass normalized-correlation patches in stationary land/wall/shrubs. Sky and sea excluded from landmark fitting. Source images preserved unchanged in the image generator output directory.",
+  "limits": "Statistics describe matched visible patches, not every pixel or the fog-obscured coast; waves, fog, cloud and windblown foliage differ intentionally.",
+  "landmark_candidates": 190,
+  "variants": [
+    {
+      "file": "19-night-rain.png",
+      "generated_size": [
+        2171,
+        724
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 27,
+      "affine_inliers": 27,
+      "median_displacement_before_px": 1.159,
+      "median_displacement_after_px": 0.307,
+      "p95_displacement_after_px": 0.887,
+      "matched_stable_patches_after": 32,
+      "output_to_input_affine": [
+        1.000653493286579,
+        -0.0018344878500432878,
+        0.17023157267801003,
+        -0.0005158372857197182,
+        1.007291743605597,
+        -4.259353273949383
+      ],
+      "affine_fit_median_residual_px": 0.279,
+      "land_median_luma_255": 11.0,
+      "land_fraction_luma_below_32": 0.8906298439375334
+    },
+    {
+      "file": "20-night-fair.png",
+      "generated_size": [
+        2171,
+        724
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 51,
+      "affine_inliers": 51,
+      "median_displacement_before_px": 1.087,
+      "median_displacement_after_px": 0.148,
+      "p95_displacement_after_px": 0.379,
+      "matched_stable_patches_after": 50,
+      "output_to_input_affine": [
+        1.0003333705352557,
+        -0.000500233455603667,
+        -0.19106293607851144,
+        -0.00010895006130774605,
+        1.0003550279006503,
+        -1.1452254294417432
+      ],
+      "affine_fit_median_residual_px": 0.166,
+      "land_median_luma_255": 10.0,
+      "land_fraction_luma_below_32": 0.8831653091373872
+    },
+    {
+      "file": "21-night-change.png",
+      "generated_size": [
+        2171,
+        724
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 17,
+      "affine_inliers": 16,
+      "median_displacement_before_px": 6.036,
+      "median_displacement_after_px": 0.2,
+      "p95_displacement_after_px": 0.6,
+      "matched_stable_patches_after": 22,
+      "output_to_input_affine": [
+        0.9989236637805473,
+        -0.0015997206678549998,
+        -0.23443638885642346,
+        0.00014418575918475842,
+        1.0158402868904135,
+        -12.549147893739388
+      ],
+      "affine_fit_median_residual_px": 0.242,
+      "land_median_luma_255": 16.0,
+      "land_fraction_luma_below_32": 0.830430362471575
+    },
+    {
+      "file": "22-night-stormy.png",
+      "generated_size": [
+        2171,
+        724
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 24,
+      "affine_inliers": 24,
+      "median_displacement_before_px": 1.19,
+      "median_displacement_after_px": 0.192,
+      "p95_displacement_after_px": 0.413,
+      "matched_stable_patches_after": 26,
+      "output_to_input_affine": [
+        1.0005629766508501,
+        -0.0006497691751256543,
+        -0.24986491986725867,
+        -0.00021276158389009443,
+        1.002546284079586,
+        -2.1458582354152638
+      ],
+      "affine_fit_median_residual_px": 0.193,
+      "land_median_luma_255": 14.0,
+      "land_fraction_luma_below_32": 0.8630664863170401
+    },
+    {
+      "file": "23-night-very-dry.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 51,
+      "affine_inliers": 51,
+      "median_displacement_before_px": 1.11,
+      "median_displacement_after_px": 0.188,
+      "p95_displacement_after_px": 0.384,
+      "matched_stable_patches_after": 57,
+      "output_to_input_affine": [
+        0.9999322598581073,
+        -0.00014292611301900532,
+        -0.23169757926072274,
+        1.9647876120505842e-05,
+        1.0016715921375479,
+        -1.7988080911720303
+      ],
+      "affine_fit_median_residual_px": 0.172,
+      "land_median_luma_255": 12.0,
+      "land_fraction_luma_below_32": 0.8382724537882947
+    }
+  ]
+}
