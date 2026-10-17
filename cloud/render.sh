@@ -51,9 +51,15 @@ ENV=$(python -c 'import json,sys; print(json.dumps(dict(WA_BRANCH=sys.argv[1], W
 json() { python -c "import json,sys; d=json.load(sys.stdin); print(d.get('$1', '') if isinstance(d, dict) else '')"; }
 
 echo "starting a $CLOUD $GPU pod to render $BUILD from $BRANCH"
-POD_JSON=$("$RPC" pod create --name "whiskedaway-render" --image ubuntu:22.04 --gpu-id "$GPU" --cloud-type "$CLOUD" \
-  --container-disk-in-gb 40 --ports "8000/http" --env "$ENV" --docker-args "$START")
-POD=$(echo "$POD_JSON" | json id)
+# Community machines come and go, so a "no resources" answer is worth a few more tries
+for attempt in 1 2 3 4 5 6; do
+  POD_JSON=$("$RPC" pod create --name "whiskedaway-render" --image ubuntu:22.04 --gpu-id "$GPU" --cloud-type "$CLOUD" \
+    --container-disk-in-gb 30 --ports "8000/http" --env "$ENV" --docker-args "$START" 2>&1 || true)
+  POD=$(echo "$POD_JSON" | json id 2>/dev/null || true)
+  [ -n "$POD" ] && break
+  echo "no $GPU free yet (try $attempt): $(echo "$POD_JSON" | head -c 160)"
+  sleep 30
+done
 [ -n "$POD" ] || { echo "couldn't create the pod: $POD_JSON" >&2; exit 1; }
 COST=$(echo "$POD_JSON" | json costPerHr)
 T0=$(date +%s)
