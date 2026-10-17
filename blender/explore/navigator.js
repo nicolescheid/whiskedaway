@@ -165,10 +165,12 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
         already_served: state.served || [],
         dismissed: state.dismissed || [],
     };
-    // endpoint is either a function (e.g. genieFetch with a visitor pass) or a plain URL
-    const res = typeof endpoint === 'function'
-      ? await endpoint(payload, { signal: ctrl.signal })
-      : await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal, body: JSON.stringify(payload) });
+    // endpoint is either a function (e.g. genieFetch with a visitor pass) or a plain URL.
+    // The race caps the whole step, including getting a visitor pass, so a stalled check falls back to local.
+    const call = typeof endpoint === 'function'
+      ? endpoint(payload, { signal: ctrl.signal })
+      : fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal, body: JSON.stringify(payload) });
+    const res = await Promise.race([call, new Promise((_, reject) => ctrl.signal.addEventListener('abort', () => reject(new Error('timeout'))))]);
     if (!res.ok) throw new Error(`navigate ${res.status}`);
     const r = await res.json();
     const objects = new Set(Object.keys(world.objects));

@@ -9,3 +9,4 @@ worker/.wrangler/
 blender/out/*.blend*
 blender/out/crop_*
 blender/assets/
+public/explore/

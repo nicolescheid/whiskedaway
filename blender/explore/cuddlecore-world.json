@@ -773,7 +773,8 @@
         2.36
       ],
       "facing": "+y",
-      "radius": 0.14
+      "radius": 0.14,
+      "in_render": true
     }
   }
 }

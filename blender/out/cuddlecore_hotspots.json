@@ -34,6 +34,13 @@
     "yaw": 33.74,
     "pitch": 4.66
   },
+  "barometer": {
+    "label": "The weather",
+    "overlay": "weather",
+    "type": "weather",
+    "yaw": -33.67,
+    "pitch": 0.92
+  },
   "basket": {
     "label": "The basket",
     "overlay": null,
@@ -81,7 +88,7 @@
     "overlay": "dietary",
     "type": "interactive",
     "yaw": 104.54,
-    "pitch": 2.31
+    "pitch": 2.88
   },
   "exit-door": {
     "label": "Back to the inn",
