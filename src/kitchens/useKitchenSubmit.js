@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
 
 import { genieFetch } from '../lib/genie';
@@ -12,8 +12,11 @@ export default function useKitchenSubmit(kitchenId) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const { trackRecipeGenerated } = useProfile();
+  const inFlight = useRef(false);   // each submit is a paid call: ignore clicks while one is cooking
 
   const submit = useCallback(async (payload) => {
+    if (inFlight.current) return null;
+    inFlight.current = true;
     setLoading(true);
     setError(null);
 
@@ -36,6 +39,7 @@ export default function useKitchenSubmit(kitchenId) {
       setError(err.message);
       return null;
     } finally {
+      inFlight.current = false;
       setLoading(false);
     }
   }, [kitchenId, trackRecipeGenerated]);

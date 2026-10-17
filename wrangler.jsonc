@@ -5,6 +5,9 @@
   "name": "whiskedaway-site",
   "account_id": "413cb81347f3e89932f12e3ed9a6d062", // Nicole's account; never deploy elsewhere
   "compatibility_date": "2026-10-01",
+  // A route (not a custom domain): DNS still points at DreamHost, but Cloudflare answers
+  // every whiskedaway.com request from this Worker. Remove the route to fall back instantly.
+  "routes": [{ "pattern": "whiskedaway.com/*", "zone_name": "whiskedaway.com" }],
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"

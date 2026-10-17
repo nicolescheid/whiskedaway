@@ -139,7 +139,18 @@ npm run build
 
 This creates a `dist/` folder with static files ready for deployment.
 
-### Deployment to DreamHost
+### Deployment (Cloudflare, since Oct 2026)
+
+- **Site:** `npm run deploy` builds and uploads `dist/` to the `whiskedaway-site` Worker, which
+  answers whiskedaway.com via a Worker route (DNS still points at DreamHost; removing the route
+  falls back to it).
+- **API:** `npm run deploy:api` deploys `whiskedaway-genie` from `worker/wrangler.toml`. Always use
+  this script, or `--config worker/wrangler.toml`: run bare inside `worker/`, wrangler picks up the
+  site's `wrangler.jsonc` from the parent folder instead.
+- **Bot guard:** `BOT_GUARD` in `worker/wrangler.toml` is `enforce`. If a frontend change needs to
+  roll out before the client sends passes, set it to `log` temporarily.
+
+### Deployment to DreamHost (old)
 
 1. Run `npm run build`
 2. Upload the *contents* of `dist/` (not the folder itself) into the site's web directory on
