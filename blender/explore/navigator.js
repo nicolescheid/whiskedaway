@@ -13,6 +13,8 @@
  *   { kind: 'dismiss', atom }        set a served piece aside ("not this")
  *   { kind: 'choose',  cluster }     picked one side of a fork
  *   { kind: 'weather', id }          turned the barometer (id = a key of world.weathers)
+ *   { kind: 'time',    id }          pushed the clock to a time of day (id = a key of world.times)
+ *   { kind: 'clock',   id }          the device's own time of day, observed rather than chosen
  */
 
 const WEIGHTS = { touch: 3, linger: 1.5, map: 1, open: 2.5, dismiss: -2, choose: 4 };
@@ -21,6 +23,7 @@ const SERVE_MIN = 1.2;        // below this an atom isn't relevant enough to ser
 const REVEAL_MIN = 1.2;
 const FORK_BELOW = 0.2;       // confidence below which Gemma offers a fork instead of a guess
 const WEATHER_WEIGHT = 3;     // the chosen weather is a standing mood: it holds until changed, it doesn't fade
+const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more than the device's clock
 
 export function themeWeights(trail, world) {
   const w = {};
@@ -35,6 +38,8 @@ export function themeWeights(trail, world) {
   });
   const weather = currentWeather(trail, world);
   if (weather) add(world.weathers[weather].themes, WEATHER_WEIGHT);
+  const time = currentTime(trail, world);
+  if (time) add(world.times[time.id].themes, TIME_WEIGHT[time.kind]);
   return w;
 }
 
@@ -42,6 +47,15 @@ export function themeWeights(trail, world) {
 export function currentWeather(trail, world) {
   for (let i = trail.length - 1; i >= 0; i--) {
     if (trail[i].kind === 'weather' && world.weathers && world.weathers[trail[i].id]) return trail[i].id;
+  }
+  return null;
+}
+
+/** The time of day in play: the last one the visitor chose, else the device's own. */
+export function currentTime(trail, world) {
+  for (let i = trail.length - 1; i >= 0; i--) {
+    const e = trail[i];
+    if ((e.kind === 'time' || e.kind === 'clock') && world.times && world.times[e.id]) return { id: e.id, kind: e.kind };
   }
   return null;
 }
@@ -58,9 +72,16 @@ const score = (themes, weights) => themes.reduce((s, t) => s + (weights[t] || 0)
 function reasonsFor(themes, trail, world) {
   const seen = new Set();
   const why = [];
+  let context = null;                 // something observed rather than done, e.g. the device's time
   const weather = currentWeather(trail, world);
   if (weather && world.weathers[weather].themes.some(t => themes.includes(t))) {
     why.push(`turned the barometer to ${world.weathers[weather].label}`);
+  }
+  const time = currentTime(trail, world);
+  if (time && world.times[time.id].themes.some(t => themes.includes(t))) {
+    const label = world.times[time.id].label.toLowerCase();
+    if (time.kind === 'time') why.push(`turned the clock to ${label}`);
+    else context = `it's ${label === 'late night' ? 'late at night' : label} where you are`;
   }
   for (let i = trail.length - 1; i >= 0 && why.length < 3; i--) {
     const e = trail[i];
@@ -69,7 +90,7 @@ function reasonsFor(themes, trail, world) {
     seen.add(e.id);
     why.push(`${e.kind === 'linger' ? 'lingered by' : 'went to'} ${obj.ref}`);
   }
-  return why;
+  return { why, context };
 }
 
 const listJoin = parts => parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
@@ -103,8 +124,10 @@ export function localNavigate(trail, world, { served = [], dismissed = [] } = {}
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)
     .map(({ a }) => {
-      const why = reasonsFor(a.themes, trail, world);
-      return { atom: a.id, why: why.length ? `Because you ${listJoin(why)}.` : `Because it fits ${top.label}.` };
+      const { why, context } = reasonsFor(a.themes, trail, world);
+      const text = why.length ? `Because you ${listJoin(why)}${context ? `, and ${context}` : ''}.`
+        : context ? `Because ${context}.` : `Because it fits ${top.label}.`;
+      return { atom: a.id, why: text };
     });
 
   const recent = [...new Set(trail.filter(e => e.id && world.objects[e.id]).map(e => e.id))]
@@ -133,7 +156,8 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
         room: world.name,
         trail: trail.slice(-30),
         objects: Object.entries(world.objects).map(([id, o]) => ({ id, label: o.label, type: o.type, themes: o.themes }))
-          .concat(Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: `Weather: ${w.label}`, type: 'weather', themes: w.themes }))),
+          .concat(Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: `Weather: ${w.label}`, type: 'weather', themes: w.themes })))
+          .concat(Object.entries(world.times || {}).map(([id, t]) => ({ id, label: `Time of day: ${t.label}`, type: 'time', themes: t.themes }))),
         atoms: world.atoms.map(({ id, title, kind, themes, spoons }) => ({ id, title, kind, themes, spoons })),
         clusters: Object.entries(world.clusters).map(([id, c]) => ({ id, label: c.label })),
         already_served: state.served || [],

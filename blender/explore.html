@@ -16,6 +16,12 @@
   html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1410; color: var(--ink);
                font-family: 'Quicksand', system-ui, sans-serif; }
   #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; }
+  /* Time-of-day light over the day render: cool and pale in the morning, golden in the evening */
+  #tint { position: fixed; inset: 0; pointer-events: none; z-index: 1; transition: background-color 1.4s ease;
+          mix-blend-mode: soft-light; background-color: transparent; }
+  #tint.morning { background-color: rgba(170, 200, 255, 0.35); }
+  #tint.evening { background-color: rgba(255, 150, 70, 0.4); }
+  #tint.night { mix-blend-mode: multiply; background-color: rgba(30, 36, 70, 0.62); }
   #stage.dragging { cursor: grabbing; }
   button { font: inherit; color: inherit; cursor: pointer; }
 
@@ -106,6 +112,7 @@
 </head>
 <body>
 <div id="stage"></div>
+<div id="tint" aria-hidden="true"></div>
 
 <div class="bar">
   <h1>Cuddlecore Kitchen</h1>
@@ -140,6 +147,15 @@
 </div>
 
 <div class="counter" id="counter" aria-label="On the counter"></div>
+
+<div class="tool" id="clockdlg" role="dialog" aria-modal="true" aria-labelledby="clock-title">
+  <div class="box">
+    <h2 id="clock-title">The clock</h2>
+    <p id="clock-text">Push the hands to whatever time you're cooking for.</p>
+    <div class="dial" id="clockdial"></div>
+    <p style="margin:12px 0 0"><button class="ok" id="clock-ok">Done</button></p>
+  </div>
+</div>
 
 <div class="tool" id="weather" role="dialog" aria-modal="true" aria-labelledby="weather-title">
   <div class="box">
@@ -183,6 +199,15 @@ const store = {
 };
 const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
 state.weather = state.weather || world.default_weather || 'rain';
+state.time = state.time || null;          // a time of day the visitor chose on the clock, or null for their own
+
+// ---------- time of day: the device's own, unless the visitor pushed the clock
+const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
+const deviceTime = () => bucketFor(new Date().getHours());
+const timeNow = () => state.time || deviceTime();
+const isNight = () => timeNow() === 'night';
+/** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */
+const navTrail = () => state.trail.some(e => e.kind === 'time') ? state.trail : [{ kind: 'clock', id: deviceTime() }, ...state.trail];
 $('mode').textContent = AI ? 'AI navigator' : 'Local navigator';
 
 // ---------- panorama
@@ -209,7 +234,7 @@ const useFull = renderer.capabilities.maxTextureSize >= 8192;
 const texCache = {};
 const prep = t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
 const loadTex = url => texCache[url] || (texCache[url] = new Promise(ok => loader.load(url, t => ok(prep(t)), undefined, () => ok(null))));
-const panoUrl = (w, full) => `out/cuddlecore_pano_${w}${full ? '' : '_preview'}.jpg`;
+const panoUrl = (w, full, night) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg`;
 
 let fadeSeq = 0;
 function crossFade(tex) {
@@ -234,12 +259,16 @@ function crossFade(tex) {
 
 /** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
 async function showWeather(w, { fade = true } = {}) {
-  const preview = await loadTex(panoUrl(w, false));
-  if (w !== state.weather) return;
+  const night = isNight();
+  let preview = night ? await loadTex(panoUrl(w, false, true)) : null;
+  const haveNight = !!preview;                       // until the night renders exist, darken the day render
+  if (!preview) preview = await loadTex(panoUrl(w, false, false));
+  if (w !== state.weather || night !== isNight()) return;
+  $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
   if (preview) fade && sphere.material.map ? crossFade(preview) : (sphere.material = new THREE.MeshBasicMaterial({ map: preview }), render());
   if (useFull) {
-    const full = await loadTex(panoUrl(w, true));
-    if (full && w === state.weather) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
+    const full = await loadTex(panoUrl(w, true, haveNight));
+    if (full && w === state.weather && night === isNight()) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
   }
 }
 showWeather(state.weather, { fade: false });
@@ -250,6 +279,59 @@ const dir = (yaw, pitch) => {
   return new THREE.Vector3(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p));
 };
 const look = { yaw: 0, pitch: -6 };
+
+// ---------- the clock: hotspot from the shared fixture, hands drawn live in true perspective
+const clockFx = world.fixtures?.clock;
+const toThree = ([x, y, z]) => new THREE.Vector3(x, z - 1.6, -y);   // room metres -> viewer (eye at 1.6 m)
+let setHands = () => {};
+if (clockFx) {
+  const [cx, cy, cz] = clockFx.center;
+  spots.clock = { yaw: THREE.MathUtils.radToDeg(Math.atan2(cx, cy)), pitch: THREE.MathUtils.radToDeg(Math.atan2(cz - 1.6, Math.hypot(cx, cy))) };
+  const clock = new THREE.Group();
+  clock.position.copy(toThree(clockFx.center));
+  clock.lookAt(0, 0, 0);                                            // face the visitor
+  const R = clockFx.radius;
+  const ink = new THREE.MeshBasicMaterial({ color: 0x2c2416, side: THREE.DoubleSide });
+  if (!clockFx.in_render) {                                         // stand-in face until the renders include it
+    clock.add(new THREE.Mesh(new THREE.CircleGeometry(R, 48), new THREE.MeshBasicMaterial({ color: 0xe9dfca, side: THREE.DoubleSide })));
+    clock.add(new THREE.Mesh(new THREE.RingGeometry(R * 0.96, R * 1.08, 48), new THREE.MeshBasicMaterial({ color: 0x5a3e28, side: THREE.DoubleSide })));
+    for (let i = 0; i < 12; i++) {
+      const t = new THREE.Mesh(new THREE.PlaneGeometry(0.004, i % 3 ? 0.012 : 0.022), ink);
+      const a = (i / 12) * Math.PI * 2;
+      t.position.set(Math.sin(a) * R * 0.84, Math.cos(a) * R * 0.84, 0.001);
+      t.rotation.z = -a;
+      clock.add(t);
+    }
+  }
+  const hand = (len, width) => {
+    const g = new THREE.PlaneGeometry(width, len);
+    g.translate(0, len / 2 - 0.012, 0);                                // pivot near the base
+    const m = new THREE.Mesh(g, ink);
+    m.position.z = 0.003;
+    clock.add(m);
+    return m;
+  };
+  const hourHand = hand(R * 0.55, 0.012), minuteHand = hand(R * 0.82, 0.008);
+  scene.add(clock);
+  let shown = null;
+  setHands = (hours, animate = true) => {
+    const target = ((hours % 12) + 12) % 12;
+    const from = shown ?? target;
+    const delta = ((target - from) % 12 + 12) % 12;                  // the hands only ever go forward
+    const t0 = performance.now(), dur = animate && delta ? 900 : 0;
+    const step = now => {
+      const k = dur ? Math.min(1, (now - t0) / dur) : 1;
+      const h = from + delta * (1 - (1 - k) ** 3);
+      hourHand.rotation.z = -(h / 12) * Math.PI * 2;
+      minuteHand.rotation.z = -((h % 1) * Math.PI * 2);
+      render();
+      if (k < 1) requestAnimationFrame(step);
+    };
+    shown = target;
+    requestAnimationFrame(step);
+  };
+}
+const handsHour = () => state.time ? world.times[state.time].hour : new Date().getHours() + new Date().getMinutes() / 60;
 
 // ---------- hotspots
 const hotspots = Object.entries(spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
@@ -341,6 +423,8 @@ function touch(id) {
     say(obj.moment, [], true);
   } else if (obj.type === 'weather') {
     openWeather();
+  } else if (obj.type === 'time') {
+    openClock();
   } else if (obj.type === 'door') {
     openTool('Back to the inn', 'In the full site this door takes you back to the hallway. Your wander would come with you.');
   } else if (obj.type === 'submit') {
@@ -359,7 +443,7 @@ function scheduleNavigate() {
 async function navigate() {
   const seq = ++navSeq;
   const opts = { served: state.served, dismissed: state.dismissed };
-  const local = localNavigate(state.trail, world, opts);
+  const local = localNavigate(navTrail(), world, opts);
   let r = local;
   if (AI) {
     // Hybrid: the room responds at once with the local reading (glow + Gemma's line), then the
@@ -369,7 +453,7 @@ async function navigate() {
     if (local.gemma) say(local.gemma.replace(" I've put something on the counter for you.", ' Let me think…'), local.fork);
     $('bubble').classList.add('thinking');
     renderNotes();
-    r = await aiNavigate(AI, state.trail, world, opts);
+    r = await aiNavigate(AI, navTrail(), world, opts);
     if (seq !== navSeq) return;                            // a newer event superseded this one
     $('bubble').classList.remove('thinking');
   }
@@ -378,8 +462,9 @@ async function navigate() {
   applyReveal(r.reveal);
   // Right after a barometer turn, Gemma reacts to the weather first, then says what she's put out
   const last = state.trail[state.trail.length - 1];
-  const gemma = last?.kind === 'weather' && r.gemma
-    ? `${world.weathers[last.id].moment} ${r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase())}`
+  const moment = last?.kind === 'weather' ? world.weathers[last.id]?.moment : last?.kind === 'time' ? world.times[last.id]?.moment : null;
+  const gemma = moment && r.gemma
+    ? `${moment} ${r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase())}`
     : r.gemma;
   if (gemma) say(gemma, r.fork);
   // One new piece per step (two to start), so the counter fills at the pace of the wander
@@ -465,9 +550,9 @@ function renderNotes() {
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to' };
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to' };
   $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).map(e =>
-    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
+    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
 function togglePanel(id, btn) {
   const p = $(id), open = !p.classList.contains('open');
@@ -479,7 +564,8 @@ $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
 $('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
 $('forget').onclick = () => {
   store.clear();
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain' });
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, asked: false });
+  setHands(handsHour());
   showWeather(state.weather);
   renderCards(); renderNotes(); applyReveal([]);
   say('Forgotten. Fresh start. Have a wander.');
@@ -510,12 +596,52 @@ function chooseWeather(id) {
 $('weather-ok').onclick = () => $('weather').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('weather').classList.remove('open'); });
 
-window.__explore = { state, touch, chooseWeather, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+// ---------- clock
+function openClock() {
+  const mine = deviceTime();
+  $('clock-text').textContent = `Where you are it's ${world.times[mine].label.toLowerCase()}. Push the hands to whatever time you're cooking for.`;
+  const opts = Object.entries(world.times).map(([id, t]) => ({ id, label: t.label })).concat(state.time ? [{ id: '', label: 'Back to my time' }] : []);
+  $('clockdial').innerHTML = opts.map(o => `<button data-t="${esc(o.id)}" class="${o.id && o.id === state.time ? 'on' : ''}">${esc(o.label)}</button>`).join('');
+  $('clockdial').querySelectorAll('button').forEach(b => b.onclick = () => chooseTime(b.dataset.t || null));
+  $('clockdlg').classList.add('open');
+}
+function chooseTime(id) {
+  if (id === state.time) return;
+  state.time = id;
+  setHands(handsHour());
+  showWeather(state.weather);                                        // re-light: tint, or the night render
+  $('clockdial').querySelectorAll('button').forEach(b => b.classList.toggle('on', !!id && b.dataset.t === id));
+  if (id) {
+    say(world.times[id].moment, [], true);
+    record({ kind: 'time', id });
+  } else {
+    say(`Back to your own time: ${world.times[deviceTime()].label.toLowerCase()}.`, [], true);
+    state.trail = state.trail.filter(e => e.kind !== 'time');
+    store.save(state);
+    scheduleNavigate();
+  }
+}
+$('clock-ok').onclick = () => $('clockdlg').classList.remove('open');
+addEventListener('keydown', e => { if (e.key === 'Escape') $('clockdlg').classList.remove('open'); });
+
+// ---------- arrival: Gemma asks once about the visitor's weather
+function arrive() {
+  if (state.asked || state.trail.length) return;
+  state.asked = true;
+  store.save(state);
+  $('bubble').innerHTML = `${esc("Hello, love. What's the weather like for you today?")}<div class="forks"><button id="show-baro">Turn the barometer</button></div>`;
+  $('show-baro').onclick = () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); };
+  applyReveal([{ object: 'barometer' }]);
+}
+
+window.__explore = { state, touch, chooseWeather, chooseTime, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 fillMap();
 renderCards();
 renderNotes();
 if (state.result) { applyReveal(state.result.reveal); if (state.result.gemma) say(state.result.gemma, state.result.fork); }
+setHands(handsHour(), false);
+arrive();
 resize();
 </script>
 </body>

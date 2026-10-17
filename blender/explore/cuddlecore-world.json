@@ -75,6 +75,15 @@
         "chilled",
         "no-cook"
       ]
+    },
+    "morning": {
+      "label": "a gentle start to the day",
+      "themes": [
+        "breakfast",
+        "oats",
+        "gentle",
+        "tea"
+      ]
     }
   },
   "objects": {
@@ -239,6 +248,13 @@
       "type": "weather",
       "tool": "weather",
       "themes": []
+    },
+    "clock": {
+      "label": "The time",
+      "ref": "the clock",
+      "type": "time",
+      "tool": "time",
+      "themes": []
     }
   },
   "atoms": [
@@ -253,7 +269,8 @@
         "honey",
         "ginger",
         "citrus",
-        "calm"
+        "calm",
+        "breakfast"
       ],
       "body": "A few slices of ginger, a squeeze of lemon, a spoon of honey, hot (not boiling) water. Wrap both hands round it. That's the whole recipe."
     },
@@ -279,7 +296,8 @@
         "bread",
         "simple",
         "cosy",
-        "low-spoons"
+        "low-spoons",
+        "breakfast"
       ],
       "body": "Toast counts. You're eating, and that's the win. Cutting it into strips somehow makes it feel like someone's looking after you."
     },
@@ -293,7 +311,8 @@
         "no-cook",
         "simple",
         "sweet",
-        "honey"
+        "honey",
+        "breakfast"
       ],
       "body": "Half a cup of oats, the same of milk, a spoon of honey, into a jar and into the fridge. Future-you wakes up to breakfast already made."
     },
@@ -349,7 +368,8 @@
         "broth",
         "cosy",
         "hands-on",
-        "cooking"
+        "cooking",
+        "evening"
       ],
       "body": "Onion, carrot and celery, slowly softened in butter, then whatever vegetables need using and enough stock to cover. Let it tick over while the rain does its thing."
     },
@@ -431,7 +451,8 @@
         "warming",
         "honey",
         "sweet",
-        "tea"
+        "tea",
+        "night"
       ],
       "body": "Milk (any kind) warmed in a pan with a pinch of cinnamon and a little honey. Drink it by lamplight. It's not magic, it's a signal to yourself that the day is done."
     },
@@ -458,7 +479,8 @@
         "bread",
         "simple",
         "no-cook",
-        "cosy"
+        "cosy",
+        "night"
       ],
       "body": "Sometimes the best thing in the basket needs nothing doing to it. Thick slice, real butter, a few flakes of salt."
     },
@@ -498,7 +520,8 @@
         "no-cook",
         "rest",
         "low-spoons",
-        "simple"
+        "simple",
+        "night"
       ],
       "body": "Crackers, a bit of cheese, apple slices, a few nuts. Nothing cooked, nothing to wash but one plate, and you can eat it with a blanket over your knees."
     },
@@ -540,7 +563,8 @@
         "no-cook",
         "sweet",
         "hydrating",
-        "chilled"
+        "chilled",
+        "night"
       ],
       "body": "Pop a bunch of grapes in the freezer in the morning. By afternoon they're little sorbet bites. A cold, sweet thing that asks nothing of you."
     },
@@ -613,7 +637,8 @@
         "warming",
         "slow",
         "pantry",
-        "what-you-have"
+        "what-you-have",
+        "cooking"
       ],
       "body": "Onion softened in oil, a cup of red lentils, a tin of tomatoes and stock. Simmer until the lentils collapse, then a squeeze of lemon. Thick, warm and cheap."
     },
@@ -627,7 +652,8 @@
         "warming",
         "gentle",
         "calm",
-        "simple"
+        "simple",
+        "breakfast"
       ],
       "body": "Oats, milk and a pinch of salt, stirred slowly over a low heat while the fog drifts past. A spoon of honey or a grated apple on top."
     }
@@ -689,5 +715,65 @@
       "moment": "It's sweltering out there."
     }
   },
-  "default_weather": "rain"
+  "default_weather": "rain",
+  "times": {
+    "morning": {
+      "label": "Morning",
+      "hour": 8,
+      "themes": [
+        "breakfast",
+        "oats",
+        "gentle",
+        "tea",
+        "fresh"
+      ],
+      "moment": "Morning! Something easy to start the day, I think."
+    },
+    "midday": {
+      "label": "Midday",
+      "hour": 12.5,
+      "themes": [
+        "light",
+        "fresh",
+        "simple",
+        "bread"
+      ],
+      "moment": "Lunchtime already."
+    },
+    "evening": {
+      "label": "Evening",
+      "hour": 18.5,
+      "themes": [
+        "hearty",
+        "cooking",
+        "warming",
+        "slow"
+      ],
+      "moment": "Evening's drawing in. Time for a proper meal?"
+    },
+    "night": {
+      "label": "Late night",
+      "hour": 23.5,
+      "themes": [
+        "rest",
+        "no-cook",
+        "calm",
+        "evening",
+        "simple",
+        "low-spoons"
+      ],
+      "moment": "Burning the midnight oil? Let's keep it gentle."
+    }
+  },
+  "fixtures": {
+    "clock": {
+      "center": [
+        -0.95,
+        -2.215,
+        2.36
+      ],
+      "facing": "+y",
+      "radius": 0.14
+    }
+  }
 }
