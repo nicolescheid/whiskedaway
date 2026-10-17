@@ -1,0 +1,191 @@
+{
+  "image_count": 19,
+  "botanical_packet_count": 6,
+  "blank_plant_label_count": 8,
+  "seasons_wheel_plates": 4,
+  "seasons_wheel_handle_absent_in_flat": true,
+  "spring_01_09_byte_identical": true,
+  "visual_review": "Selected final images inspected; no people, animals, lettering, logos or plastic pots observed. Room is a single lean-to, with Inn wall on one long side. Oblique lane-view seasons wheel corrected to four plaques.",
+  "notes": "Written layout and canonical flat textures govern small details that vary between generated viewpoints. Plant taxonomy/season schedule is in notes; wide generated foliage is not a botanical specimen. Photo textures have baked illumination and neutral backgrounds, not alpha cutouts or PBR maps.",
+  "gallery_local_links_valid": true,
+  "gallery_browser_preview": "Browser could not reach the local preview server; image comparisons and local file/link checks completed. Interactive controls were not browser-verified.",
+  "alignment": {
+    "method": "Lanczos size normalization; conservative robust affine alignment from normalized high-pass patch correlation. Interior fit uses stationary door timber, wheel, staging and floor; exterior fit uses exposed wall, coast and path. Seasonal foliage, sky and sea surface excluded where practical.",
+    "limitations": "Metrics describe the visible matched patches, not every pixel. Generated local details can still differ. This is concept/backdrop alignment, not a shared 3D render. Use a locked Blender scene/camera for exact architectural geometry and all-angle seasonal panoramas.",
+    "originals": "Source PNGs preserved unchanged in the image-generator output directory. Spring masters unchanged.",
+    "groups": [
+      {
+        "group": "inside",
+        "master": "09-spring.png",
+        "size": [
+          1672,
+          941
+        ],
+        "candidate_patches": 353,
+        "variants": [
+          {
+            "file": "10-summer.png",
+            "generated_size": [
+              1672,
+              941
+            ],
+            "final_size": [
+              1672,
+              941
+            ],
+            "matches_before": 342,
+            "affine_inliers": 341,
+            "matches_after": 342,
+            "median_before_px": 0.148,
+            "median_after_px": 0.12,
+            "p95_after_px": 0.309,
+            "output_to_input_affine": [
+              1.000110445909986,
+              0.00010971436734490595,
+              -0.25217000898750125,
+              -8.976681668141267e-06,
+              0.9998625377140034,
+              0.07061311473104517
+            ]
+          },
+          {
+            "file": "11-autumn.png",
+            "generated_size": [
+              1672,
+              941
+            ],
+            "final_size": [
+              1672,
+              941
+            ],
+            "matches_before": 346,
+            "affine_inliers": 346,
+            "matches_after": 347,
+            "median_before_px": 0.153,
+            "median_after_px": 0.141,
+            "p95_after_px": 0.414,
+            "output_to_input_affine": [
+              1.000183800913441,
+              0.00025192465533523947,
+              -0.3383590452218879,
+              1.0784294276213449e-07,
+              0.9998536481196422,
+              0.06543183781510427
+            ]
+          },
+          {
+            "file": "12-winter.png",
+            "generated_size": [
+              1672,
+              941
+            ],
+            "final_size": [
+              1672,
+              941
+            ],
+            "matches_before": 323,
+            "affine_inliers": 323,
+            "matches_after": 322,
+            "median_before_px": 0.225,
+            "median_after_px": 0.152,
+            "p95_after_px": 0.389,
+            "output_to_input_affine": [
+              1.0001672024388883,
+              0.00020744316633031738,
+              -0.3291213573841626,
+              -1.5132924511904671e-05,
+              0.9994864221612213,
+              0.20049516039509824
+            ]
+          }
+        ]
+      },
+      {
+        "group": "outside",
+        "master": "13-outside-spring.png",
+        "size": [
+          2170,
+          725
+        ],
+        "candidate_patches": 228,
+        "variants": [
+          {
+            "file": "14-outside-summer.png",
+            "generated_size": [
+              2169,
+              725
+            ],
+            "final_size": [
+              2170,
+              725
+            ],
+            "matches_before": 91,
+            "affine_inliers": 91,
+            "matches_after": 100,
+            "median_before_px": 1.376,
+            "median_after_px": 0.185,
+            "p95_after_px": 0.646,
+            "output_to_input_affine": [
+              0.9998346755034698,
+              -0.003729440290984929,
+              1.2609247537946944,
+              3.118038906455577e-05,
+              0.9992704334941988,
+              -0.9914840333231806
+            ]
+          },
+          {
+            "file": "15-outside-autumn.png",
+            "generated_size": [
+              2169,
+              725
+            ],
+            "final_size": [
+              2170,
+              725
+            ],
+            "matches_before": 108,
+            "affine_inliers": 108,
+            "matches_after": 108,
+            "median_before_px": 1.09,
+            "median_after_px": 0.117,
+            "p95_after_px": 0.554,
+            "output_to_input_affine": [
+              1.000854832043119,
+              -0.001903484259723852,
+              0.12488649901338013,
+              -2.6849017605223973e-05,
+              0.9977016390046439,
+              0.11694638183811475
+            ]
+          },
+          {
+            "file": "16-outside-winter.png",
+            "generated_size": [
+              2169,
+              725
+            ],
+            "final_size": [
+              2170,
+              725
+            ],
+            "matches_before": 59,
+            "affine_inliers": 54,
+            "matches_after": 65,
+            "median_before_px": 6.677,
+            "median_after_px": 0.22,
+            "p95_after_px": 1.438,
+            "output_to_input_affine": [
+              1.0010574709068623,
+              -0.0039061053723142072,
+              -0.2891967282422099,
+              2.8024515923165997e-05,
+              1.0068075517595374,
+              -9.3687723590639
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

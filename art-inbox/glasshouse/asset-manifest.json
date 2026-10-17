@@ -1,0 +1,173 @@
+[
+  {
+    "file": "01-to-garden-door.png",
+    "title": "Spring composition master",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3181251,
+    "sha256": "d4403658e83d5e690f96bd4c9399b166824d0f62796921c6168a76dbf4d1159b"
+  },
+  {
+    "file": "02-to-sea-end.png",
+    "title": "Toward the sea",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3176029,
+    "sha256": "de54e7d4e1c584a73e6747432a33de9a98ca25e84ab72746653d446eb11b9fc3"
+  },
+  {
+    "file": "03-to-lane-end.png",
+    "title": "Toward the lane",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3117271,
+    "sha256": "70c7f4446dffdec13784d5c2363782de6ec6aa6d4c99a035f2995bab8dee78a2"
+  },
+  {
+    "file": "04-to-inn-wall.png",
+    "title": "The Inn wall and oak door",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3126495,
+    "sha256": "f5b982ee7b55dea4cbec9ac4868d3f7963301f7e45530452b195dd43347a1132"
+  },
+  {
+    "file": "05-glass-roof.png",
+    "title": "Single-pitch roof and passionflower",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2881373,
+    "sha256": "b83e087480c603e60fe8523e636e5f8325819bc394c7b6a645dbfbcb7a7eed62"
+  },
+  {
+    "file": "06-staging-closeup.png",
+    "title": "Staging, seedlings and tools",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2873649,
+    "sha256": "9443d440907f3e865596e142be3dc5efe48492872855ed98c19028bc9def3d20"
+  },
+  {
+    "file": "07-terracotta-pots-closeup.png",
+    "title": "Worn pots and mixed herbs",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3218451,
+    "sha256": "04f5d1d744066810e279b3bb1b7f0aa5c6e212903eae1922843102ed6ffb0ab7"
+  },
+  {
+    "file": "08-materials-moodboard.png",
+    "title": "Materials on linen",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3941994,
+    "sha256": "7c630c51f5333854330770c4870b471464a38b41682bea4f872c0e0ae60e66a0"
+  },
+  {
+    "file": "09-spring.png",
+    "title": "Spring",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3181251,
+    "sha256": "d4403658e83d5e690f96bd4c9399b166824d0f62796921c6168a76dbf4d1159b"
+  },
+  {
+    "file": "10-summer.png",
+    "title": "Summer",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3017082,
+    "sha256": "70ada425aa0280c9609863cb51b9d32179d19c3cb0b83da4fbaa920c6a807800"
+  },
+  {
+    "file": "11-autumn.png",
+    "title": "Autumn",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2902430,
+    "sha256": "573f3d4ffc318fc235bf2d712f9f136ffb7947f6e1746b290d5b3dfadb219505"
+  },
+  {
+    "file": "12-winter.png",
+    "title": "Winter",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2858912,
+    "sha256": "f9d97d38c1a8a8ffd5d00cc6d98a45b63939e077002df4c0604a396977db00fa"
+  },
+  {
+    "file": "13-outside-spring.png",
+    "title": "Garden backdrop — spring",
+    "width": 2170,
+    "height": 725,
+    "mode": "RGB",
+    "bytes": 3038569,
+    "sha256": "e35377bf95d8714c118a2bb55294c4771ce8fab2395db18c7d8cd0595684f5c5"
+  },
+  {
+    "file": "14-outside-summer.png",
+    "title": "Garden backdrop — summer",
+    "width": 2170,
+    "height": 725,
+    "mode": "RGB",
+    "bytes": 2743222,
+    "sha256": "765a90086f505d751a6f10955901d8086860de2ab97ab45e5df29a42a8e54cea"
+  },
+  {
+    "file": "15-outside-autumn.png",
+    "title": "Garden backdrop — autumn",
+    "width": 2170,
+    "height": 725,
+    "mode": "RGB",
+    "bytes": 2819588,
+    "sha256": "1866079eb1ac42c11c5e77b7e0bc8bc05ff22684eafacbfa58f43008ae90f23b"
+  },
+  {
+    "file": "16-outside-winter.png",
+    "title": "Garden backdrop — winter",
+    "width": 2170,
+    "height": 725,
+    "mode": "RGB",
+    "bytes": 2542128,
+    "sha256": "7255488fb7b1e1869d575497154d4f4c0188c0f53dfaf9c9be827d7fd405685e"
+  },
+  {
+    "file": "17-seasons-wheel-flat.png",
+    "title": "Blank seasons-wheel face",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGB",
+    "bytes": 2491702,
+    "sha256": "faccac1a04cc6b53f39e3715a6f5d18a0a69982005891d6336d38d4b7186de18"
+  },
+  {
+    "file": "18-seed-packets-flat.png",
+    "title": "Six botanical seed packets",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGB",
+    "bytes": 3177049,
+    "sha256": "86a3444a188a06f5914fdbe18210db63eee3633e1a5440ee5303bba403aca6e8"
+  },
+  {
+    "file": "19-plant-labels-flat.png",
+    "title": "Eight blank plant labels",
+    "width": 1448,
+    "height": 1086,
+    "mode": "RGB",
+    "bytes": 2958395,
+    "sha256": "5bf7f4c58d94c3beb03e0b6a71808e4f78935dc374fb6ffbc783ba0d0fd4a9ce"
+  }
+]

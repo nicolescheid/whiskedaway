@@ -1,0 +1,114 @@
+{
+  "units": "metres",
+  "coordinate_system": {
+    "x": "Inn wall 0 to garden glazing 1.8",
+    "y": "lane end 0 to sea end 6.3",
+    "z": "finished floor 0"
+  },
+  "dimensions": {
+    "width": 1.8,
+    "length": 6.3,
+    "roof_high": 2.75,
+    "roof_low": 2.15,
+    "roof_form": "one lean-to plane"
+  },
+  "authoritative_composition": "01-to-garden-door.png",
+  "season_masters": {
+    "inside": "01-to-garden-door.png",
+    "outside": "13-outside-spring.png"
+  },
+  "garden_door": {
+    "wall": "x=1.8",
+    "centre_y": 3.15,
+    "width": 0.82,
+    "height": 1.95
+  },
+  "chiapothecary_door": {
+    "wall": "x=0",
+    "centre_y": 1.9,
+    "width": 0.85,
+    "height": 2,
+    "form": "four recessed oak panels",
+    "overrides": "Older floorplan card describes glass; current brief specifies oak."
+  },
+  "seasons_wheel": {
+    "diameter": 0.3,
+    "centre": [
+      1.77,
+      2.5,
+      1.36
+    ],
+    "plates_clockwise_from_top_deg": [
+      0,
+      90,
+      180,
+      270
+    ],
+    "leaf_motifs_deg": [
+      45,
+      135,
+      225,
+      315
+    ],
+    "texture": "17-seasons-wheel-flat.png",
+    "handle": "separate mesh"
+  },
+  "room_dial": {
+    "diameter": 0.2,
+    "centre": [
+      0.035,
+      1.2,
+      1.35
+    ],
+    "stations_clockwise_from_top_deg": [
+      0,
+      40,
+      80,
+      120,
+      160,
+      200,
+      240,
+      280,
+      320
+    ],
+    "top_station": "star",
+    "remaining_stations": 8,
+    "source": "Reuse existing hallway dial geometry/face"
+  },
+  "staging": {
+    "depth": 0.45,
+    "height": 0.8,
+    "garden_runs_y": [
+      [
+        0.15,
+        2.62
+      ],
+      [
+        3.68,
+        6.15
+      ]
+    ]
+  },
+  "camera_concepts": {
+    "garden": "across +x from Inn wall",
+    "sea": "along +y: Inn left",
+    "lane": "along -y: Inn right",
+    "inn_wall": "toward -x: lane left"
+  },
+  "season_states": [
+    "spring",
+    "summer",
+    "autumn",
+    "winter"
+  ],
+  "constraints": [
+    "one solid long wall; other three glazed",
+    "glazed end walls fixed; garden exit in long side",
+    "same scene, cameras and object transforms in all seasons",
+    "season changes alter foliage, illumination and outdoor plate only",
+    "all labels added as crisp Blender text",
+    "indoor renders use real 3D glazing/condensation",
+    "outdoor plates are perspective backdrops, not 360 equirectangular renders"
+  ],
+  "dimensions_status": "User-specified footprint and wheel diameters; other dimensions proposed for Blender blockout."
+}
