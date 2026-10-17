@@ -22,8 +22,12 @@ cpSync(join(root, 'src', 'lib', 'genie.js'), join(out, 'genie.js'));
 // Room data, navigator, Gemma's pixel avatar (and the Fluent Emoji MIT licence)
 cpSync(join(src, 'explore'), join(out, 'explore'), { recursive: true });
 
-// Renders: every weather by day and night, plus their previews and the hotspots
-const keep = /^cuddlecore_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$|^cuddlecore_hotspots\.json$/;
+// Renders: every room and weather by day and night, plus their previews and the hotspots
+const keep = new RegExp([
+  /^cuddlecore_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
+  /^hallway_pano_(entrance|middle)_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
+  /^(cuddlecore|hallway)_hotspots\.json$/.source,
+].join('|'));
 const files = readdirSync(join(src, 'out')).filter(f => keep.test(f));
 for (const f of files) cpSync(join(src, 'out', f), join(out, 'out', f));
 console.log(`explore: page + ${files.length} render files -> public/explore/`);

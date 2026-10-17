@@ -1,0 +1,49 @@
+{
+  "room": "hallway",
+  "name": "The hallway",
+  "stops": {
+    "hall-entrance": { "stop": "entrance", "title": "The entrance hall", "where": "In the entrance hall", "yaw": 0 },
+    "hall-middle": { "stop": "middle", "title": "The hallway", "where": "In the hallway", "yaw": 0 }
+  },
+  "walks": {
+    "hall-entrance": { "walk-hall": { "yaw": 0, "pitch": -14 } },
+    "hall-middle": { "walk-front": { "yaw": 180, "pitch": -14 } }
+  },
+  "clock": { "center": [-0.585, 4.0, 1.732], "normal": [1, 0, 0], "radius": 0.13, "in_render": true },
+  "objects": {
+    "walk-hall": { "label": "Down the hall", "ref": "the hallway", "type": "walk", "go": "hall-middle", "themes": [] },
+    "walk-front": { "label": "To the front door", "ref": "the entrance hall", "type": "walk", "go": "hall-entrance", "arrive_yaw": 180, "themes": [] },
+    "door-cuddlecore": { "label": "Cuddlecore Kitchen", "ref": "the kitchen door", "type": "door", "go": "cuddlecore", "themes": [] },
+    "door-flourish": { "label": "Flourish", "ref": "the Flourish door", "type": "door", "themes": [],
+                       "closed": "Flourish isn't open yet. Someone's still unpacking the phonograph." },
+    "door-sweet-spells": { "label": "Sweet Spells", "ref": "the Sweet Spells door", "type": "door", "themes": [],
+                           "closed": "Sweet Spells isn't open yet. You can smell the sugar from here, though." },
+    "door-chiapothecary": { "label": "Chiapothecary", "ref": "the Chiapothecary door", "type": "door", "themes": [], "always_visible": true,
+                            "closed": "The still-room isn't ready yet. The glasshouse through there is next." },
+    "dial-cuddlecore": { "label": "The dial", "map": "The dial by the kitchen door", "ref": "the dial by the kitchen door", "type": "dial", "door": "door-cuddlecore", "themes": [] },
+    "dial-flourish": { "label": "The dial", "map": "The dial by the Flourish door", "ref": "the dial by the Flourish door", "type": "dial", "door": "door-flourish", "themes": [] },
+    "dial-sweet-spells": { "label": "The dial", "map": "The dial by the Sweet Spells door", "ref": "the dial by the Sweet Spells door", "type": "dial", "door": "door-sweet-spells", "themes": [] },
+    "dial-chiapothecary": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial by the Chiapothecary door", "type": "dial", "door": "door-chiapothecary", "themes": [] },
+    "grandfather-clock": { "label": "The clock", "ref": "the grandfather clock", "type": "time", "tool": "time", "themes": [] },
+    "front-door": { "label": "The front door", "ref": "the front door", "type": "door", "go": "/", "themes": [],
+                    "leaving": "Off out? Mind the step, love." },
+    "stairs": { "label": "Up the stairs", "ref": "the stairs", "type": "ambient", "themes": [],
+                "moment": "Upstairs is the library and the turret. Not open yet, and the guest rooms are full tonight." },
+    "cellar-door": { "label": "The cellar door", "ref": "the cellar door", "type": "ambient", "themes": [],
+                     "moment": "It's stiff. It's been stiff for years." },
+    "notice-board": { "label": "The notice board", "ref": "the notice board", "type": "ambient", "themes": [],
+                      "moment": "What's in season, tonight's soup, and anything I pin up for you. Nothing pinned yet." },
+    "sea-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": [],
+                    "moment": "The same bay you can see from the kitchen." }
+  },
+  "dial": [
+    { "label": "Cuddlecore", "go": "cuddlecore" },
+    { "label": "Flourish" },
+    { "label": "Sweet Spells" },
+    { "label": "Chiapothecary" },
+    { "label": "Glasshouse" },
+    { "label": "Nourish Academy" },
+    { "label": "Cravings Decoded" },
+    { "label": "The Hall", "go": "hall-entrance" }
+  ]
+}

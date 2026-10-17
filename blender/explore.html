@@ -27,7 +27,8 @@
   button { font: inherit; color: inherit; cursor: pointer; }
 
   /* Hotspots */
-  .spot { position: fixed; transform: translate(-50%, -50%); border: 0; background: none; padding: 0;
+  /* The dot sits on the object; the name trails off to its right */
+  .spot { position: fixed; transform: translate(-6px, -50%); border: 0; background: none; padding: 0;
           display: flex; align-items: center; gap: 8px; z-index: 5; }
   .spot .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(244, 239, 228, 0.7);
                box-shadow: 0 0 0 3px rgba(244, 239, 228, 0.18); transition: all .4s; flex: none; }
@@ -140,7 +141,7 @@
 <div id="tint" aria-hidden="true"></div>
 
 <div class="bar">
-  <h1>Cuddlecore Kitchen</h1>
+  <h1 id="room-title">Cuddlecore Kitchen</h1>
   <span class="mode" id="mode"></span>
   <a class="chip" href="/">Back to the inn</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
@@ -168,11 +169,11 @@
 </aside>
 
 <section class="chatwin" id="chatwin" aria-label="Chat with Gemma">
-  <div class="cw-bar"><span>Gemma — Cuddlecore Kitchen</span><span><button id="cw-min" aria-label="Minimise the chat" aria-expanded="true">_</button></span></div>
+  <div class="cw-bar"><span id="cw-title">Gemma · Cuddlecore Kitchen</span><span><button id="cw-min" aria-label="Minimise the chat" aria-expanded="true">_</button></span></div>
   <div class="cw-body">
     <div class="cw-status">
       <img id="cw-av" src="explore/assets/gemma-pixel.png" alt="Gemma, a pixel-art kitchen genie">
-      <div><b>Gemma</b><small><i aria-hidden="true"></i>In the kitchen</small></div>
+      <div><b>Gemma</b><small><i aria-hidden="true"></i><span id="cw-where">In the kitchen</span></small></div>
     </div>
     <div class="cw-log" id="cw-log" role="log" aria-live="polite"></div>
     <div class="cw-typing" id="cw-typing" hidden>Gemma is typing <span>• • •</span></div>
@@ -209,6 +210,15 @@
   </div>
 </div>
 
+<div class="tool" id="dialdlg" role="dialog" aria-modal="true" aria-labelledby="dial-title">
+  <div class="box">
+    <h2 id="dial-title">The dial</h2>
+    <p>Turn the pointer to a room and open the door. Or set it to the star, and the door opens wherever your wander points.</p>
+    <div class="dial" id="roomdial"></div>
+    <p style="margin:12px 0 0"><button class="ok" id="dial-ok">Leave it</button></p>
+  </div>
+</div>
+
 <div class="tool" id="weather" role="dialog" aria-modal="true" aria-labelledby="weather-title">
   <div class="box">
     <h2 id="weather-title">The barometer</h2>
@@ -236,10 +246,28 @@ const params = new URLSearchParams(location.search);
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, spots] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
+  fetch('explore/hallway-world.json').then(r => r.json()),
+  fetch('out/hallway_hotspots.json').then(r => r.json()),
 ]);
+// One world for the navigator: the kitchen's objects and the hallway's together
+Object.assign(world.objects, hallWorld.objects);
+
+// ---------- rooms: the kitchen, and the hallway's two camera stops
+const ROOMS = {
+  cuddlecore: { title: 'Cuddlecore Kitchen', where: 'In the kitchen', eye: [0, 0, 1.6], spots: kitchenSpots,
+                pano: (w, night, full) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` },
+};
+for (const [id, st] of Object.entries(hallWorld.stops)) {
+  const stop = hallSpots.stops[st.stop];
+  const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
+    .filter(([k, h]) => hallWorld.objects[k] && (h.visible || hallWorld.objects[k].always_visible)));
+  Object.assign(stopSpots, hallWorld.walks[id] || {});
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock,
+                pano: (w, night, full) => `out/hallway_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+}
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -253,6 +281,9 @@ const store = {
 const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
 state.weather = state.weather || world.default_weather || 'rain';
 state.time = state.time || null;
+state.room = ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
+const room = () => ROOMS[state.room];
+let spots = room().spots;
 state.chat = state.chat || [];             // Gemma's chat log for this visit
 if (state.sound === undefined) state.sound = true;          // a time of day the visitor chose on the clock, or null for their own
 
@@ -289,7 +320,6 @@ const useFull = renderer.capabilities.maxTextureSize >= 8192;
 const texCache = {};
 const prep = t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
 const loadTex = url => texCache[url] || (texCache[url] = new Promise(ok => loader.load(url, t => ok(prep(t)), undefined, () => ok(null))));
-const panoUrl = (w, full, night) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg`;
 
 let fadeSeq = 0;
 function crossFade(tex) {
@@ -314,16 +344,18 @@ function crossFade(tex) {
 
 /** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
 async function showWeather(w, { fade = true } = {}) {
-  const night = isNight();
-  let preview = night ? await loadTex(panoUrl(w, false, true)) : null;
+  const night = isNight(), R = room(), at = state.room;
+  let shown = w;                                     // a room without this weather's render falls back to rain
+  let preview = night ? await loadTex(R.pano(w, true, false)) : null;
   const haveNight = !!preview;                       // until the night renders exist, darken the day render
-  if (!preview) preview = await loadTex(panoUrl(w, false, false));
-  if (w !== state.weather || night !== isNight()) return;
+  if (!preview) preview = await loadTex(R.pano(w, false, false));
+  if (!preview && w !== 'rain') { shown = 'rain'; preview = await loadTex(R.pano('rain', false, false)); }
+  if (w !== state.weather || night !== isNight() || at !== state.room) return;
   $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
   if (preview) fade && sphere.material.map ? crossFade(preview) : (sphere.material = new THREE.MeshBasicMaterial({ map: preview }), render());
   if (useFull) {
-    const full = await loadTex(panoUrl(w, true, haveNight));
-    if (full && w === state.weather && night === isNight()) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
+    const full = await loadTex(R.pano(shown, haveNight, true));
+    if (full && w === state.weather && night === isNight() && at === state.room) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
   }
 }
 showWeather(state.weather, { fade: false });
@@ -335,16 +367,26 @@ const dir = (yaw, pitch) => {
 };
 const look = { yaw: 0, pitch: -6 };
 
-// ---------- the clock: hotspot from the shared fixture, hands drawn live in true perspective
-const clockFx = world.fixtures?.clock;
-const toThree = ([x, y, z]) => new THREE.Vector3(x, z - 1.6, -y);   // room metres -> viewer (eye at 1.6 m)
-let setHands = () => {};
-if (clockFx) {
-  const [cx, cy, cz] = clockFx.center;
-  spots.clock = { yaw: THREE.MathUtils.radToDeg(Math.atan2(cx, cy)), pitch: THREE.MathUtils.radToDeg(Math.atan2(cz - 1.6, Math.hypot(cx, cy))) };
+// ---------- the clocks: hands drawn live in true perspective, one set per room view
+// room metres -> viewer space, for a camera standing at eye
+const toThree = ([x, y, z], [ex, ey, ez]) => new THREE.Vector3(x - ex, z - ez, -(y - ey));
+const NORMALS = { '+y': [0, 1, 0], '-y': [0, -1, 0], '+x': [1, 0, 0], '-x': [-1, 0, 0] };
+const clocks = {};
+ROOMS.cuddlecore.clock = world.fixtures?.clock;
+if (ROOMS.cuddlecore.clock) {
+  const [cx, cy, cz] = ROOMS.cuddlecore.clock.center;
+  kitchenSpots.clock = { yaw: THREE.MathUtils.radToDeg(Math.atan2(cx, cy)), pitch: THREE.MathUtils.radToDeg(Math.atan2(cz - 1.6, Math.hypot(cx, cy))) };
+}
+for (const [id, R] of Object.entries(ROOMS)) if (R.clock) clocks[id] = makeClock(R.clock, R.eye);
+const setHands = (hours, animate) => Object.values(clocks).forEach(c => c.setHands(hours, animate));
+function showClock() { for (const [id, c] of Object.entries(clocks)) c.group.visible = id === state.room; }
+
+function makeClock(clockFx, eye) {
   const clock = new THREE.Group();
-  clock.position.copy(toThree(clockFx.center));
-  clock.lookAt(0, 0, 0);                                            // face the visitor
+  const at = toThree(clockFx.center, eye);
+  clock.position.copy(at);
+  const n = clockFx.normal || NORMALS[clockFx.facing] || [0, 1, 0];
+  clock.lookAt(at.clone().add(new THREE.Vector3(n[0], n[2], -n[1])));   // lie flat on the clock's face
   const R = clockFx.radius;
   const ink = new THREE.MeshBasicMaterial({ color: 0x2c2416, side: THREE.DoubleSide });
   if (!clockFx.in_render) {                                         // stand-in face until the renders include it
@@ -369,7 +411,7 @@ if (clockFx) {
   const hourHand = hand(R * 0.55, 0.012), minuteHand = hand(R * 0.82, 0.008);
   scene.add(clock);
   let shown = null;
-  setHands = (hours, animate = true) => {
+  const setHands = (hours, animate = true) => {
     const target = ((hours % 12) + 12) % 12;
     const from = shown ?? target;
     const delta = ((target - from) % 12 + 12) % 12;                  // the hands only ever go forward
@@ -385,20 +427,26 @@ if (clockFx) {
     shown = target;
     requestAnimationFrame(step);
   };
+  return { group: clock, setHands };
 }
 const handsHour = () => state.time ? world.times[state.time].hour : new Date().getHours() + new Date().getMinutes() / 60;
 
 // ---------- hotspots
-const hotspots = Object.entries(spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
-  const obj = world.objects[id];
-  const el = document.createElement('button');
-  el.className = `spot ${obj.type === 'ambient' ? 'ambient' : 'is-tool'} ${obj.type}`;
-  el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}</span>`;
-  el.setAttribute('aria-label', obj.label);
-  el.addEventListener('click', e => { e.stopPropagation(); touch(id); });
-  document.body.appendChild(el);
-  return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
-});
+let hotspots = [];
+function buildHotspots() {
+  hotspots.forEach(h => h.el.remove());
+  hotspots = Object.entries(spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
+    const obj = world.objects[id];
+    const el = document.createElement('button');
+    // Dials show their name on hover only: four of them would crowd the hallway
+    el.className = `spot ${obj.type === 'ambient' ? 'ambient' : obj.type === 'dial' ? '' : 'is-tool'} ${obj.type}`;
+    el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}</span>`;
+    el.setAttribute('aria-label', obj.label);
+    el.addEventListener('click', e => { e.stopPropagation(); touch(id); });
+    document.body.appendChild(el);
+    return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
+  });
+}
 
 function render() {
   camera.lookAt(dir(look.yaw, look.pitch));
@@ -457,6 +505,8 @@ const SYS = {
   weather: e => `You turned the barometer to ${world.weathers[e.id]?.label}`,
   time: e => `You pushed the clock to ${world.times[e.id]?.label.toLowerCase()}`,
   choose: e => `You chose ${world.clusters[e.cluster]?.label}`,
+  room: e => `You went into ${ROOMS[e.id]?.title.replace(/^The /, 'the ')}`,
+  dial: e => `You turned the dial to ${e.id}`,
   dismiss: e => `You set aside "${atomsById[e.atom]?.title}"`,
 };
 function record(e) {
@@ -465,7 +515,7 @@ function record(e) {
   state.trail = state.trail.slice(-40);
   store.save(state);
   renderNotes();
-  scheduleNavigate();
+  if (e.kind !== 'room' && e.kind !== 'dial') scheduleNavigate();   // walking about isn't a mood
 }
 setInterval(() => {
   if (!hasLooked || drag || document.hidden || performance.now() - lastMove < 2000) return;
@@ -488,15 +538,64 @@ function touch(id) {
     openWeather();
   } else if (obj.type === 'time') {
     openClock();
-  } else if (obj.type === 'door') {
-    say('Off to the inn? Mind the step, love.', [], true);
-    setTimeout(() => { location.href = '/'; }, 1200);
+  } else if (obj.type === 'door' || obj.type === 'walk') {
+    if (!obj.go) return say(obj.closed || "That one's not open yet.", [], true);
+    if (obj.go.startsWith('/')) {
+      say(obj.leaving || 'Mind the step, love.', [], true);
+      return setTimeout(() => { location.href = obj.go; }, 1200);
+    }
+    goRoom(obj.go, obj.arrive_yaw);
+  } else if (obj.type === 'dial') {
+    openDial();
   } else if (obj.type === 'submit') {
     openTool('Find Comfort', 'In the full site, the pot cooks up a full recipe with Gemma, using everything you\'ve told her.');
   } else {
     openTool(obj.label, `This is one of the room's fixed tools. In the full site it opens the "${obj.label}" panel, exactly as it always does. Touching it still counts as part of your wander.`);
   }
 }
+
+// ---------- moving between rooms
+function goRoom(id, yaw) {
+  if (!ROOMS[id] || id === state.room) return;
+  state.room = id;
+  spots = room().spots;
+  look.yaw = yaw ?? room().yaw ?? 0;
+  look.pitch = -6;
+  setRoomText();
+  buildHotspots();
+  fillMap();
+  showClock();
+  showWeather(state.weather);
+  record({ kind: 'room', id });
+  if (state.result) applyReveal(state.result.reveal);
+  render();
+}
+function setRoomText() {
+  $('room-title').textContent = room().title;
+  $('cw-title').textContent = `Gemma · ${room().title}`;
+  $('cw-where').textContent = room().where;
+  document.title = `WhiskedAway · ${room().title}`;
+}
+
+// ---------- the magic dial beside every hallway door: any room, or wherever the wander points
+function openDial() {
+  const opts = hallWorld.dial.concat([{ label: 'Wherever my wander points', star: true }]);
+  $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}">${o.star ? '✦ ' : ''}${esc(o.label)}</button>`).join('');
+  $('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
+  $('dialdlg').classList.add('open');
+}
+function turnDial(o) {
+  $('dialdlg').classList.remove('open');
+  record({ kind: 'dial', id: o.star ? 'the star' : o.label });
+  // Only the kitchen is open so far, so for now the star's wander always leads there
+  const go = o.star ? 'cuddlecore' : o.go;
+  if (!go) return say(`${o.label} isn't open yet. Soon.`, [], true);
+  if (go === state.room) return say("You're already here, love.", [], true);
+  say(o.star ? 'Your wander says the kitchen. In you go.' : 'In you go.', [], true);
+  setTimeout(() => goRoom(go), 700);
+}
+$('dial-ok').onclick = () => $('dialdlg').classList.remove('open');
+addEventListener('keydown', e => { if (e.key === 'Escape') $('dialdlg').classList.remove('open'); });
 
 // ---------- navigator
 let navTimer, navSeq = 0;
@@ -666,10 +765,11 @@ function renderCards() {
 
 // ---------- map + notebook (the fixed navigation)
 function fillMap() {
+  $('map-tools').innerHTML = $('map-room').innerHTML = '';
   const item = id => {
     const li = document.createElement('li');
     const b = document.createElement('button');
-    b.textContent = label(id);
+    b.textContent = world.objects[id]?.map || label(id);
     b.onclick = () => { const s = spots[id]; hasLooked = true; lookTo(s.yaw, s.pitch); record({ kind: 'map', id }); };
     li.appendChild(b);
     return li;
@@ -689,9 +789,9 @@ function renderNotes() {
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to' };
-  $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).map(e =>
-    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to' };
+  $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e =>
+    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
 function togglePanel(id, btn) {
   const p = $(id), open = !p.classList.contains('open');
@@ -766,7 +866,7 @@ addEventListener('keydown', e => { if (e.key === 'Escape') $('clockdlg').classLi
 
 // ---------- arrival: Gemma asks once about the visitor's weather
 function arrive() {
-  if (state.asked || state.trail.length) return;
+  if (state.asked || state.trail.length || state.room !== 'cuddlecore') return;
   state.asked = true;
   store.save(state);
   chatLine('gemma', "Hello, love. What's the weather like for you today?");
@@ -774,8 +874,12 @@ function arrive() {
   applyReveal([{ object: 'barometer' }]);
 }
 
-window.__explore = { state, touch, chooseWeather, chooseTime, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, touch, chooseWeather, chooseTime, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
+setRoomText();
+buildHotspots();
+showClock();
+look.yaw = room().yaw ?? 0;
 fillMap();
 renderCards();
 renderNotes();

@@ -237,9 +237,11 @@
       ]
     },
     "exit-door": {
-      "label": "Back to the inn",
-      "ref": "the door",
+      "label": "Into the hallway",
+      "ref": "the door to the hallway",
       "type": "door",
+      "go": "hall-middle",
+      "arrive_yaw": 0,
       "themes": []
     },
     "barometer": {
