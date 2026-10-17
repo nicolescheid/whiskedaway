@@ -155,7 +155,8 @@ def box(name, loc, size, material, bevel=0.01):
     o = bpy.context.active_object
     o.name = name
     o.scale = (size[0] / 2, size[1] / 2, size[2] / 2)
-    bpy.ops.object.transform_apply(scale=True)
+    # Bake only the scale: keeping the origin at loc means a later rotation turns the box in place
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     return finish(o, material, bevel)
 
 

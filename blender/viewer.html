@@ -34,7 +34,7 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
 const params = new URLSearchParams(location.search);
-const pano = params.get('img') || 'out/cuddlecore_pano.jpg';
+const pano = params.get('img') || 'out/cuddlecore_pano_rain.jpg';
 const spots = await fetch('out/cuddlecore_hotspots.json').then(r => r.json());
 
 const stage = document.getElementById('stage');
@@ -50,7 +50,7 @@ geo.scale(-1, 1, 1);
 const loader = new THREE.TextureLoader();
 const tex = loader.load(pano, () => render(), undefined, () => {
   // No full-resolution render yet: fall back to the quick preview
-  loader.load('out/cuddlecore_pano_preview.jpg', t => { sphere.material.map = t; t.colorSpace = THREE.SRGBColorSpace; render(); });
+  loader.load('out/cuddlecore_pano_rain_preview.jpg', t => { sphere.material.map = t; t.colorSpace = THREE.SRGBColorSpace; render(); });
 });
 tex.colorSpace = THREE.SRGBColorSpace;
 tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
