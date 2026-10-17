@@ -139,7 +139,9 @@ export function localNavigate(trail, world, { served = [], dismissed = [] } = {}
     fork = [top.id, clusters[1].id];
     gemma = `${lead}I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;
   } else {
-    gemma = `${lead}I think you're after ${top.label}. I've put something on the counter for you.`;
+    const putOut = ["I've put something on the counter for you.", "There's something on the counter for you.",
+      "Have a look on the counter.", "I've left something out for you."][trail.length % 4];
+    gemma = `${lead}I think you're after ${top.label}. ${putOut}`;
   }
 
   return { mode: 'local', hypothesis: top.label, cluster: top.id, confidence, gemma, fork, reveal, serve };

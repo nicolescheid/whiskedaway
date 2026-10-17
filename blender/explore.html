@@ -67,12 +67,34 @@
   .link { background: none; border: 0; color: var(--berry); text-decoration: underline; padding: 0; font-size: 13px; }
 
   /* Gemma */
-  .gemma { position: fixed; left: 16px; bottom: 16px; width: min(440px, calc(100vw - 32px)); display: flex; gap: 12px; align-items: flex-end; z-index: 15; }
-  .gemma .face { flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--parchment); display: grid; place-items: center;
-                 font-size: 28px; box-shadow: 0 4px 16px rgba(0,0,0,.35); border: 2px solid var(--berry-soft); }
-  .gemma .bubble { background: var(--parchment-90); border-radius: 16px 16px 16px 4px; padding: 12px 14px; box-shadow: 0 6px 22px rgba(0,0,0,.3);
-                   font: italic 17px/1.4 'Crimson Pro', Georgia, serif; }
-  .gemma .bubble.thinking { opacity: .75; }
+  /* Gemma's chat window: a 90s messenger floating over the photoreal room */
+  .chatwin { position: fixed; left: 16px; bottom: 16px; width: min(360px, calc(100vw - 32px)); z-index: 15;
+             background: var(--parchment); border: 2px solid var(--berry); border-radius: 6px; box-shadow: 0 8px 26px rgba(0,0,0,.35); }
+  .cw-bar { display: flex; align-items: center; justify-content: space-between; background: var(--berry); color: var(--parchment);
+            padding: 3px 4px 3px 10px; font: 600 12px 'Quicksand'; letter-spacing: .02em; user-select: none; }
+  .cw-bar button { width: 20px; height: 18px; border: 1px solid var(--parchment); background: transparent; color: var(--parchment);
+                   font: 700 11px/1 'Quicksand'; padding: 0; margin-left: 3px; }
+  .chatwin.min .cw-body { display: none; }
+  .cw-status { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .cw-status img { width: 40px; height: 40px; image-rendering: pixelated; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+  .cw-status b { display: block; font: 600 14px 'Quicksand'; }
+  .cw-status small { font-size: 12px; color: var(--ink-soft); }
+  .cw-status i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3bb36a; margin-right: 5px; }
+  .cw-log { max-height: min(34vh, 300px); overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .cw-who { font: 600 11px 'Quicksand'; color: var(--berry); margin-bottom: -3px; }
+  .cw-msg { align-self: flex-start; max-width: 88%; background: #fff; border: 1px solid var(--line); border-radius: 10px 10px 10px 2px;
+            padding: 6px 10px; font: 16px/1.4 'Crimson Pro', Georgia, serif; animation: arrive .35s ease-out; }
+  .cw-sys { text-align: center; font: italic 12px 'Quicksand'; color: var(--ink-soft); opacity: .85; }
+  .cw-typing { padding: 0 12px 6px; font-size: 12px; color: var(--ink-soft); }
+  .cw-typing span { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
+  @keyframes blinkdots { 50% { opacity: .25; } }
+  .cw-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
+  .cw-chips:empty { display: none; }
+  .cw-chips button { font: 500 12px 'Quicksand'; background: #fff; border: 1px solid var(--berry); color: var(--berry); border-radius: 999px; padding: 4px 11px; }
+  .cw-foot { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding: 5px 10px; }
+  .cw-foot .link { font-size: 12px; }
+  .credits li { font-size: 14px; margin: 0 0 8px; color: var(--ink-soft); }
+  .credits b { color: var(--ink); }
   .forks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-style: normal; }
   .forks button { font: 500 13px 'Quicksand'; background: #fff; border: 1px solid var(--berry); color: var(--berry); border-radius: 999px; padding: 5px 12px; }
 
@@ -106,7 +128,8 @@
 
   @media (max-width: 720px) {
     .counter { top: auto; height: 46vh; left: 16px; width: auto; bottom: 120px; }
-    .gemma .bubble { font-size: 15px; }
+    .chatwin { width: calc(100vw - 32px); }
+    .cw-log { max-height: 26vh; }
   }
 </style>
 </head>
@@ -141,9 +164,35 @@
   <p><button class="link" id="forget">Forget this visit</button></p>
 </aside>
 
-<div class="gemma">
-  <div class="face" aria-hidden="true">🧞‍♀️</div>
-  <div class="bubble" id="bubble" aria-live="polite">This is the softest kitchen in the inn. Have a look around. Touch whatever catches your eye.</div>
+<section class="chatwin" id="chatwin" aria-label="Chat with Gemma">
+  <div class="cw-bar"><span>Gemma — Cuddlecore Kitchen</span><span><button id="cw-min" aria-label="Minimise the chat" aria-expanded="true">_</button></span></div>
+  <div class="cw-body">
+    <div class="cw-status">
+      <img id="cw-av" src="explore/assets/gemma-pixel.png" alt="Gemma, a pixel-art kitchen genie">
+      <div><b>Gemma</b><small><i aria-hidden="true"></i>In the kitchen</small></div>
+    </div>
+    <div class="cw-log" id="cw-log" role="log" aria-live="polite"></div>
+    <div class="cw-typing" id="cw-typing" hidden>Gemma is typing <span>• • •</span></div>
+    <div class="cw-chips" id="cw-chips"></div>
+    <div class="cw-foot"><button class="link" id="cw-sound"></button><button class="link" id="cw-credits">Made with open things</button></div>
+  </div>
+</section>
+
+<div class="tool" id="credits" role="dialog" aria-modal="true" aria-labelledby="credits-title">
+  <div class="box credits">
+    <h2 id="credits-title">Made with open things</h2>
+    <p>WhiskedAway stands on the shoulders of people who share their work.</p>
+    <ul>
+      <li><b>Gemma's face</b>: Microsoft's Fluent Emoji "woman genie", MIT licence, pixelated by hand for that 1997 feeling.</li>
+      <li><b>The kitchen's furniture and materials</b>: Poly Haven, CC0. Given to everyone, no strings.</li>
+      <li><b>The room</b>: built and rendered in Blender, free and open source (GPL).</li>
+      <li><b>The 360° view</b>: three.js, MIT licence.</li>
+      <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
+      <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
+    </ul>
+    <p>Copyleft spirit: take what helps you, credit what you borrow, share what you make.</p>
+    <button class="ok" id="credits-ok">Back to the kitchen</button>
+  </div>
 </div>
 
 <div class="counter" id="counter" aria-label="On the counter"></div>
@@ -199,7 +248,9 @@ const store = {
 };
 const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
 state.weather = state.weather || world.default_weather || 'rain';
-state.time = state.time || null;          // a time of day the visitor chose on the clock, or null for their own
+state.time = state.time || null;
+state.chat = state.chat || [];             // Gemma's chat log for this visit
+if (state.sound === undefined) state.sound = true;          // a time of day the visitor chose on the clock, or null for their own
 
 // ---------- time of day: the device's own, unless the visitor pushed the clock
 const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
@@ -397,7 +448,15 @@ function lookTo(yaw, pitch) {
 // ---------- trail + lingering
 const label = id => world.objects[id]?.label || id;
 const lingered = {};
+const SYS = {
+  touch: e => `You went to ${world.objects[e.id]?.ref || label(e.id)}`,
+  weather: e => `You turned the barometer to ${world.weathers[e.id]?.label}`,
+  time: e => `You pushed the clock to ${world.times[e.id]?.label.toLowerCase()}`,
+  choose: e => `You chose ${world.clusters[e.cluster]?.label}`,
+  dismiss: e => `You set aside "${atomsById[e.atom]?.title}"`,
+};
 function record(e) {
+  if (SYS[e.kind]) chatLine('sys', SYS[e.kind](e));
   state.trail.push({ ...e, t: Date.now() });
   state.trail = state.trail.slice(-40);
   store.save(state);
@@ -450,22 +509,20 @@ async function navigate() {
     // AI refines it a few seconds later. Serving waits for the AI so cards don't arrive twice.
     state.result = local;
     applyReveal(local.reveal);
-    if (local.gemma) say(local.gemma.replace(" I've put something on the counter for you.", ' Let me think…'), local.fork);
-    $('bubble').classList.add('thinking');
+    typing(true);
     renderNotes();
     r = await aiNavigate(AI, navTrail(), world, opts);
     if (seq !== navSeq) return;                            // a newer event superseded this one
-    $('bubble').classList.remove('thinking');
+    typing(false);
   }
   state.result = r;
   $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
   applyReveal(r.reveal);
   // Right after a barometer turn, Gemma reacts to the weather first, then says what she's put out
   const last = state.trail[state.trail.length - 1];
-  const moment = last?.kind === 'weather' ? world.weathers[last.id]?.moment : last?.kind === 'time' ? world.times[last.id]?.moment : null;
-  const gemma = moment && r.gemma
-    ? `${moment} ${r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase())}`
-    : r.gemma;
+  // In the chat the weather or clock line is its own message, so this one is the follow-up double-text
+  const reacted = last?.kind === 'weather' || last?.kind === 'time';
+  const gemma = reacted && r.gemma ? r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase()) : r.gemma;
   if (gemma) say(gemma, r.fork);
   // One new piece per step (two to start), so the counter fills at the pace of the wander
   r.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(serve);
@@ -478,16 +535,93 @@ function applyReveal(reveal) {
   for (const h of hotspots) h.el.classList.toggle('revealed', ids.has(h.id));
 }
 
+// ---------- Gemma's chat
+function clockLabel() {
+  // Timestamps follow the kitchen clock: the visitor's own time, or the time they pushed it to
+  let d = new Date();
+  if (state.time) {
+    const h = world.times[state.time].hour;
+    d = new Date(); d.setHours(Math.floor(h), Math.round((h % 1) * 60) + (state.chatMinute = (state.chatMinute || 0) + 1), 0);
+  }
+  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+}
+function renderChat() {
+  const log = $('cw-log');
+  log.innerHTML = state.chat.map(m => m.who === 'sys'
+    ? `<div class="cw-sys">${esc(m.text)}</div>`
+    : `<div class="cw-who">Gemma · ${esc(m.at)}</div><div class="cw-msg">${esc(m.text)}</div>`).join('');
+  log.scrollTop = log.scrollHeight;
+}
+function chatLine(who, text) {
+  if (!text) return;
+  const last = [...state.chat].reverse().find(m => m.who === who);
+  if (who === 'gemma' && last?.text === text) return;            // don't repeat herself
+  state.chat.push({ who, text, at: clockLabel() });
+  state.chat = state.chat.slice(-60);
+  renderChat();
+  if (who === 'gemma') uhOh();
+  store.save(state);
+}
+function setChips(chips) {
+  const box = $('cw-chips');
+  box.innerHTML = '';
+  for (const c of chips) {
+    const b = document.createElement('button');
+    b.textContent = c.label;
+    b.onclick = () => { box.innerHTML = ''; c.act(); };
+    box.appendChild(b);
+  }
+}
+function typing(on) { $('cw-typing').hidden = !on; }
 let sayTimer;
 function say(text, fork = [], brief = false) {
+  // Locally Gemma takes a beat to "type"; with the AI on, the typing indicator already covered the wait
   clearTimeout(sayTimer);
-  const b = $('bubble');
-  b.innerHTML = esc(text) + (fork.length
-    ? `<div class="forks">${fork.map(c => `<button data-c="${esc(c)}">${esc(world.clusters[c].label.replace(/^./, x => x.toUpperCase()))}</button>`).join('')}</div>`
-    : '');
-  b.querySelectorAll('button').forEach(btn => btn.onclick = () => record({ kind: 'choose', cluster: btn.dataset.c }));
-  if (brief && state.result?.gemma) sayTimer = setTimeout(() => say(state.result.gemma, state.result.fork), 4500);
+  const post = () => {
+    typing(false);
+    chatLine('gemma', text);
+    setChips(fork.map(c => ({ label: world.clusters[c].label.replace(/^./, x => x.toUpperCase()), act: () => record({ kind: 'choose', cluster: c }) })));
+  };
+  if (AI && !brief) return post();
+  typing(true);
+  sayTimer = setTimeout(post, brief ? 350 : 650);
 }
+
+// "uh-oh!": Nicole's recorded one when it exists, otherwise a two-note synth homage
+let lastUhOh = 0, uhOhAudio = null, actx = null;
+fetch('explore/assets/uh-oh.mp3', { method: 'HEAD' }).then(r => { if (r.ok) uhOhAudio = new Audio('explore/assets/uh-oh.mp3'); }).catch(() => {});
+function uhOh() {
+  if (!state.sound || performance.now() - lastUhOh < 2500) return;
+  lastUhOh = performance.now();
+  try {
+    if (uhOhAudio) { uhOhAudio.volume = 0.5; uhOhAudio.currentTime = 0; uhOhAudio.play().catch(() => {}); return; }
+    actx = actx || new AudioContext();
+    if (actx.state === 'suspended') actx.resume();
+    [[659, 0], [523, 0.16]].forEach(([f, t]) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, actx.currentTime + t);
+      g.gain.linearRampToValueAtTime(0.08, actx.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + t + 0.22);
+      o.connect(g).connect(actx.destination);
+      o.start(actx.currentTime + t); o.stop(actx.currentTime + t + 0.25);
+    });
+  } catch { /* no audio available: the chat still works */ }
+}
+const soundLabel = () => { $('cw-sound').textContent = state.sound ? 'uh-oh: on' : 'uh-oh: off'; };
+$('cw-sound').onclick = () => { state.sound = !state.sound; soundLabel(); store.save(state); if (state.sound) { lastUhOh = 0; uhOh(); } };
+$('cw-min').onclick = () => { const min = $('chatwin').classList.toggle('min'); $('cw-min').setAttribute('aria-expanded', String(!min)); $('cw-min').textContent = min ? '□' : '_'; };
+$('cw-credits').onclick = () => $('credits').classList.add('open');
+$('credits-ok').onclick = () => $('credits').classList.remove('open');
+
+// Her 90s avatar blinks now and then
+(function blink() {
+  setTimeout(() => {
+    const av = $('cw-av');
+    av.src = 'explore/assets/gemma-pixel-blink.png';
+    setTimeout(() => { av.src = 'explore/assets/gemma-pixel.png'; blink(); }, 170);
+  }, 2500 + Math.random() * 4000);
+})();
 
 function serve({ atom, why }) {
   const a = atomsById[atom];
@@ -564,11 +698,12 @@ $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
 $('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
 $('forget').onclick = () => {
   store.clear();
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, asked: false });
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, asked: false, chat: [] });
+  renderChat(); setChips([]);
   setHands(handsHour());
   showWeather(state.weather);
   renderCards(); renderNotes(); applyReveal([]);
-  say('Forgotten. Fresh start. Have a wander.');
+  chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
 };
 
 function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; $('tool').classList.add('open'); $('tool-ok').focus(); }
@@ -629,8 +764,8 @@ function arrive() {
   if (state.asked || state.trail.length) return;
   state.asked = true;
   store.save(state);
-  $('bubble').innerHTML = `${esc("Hello, love. What's the weather like for you today?")}<div class="forks"><button id="show-baro">Turn the barometer</button></div>`;
-  $('show-baro').onclick = () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); };
+  chatLine('gemma', "Hello, love. What's the weather like for you today?");
+  setChips([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
   applyReveal([{ object: 'barometer' }]);
 }
 
@@ -639,7 +774,9 @@ window.__explore = { state, touch, chooseWeather, chooseTime, lookTo: (y, p) => 
 fillMap();
 renderCards();
 renderNotes();
-if (state.result) { applyReveal(state.result.reveal); if (state.result.gemma) say(state.result.gemma, state.result.fork); }
+renderChat();
+soundLabel();
+if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);
 arrive();
 resize();
