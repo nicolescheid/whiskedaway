@@ -142,8 +142,11 @@ This creates a `dist/` folder with static files ready for deployment.
 ### Deployment to DreamHost
 
 1. Run `npm run build`
-2. Upload contents of `dist/` folder to your DreamHost public_html directory
-3. Done!
+2. Upload the *contents* of `dist/` (not the folder itself) into the site's web directory on
+   DreamHost. That's the folder named after the domain, `whiskedaway.com/`, in the home
+   directory (DreamHost doesn't use `public_html`). Overwrite `index.html`; keep `.htaccess`.
+3. Check it's live: `curl -s https://whiskedaway.com/ | grep assets/` should list the new
+   `index-<hash>.js` from `dist/index.html`.
 
 ## 📦 Available Components
 
