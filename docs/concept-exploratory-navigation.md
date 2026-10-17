@@ -109,6 +109,25 @@ The view through the window colours what a visitor wants, so the visitor should 
 - **Mood, not forecast:** each room starts on its own weather. Using the visitor's real local
   weather could come later, only as an explicit opt-in.
 
+## The clock, and "what's the weather like for you?" (Nicole, 17 Oct 2026)
+
+Weather and time are the two things that most change what someone feels like eating, so the
+room offers both as things to touch, never as a form.
+
+- **Gemma asks once, on arrival:** "What's the weather like for you today?" It works literally
+  (a sweltering day) and emotionally (a stormy day). The answer is turning the barometer. She
+  never asks twice, and wandering off instead is an answer too.
+- **The wall clock** starts at the visitor's own local time. Only "morning", "midday",
+  "evening" or "late night" ever leaves the device. Pushing the hour hand changes it: forward
+  to plan tonight's dinner, back for breakfast at noon.
+- **Time steers content:** porridge and toast in the morning, light at midday, a proper meal in
+  the evening, gentle and easy late at night. Gemma notices ("Burning the midnight oil?").
+- **Weight:** a time the visitor chose counts like the weather (a standing mood); the device's
+  own clock counts more lightly, because it was observed, not chosen.
+- **Visually:** each weather has a day and a night render. Morning and evening are a light tint
+  over the day render, cool and pale or golden. The clock's hands are drawn live in the viewer, so
+  they always show the time the visitor set.
+
 ## The prototype (blender/explore.html)
 
 One room, Cuddlecore, as a 360° panorama:
