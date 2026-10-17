@@ -1,5 +1,5 @@
 # The Inn from outside, inside a whisk
-18 October 2026 — WhiskedAway
+18 October 2026, WhiskedAway
 
 The storybook exterior from Part B of `docs/art-brief-inn.md`. Nicole chose this single image
 (late-afternoon light), so there are no separate day, dusk or wide versions.
