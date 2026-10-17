@@ -34,8 +34,8 @@
   .spot .name { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 999px;
                 padding: 5px 12px; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.25);
                 opacity: 0; transform: translateX(-4px); transition: all .25s; pointer-events: none; }
-  .spot:hover .name, .spot:focus-visible .name, .spot.tool .name, .spot.revealed .name { opacity: 1; transform: none; }
-  .spot.tool .dot { background: var(--berry); }
+  .spot:hover .name, .spot:focus-visible .name, .spot.is-tool .name, .spot.revealed .name { opacity: 1; transform: none; }
+  .spot.is-tool .dot { background: var(--berry); }
   .spot.submit .name { background: var(--berry); color: var(--parchment); }
   .spot.ambient .dot { width: 9px; height: 9px; }
   .spot.revealed .dot { background: var(--amber-glow); width: 14px; height: 14px; animation: glow 1.8s ease-in-out infinite; }
@@ -390,7 +390,7 @@ const handsHour = () => state.time ? world.times[state.time].hour : new Date().g
 const hotspots = Object.entries(spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
   const obj = world.objects[id];
   const el = document.createElement('button');
-  el.className = `spot ${obj.type === 'ambient' ? 'ambient' : 'tool'} ${obj.type}`;
+  el.className = `spot ${obj.type === 'ambient' ? 'ambient' : 'is-tool'} ${obj.type}`;
   el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}</span>`;
   el.setAttribute('aria-label', obj.label);
   el.addEventListener('click', e => { e.stopPropagation(); touch(id); });
