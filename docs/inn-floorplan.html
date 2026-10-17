@@ -83,9 +83,9 @@
 </style>
 
 <div class="wrap">
-  <p class="eyebrow">Draft for Nicole · 18 October 2026</p>
+  <p class="eyebrow">Agreed with Nicole · 18 October 2026</p>
   <h1>The WhiskedAway Inn</h1>
-  <p class="lede">A floorplan for the Inn as a place you can wander: which room is where, what each window looks out on, and what plays in every room. Agree this first, then it becomes the ChatGPT brief.</p>
+  <p class="lede">A floorplan for the Inn as a place you can wander: which room is where, what each window looks out on, and what plays in every room. This is the map the ChatGPT briefs are drawn from.</p>
 
   <section aria-labelledby="plan-h">
     <h2 id="plan-h">The plan</h2>
@@ -262,7 +262,7 @@
           <dt>Where</dt><dd>Off the Chiapothecary, opening onto the herb and flower garden</dd>
           <dt>View</dt><dd>Glass on three sides: the garden, the sea, the sky</dd>
           <dt>Plays</dt><dd>No instrument. Rain on the glass, bees, birds, a wind chime by the garden door</dd>
-          <dt>Changes</dt><dd>Follows the visitor's real season, so what's in bed and pot matches what they could plant now</dd>
+          <dt>Changes</dt><dd>Opens in the visitor's real season, so what's in bed and pot matches what they could plant now. A seasons wheel by the garden door turns it to any other season.</dd>
         </dl>
       </article>
 
@@ -329,13 +329,25 @@
     </div>
   </section>
 
+  <section aria-labelledby="defaults-h">
+    <h2 id="defaults-h">Good guesses, never locks</h2>
+    <p>The Inn guesses from where the visitor seems to be, then always lets them change it. The guess comes from the country and rough latitude Cloudflare attaches to each visit. It can be wrong (a VPN in another country, for one), which is fine, because it's only a starting point.</p>
+    <ul class="plain">
+      <li><strong>Season.</strong> The glasshouse opens in the visitor's season for their hemisphere: October is spring in Auckland and autumn in Edinburgh. The seasons wheel turns it to any season, for anyone who wants to learn about spring planting in autumn.</li>
+      <li><strong>Time of day.</strong> Already works this way: the device's own clock, until the visitor pushes the hands.</li>
+      <li><strong>Weather.</strong> Already works this way: the barometer starts on rain and Gemma asks what it's like for them.</li>
+      <li><strong>Country for shopping lists.</strong> Grocery suggestions start with the visitor's country and its supermarkets, with a country picker on the list itself.</li>
+    </ul>
+    <p>Only the guess is used, in the page. Nothing about location is stored or kept after the visit.</p>
+  </section>
+
   <section aria-labelledby="q-h">
-    <h2 id="q-h">For you to decide</h2>
+    <h2 id="q-h">Decided</h2>
     <ol class="qs">
-      <li><span>Are the rooms in the right places? In particular, Cravings Decoded in the turret and Nourish Academy as the upstairs library.</span></li>
-      <li><span>Should the dial show room names, with Gemma's star notch as the one surprise? (That's my suggestion.)</span></li>
-      <li><span>Should the glasshouse follow the visitor's real season, hemisphere and all, or the barometer like everywhere else?</span></li>
-      <li><span>Build order: I'd suggest the hallway and the magic door first, then the glasshouse, then Flourish.</span></li>
+      <li><span>The rooms stay where they are on the plan.</span></li>
+      <li><span>The dial shows room names, plus Gemma's star notch for "wherever your wander points".</span></li>
+      <li><span>The glasshouse opens in the visitor's real season, and they can turn it to any other.</span></li>
+      <li><span>Build order: the hallway and the magic door, then the glasshouse, then Flourish. ChatGPT also draws the outside of the Inn as a storybook illustration, held inside a whisk the way a genie is held in a lamp.</span></li>
     </ol>
   </section>
 </div>
