@@ -1,0 +1,12 @@
+{
+  // whiskedaway.com, served as static assets from a Worker (moved from DreamHost, Oct 2026).
+  // Deploy: npm run deploy   (builds, then uploads dist/)
+  // The recipe/navigation API is a separate Worker: worker/wrangler.toml
+  "name": "whiskedaway-site",
+  "account_id": "413cb81347f3e89932f12e3ed9a6d062", // Nicole's account; never deploy elsewhere
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

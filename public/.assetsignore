@@ -1,0 +1,2 @@
+# Apache-only files from the DreamHost days; Cloudflare's SPA handling replaces them
+.htaccess
