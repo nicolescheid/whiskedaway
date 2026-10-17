@@ -1,0 +1,341 @@
+<title>The WhiskedAway Inn Floorplan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Layout: an estate agent's particulars for a house that half exists. Plan first, then room-by-room cards, then the rules. */
+  :root {
+    --bg: #f4efe4; --paper: #fbf8f1; --ink: #2c2416; --ink-soft: #5c5040; --berry: #8b4d5c; --amber: #b07f52;
+    --line: rgba(139, 77, 92, 0.28); --wall: #3a2e22; --sea: #c9d6d8; --green: #c9d3b4; --glass: #dde7dc; --locked: #e4ddd0;
+    --display: 'Crimson Pro', Georgia, 'Times New Roman', serif; --body: 'Quicksand', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #1c1612; --paper: #261e18; --ink: #efe7d8; --ink-soft: #c2b59f; --berry: #d58fa0; --amber: #e0ae7c;
+    --line: rgba(213, 143, 160, 0.3); --wall: #e6dccb; --sea: #24383c; --green: #2c3a24; --glass: #24342c; --locked: #332a22; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #1c1612; --paper: #261e18; --ink: #efe7d8; --ink-soft: #c2b59f; --berry: #d58fa0; --amber: #e0ae7c;
+    --line: rgba(213, 143, 160, 0.3); --wall: #e6dccb; --sea: #24383c; --green: #2c3a24; --glass: #24342c; --locked: #332a22; color-scheme: dark }
+
+  body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--body); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-block: 40px 64px;
+          padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.05; }
+  h2 { font-size: 30px; margin-bottom: 6px; }
+  h3 { font-size: 22px; }
+  p { margin: 0; max-width: 66ch; }
+  .eyebrow { font: 600 12px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--berry); }
+  .lede { font: 20px/1.5 var(--display); color: var(--ink-soft); margin-top: 12px; }
+  section { margin-top: 56px; display: grid; gap: 14px; }
+
+  /* Plans */
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 20px; }
+  figure { margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 14px; min-width: 0; }
+  figcaption { font: 600 13px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { font-family: var(--body); fill: var(--ink); }
+  svg .room { fill: var(--paper); stroke: var(--wall); stroke-width: 3; }
+  svg .room.built { fill: color-mix(in srgb, var(--berry) 14%, var(--paper)); }
+  svg .room.locked { fill: var(--locked); stroke-dasharray: 6 4; }
+  svg .hall { fill: color-mix(in srgb, var(--amber) 12%, var(--paper)); stroke: var(--wall); stroke-width: 3; }
+  svg .glass { fill: var(--glass); stroke: var(--wall); stroke-width: 2; }
+  svg .sea { fill: var(--sea); }
+  svg .green { fill: var(--green); }
+  svg .lane { fill: var(--locked); }
+  svg .door { fill: var(--paper); stroke: none; }
+  svg .dial { fill: var(--amber); stroke: var(--wall); stroke-width: 1; }
+  svg .name { font: 600 14px var(--display); }
+  svg .note { font-size: 10.5px; fill: var(--ink-soft); }
+  svg .edge { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; fill: var(--ink-soft); }
+  svg .stairs line { stroke: var(--wall); stroke-width: 1; }
+  svg a:hover .room, svg a:focus .room { stroke: var(--berry); }
+  .key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--ink-soft); }
+  .key span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 14px; height: 14px; border: 1.5px solid var(--wall); display: inline-block; }
+
+  /* Movement */
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+  .way { border-top: 3px solid var(--berry); padding-top: 12px; display: grid; gap: 6px; min-width: 0; }
+
+  /* Rooms */
+  .rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+  .card header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .tome { font-size: 13px; color: var(--ink-soft); font-style: italic; font-family: var(--display); font-size: 16px; }
+  .status { font: 600 11px var(--body); letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+  .status.built { color: var(--berry); }
+  .status.next { color: var(--amber); }
+  .status.later { color: var(--ink-soft); }
+  dl { margin: 0; display: grid; grid-template-columns: 82px 1fr; gap: 6px 12px; font-size: 14.5px; }
+  dt { font: 600 11px/2 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  dd { margin: 0; min-width: 0; }
+  .plays { display: grid; gap: 2px; }
+  .plays i { font-style: normal; color: var(--ink-soft); }
+
+  ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 70ch; }
+  .rights { background: var(--paper); border-left: 3px solid var(--amber); padding: 14px 18px; display: grid; gap: 8px; }
+  .qs { counter-reset: q; display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; max-width: 72ch; }
+  .qs li { counter-increment: q; display: grid; grid-template-columns: 28px 1fr; }
+  .qs li::before { content: counter(q); font: 600 18px var(--display); color: var(--berry); }
+  a { color: var(--berry); }
+  :focus-visible { outline: 2px solid var(--berry); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Draft for Nicole · 18 October 2026</p>
+  <h1>The WhiskedAway Inn</h1>
+  <p class="lede">A floorplan for the Inn as a place you can wander: which room is where, what each window looks out on, and what plays in every room. Agree this first, then it becomes the ChatGPT brief.</p>
+
+  <section aria-labelledby="plan-h">
+    <h2 id="plan-h">The plan</h2>
+    <p>The Inn sits on a headland above the sea. The back of the house faces the water, the front faces the village lane, the sunny side opens onto the garden and the glasshouse, and the shady side backs onto the hill. Click a room to jump to its notes.</p>
+    <div class="plans">
+      <figure>
+        <figcaption>Ground floor</figcaption>
+        <svg viewBox="0 0 560 440" role="img" aria-labelledby="gf-t">
+          <title id="gf-t">Ground floor plan: Cuddlecore and Flourish kitchens at the back by the sea, Sweet Spells and Chiapothecary at the front, a central hallway, the entrance hall with the stairs, and the glasshouse on the sunny side.</title>
+          <rect class="sea" x="0" y="0" width="560" height="44"/>
+          <text class="edge" x="280" y="27" text-anchor="middle">The sea</text>
+          <rect class="green" x="470" y="44" width="90" height="356"/>
+          <text class="edge" x="515" y="380" text-anchor="middle">Garden</text>
+          <rect class="lane" x="0" y="404" width="560" height="36"/>
+          <text class="edge" x="280" y="427" text-anchor="middle">Village lane</text>
+          <text class="edge" x="22" y="230" text-anchor="middle" transform="rotate(-90 22 230)">The hill</text>
+
+          <a href="#room-cuddlecore"><rect class="room built" x="50" y="60" width="150" height="130"/>
+            <text class="name" x="125" y="120" text-anchor="middle">Cuddlecore</text>
+            <text class="note" x="125" y="138" text-anchor="middle">wireless radio</text></a>
+          <a href="#room-flourish"><rect class="room" x="260" y="60" width="150" height="130"/>
+            <text class="name" x="335" y="120" text-anchor="middle">Flourish</text>
+            <text class="note" x="335" y="138" text-anchor="middle">phonograph</text></a>
+          <a href="#room-sweet"><rect class="room" x="50" y="190" width="150" height="130"/>
+            <text class="name" x="125" y="250" text-anchor="middle">Sweet Spells</text>
+            <text class="note" x="125" y="268" text-anchor="middle">music box</text></a>
+          <a href="#room-chia"><rect class="room" x="260" y="190" width="150" height="130"/>
+            <text class="name" x="335" y="250" text-anchor="middle">Chiapothecary</text>
+            <text class="note" x="335" y="268" text-anchor="middle">clockwork songbird</text></a>
+          <a href="#room-hall"><rect class="hall" x="200" y="60" width="60" height="260"/>
+            <text class="note" x="230" y="190" text-anchor="middle" transform="rotate(-90 230 190)">hallway · grandfather clock</text>
+            <rect class="hall" x="50" y="320" width="360" height="74"/>
+            <text class="name" x="270" y="352" text-anchor="middle">Entrance hall</text>
+            <text class="note" x="270" y="370" text-anchor="middle">notice board · front door</text></a>
+          <g class="stairs" aria-hidden="true"><rect class="hall" x="60" y="328" width="120" height="58"/>
+            <line x1="75" y1="328" x2="75" y2="386"/><line x1="90" y1="328" x2="90" y2="386"/><line x1="105" y1="328" x2="105" y2="386"/>
+            <line x1="120" y1="328" x2="120" y2="386"/><line x1="135" y1="328" x2="135" y2="386"/><line x1="150" y1="328" x2="150" y2="386"/><line x1="165" y1="328" x2="165" y2="386"/>
+            <text class="note" x="120" y="360" text-anchor="middle" style="paint-order:stroke;stroke:var(--paper);stroke-width:3px">stairs up</text></g>
+          <a href="#room-glass"><path class="glass" d="M410 110 h60 v210 h-60 z"/>
+            <path d="M410 110 L470 110 M430 110 L430 320 M450 110 L450 320" stroke="var(--wall)" stroke-width=".6" fill="none" aria-hidden="true"/>
+            <text class="name" x="440" y="210" text-anchor="middle" transform="rotate(-90 440 210)">Glasshouse</text></a>
+          <!-- doors (gaps in the walls) and a magic dial beside every room door -->
+          <rect class="door" x="198" y="112" width="5" height="26"/><rect class="door" x="257" y="112" width="5" height="26"/>
+          <rect class="door" x="198" y="242" width="5" height="26"/><rect class="door" x="257" y="242" width="5" height="26"/>
+          <rect class="door" x="408" y="242" width="5" height="26"/><rect class="door" x="256" y="391" width="28" height="6"/>
+          <rect class="door" x="74" y="57" width="34" height="6" fill="var(--sea)"/><rect class="door" x="284" y="57" width="34" height="6" fill="var(--sea)"/>
+          <circle class="dial" cx="192" cy="150" r="4.5"/><circle class="dial" cx="268" cy="150" r="4.5"/>
+          <circle class="dial" cx="192" cy="280" r="4.5"/><circle class="dial" cx="268" cy="280" r="4.5"/>
+          <circle class="dial" cx="418" cy="280" r="4.5"/>
+          <text class="note" x="125" y="76" text-anchor="middle">window to the sea</text>
+          <text class="note" x="335" y="76" text-anchor="middle">window to the sea</text>
+          <text class="note" x="125" y="312" text-anchor="middle">bay window to the lane</text>
+        </svg>
+      </figure>
+
+      <figure>
+        <figcaption>First floor and turret</figcaption>
+        <svg viewBox="0 0 560 440" role="img" aria-labelledby="ff-t">
+          <title id="ff-t">First floor plan: the Cravings Decoded turret over the sea corner, guest rooms that stay locked, the landing with a window seat over the glasshouse roof, Nourish Academy over the front, and the attic stairs, also locked.</title>
+          <rect class="sea" x="0" y="0" width="560" height="44"/>
+          <text class="edge" x="280" y="27" text-anchor="middle">The sea</text>
+          <rect class="green" x="470" y="44" width="90" height="356"/>
+          <text class="edge" x="515" y="380" text-anchor="middle">Garden</text>
+          <rect class="lane" x="0" y="404" width="560" height="36"/>
+          <text class="edge" x="280" y="427" text-anchor="middle">Village lane</text>
+          <path class="glass" d="M410 110 h60 v210 h-60 z" opacity=".55" stroke-dasharray="5 4"/>
+          <text class="note" x="440" y="214" text-anchor="middle" transform="rotate(-90 440 214)">glasshouse roof below</text>
+
+          <a href="#room-cravings"><rect class="room" x="50" y="60" width="150" height="130"/>
+            <circle class="room" cx="90" cy="96" r="52"/>
+            <text class="name" x="92" y="92" text-anchor="middle">Cravings</text>
+            <text class="name" x="92" y="108" text-anchor="middle">Decoded</text>
+            <text class="note" x="150" y="168" text-anchor="middle">turret · orrery</text></a>
+          <a href="#teasers"><rect class="room locked" x="260" y="60" width="150" height="130"/>
+            <text class="name" x="335" y="120" text-anchor="middle">Guest rooms</text>
+            <text class="note" x="335" y="138" text-anchor="middle">locked: full tonight</text></a>
+          <a href="#room-academy"><rect class="room" x="50" y="190" width="150" height="204"/>
+            <text class="name" x="125" y="282" text-anchor="middle">Nourish</text>
+            <text class="name" x="125" y="298" text-anchor="middle">Academy</text>
+            <text class="note" x="125" y="316" text-anchor="middle">library · player piano</text></a>
+          <a href="#room-hall"><rect class="hall" x="200" y="60" width="60" height="334"/>
+            <text class="note" x="230" y="230" text-anchor="middle" transform="rotate(-90 230 230)">landing · stairs down</text>
+            <rect class="hall" x="260" y="190" width="150" height="80"/>
+            <text class="name" x="335" y="226" text-anchor="middle">Window seat</text>
+            <text class="note" x="335" y="244" text-anchor="middle">looks over the garden</text></a>
+          <a href="#teasers"><rect class="room locked" x="260" y="270" width="150" height="124"/>
+            <text class="name" x="335" y="326" text-anchor="middle">Attic stairs</text>
+            <text class="note" x="335" y="344" text-anchor="middle">locked: "not today, love"</text></a>
+          <rect class="door" x="198" y="112" width="5" height="26"/><rect class="door" x="198" y="280" width="5" height="26"/>
+          <circle class="dial" cx="192" cy="150" r="4.5"/><circle class="dial" cx="192" cy="318" r="4.5"/>
+          <text class="note" x="125" y="384" text-anchor="middle">windows to the lane and village</text>
+        </svg>
+      </figure>
+    </div>
+    <div class="key">
+      <span><i class="sw" style="background:color-mix(in srgb, var(--berry) 14%, var(--paper))"></i>Built (360° panorama)</span>
+      <span><i class="sw" style="background:var(--paper)"></i>To build</span>
+      <span><i class="sw" style="background:var(--locked);border-style:dashed"></i>Locked on purpose</span>
+      <span><i class="sw" style="background:var(--amber);border-radius:50%"></i>Magic dial beside the door</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="move-h">
+    <h2 id="move-h">Two ways through every door</h2>
+    <div class="two">
+      <div class="way">
+        <h3>Walk</h3>
+        <p>Click the door and you step into the hallway. From there the Inn is a world you explore on foot: the hallway, the entrance hall, the stairs, the landing, every room's own door. This is what makes the Inn feel real.</p>
+      </div>
+      <div class="way">
+        <h3>Turn the dial</h3>
+        <p>Beside every door is the same brass dial. Turn it to a room, open the door, and you're there, with a one-second glimpse of the room through the doorframe as it opens. This is the fixed navigation: always in the same place, always works.</p>
+      </div>
+      <div class="way">
+        <h3>Gemma's notch</h3>
+        <p>One notch on the dial has a little star. Set it there and the door opens wherever your wander points: lingering on rainy-day comfort might open the reading corner of the library. This is the exploratory navigation, built into the furniture.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="rooms-h">
+    <h2 id="rooms-h">Room by room</h2>
+    <p>Each room keeps the tome it already has, gets a view that suits it, and has one thing in it that plays. What plays changes with the barometer and the clock. Pieces are suggestions, all public-domain compositions (see the note on recordings below).</p>
+    <div class="rooms">
+
+      <article class="card" id="room-cuddlecore">
+        <header><h3>Cuddlecore Kitchen</h3><span class="status built">Built</span></header>
+        <span class="tome">Cuddlecore Care: gentle nourishment when you need it most</span>
+        <dl>
+          <dt>Where</dt><dd>Ground floor, back, hill side</dd>
+          <dt>View</dt><dd>The sea, in all five weathers, day and night</dd>
+          <dt>Plays</dt><dd>A wireless radio on the dresser that drifts between stations</dd>
+          <dt>Pieces</dt><dd class="plays"><span><i>Rain:</i> Chopin, "Raindrop" Prelude</span><span><i>Fair:</i> Satie, Gymnopédie No. 1</span><span><i>Stormy:</i> static, then Debussy, Clair de lune</span><span><i>Late night:</i> Brahms, Lullaby</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" id="room-flourish">
+        <header><h3>Flourish Kitchen</h3><span class="status next">Next</span></header>
+        <span class="tome">Flourish: nourishment for becoming your best self</span>
+        <dl>
+          <dt>Where</dt><dd>Ground floor, back, sunny side</dd>
+          <dt>View</dt><dd>The sea, plus morning sun, and a back door to the kitchen garden</dd>
+          <dt>Plays</dt><dd>A horn phonograph you wind up</dd>
+          <dt>Pieces</dt><dd class="plays"><span><i>Morning:</i> Grieg, Morning Mood</span><span><i>Midday:</i> Vivaldi, Spring</span><span><i>Evening:</i> Dvořák, Humoresque No. 7</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" id="room-sweet">
+        <header><h3>Sweet Spells</h3><span class="status later">Later</span></header>
+        <span class="tome">Sweet Spells: treats that happen to be good for you</span>
+        <dl>
+          <dt>Where</dt><dd>Ground floor, front, hill side</dd>
+          <dt>View</dt><dd>A bay window onto the village lane: umbrellas in the rain, lamplight at night</dd>
+          <dt>Plays</dt><dd>A music box on the cake stand; open the lid and the dancer turns</dd>
+          <dt>Pieces</dt><dd class="plays"><span><i>Any weather:</i> Tchaikovsky, Dance of the Sugar Plum Fairy</span><span><i>Rain:</i> Beethoven, Für Elise</span><span><i>Night:</i> Brahms, Waltz in A-flat</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" id="room-chia">
+        <header><h3>Chiapothecary</h3><span class="status later">Later</span></header>
+        <span class="tome">Chiapothecary: chia pudding experiments with superpower vibes</span>
+        <dl>
+          <dt>Where</dt><dd>Ground floor, front, sunny side, with a glass door into the glasshouse</dd>
+          <dt>View</dt><dd>Through the glasshouse to the garden</dd>
+          <dt>Plays</dt><dd>A clockwork songbird in a brass cage, plus bubbling flasks and ticking scales</dd>
+          <dt>Pieces</dt><dd class="plays"><span>Birdsong that brightens in fair weather and goes quiet in a storm</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" id="room-glass">
+        <header><h3>The Glasshouse</h3><span class="status next">Next</span></header>
+        <span class="tome">New: herbs and flowers you can grow, and recipes for them</span>
+        <dl>
+          <dt>Where</dt><dd>Off the Chiapothecary, opening onto the herb and flower garden</dd>
+          <dt>View</dt><dd>Glass on three sides: the garden, the sea, the sky</dd>
+          <dt>Plays</dt><dd>No instrument. Rain on the glass, bees, birds, a wind chime by the garden door</dd>
+          <dt>Changes</dt><dd>Follows the visitor's real season, so what's in bed and pot matches what they could plant now</dd>
+        </dl>
+      </article>
+
+      <article class="card" id="room-academy">
+        <header><h3>Nourish Academy</h3><span class="status later">Later</span></header>
+        <span class="tome">Nourish Academy: kitchen wisdom, no jargon</span>
+        <dl>
+          <dt>Where</dt><dd>First floor, front: a library and schoolroom</dd>
+          <dt>View</dt><dd>Over the lane to the village rooftops and the hills</dd>
+          <dt>Plays</dt><dd>A player piano with its roll turning</dd>
+          <dt>Pieces</dt><dd class="plays"><span><i>Fair:</i> Joplin, Maple Leaf Rag</span><span><i>Rain:</i> Joplin, Solace</span><span><i>Evening:</i> Joplin, Bethena</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" id="room-cravings">
+        <header><h3>Cravings Decoded</h3><span class="status later">Later</span></header>
+        <span class="tome">Cravings Decoded: what's your body really asking for?</span>
+        <dl>
+          <dt>Where</dt><dd>The turret, up a short spiral from the landing</dd>
+          <dt>View</dt><dd>Windows all round: sea, village, garden. A telescope; the best room at night</dd>
+          <dt>Plays</dt><dd>A clockwork orrery whose planets chime as they turn</dd>
+          <dt>Pieces</dt><dd class="plays"><span><i>Day:</i> Satie, Gnossienne No. 1</span><span><i>Night:</i> Holst, Venus from The Planets</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" id="room-hall">
+        <header><h3>Hallway and landing</h3><span class="status next">Next</span></header>
+        <span class="tome">The spine of the house</span>
+        <dl>
+          <dt>Where</dt><dd>Through the middle of both floors, with the entrance hall and stairs at the front</dd>
+          <dt>View</dt><dd>Every room's door, the front door's fanlight, the landing window seat over the garden</dd>
+          <dt>Plays</dt><dd>A grandfather clock that ticks and strikes the hour, matching the kitchen clock</dd>
+          <dt>Also</dt><dd>Each room's music leaks through its door, louder as you get closer</dd>
+        </dl>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="teasers">
+    <h2 id="teasers">Making it feel bigger than it is</h2>
+    <p>The visitor sees a handful of rooms but should believe in many more. These cost very little to build:</p>
+    <ul class="plain">
+      <li><strong>Locked doors that stay locked.</strong> The guest rooms are "full tonight". The attic is "not today, love". The cellar door under the stairs is stiff.</li>
+      <li><strong>Light behind doors.</strong> A door left ajar with warm light and a sound behind it, before that room is built.</li>
+      <li><strong>Sound through the walls.</strong> The grandfather clock, the phonograph two rooms away, a kettle somewhere.</li>
+      <li><strong>Windows onto other parts of the Inn.</strong> From the window seat you see the glasshouse roof; at night the turret window is lit.</li>
+      <li><strong>The Inn cat.</strong> A cat who is somewhere different depending on the weather and the time: on the glasshouse bench in the sun, by the range in the rain, in the turret at night. Following the cat is a wander of its own, and the navigator can notice it.</li>
+      <li><strong>The notice board.</strong> In the entrance hall, with what's in season, tonight's soup and whatever Gemma has pinned up for the visitor.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="sound-h">
+    <h2 id="sound-h">How sound behaves</h2>
+    <ul class="plain">
+      <li>Nothing plays until the visitor clicks something. Browsers require it, and it's good manners.</li>
+      <li>The one sound switch in Gemma's chat window turns everything on or off, the uh-oh included.</li>
+      <li>Click the object to start or stop it: lift the music box lid, wind the phonograph, turn the radio dial.</li>
+      <li>Turning the barometer or pushing the clock changes the piece, with a short fade between them.</li>
+      <li>Starting a piece counts as part of the wander, so music taste can steer what Gemma serves.</li>
+    </ul>
+    <div class="rights">
+      <h3>A note on the recordings</h3>
+      <p>These compositions are out of copyright, but every recording of them has its own rights. We'd use only recordings that are free to use: CC0 or public-domain performances from Musopen and Wikimedia Commons, or very old recordings that are public domain where we publish. The player piano is the neat case: scans of old piano rolls can be played back through a free piano sound, so it really is the roll playing. Every recording goes into the "Made with open things" credits.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="q-h">
+    <h2 id="q-h">For you to decide</h2>
+    <ol class="qs">
+      <li><span>Are the rooms in the right places? In particular, Cravings Decoded in the turret and Nourish Academy as the upstairs library.</span></li>
+      <li><span>Should the dial show room names, with Gemma's star notch as the one surprise? (That's my suggestion.)</span></li>
+      <li><span>Should the glasshouse follow the visitor's real season, hemisphere and all, or the barometer like everywhere else?</span></li>
+      <li><span>Build order: I'd suggest the hallway and the magic door first, then the glasshouse, then Flourish.</span></li>
+    </ol>
+  </section>
+</div>
