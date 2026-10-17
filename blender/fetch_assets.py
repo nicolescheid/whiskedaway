@@ -14,7 +14,10 @@ RES = "2k"
 
 MODELS = ["pot_enamel_01", "painted_wooden_cabinet", "wooden_bookshelf_worn", "ArmChair_01",
           "wooden_candlestick", "vintage_oil_lamp", "wicker_basket_01", "wooden_bowl_01",
-          "wooden_cutting_board", "wooden_spoon", "potted_plant_02", "ceramic_vase_01"]
+          "wooden_cutting_board", "wooden_spoon", "potted_plant_02", "ceramic_vase_01",
+          # Concept-pack pass (Oct 2026): tall pantry, framed print, kitchen dressing
+          "painted_wooden_cabinet_02", "hanging_picture_frame_01", "jug_01", "food_apple_01",
+          "lemon", "yellow_onion", "throw_pillows_01", "wicker_basket_02"]
 TEXTURES = ["old_wooden_floor_01", "white_plaster_rough_01", "medieval_wood", "wood_table_worn",
             "rough_linen", "knitted_fleece"]
 HDRIS = ["kloofendal_overcast_puresky"]

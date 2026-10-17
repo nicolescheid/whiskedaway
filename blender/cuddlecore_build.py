@@ -233,37 +233,190 @@ def shelf_heights(root, x, y, top):
     return hits
 
 
+# ---------------------------------------------------------------- concept-pack helpers
+
+CONCEPT = os.path.join(os.path.dirname(HERE), "art-inbox", "cuddlecore")
+
+
+def retint(root, hex_color, lo=0.55, hi=1.15):
+    """Repaint a model in hex_color while keeping its texture's wear and dirt as light/dark variation."""
+    tint = srgb(hex_color)
+    for o in meshes_of(root):
+        for m in o.data.materials:
+            if not m or not m.node_tree:
+                continue
+            nt = m.node_tree
+            p = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+            if not p or not p.inputs["Base Color"].is_linked:
+                continue
+            src = p.inputs["Base Color"].links[0].from_socket
+            bw = nt.nodes.new("ShaderNodeRGBToBW")
+            nt.links.new(src, bw.inputs["Color"])
+            rng = nt.nodes.new("ShaderNodeMapRange")
+            rng.inputs["To Min"].default_value = lo
+            rng.inputs["To Max"].default_value = hi
+            nt.links.new(bw.outputs["Val"], rng.inputs["Value"])
+            mix = nt.nodes.new("ShaderNodeMix")
+            mix.data_type = "RGBA"
+            mix.blend_type = "MULTIPLY"
+            mix.inputs["Factor"].default_value = 1.0
+            mix.inputs[6].default_value = tint
+            nt.links.new(rng.outputs["Result"], mix.inputs[7])
+            nt.links.new(mix.outputs[2], p.inputs["Base Color"])
+
+
+def swap_material(root, material):
+    for o in meshes_of(root):
+        o.data.materials.clear()
+        o.data.materials.append(material)
+
+
+def image_mat(name, path, rough=0.85, tile=None, normal_from=None, normal_strength=0.6):
+    """Principled material from a flat image (ChatGPT artwork / fabric). tile = metres per repeat, else UVs."""
+    m = bpy.data.materials.new(name)
+    nt, p = principled(m)
+    p.inputs["Roughness"].default_value = rough
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.image = bpy.data.images.load(path, check_existing=True)
+    if tile:
+        tc = nt.nodes.new("ShaderNodeTexCoord")
+        mp = nt.nodes.new("ShaderNodeMapping")
+        mp.inputs["Scale"].default_value = (1 / tile,) * 3
+        nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+        nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
+        t.projection = "BOX"
+        t.projection_blend = 0.3
+    nt.links.new(t.outputs["Color"], p.inputs["Base Color"])
+    if normal_from:
+        n = nt.nodes.new("ShaderNodeTexImage")
+        n.image = bpy.data.images.load(os.path.join(ASSETS, "textures", normal_from, "nor.jpg"), check_existing=True)
+        n.image.colorspace_settings.name = "Non-Color"
+        if tile:
+            nt.links.new(mp.outputs["Vector"], n.inputs["Vector"])
+            n.projection = "BOX"
+        nm = nt.nodes.new("ShaderNodeNormalMap")
+        nm.inputs["Strength"].default_value = normal_strength
+        nt.links.new(n.outputs["Color"], nm.inputs["Color"])
+        nt.links.new(nm.outputs["Normal"], p.inputs["Normal"])
+    return m
+
+
+def wall_picture(name, path, center, size, facing, material=None):
+    """A flat picture on a wall. facing: '-y' (front wall, faces into the room) or '+y' (back wall)."""
+    bpy.ops.mesh.primitive_plane_add(size=1, location=center,
+                                     rotation=(math.radians(90), 0, 0 if facing == "-y" else math.radians(180)))
+    o = bpy.context.active_object
+    o.name = name
+    o.scale = (size[0], size[1], 1)
+    bpy.ops.object.transform_apply(scale=True)
+    o.data.materials.append(material or image_mat(f"{name}_art", path, rough=0.8))
+    return o
+
+
+def curtain(name, cx, y, z_top, width, height, material, pleats=8, amp=0.035, seed=0):
+    """A gathered linen curtain built as a pleated mesh: fuller folds toward the hem."""
+    import random
+    rnd = random.Random(seed)
+    nx, nz = pleats * 10, 48
+    verts, faces = [], []
+    for k in range(nz):
+        t = k / (nz - 1)
+        for i in range(nx):
+            u = i / (nx - 1)
+            fold = math.sin(u * pleats * 2 * math.pi + rnd.uniform(-0.05, 0.05))
+            depth = amp * fold * (0.7 + 0.6 * t)
+            x = cx - width / 2 + width * u + (0.04 * t * (u - 0.5))   # slight flare at the hem
+            verts.append((x, y + depth, z_top - height * t + 0.01 * math.sin(u * 9 + seed) * t))
+    for k in range(nz - 1):
+        for i in range(nx - 1):
+            a = k * nx + i
+            faces.append((a, a + 1, a + nx + 1, a + nx))
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(verts, [], faces)
+    o = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(o)
+    o.modifiers.new("thick", "SOLIDIFY").thickness = 0.004
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    o.data.materials.append(material)
+    return o
+
+
+def drape(name, size, cuts, loc, rot, material, colliders, frames=70):
+    """Drop a cloth sheet onto colliders and keep the settled shape (used for the knitted throw)."""
+    bpy.ops.mesh.primitive_plane_add(size=1, location=loc, rotation=rot)
+    o = bpy.context.active_object
+    o.name = name
+    o.scale = (size[0], size[1], 1)
+    bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.subdivide(number_cuts=cuts)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for c in colliders:
+        if not any(m.type == "COLLISION" for m in c.modifiers):
+            col = c.modifiers.new("collide", "COLLISION")
+            c.collision.thickness_outer = 0.008
+    cloth = o.modifiers.new("Cloth", "CLOTH")
+    s = cloth.settings
+    s.quality = 8
+    s.mass = 0.6
+    s.tension_stiffness = s.compression_stiffness = 8
+    s.bending_stiffness = 0.1
+    cloth.collision_settings.distance_min = 0.006
+    cloth.collision_settings.use_self_collision = True
+    scene = bpy.context.scene
+    scene.frame_start, scene.frame_end = 1, frames
+    for f in range(1, frames + 1):
+        scene.frame_set(f)
+    with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
+        bpy.ops.object.modifier_apply(modifier="Cloth")
+    for c in colliders:
+        for m in [m for m in c.modifiers if m.type == "COLLISION"]:
+            c.modifiers.remove(m)
+    scene.frame_set(1)
+    o.modifiers.new("thick", "SOLIDIFY").thickness = 0.014
+    o.modifiers.new("smooth", "SUBSURF").levels = 1
+    for poly in o.data.polygons:
+        poly.use_smooth = True
+    o.data.materials.append(material)
+    return o
+
+
 # ---------------------------------------------------------------- build
 
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
 
-    # Scanned materials
-    plaster = pbr("plaster", "white_plaster_rough_01", 3.0, tint=srgb("#eadcc4"), tint_mix=0.85, bump=0.6)
-    floor = pbr("floor", "old_wooden_floor_01", 2.5, bump=0.8)
-    beam_wood = pbr("beams", "wood_table_worn", 1.5, tint=srgb("#8a6448"), tint_mix=1.0, rot_z=90)
-    worktop = pbr("worktop", "wood_table_worn", 1.2)
-    dark_wood = pbr("dark_wood", "medieval_wood", 2.2, tint=srgb("#9a7a60"), tint_mix=1.0)
-    berry_linen = pbr("berry_linen", "rough_linen", 0.6, tint=srgb("#8b4d5c"), tint_mix=1.0, bump=0.5)
-    berry_knit = pbr("berry_knit", "knitted_fleece", 0.4, tint=srgb("#a85a6c"), tint_mix=1.0, bump=1.0)
-    rug_mat = pbr("rug", "knitted_fleece", 0.5, tint=srgb("#c79a92"), tint_mix=0.8, bump=1.0)
+    # Scanned materials, colours from ChatGPT's concept notes (art-inbox/cuddlecore/notes.md)
+    plaster = pbr("plaster", "white_plaster_rough_01", 3.0, tint=srgb("#ece2cf"), tint_mix=0.85, bump=0.6)
+    floor = pbr("floor", "old_wooden_floor_01", 2.5, tint=srgb("#6c4b31"), tint_mix=0.3, rough_add=0.15, bump=0.8)
+    beam_wood = pbr("beams", "wood_table_worn", 1.5, tint=srgb("#7a5536"), tint_mix=0.45, rot_z=90)
+    worktop = pbr("worktop", "wood_table_worn", 1.2, tint=srgb("#a27648"), tint_mix=0.35)
+    oak = pbr("oak", "wood_table_worn", 1.0, tint=srgb("#a57543"), tint_mix=0.35, rot_z=90)
+    door_oak = pbr("door_oak", "medieval_wood", 2.0, tint=srgb("#a8723f"), tint_mix=0.55)
+    berry_linen = pbr("berry_linen", "rough_linen", 0.5, tint=srgb("#8b4d5c"), tint_mix=1.0, bump=0.5)
+    berry_linen.node_tree.nodes["Principled BSDF"].inputs["Subsurface Weight"].default_value = 0.25
+    knit = image_mat("knit", os.path.join(CONCEPT, "12-cable-knit-tile-candidate.png"), rough=0.95,
+                     tile=0.45, normal_from="knitted_fleece", normal_strength=1.0)
+    rug_mat = image_mat("rug", os.path.join(CONCEPT, "13-rag-rug-tile-candidate.png"), rough=0.97,
+                        tile=0.7, normal_from="knitted_fleece", normal_strength=0.8)
 
-    # Simple materials
-    enamel = mat("enamel", srgb("#e9dcc3"), rough=0.22, coat=0.7)
-    cast_iron = mat("cast_iron", srgb("#191716"), rough=0.6, metal=0.8)
-    brass = mat("brass", srgb("#b58a45"), rough=0.32, metal=1.0)
-    beeswax = mat("beeswax", srgb("#f0ddb2"), rough=0.45)
+    paint = mat("cream_paint", srgb("#eee5d3"), rough=0.55)
+    enamel = mat("enamel", srgb("#e9dfc9"), rough=0.3, coat=0.6)
+    cast_iron = mat("cast_iron", srgb("#24211c"), rough=0.7, metal=0.75)
+    brass = mat("brass", srgb("#9d7b3c"), rough=0.42, metal=1.0)
+    chrome = mat("chrome", srgb("#c9c6bf"), rough=0.25, metal=1.0)
+    glass = mat("glass", (0.96, 0.98, 0.97, 1), rough=0.03, transmission=1.0, ior=1.5)
+    berry_glaze = mat("berry_glaze", srgb("#8b4d5c"), rough=0.3, coat=0.4)
+    stoneware = mat("stoneware", srgb("#d9cbb0"), rough=0.45)
+    cork = mat("cork", srgb("#a7895e"), rough=0.9)
+    beeswax = mat("beeswax", srgb("#e7c779"), rough=0.5)
     beeswax.node_tree.nodes["Principled BSDF"].inputs["Subsurface Weight"].default_value = 0.6
     flame = mat("flame", (1, 0.6, 0.25, 1), emission=(1.0, 0.55, 0.2, 1), strength=30)
-    paper = mat("paper", srgb("#e3d1ab"), rough=0.9)
-    cork = mat("cork", srgb("#a8845a"), rough=0.9)
-    berry_glaze = mat("berry_glaze", srgb("#8b4d5c"), rough=0.18, coat=0.5)
-    glass = mat("glass", (0.96, 0.98, 0.97, 1), rough=0.03, transmission=1.0, ior=1.5)
-    fills = [srgb(c) for c in ("#c9a25b", "#7a8a4a", "#e9d9b4", "#b5651d", "#d8b04a")]
-    book_colours = ["#6e3b3b", "#3f5543", "#8b6b3e", "#2f3e4f", "#7d4a5a", "#a08155", "#4d3a2a", "#c2a878"]
+    card = mat("card", srgb("#efe6d2"), rough=0.9)
+    book_colours = ["#6e3b3b", "#3f5543", "#8b6b3e", "#2f3e4f", "#7d4a5a", "#a08155", "#4d3a2a", "#c2a878", "#5b5048"]
 
-    # Rain-streaked window glass: stretched noise drives a bump
     rain_glass = mat("rain_glass", (0.97, 0.99, 1.0, 1), rough=0.05, transmission=1.0, ior=1.5)
     nt = rain_glass.node_tree
     tc = nt.nodes.new("ShaderNodeTexCoord")
@@ -284,74 +437,66 @@ def build():
     nt.links.new(bmp.outputs["Normal"], nt.nodes["Principled BSDF"].inputs["Normal"])
 
     # ---- Shell
-    box("floor", (0, 0, -0.05), (W, D, 0.1), floor, bevel=0)
+    floor_obj = box("floor", (0, 0, -0.05), (W, D, 0.1), floor, bevel=0)
     box("ceiling", (0, 0, H + 0.05), (W, D, 0.1), plaster, bevel=0)
     box("wall_left", (-HX - 0.05, 0, H / 2), (0.1, D, H), plaster, bevel=0)
     box("wall_right", (HX + 0.05, 0, H / 2), (0.1, D, H), plaster, bevel=0)
     box("wall_back", (0, -HY - 0.05, H / 2), (W, 0.1, H), plaster, bevel=0)
-    win_l, win_r, win_b, win_t = -0.65, 0.65, 1.15, 2.15
+    win_l, win_r, win_b, win_t = -0.775, 0.775, 1.05, 2.42     # concept: 1.55 x 1.4 m, sill at ~1.05 m
     box("wall_front_l", ((-HX + win_l) / 2, HY + 0.15, H / 2), (win_l + HX, 0.3, H), plaster, bevel=0)
     box("wall_front_r", ((HX + win_r) / 2, HY + 0.15, H / 2), (HX - win_r, 0.3, H), plaster, bevel=0)
     box("wall_front_b", (0, HY + 0.15, win_b / 2), (win_r - win_l, 0.3, win_b), plaster, bevel=0)
     box("wall_front_t", (0, HY + 0.15, (H + win_t) / 2), (win_r - win_l, 0.3, H - win_t), plaster, bevel=0)
-
     for x in (-1.5, 0, 1.5):
         box(f"beam_{x}", (x, 0, H - 0.1), (0.2, D, 0.2), beam_wood, bevel=0.015)
-    box("beam_cross", (0, HY - 0.1, H - 0.1), (W, 0.2, 0.2), beam_wood, bevel=0.015)
     for name, loc, size in (("skirt_l", (-HX + 0.01, 0, 0.08), (0.02, D, 0.16)),
                             ("skirt_r", (HX - 0.01, 0, 0.08), (0.02, D, 0.16)),
                             ("skirt_b", (0, -HY + 0.01, 0.08), (W, 0.02, 0.16)),
                             ("skirt_f", (0, HY - 0.01, 0.08), (W, 0.02, 0.16))):
-        box(name, loc, size, dark_wood, bevel=0.003)
+        box(name, loc, size, paint, bevel=0.003)
 
-    # ---- Front wall: deep-set window, curtains, range + pot, map
-    box("sill", (0, HY - 0.04, win_b - 0.025), (1.5, 0.3, 0.05), worktop, bevel=0.006)
-    box("frame_v", (0, HY + 0.2, (win_b + win_t) / 2), (0.04, 0.05, win_t - win_b), worktop)
-    box("frame_h", (0, HY + 0.2, (win_b + win_t) / 2), (win_r - win_l, 0.05, 0.04), worktop)
-    for side, x in (("l", win_l + 0.02), ("r", win_r - 0.02)):
-        box(f"frame_{side}", (x, HY + 0.2, (win_b + win_t) / 2), (0.05, 0.07, win_t - win_b), worktop)
-    box("frame_t", (0, HY + 0.2, win_t - 0.02), (win_r - win_l, 0.07, 0.05), worktop)
-    box("frame_b", (0, HY + 0.2, win_b + 0.02), (win_r - win_l, 0.07, 0.05), worktop)
-    pane = box("glass", (0, HY + 0.21, (win_b + win_t) / 2), (win_r - win_l, 0.006, win_t - win_b), rain_glass, bevel=0)
+    # ---- Front wall: six-pane sash window, berry curtains, vintage range, cast-iron pot
+    wy = HY + 0.2
+    zc = (win_b + win_t) / 2
+    box("sill", (0, HY - 0.04, win_b - 0.025), (win_r - win_l + 0.2, 0.3, 0.05), worktop, bevel=0.006)
+    for side, x in (("l", win_l + 0.03), ("r", win_r - 0.03)):
+        box(f"frame_{side}", (x, wy, zc), (0.06, 0.08, win_t - win_b), paint)
+    box("frame_t", (0, wy, win_t - 0.03), (win_r - win_l, 0.08, 0.06), paint)
+    box("frame_b", (0, wy, win_b + 0.03), (win_r - win_l, 0.08, 0.06), paint)
+    box("meeting_rail", (0, wy, zc), (win_r - win_l, 0.07, 0.05), paint)
+    for x in (-0.258, 0.258):
+        box(f"muntin_{x}", (x, wy, zc), (0.025, 0.05, win_t - win_b), paint)
+    pane = box("glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b), rain_glass, bevel=0)
     hotspot("window", "The rain", None, pane, kind="ambient")
+    box("curtain_rod", (0, HY - 0.12, win_t + 0.1), (2.3, 0.022, 0.022), cast_iron, bevel=0.009)
+    curtain("curtain_l", win_l - 0.18, HY - 0.12, win_t + 0.08, 0.5, win_t - win_b + 0.32, berry_linen, seed=1)
+    curtain("curtain_r", win_r + 0.18, HY - 0.12, win_t + 0.08, 0.5, win_t - win_b + 0.32, berry_linen, seed=2)
 
-    for side, x in (("l", win_l - 0.2), ("r", win_r + 0.2)):
-        bpy.ops.mesh.primitive_plane_add(size=1, location=(x, HY - 0.1, (win_b + win_t) / 2 + 0.08),
-                                         rotation=(math.radians(90), 0, 0))
-        c = bpy.context.active_object
-        c.name = f"curtain_{side}"
-        c.scale = (0.45, 1.35, 1)
-        bpy.ops.object.transform_apply(scale=True)
-        bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.mesh.subdivide(number_cuts=48)
-        bpy.ops.object.mode_set(mode="OBJECT")
-        tex = bpy.data.textures.new(f"folds_{side}", "WOOD")
-        tex.wood_type = "BANDS"
-        tex.noise_basis_2 = "SIN"
-        tex.turbulence = 1.5
-        tex.noise_scale = 0.12
-        disp = c.modifiers.new("folds", "DISPLACE")
-        disp.texture = tex
-        disp.texture_coords = "LOCAL"
-        disp.strength = 0.045
-        disp.direction = "Z"
-        c.modifiers.new("thick", "SOLIDIFY").thickness = 0.005
-        bpy.ops.object.shade_smooth()
-        c.data.materials.append(berry_linen)
-    box("curtain_rod", (0, HY - 0.1, win_t + 0.16), (2.1, 0.025, 0.025), brass, bevel=0.01)
+    ry = HY - 0.36                                   # range: 1.0 w x 0.7 d x 0.9 h, against the wall
+    front = ry - 0.35
+    box("range_plinth", (0, ry + 0.03, 0.04), (0.96, 0.62, 0.08), cast_iron, bevel=0.005)
+    box("range_body", (0, ry, 0.49), (1.0, 0.7, 0.82), enamel, bevel=0.035)
+    box("range_top", (0, ry + 0.01, 0.92), (1.03, 0.72, 0.04), cast_iron, bevel=0.008)
+    cyl("hotplate_lid", (-0.24, ry + 0.02, 0.965), 0.16, 0.05, enamel, bevel=0.02)
+    cyl("hotplate_knob", (-0.24, ry + 0.02, 1.0), 0.02, 0.03, chrome)
+    cyl("hotplate_r", (0.24, ry + 0.02, 0.945), 0.16, 0.012, cast_iron, bevel=0.003)
+    cyl("towel_rail", (0, front - 0.06, 0.86), 0.012, 1.0, brass, rot=(0, math.radians(90), 0))
+    for x in (-0.48, 0.48):
+        box(f"rail_bracket_{x}", (x, front - 0.03, 0.86), (0.02, 0.06, 0.02), brass, bevel=0.004)
+    for col, x in (("l", -0.24), ("r", 0.24)):
+        for row, (z, h) in (("t", (0.62, 0.3)), ("b", (0.25, 0.3))):
+            box(f"oven_{col}{row}", (x, front - 0.008, z), (0.42, 0.02, h), enamel, bevel=0.018)
+            box(f"latch_{col}{row}", (x + (0.15 if col == "l" else -0.15), front - 0.025, z), (0.06, 0.02, 0.025), chrome, bevel=0.005)
+            for dz in (-h / 3, h / 3):
+                cyl(f"hinge_{col}{row}{dz}", (x + (-0.2 if col == "l" else 0.2), front - 0.02, z + dz), 0.012, 0.05, chrome)
+    box("tea_towel", (0.18, front - 0.07, 0.72), (0.2, 0.01, 0.3), card, bevel=0.003)
 
-    box("range", (0, HY - 0.33, 0.43), (0.95, 0.62, 0.86), enamel, bevel=0.03)
-    box("range_top", (0, HY - 0.33, 0.875), (0.97, 0.64, 0.03), cast_iron, bevel=0.006)
-    box("range_door", (0, HY - 0.645, 0.38), (0.62, 0.02, 0.42), enamel, bevel=0.015)
-    box("range_handle", (0, HY - 0.675, 0.64), (0.52, 0.025, 0.025), brass, bevel=0.01)
-    for x in (-0.22, 0.22):
-        cyl(f"hob_{x}", (x, HY - 0.33, 0.894), 0.13, 0.012, cast_iron, bevel=0.003)
-    pot = model("pot_enamel_01", (0.02, HY - 0.33, 0.9), rot_z=10, scale=1.7)
-    # Steam: a soft volume above the pot
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.22, location=(0.02, HY - 0.36, 1.42))
+    pot = model("pot_enamel_01", (0.24, ry + 0.02, 0.952), rot_z=8, scale=1.25)
+    swap_material(pot, cast_iron)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.2, location=(0.24, ry, 1.42))
     steam = bpy.context.active_object
     steam.name = "steam"
-    steam.scale = (0.9, 0.9, 1.6)
+    steam.scale = (0.8, 0.8, 1.6)
     sm = bpy.data.materials.new("steam")
     snt, sp = principled(sm)
     snt.nodes.remove(sp)
@@ -362,7 +507,6 @@ def build():
     snz.inputs["Scale"].default_value = 3.5
     snz.inputs["Detail"].default_value = 6
     snt.links.new(stc.outputs["Object"], snz.inputs["Vector"])
-    # Fade out towards the edge of the sphere and upward
     grad = snt.nodes.new("ShaderNodeTexGradient")
     grad.gradient_type = "SPHERICAL"
     snt.links.new(stc.outputs["Object"], grad.inputs["Vector"])
@@ -371,108 +515,167 @@ def build():
     snt.links.new(snz.outputs["Fac"], mul.inputs[0])
     snt.links.new(grad.outputs["Fac"], mul.inputs[1])
     dens = snt.nodes.new("ShaderNodeMapRange")
-    dens.inputs["From Min"].default_value = 0.15
-    dens.inputs["To Max"].default_value = 6.0
+    dens.inputs["From Min"].default_value = 0.2
+    dens.inputs["To Max"].default_value = 3.0
     snt.links.new(mul.outputs[0], dens.inputs["Value"])
     snt.links.new(dens.outputs["Result"], vol.inputs["Density"])
     snt.links.new(vol.outputs["Volume"], snt.nodes["Material Output"].inputs["Volume"])
     steam.data.materials.append(sm)
     hotspot("cauldron", "Find Comfort", None, pot, kind="submit")
 
-    m = box("map", (1.4, HY - 0.003, 1.62), (0.36, 0.004, 0.27), paper, bevel=0)
-    box("map_pin", (1.4, HY - 0.008, 1.74), (0.012, 0.01, 0.012), brass, bevel=0)
-    hotspot("locale-map", "Location", "locale", m)
-    plant = model("potted_plant_02", (-1.45, HY - 0.45, 0), rot_z=20, scale=1.0)
-    hotspot("plant", "The plant", None, plant, kind="ambient")
-
-    # ---- Left wall: counter, jar shelf, candles, cutting board
-    box("counter_base", (-HX + 0.32, 0.1, 0.43), (0.62, 1.9, 0.86), dark_wood, bevel=0.01)
-    box("counter_top", (-HX + 0.33, 0.1, 0.885), (0.68, 1.96, 0.05), worktop, bevel=0.008)
-    shelf = box("jar_shelf", (-HX + 0.14, 0.3, 1.6), (0.28, 1.5, 0.04), worktop, bevel=0.006)
-    for y in (-0.35, 0.95):
-        box(f"bracket_{y}", (-HX + 0.07, y, 1.52), (0.13, 0.035, 0.14), dark_wood, bevel=0.004)
-    jars = []
-    for i, (y, h) in enumerate(zip([-0.3, -0.03, 0.25, 0.52, 0.78], [0.24, 0.18, 0.28, 0.2, 0.22])):
-        r = 0.065 if i % 2 else 0.075
-        z0 = 1.62
-        if i in (1, 3):
-            jars.append(cyl(f"jar_{i}", (-HX + 0.14, y, z0 + h / 2), r, h, berry_glaze))
-        else:
-            jars.append(cyl(f"jar_{i}", (-HX + 0.14, y, z0 + h / 2), r, h, glass, bevel=0.01))
-            fill = mat(f"fill_{i}", fills[i], rough=0.9)
-            cyl(f"jar_fill_{i}", (-HX + 0.14, y, z0 + h * 0.36), r * 0.9, h * 0.68, fill, bevel=0)
-        cyl(f"lid_{i}", (-HX + 0.14, y, z0 + h + 0.015), r * 0.86, 0.03, cork)
-    hotspot("symptom-jars", "How you're feeling", "symptoms", jars + [shelf])
-
-    candle_objs = []
-    for i, (y, h) in enumerate(zip((-0.62, -0.48, -0.34), (0.1, 0.17, 0.25))):
-        x = -HX + 0.36
-        stick = model("wooden_candlestick", (x, y, 0.91), scale=0.8)
-        top = 0.91 + 0.22 * 0.8
-        candle_objs += meshes_of(stick)
-        candle_objs.append(cyl(f"candle_{i}", (x, y, top + h / 2), 0.022, h, beeswax, bevel=0.005))
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.009, location=(x, y, top + h + 0.02))
-        f = bpy.context.active_object
-        f.scale = (1, 1, 2.3)
-        f.data.materials.append(flame)
-        point_light(f"candle_light_{i}", (x + 0.02, y, top + h + 0.035), 4, (1.0, 0.55, 0.22), radius=0.012)
-    hotspot("energy-candles", "Energy level", "energy", candle_objs)
-    board = model("wooden_cutting_board", (-HX + 0.38, 0.45, 0.91), rot_z=95)
-    hotspot("cutting-board", "Chopping board", None, board, kind="ambient")
-    model("wooden_spoon", (-HX + 0.4, 0.15, 0.93), rot_z=70)
-    bowl = model("wooden_bowl_01", (-HX + 0.34, 0.85, 0.91))
-    hotspot("bowl", "The bowl", None, bowl, kind="ambient")
-
-    # ---- Right wall: painted cabinet (pantry) with an oil lamp, worn bookshelf of cookbooks
-    pantry = model("painted_wooden_cabinet", (HX - 0.34, 0.85, 0), rot_z=-90)
-    basket = model("wicker_basket_01", (HX - 0.32, 1.15, 1.18), rot_z=-80)
-    hotspot("basket", "The basket", None, basket, kind="ambient")
-    model("ceramic_vase_01", (HX - 0.3, 0.45, 1.18), scale=0.7)
-    lamp = model("vintage_oil_lamp", (HX - 0.3, 0.75, 1.18), scale=0.65)
+    # Front-right: small cupboard with the brass lamp and a bowl of produce; map above
+    side = model("painted_wooden_cabinet", (1.2, HY - 0.33, 0), rot_z=0)
+    top = 1.18
+    lamp = model("vintage_oil_lamp", (1.55, HY - 0.3, top), scale=0.65)
     for o in meshes_of(lamp):
         if o.name.endswith("flame"):
             o.data.materials.clear()
             o.data.materials.append(flame)
-    point_light("lamp_light", (HX - 0.3, 0.75, 1.18 + 0.35), 18, (1.0, 0.62, 0.3), radius=0.03)
+    point_light("lamp_light", (1.55, HY - 0.3, top + 0.36), 22, (1.0, 0.64, 0.33), radius=0.03)
     hotspot("oil-lamp", "The lamp", None, lamp, kind="ambient")
+    bowl = model("wooden_bowl_01", (1.0, HY - 0.33, top))
+    for i, (dx, dy) in enumerate(((-0.05, 0.0), (0.05, 0.03), (0.0, -0.06))):
+        model("food_apple_01", (1.0 + dx, HY - 0.33 + dy, top + 0.02), rot_z=i * 70)
+    model("yellow_onion", (1.04, HY - 0.37, top + 0.03), rot_z=40)
+    hotspot("bowl", "The bowl", None, bowl, kind="ambient")
+    m = wall_picture("map", os.path.join(CONCEPT, "10-coastal-map-flat.png"), (1.5, HY - 0.004, 1.82), (0.36, 0.36), "-y")
+    for dx in (-0.16, 0.16):
+        cyl(f"map_pin_{dx}", (1.5 + dx, HY - 0.008, 1.98), 0.006, 0.008, brass, rot=(math.radians(90), 0, 0))
+    hotspot("locale-map", "Location", "locale", m)
+
+    # Front-left floor: basket beside the range; plant in the corner
+    basket = model("wicker_basket_02", (-0.82, HY - 0.3, 0), rot_z=20, scale=1.6)
+    hotspot("basket", "The basket", None, basket, kind="ambient")
+    plant = model("potted_plant_02", (-1.85, HY - 0.42, 0), rot_z=20, scale=0.9)
+    hotspot("plant", "The plant", None, plant, kind="ambient")
+
+    # ---- Left wall: cream cabinet with butcher-block top, two oak shelves of six jars, three candles
+    cx, cy, clen = -HX + 0.31, 0.6, 1.8
+    box("left_cab", (cx, cy, 0.44), (0.62, clen, 0.88), paint, bevel=0.012)
+    for i, y in enumerate((cy - 0.6, cy, cy + 0.6)):
+        box(f"left_cab_door_{i}", (cx + 0.315, y, 0.46), (0.02, 0.56, 0.7), paint, bevel=0.01)
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.018, location=(cx + 0.335, y + 0.2, 0.62))
+        bpy.context.active_object.data.materials.append(brass)
+    box("left_top", (cx + 0.01, cy, 0.905), (0.66, clen + 0.04, 0.05), worktop, bevel=0.01)
+    shelf_objs = []
+    for z in (1.42, 1.82):
+        shelf_objs.append(box(f"jar_shelf_{z}", (-HX + 0.13, cy, z), (0.26, 1.3, 0.04), oak, bevel=0.006))
+        for y in (cy - 0.55, cy + 0.55):
+            box(f"bracket_{z}_{y}", (-HX + 0.07, y, z - 0.08), (0.13, 0.035, 0.13), oak, bevel=0.004)
+    jar_specs = [  # (shelf z, y, radius, height, contents colour or None for the berry honey jar)
+        (1.82, cy - 0.35, 0.075, 0.22, "#d8c9a3"),   # oats
+        (1.82, cy + 0.35, 0.075, 0.2, "#6f7a3c"),    # dried herbs
+        (1.42, cy - 0.45, 0.07, 0.17, None),         # honey, berry glaze
+        (1.42, cy - 0.15, 0.072, 0.21, "#c8642a"),   # lentils
+        (1.42, cy + 0.15, 0.072, 0.21, "#c9a35b"),   # dried ginger
+        (1.42, cy + 0.45, 0.072, 0.21, "#d9b13a"),   # yellow pulses
+    ]
+    jars = []
+    for i, (z, y, r, h, colour) in enumerate(jar_specs):
+        z0 = z + 0.02
+        if colour is None:
+            jars.append(cyl(f"jar_{i}", (-HX + 0.13, y, z0 + h / 2), r, h, berry_glaze))
+        else:
+            jars.append(cyl(f"jar_{i}", (-HX + 0.13, y, z0 + h / 2), r, h, glass, bevel=0.01))
+            fill = mat(f"fill_{i}", srgb(colour), rough=0.9)
+            cyl(f"jar_fill_{i}", (-HX + 0.13, y, z0 + h * 0.37), r * 0.9, h * 0.7, fill, bevel=0)
+        cyl(f"lid_{i}", (-HX + 0.13, y, z0 + h + 0.015), r * 0.86, 0.03, cork)
+    hotspot("symptom-jars", "How you're feeling", "symptoms", jars + shelf_objs)
+
+    candle_objs = []
+    for i, (y, h) in enumerate(zip((0.05, 0.19, 0.33), (0.09, 0.17, 0.125))):   # shortest, tallest, medium
+        x = -HX + 0.4
+        candle_objs.append(cyl(f"saucer_{i}", (x, y, 0.937), 0.06, 0.014, stoneware, bevel=0.005))
+        candle_objs.append(cyl(f"candle_{i}", (x, y, 0.944 + h / 2), 0.035, h, beeswax, bevel=0.006))
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.009, location=(x, y, 0.944 + h + 0.02))
+        f = bpy.context.active_object
+        f.scale = (1, 1, 2.3)
+        f.data.materials.append(flame)
+        point_light(f"candle_light_{i}", (x + 0.02, y, 0.944 + h + 0.035), 4, (1.0, 0.52, 0.2), radius=0.012)
+    hotspot("energy-candles", "Energy level", "energy", candle_objs)
+    model("jug_01", (-HX + 0.38, 0.62, 0.93), rot_z=100)
+    board = model("wooden_cutting_board", (-HX + 0.4, 1.02, 0.93), rot_z=95)
+    hotspot("cutting-board", "Chopping board", None, board, kind="ambient")
+    model("lemon", (-HX + 0.42, 1.25, 0.975), rot_z=30)
+    model("potted_plant_02", (-HX + 0.32, 1.38, 0.93), rot_z=60, scale=0.3)   # herb pot
+
+    # ---- Right wall: the pantry (a cream dresser, open shelves stocked), cookbook shelves over a cabinet
+    px, py, ps = HX - 0.3, 0.92, 0.9
+    pantry = model("painted_wooden_cabinet_02", (px, py, 0), rot_z=-90, scale=ps)
+    retint(pantry, "#eee5d3")
+    bpy.context.view_layer.update()
+    sx = px + 0.1                                   # the upper shelves are set back from the counter edge
+    shelves = sorted(z for z in shelf_heights(pantry, sx, py, 2.6) if 0.9 < z < 2.1)
+    stock = [
+        lambda z: [model("food_apple_01", (sx, py + dy, z), rot_z=dy * 300) for dy in (-0.25, -0.15, -0.05)]
+        + [model("lemon", (sx, py + 0.08, z + 0.045)), model("yellow_onion", (sx, py + 0.2, z))],
+        lambda z: [model("wicker_basket_02", (sx, py - 0.15, z), rot_z=10),
+                   model("jug_01", (sx, py + 0.17, z), rot_z=200)],
+        lambda z: [cyl(f"bowl_stack_{z}_{k}", (sx, py - 0.1, z + 0.025 + k * 0.045), 0.11 - k * 0.012, 0.045, stoneware, bevel=0.01) for k in range(3)]
+        + [cyl(f"beans_jar_{z}", (sx, py + 0.17, z + 0.11), 0.065, 0.22, glass, bevel=0.01),
+           cyl(f"beans_{z}", (sx, py + 0.17, z + 0.08), 0.058, 0.15, mat("beans", srgb("#efe8da"), rough=0.7), bevel=0)],
+        lambda z: [model("ceramic_vase_01", (sx, py, z), scale=0.5)],
+    ]
+    for i, z in enumerate(shelves[:len(stock)]):
+        stock[i](z)
+    point_light("pantry_glow", (px - 0.25, py, 1.7), 6, (1.0, 0.7, 0.42), radius=0.15)
     hotspot("pantry-cabinet", "Your pantry", "pantry", pantry)
 
-    shelf_x, shelf_y = HX - 0.3, -0.9
-    bs = model("wooden_bookshelf_worn", (shelf_x, shelf_y, 0), rot_z=-90)
-    hits = shelf_heights(bs, shelf_x - 0.05, shelf_y, 2.2)
-    shelves = sorted(z for z in hits if 0.1 < z < max(hits) - 0.15)  # skip the floor and the top board
-    for zi, z in enumerate(shelves):
-        y = shelf_y - 0.6
-        bi = 0
-        while y < shelf_y + 0.55:
-            t = 0.025 + ((bi * 7 + zi) % 5) * 0.008
-            hb = 0.2 + ((bi * 3 + zi) % 5) * 0.03
-            lean = math.radians(8) if (bi + zi) % 11 == 10 else 0
-            colour = mat(f"book_{zi}_{bi}", srgb(book_colours[(bi * 3 + zi) % len(book_colours)]), rough=0.75)
-            b = box(f"book_{zi}_{bi}", (shelf_x - 0.06, y + t / 2, z + hb / 2), (0.19, t, hb), colour, bevel=0.003)
-            b.rotation_euler = (lean, 0, 0)
-            y += t + 0.004
-            bi += 1
-    hotspot("dietary-shelf", "Dietary needs", "dietary", bs)
+    bx, by, blen = HX - 0.31, -0.55, 1.3
+    box("right_cab", (bx, by, 0.44), (0.62, blen, 0.88), paint, bevel=0.012)
+    for i, y in enumerate((by - 0.32, by + 0.32)):
+        box(f"right_cab_door_{i}", (bx - 0.315, y, 0.46), (0.02, 0.6, 0.7), paint, bevel=0.01)
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.018, location=(bx - 0.335, y + (0.22 if i == 0 else -0.22), 0.62))
+        bpy.context.active_object.data.materials.append(brass)
+    box("right_top", (bx - 0.01, by, 0.905), (0.66, blen + 0.04, 0.05), worktop, bevel=0.01)
+    book_shelf = []
+    for z in (1.5, 1.92):
+        book_shelf.append(box(f"book_shelf_{z}", (HX - 0.13, by, z), (0.26, 1.2, 0.04), oak, bevel=0.006))
+        for y in (by - 0.5, by + 0.5):
+            box(f"bk_bracket_{z}_{y}", (HX - 0.07, y, z - 0.08), (0.13, 0.035, 0.13), oak, bevel=0.004)
+    y = by - 0.52
+    for bi in range(11):
+        t = 0.03 + (bi * 7 % 5) * 0.007
+        hb = 0.21 + (bi * 3 % 5) * 0.022
+        colour = mat(f"book_{bi}", srgb(book_colours[bi % len(book_colours)]), rough=0.8)
+        b = box(f"book_{bi}", (HX - 0.14, y + t / 2, 1.52 + hb / 2), (0.19, t, hb), colour, bevel=0.003)
+        b.rotation_euler = (math.radians(7) if bi == 10 else 0, 0, 0)
+        book_shelf.append(b)
+        y += t + 0.004
+    box("card_box", (HX - 0.14, by + 0.3, 1.565), (0.12, 0.16, 0.09), oak, bevel=0.004)
+    box("cards", (HX - 0.14, by + 0.3, 1.615), (0.1, 0.14, 0.04), card, bevel=0.002)
+    model("jug_01", (HX - 0.13, by + 0.05, 1.94), rot_z=180, scale=0.9)
+    for k in range(2):
+        cyl(f"shelf_bowl_{k}", (HX - 0.13, by - 0.35, 1.965 + k * 0.04), 0.1 - k * 0.012, 0.04, stoneware, bevel=0.01)
+    model("potted_plant_02", (HX - 0.15, by + 0.38, 1.94), rot_z=10, scale=0.28)
+    hotspot("dietary-shelf", "Dietary needs", "dietary", book_shelf)
 
-    # ---- Back wall: door, armchair + blanket, rug
-    door = box("door", (-1.1, -HY + 0.03, 1.0), (0.85, 0.05, 2.0), dark_wood, bevel=0.012)
-    for z in (0.5, 1.5):
-        box(f"door_panel_{z}", (-1.1, -HY + 0.06, z), (0.62, 0.015, 0.75), dark_wood, bevel=0.01)
-    box("door_frame_t", (-1.1, -HY + 0.04, 2.04), (1.0, 0.09, 0.09), beam_wood, bevel=0.008)
-    for x in (-1.57, -0.63):
-        box(f"door_frame_{x}", (x, -HY + 0.04, 1.02), (0.09, 0.09, 2.08), beam_wood, bevel=0.008)
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.03, location=(-0.78, -HY + 0.09, 1.0))
+    # ---- Back wall: cream armchair with a knitted berry throw, rag rug, botanical print, oak door
+    door = box("door", (-0.95, -HY + 0.035, 1.025), (0.9, 0.05, 2.05), door_oak, bevel=0.01)
+    for dz in (-0.55, 0.0, 0.55):
+        box(f"ledge_{dz}", (-0.95, -HY + 0.065, 1.025 + dz), (0.84, 0.015, 0.1), door_oak, bevel=0.004)
+    box("door_trim_t", (-0.95, -HY + 0.03, 2.09), (1.06, 0.06, 0.09), paint, bevel=0.006)
+    for x in (-1.44, -0.46):
+        box(f"door_trim_{x}", (x, -HY + 0.03, 1.04), (0.08, 0.06, 2.1), paint, bevel=0.006)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.03, location=(-0.6, -HY + 0.1, 1.0))
     bpy.context.active_object.data.materials.append(brass)
     hotspot("exit-door", "Back to the inn", None, door, kind="door")
 
-    chair = model("ArmChair_01", (0.75, -HY + 0.55, 0), rot_z=165)
+    chair = model("ArmChair_01", (0.85, -HY + 0.62, 0), rot_z=180, scale=1.1)
+    retint(chair, "#ded1b9", lo=0.6, hi=1.2)
+    pillows = model("throw_pillows_01", (0.85, -HY + 0.62, 0.46), rot_z=180, scale=0.5)
+    retint(pillows, "#e9dfcc", lo=0.7, hi=1.15)
     hotspot("armchair", "The armchair", None, chair, kind="ambient")
-    throw = box("throw", (0.75, -HY + 0.6, 0.5), (0.42, 0.36, 0.07), berry_knit, bevel=0.03)
-    throw.rotation_euler = (math.radians(3), math.radians(-4), math.radians(-12))
-    cyl("rug", (0.2, -0.45, 0.006), 0.95, 0.012, rug_mat, verts=128, bevel=0.004)
+    rug = box("rug", (0.7, -1.25, 0.006), (1.6, 1.1, 0.012), rug_mat, bevel=0.003)
+    colliders = meshes_of(chair) + meshes_of(pillows) + [floor_obj, rug]
+    berry_knit = pbr("berry_knit", "knitted_fleece", 0.35, tint=srgb("#9a5466"), tint_mix=0.8, bump=1.0)
+    # start clear of the chair back (a sheet that begins inside a collider snags), over the arm and seat front
+    drape("throw", (1.0, 0.8), 40, (1.22, -1.38, 0.98), (0, 0, math.radians(8)),
+          berry_knit, colliders, frames=100)
+    art = wall_picture("botanical", os.path.join(CONCEPT, "11-botanical-flat.png"), (0.85, -HY + 0.014, 1.62), (0.48, 0.6), "+y")
+    box("botanical_board", (0.85, -HY + 0.006, 1.62), (0.48, 0.012, 0.6), oak, bevel=0.002)
 
-    # ---- Lighting: overcast sky through the window, warm interior
+    # ---- Lighting: rainy sky through the window, warm candles and lamp
     world = bpy.data.worlds.new("world")
     scene.world = world
     world.use_nodes = True
@@ -485,13 +688,11 @@ def build():
     wnt.links.new(wtc.outputs["Generated"], wmap.inputs["Vector"])
     wnt.links.new(wmap.outputs["Vector"], env.inputs["Vector"])
     wnt.links.new(env.outputs["Color"], wnt.nodes["Background"].inputs["Color"])
-    wnt.nodes["Background"].inputs["Strength"].default_value = 1.2
+    wnt.nodes["Background"].inputs["Strength"].default_value = 1.1
 
-    area_light("window_portal", (0, HY + 0.2, (win_b + win_t) / 2), (math.radians(90), 0, 0),
-               (win_r - win_l, win_t - win_b), 0, (1, 1, 1), portal=True)
-    area_light("window_bounce", (0, HY - 0.05, (win_b + win_t) / 2), (math.radians(90), 0, 0),
-               (1.3, 1.0), 120, (0.8, 0.88, 1.0))
-    point_light("warm_fill", (0.3, -0.4, 2.3), 70, (1.0, 0.74, 0.48), radius=0.8)
+    area_light("window_portal", (0, wy, zc), (math.radians(90), 0, 0), (win_r - win_l, win_t - win_b), 0, (1, 1, 1), portal=True)
+    area_light("window_bounce", (0, HY - 0.05, zc), (math.radians(90), 0, 0), (1.5, 1.3), 70, (0.78, 0.86, 1.0))
+    point_light("warm_fill", (0.3, -0.4, 2.3), 22, (1.0, 0.68, 0.4), radius=0.8)
 
     # ---- Camera: 360 equirectangular from the middle of the room
     cam_data = bpy.data.cameras.new("pano")
@@ -529,7 +730,7 @@ def build():
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = 1.25
+    scene.view_settings.exposure = 0.55
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
 
