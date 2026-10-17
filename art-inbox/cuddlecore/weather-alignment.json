@@ -1,0 +1,117 @@
+{
+  "master": "14-window-rain.png",
+  "size": [
+    2172,
+    724
+  ],
+  "aspect_ratio": 3.0,
+  "method": "Lanczos dimension normalization and small robust affine alignment to high-pass normalized-correlation patches in stationary land/wall/shrubs. Sky and sea excluded from landmark fitting. Source images preserved unchanged in the image generator output directory.",
+  "limits": "Statistics describe matched visible patches, not every pixel or the fog-obscured coast; waves, fog, cloud and windblown foliage differ intentionally.",
+  "landmark_candidates": 190,
+  "variants": [
+    {
+      "file": "15-window-fair.png",
+      "generated_size": [
+        2170,
+        725
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 54,
+      "affine_inliers": 54,
+      "median_displacement_before_px": 0.981,
+      "median_displacement_after_px": 0.126,
+      "p95_displacement_after_px": 0.28,
+      "matched_stable_patches_after": 65,
+      "output_to_input_affine": [
+        1.000303033829754,
+        0.00028106599922079025,
+        -0.5676706744217085,
+        -9.033725850534922e-06,
+        1.000665597977147,
+        -1.211553889039618
+      ],
+      "affine_fit_median_residual_px": 0.132
+    },
+    {
+      "file": "16-window-change.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 42,
+      "affine_inliers": 42,
+      "median_displacement_before_px": 0.539,
+      "median_displacement_after_px": 0.181,
+      "p95_displacement_after_px": 0.442,
+      "matched_stable_patches_after": 61,
+      "output_to_input_affine": [
+        1.0001409292306134,
+        -0.00030395143409204096,
+        -0.36222752335022623,
+        0.00013966408764485558,
+        0.998915928283318,
+        0.05304741133428724
+      ],
+      "affine_fit_median_residual_px": 0.238
+    },
+    {
+      "file": "17-window-stormy.png",
+      "generated_size": [
+        2170,
+        725
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 32,
+      "affine_inliers": 32,
+      "median_displacement_before_px": 2.367,
+      "median_displacement_after_px": 0.191,
+      "p95_displacement_after_px": 0.591,
+      "matched_stable_patches_after": 32,
+      "output_to_input_affine": [
+        1.0009228851096235,
+        0.0011346080173815724,
+        -2.2873653817710937,
+        1.0344023752266176e-06,
+        1.007271008866128,
+        -4.743555094962979
+      ],
+      "affine_fit_median_residual_px": 0.317
+    },
+    {
+      "file": "18-window-very-dry.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "final_size": [
+        2172,
+        724
+      ],
+      "matched_stable_patches_before": 38,
+      "affine_inliers": 38,
+      "median_displacement_before_px": 1.04,
+      "median_displacement_after_px": 0.142,
+      "p95_displacement_after_px": 0.311,
+      "matched_stable_patches_after": 59,
+      "output_to_input_affine": [
+        1.0004566119501614,
+        -0.00024637493499806914,
+        -0.49736110355333274,
+        0.00016489219464589733,
+        1.0016879180488654,
+        -1.7169755603509191
+      ],
+      "affine_fit_median_residual_px": 0.174
+    }
+  ]
+}
