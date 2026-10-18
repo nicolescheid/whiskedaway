@@ -639,6 +639,7 @@ import { createChat } from './explore/chat.js';
 import { createTags } from './explore/tags.js';
 import { book, snapshot } from './explore/book.js';
 import { createBookView } from './explore/book-view.js';
+import { visitTheme, themeSentence } from './explore/theme.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1146,6 +1147,8 @@ function touch(id) {
     const now = sound.music(id);
     if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
     say(!sound.on ? obj.moment_quiet || obj.moment : now ? obj.moment : obj.moment_stop || obj.moment, [], true);
+  } else if (obj.type === 'ambient' && id === 'notice-board') {
+    noticeBoard(obj);
   } else if (obj.type === 'ambient') {
     say(obj.moment, [], true);
   } else if (obj.type === 'weather') {
@@ -1233,7 +1236,7 @@ function turnDial(o) {
   // The star opens the room whose reading the wander leans to (the room identities, content stage 3): juices, smoothies,
   // quick breakfasts and comfort are Cuddlecore's; whole-food meals and busy hands Flourish's; anything sweet, frozen or
   // baked Sweet Spells'; the pudding superpowers the Chiapothecary's. A wander that hasn't said much yet opens Cuddlecore.
-  const lean = localNavigate(navTrail(), world, { served: [...state.served, ...book.ids()], dismissed: state.dismissed }).cluster;
+  const lean = localNavigate(navTrail(), world, { ...steer(), dismissed: state.dismissed }).cluster;
   const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
   const starGo = STAR_OVERRIDES[lean] || world.clusters[lean]?.room || 'cuddlecore';
   const go = o.star ? starGo : o.go;
@@ -1255,7 +1258,7 @@ function scheduleNavigate() {
 }
 async function navigate() {
   const seq = ++navSeq;
-  const opts = { served: [...state.served, ...book.ids()], dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
+  const opts = { ...steer(), dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
   // One new idea per step (two to start), so they come at the pace of the wander
@@ -1286,7 +1289,13 @@ async function navigate() {
   const reacted = last?.kind === 'weather' || last?.kind === 'time' || last?.kind === 'energy'
     || (last?.kind === 'touch' && world.objects[last.id]?.type === 'ambient');
   const gemma = reacted && r.gemma ? r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase()) : r.gemma;
-  if (gemma) say(gemma, r.fork);                       // with the AI on this posts at once: she "typed" while it read
+  if (state.askDifferent) {
+    // Three set aside in a row: instead of her reading, Gemma asks what they'd like (§9); a pick counts like a choice
+    state.askDifferent = false;
+    say(LINES.dismiss?.different || 'Something different?', [], true);
+    setTimeout(() => setChips([['Quick', 'pantry'], ['Proper meal', 'build-up'], ['Sweet', 'treat'], ['Chia', 'energising']]
+      .filter(([, c]) => world.clusters[c]).map(([label, c]) => ({ label, do: ['choose', c] }))), 400);
+  } else if (gemma) say(gemma, r.fork);                // with the AI on this posts at once: she "typed" while it read
   if (AI) r.serve.forEach(s => serve(s, r.mode)); else putOut(r);
   store.save(state);
   renderNotes();
@@ -1417,13 +1426,30 @@ function pickLine(key, list, fill = {}) {
 }
 const sizeBucket = n => (n <= 0 ? '0' : n <= 2 ? '1-2' : n <= 5 ? '3-5' : n <= 10 ? '6-10' : '11+');
 
-function serve({ atom, why }, mode) {
+// What steers the navigator besides the trail (recipe-book-ux.md §6b): never anything kept, served or clashing with a
+// dietary need; this visit's keeps weigh ×3 and older ones ×1; the pantry and cuisines add a bonus
+function steer() {
+  const kept = book.list();
+  return {
+    served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
+    book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
+    about: { pantry: visit.get('pantry') || [], cuisines: visit.get('cuisines') || [] },
+  };
+}
+// The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
+const dietClash = a => [].concat(visit.get('dietary') || []).find(d => !(a.diet || []).includes(d)) || null;
+const CLASH_NOTE = { vegetarian: 'not vegetarian', vegan: 'not vegan', 'gluten-free': 'has gluten', 'dairy-free': 'has dairy', 'nut-free': 'has nuts' };
+
+function serve({ atom, why, fromKeep }, mode) {
   const a = atomsById[atom];
   if (!a || state.served.includes(atom) || book.has(atom)) return;
   state.served.push(atom);
   servedBy[atom] = mode;
   countAtom('atom_served', atom);
   ideas.add({ atom, why }, ideaSource());
+  // An idea that came from a keep says so, unless Gemma has just spoken about that keep (one line per event)
+  if (fromKeep && state.trail.at(-1)?.kind === 'keep' && !state.keepSpoke && LINES.idea?.from_keep) say(pickLine('fromKeep', LINES.idea.from_keep), [], true);
+  state.keepSpoke = false;
 }
 // Where a new idea rises from: the object the visitor last touched or lingered by, if it's on screen and not under
 // Gemma's chat; otherwise her avatar (ideas.js)
@@ -1458,6 +1484,9 @@ function keepIdea(atom, why, method) {
   else if (n === 3) line = pickLine('keep3', L.keepThird, { cluster_label: world.clusters[state.result?.cluster]?.label });
   else if (n > 3 && (n - 3) % 4 === 0) line = pickLine('keepN', L.keepLater);
   if (line) say(line, [], true);
+  state.keepSpoke = !!line;
+  state.dismissRun = 0;
+  renderTheme();
   store.save(state);
 }
 const ideas = createIdeas({
@@ -1481,6 +1510,10 @@ const ideas = createIdeas({
     state.dismissals = (state.dismissals || 0) + 1;
     record({ kind: 'dismiss', atom: c.atom });
     if (state.dismissals === 1) say(L.dismissFirst, [], true);
+    // Three set aside in a row: Gemma asks what they'd like instead (§9); a pick counts like a choice
+    state.dismissRun = (state.dismissRun || 0) + 1;
+    if (state.dismissRun === 3) { state.dismissRun = 0; state.askDifferent = true; }   // she asks in her next line (navigate)
+    renderTheme();
   },
   // When the 5 s undo closes (or Undo is pressed): count it once, knowing whether it was undone
   onUndo: (c, { undone, method, bumped }) => {
@@ -1497,6 +1530,7 @@ const ideas = createIdeas({
   },
 });
 const bookView = createBookView({
+  themeLine: () => themeNow().sentence, clashNote: rec => CLASH_NOTE[dietClash(rec)] || '',
   book, atoms: atomsById, chip: $('btn-book'), notes: $('notes'), track, bucket: sizeBucket,
   onKeep: rec => keepIdea(rec.id, rec.why, 'book'),
   onRead: id => countAtom('atom_open', id, { from: 'book' }),     // a kept recipe opened from Contents
@@ -1505,16 +1539,50 @@ const bookView = createBookView({
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) } });
 
+// ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
+// the book's "This visit" page and the hallway notice board, once something's been kept
+function themeNow() {
+  const kept = book.list(), now = kept.filter(k => k.visit === book.visitId);
+  const { words } = visitTheme({ keptNow: now, keptBefore: kept.filter(k => k.visit !== book.visitId),
+    dismissed: state.dismissed.map(id => atomsById[id]).filter(Boolean), lean: world.clusters[state.result?.cluster]?.themes || [] });
+  const roomName = r => ({ cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'the Chiapothecary' }[r] || r);
+  return { words, now, sentence: themeSentence(words, now, roomName) };
+}
+function renderTheme() {
+  const { words } = themeNow();
+  const cap = $('ideas-theme');
+  cap.textContent = words.join(', ');
+  cap.hidden = !words.length;
+  chatUI.setTheme(words);
+}
+const caption = document.createElement('div');
+caption.id = 'ideas-theme';
+caption.className = 'ideas-theme';
+caption.hidden = true;
+caption.setAttribute('aria-label', "Today's theme");
+document.body.appendChild(caption);
+book.subscribe(renderTheme);
+// The hallway notice board shows the book once something's in it: the visit's theme and how many are kept (§5, §6)
+function noticeBoard(obj) {
+  if (!book.count) return say(obj.moment, [], true);
+  const { words } = themeNow();
+  const n = book.count;
+  say(`${words.length ? `Pinned for you: ${words.join(', ')}. ` : ''}Your book has ${n === 1 ? 'one recipe' : `${n} recipes`} in it.`, [], true);
+  setTimeout(() => bookView.open('contents', { from: 'notice_board' }), 900);
+}
+
 // The top bar's and the chat's heights: the highlight, the undo and Turnstile's box sit between them on phones
 function fitDock() {
   const s = document.documentElement.style;
   s.setProperty('--bar-h', `${Math.round(document.querySelector('.bar').getBoundingClientRect().bottom)}px`);
   s.setProperty('--chat-h', `${Math.round(innerHeight - $('chatwin').getBoundingClientRect().top)}px`);
+  s.setProperty('--ideas-h', `${Math.round(ideas.el.getBoundingClientRect().height)}px`);   // the theme caption sits above the column
   ideas.place();
 }
 const fitter = new ResizeObserver(fitDock);
 fitter.observe(document.querySelector('.bar'));
 fitter.observe($('chatwin'));
+fitter.observe(ideas.el);
 addEventListener('resize', fitDock);
 
 // ---------- map + notebook (the fixed navigation)
@@ -1551,6 +1619,15 @@ visit.subscribe(({ part, key, value }) => {
   renderTold();
   if (part === 'all' || key === 'energy') showCandle();               // forgetting the energy puts the candle out
   if (part === 'about' && key === 'energy' && !value) scheduleNavigate();
+  if ((part === 'about' && key === 'dietary') || part === 'all') {
+    const gone = state.cards.filter(c => atomsById[c.atom] && dietClash(atomsById[c.atom]));
+    gone.forEach(c => ideas.remove(c.atom));
+    if (gone.length) {
+      const a = atomsById[gone[0].atom];
+      say((LINES.diet_clash || "I've taken the {title} away. It isn't {diet}.").replace('{title}', a.short?.toLowerCase() || a.title).replace('{diet}', dietClash(a)), [], true);
+    }
+    bookView.refresh();
+  }
 });
 function renderNotes() {
   renderTold();
@@ -1825,6 +1902,7 @@ if (state.room !== 'cuddlecore') askHemisphere();
 look.yaw = room().yaw ?? 0;
 fillMap();
 ideas.render();
+renderTheme();
 renderNotes();
 renderChat();
 if (state.chips?.length) setChips(state.chips);   // the last question's answers, if it's still open (J9)

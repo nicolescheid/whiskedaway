@@ -31,6 +31,17 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .idea-fly { position: fixed; z-index: 30; pointer-events: none; border-radius: 14px; background: var(--parchment);
             border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.3); transform-origin: 50% 50%; }
 
+/* The visit's theme above the column (desktop), once something's kept */
+.ideas-theme { position: fixed; z-index: 16; right: 16px; bottom: calc(16px + var(--ideas-h, 148px) + 8px); max-width: 180px; text-align: right;
+               font: italic 14px 'Crimson Pro', Georgia, serif; color: var(--parchment); text-shadow: 0 1px 5px rgba(0,0,0,.75); pointer-events: none; }
+.ideas-theme[hidden], .ideas[hidden] + .ideas-theme { display: none; }
+@media (max-width: 719px), (max-height: 500px) { .ideas-theme { display: none; } }   /* phones: it's in the chat instead */
+.cw-theme { margin: 4px 10px 0; font: italic 13px 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
+.cw-theme[hidden] { display: none; }
+.chatwin.size-line .cw-theme { display: none; }
+@media (min-width: 720px) and (min-height: 501px) { .cw-theme { display: none; } }   /* desktop: the caption by the column */
+.bk-clash { display: inline-block; margin: 0 0 6px; padding: 1px 10px; border-radius: 999px; background: #f3e1d4; color: #7a3e1d; font: 600 12px 'Quicksand'; }
+
 /* ---------- the highlight (level 2) */
 .idea-hl { position: fixed; z-index: 17; right: 68px; bottom: var(--hl-bottom, 16px); width: 320px; max-height: calc(100vh - 96px); overflow: auto;
            background: var(--parchment); border: 1px solid var(--line); border-left: 4px solid var(--ring, var(--berry)); border-radius: 14px;
