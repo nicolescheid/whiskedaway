@@ -16,7 +16,7 @@
     "door-cuddlecore": { "label": "Cuddlecore", "blurb": "Quick comfort, juices and snacks", "ref": "the Cuddlecore door", "type": "door", "go": "cuddlecore", "themes": [] },
     "door-flourish": { "label": "Flourish", "blurb": "Proper meals from whole foods", "ref": "the Flourish door", "type": "door", "go": "flourish", "themes": [] },
     "door-sweet-spells": { "label": "Sweet Spells", "blurb": "For the sweet tooth", "ref": "the Sweet Spells door", "type": "door", "go": "sweet-spells", "themes": [] },
-    "door-chiapothecary": { "label": "Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": 25,
+    "door-chiapothecary": { "label": "Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": 10,
                             "themes": [], "always_visible": true },
     "dial-cuddlecore": { "label": "The dial", "map": "The dial by the Cuddlecore door", "ref": "the dial by the Cuddlecore door", "type": "dial", "door": "door-cuddlecore", "themes": [] },
     "dial-flourish": { "label": "The dial", "map": "The dial by the Flourish door", "ref": "the dial by the Flourish door", "type": "dial", "door": "door-flourish", "themes": [] },
@@ -39,7 +39,7 @@
     { "label": "Flourish", "go": "flourish", "blurb": "Proper meals from whole foods" },
     { "label": "Sweet Spells", "go": "sweet-spells", "blurb": "For the sweet tooth" },
     { "label": "Chiapothecary", "go": "chiapothecary", "blurb": "Your chia routine" },
-    { "label": "Glasshouse", "go": "glasshouse", "blurb": "What's growing this season" },
+    { "label": "Conservatory", "go": "glasshouse", "blurb": "What's growing this season" },
     { "label": "Nourish Academy" },
     { "label": "Cravings Decoded" },
     { "label": "The foyer", "go": "hall-entrance" }

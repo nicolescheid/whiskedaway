@@ -1,0 +1,51 @@
+{
+  "_about": "Tell Gemma V1 data (tell-gemma-ux.md). Content editor owns it. Cuisine ids are the tags on atoms' themes; labels are what the chips show.",
+  "cuisines": [
+    { "id": "kiwi", "label": "Kiwi classics" },
+    { "id": "italian", "label": "Italian" },
+    { "id": "chinese", "label": "Chinese" },
+    { "id": "japanese", "label": "Japanese" },
+    { "id": "korean", "label": "Korean" },
+    { "id": "thai", "label": "Thai" },
+    { "id": "indian", "label": "Indian" },
+    { "id": "middle-eastern", "label": "Middle Eastern" },
+    { "id": "mediterranean", "label": "Mediterranean" },
+    { "id": "mexican", "label": "Mexican" },
+    { "id": "pacific", "label": "Pacific Islands" }
+  ],
+  "countries": [
+    { "id": "NZ", "label": "New Zealand", "example": "courgette, coriander, kūmara, capsicum" },
+    { "id": "AU", "label": "Australia", "example": "zucchini, coriander, capsicum, rockmelon" },
+    { "id": "GB", "label": "United Kingdom", "example": "courgette, coriander, aubergine, spring onions" },
+    { "id": "IE", "label": "Ireland", "example": "courgette, coriander, aubergine, scallions" },
+    { "id": "US", "label": "United States", "example": "zucchini, cilantro, eggplant, bell pepper" },
+    { "id": "CA", "label": "Canada", "example": "zucchini, cilantro, eggplant, green onions" },
+    { "id": "other", "label": "Other", "example": "everyday names, nothing too local" }
+  ],
+  "_synonyms": "Each group is one ingredient. Match a pantry word if any word in its group appears in an atom's key_ingredients (after singularising, so egg matches eggs).",
+  "synonyms": [
+    ["courgette", "zucchini"],
+    ["coriander", "cilantro"],
+    ["mince", "ground beef", "beef mince"],
+    ["capsicum", "bell pepper", "red pepper", "green pepper"],
+    ["kūmara", "kumara", "sweet potato"],
+    ["aubergine", "eggplant"],
+    ["spring onion", "scallion", "green onion"],
+    ["rocket", "arugula"],
+    ["chickpea", "garbanzo"],
+    ["yoghurt", "yogurt"],
+    ["silverbeet", "chard", "spinach beet"],
+    ["beetroot", "beet"],
+    ["prawn", "shrimp"],
+    ["tinned tomatoes", "canned tomatoes", "chopped tomatoes"],
+    ["stock", "broth"],
+    ["rolled oats", "oats", "porridge oats"],
+    ["plain flour", "all-purpose flour", "flour"],
+    ["caster sugar", "superfine sugar"],
+    ["rice", "cooked rice", "leftover rice", "brown rice"],
+    ["noodles", "egg noodles"],
+    ["chocolate", "dark chocolate"],
+    ["peanut butter", "peanut"],
+    ["kiwifruit", "kiwi fruit"]
+  ]
+}

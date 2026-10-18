@@ -33,6 +33,9 @@ PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
 SEASON = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--season=")), "spring")
 GLIMPSE = "--glimpse" in ARGS      # render the glasshouse as the Chiapothecary sees it through the glazed door
+BOTH = "--both" in ARGS            # render the 8K view and then its preview from one build
+WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")), "fair")
+NIGHT = "--night" in ARGS and not GLIMPSE   # the Chiapothecary's glimpse is always a fair day
 
 os.makedirs(OUT, exist_ok=True)
 PACK = os.path.join(ART, "glasshouse")
@@ -47,6 +50,36 @@ SEASONS = {
     "winter": dict(hdri="kloofendal_overcast_puresky", sky=1.3, plate="16-outside-winter.png", wet=0.1, frost=0.35, exposure=0.5),
 }
 S = SEASONS[SEASON]
+
+# The barometer and the clock, on top of the season (brief #10, art-inbox/glasshouse/weather-notes.md).
+# Fair, changeable and very dry days use the season's own garden view (13-16); rain and storm the wet one (20-23);
+# every night the season's night view (24-27). Blender adds the rest: the sky, rain and condensation on the glass,
+# the storm's gloom, the oil lamps. plate: view, strength, saturation, colour multiply, haze. clamp: cap on the sky's
+# brightness (takes the sun out of it); sun: a soft sun lamp instead, for sunny intervals. wet: drops on the walls
+# and roof. lamps: the two oil lamps on the staging lit.
+WET_VIEWS = {"spring": "20-outside-spring-wet.png", "summer": "21-outside-summer-wet.png",
+             "autumn": "22-outside-autumn-wet.png", "winter": "23-outside-winter-wet.png"}
+NIGHT_VIEWS = {"spring": "24-outside-spring-night.png", "summer": "25-outside-summer-night.png",
+               "autumn": "26-outside-autumn-night.png", "winter": "27-outside-winter-night.png"}
+OVERCAST = "kloofendal_overcast_puresky"
+SUNNY = S["hdri"] != OVERCAST
+WX = dict(plate=S["plate"], strength=1.0, sat=1.12, mul=None, haze=0.0, hdri=S["hdri"], sky=S["sky"], tint=None,
+          clamp=None, sun=0.0, wet=0.0, roof_wet=S["wet"], frost=S["frost"], exposure=S["exposure"], lamps=False)
+if WEATHER == "change":
+    WX.update(sat=0.95, strength=0.88, clamp=2.5, sun=1.0 if SUNNY else 0.0, sky=S["sky"] * 1.1, exposure=S["exposure"] + 0.25)
+elif WEATHER == "very-dry":
+    WX.update(sat=0.88, mul=(1.07, 1.0, 0.84), haze=0.12, strength=1.05, sky=S["sky"] * 1.05, roof_wet=0.0,
+              exposure=S["exposure"] - 0.05)
+elif WEATHER == "rain":
+    WX.update(plate=WET_VIEWS[SEASON], strength=0.95, sat=1.0, hdri=OVERCAST, sky=1.1, wet=0.45, roof_wet=0.6, exposure=0.6)
+elif WEATHER == "stormy":
+    WX.update(plate=WET_VIEWS[SEASON], strength=0.5, sat=0.85, mul=(0.9, 0.95, 1.05), hdri=OVERCAST, sky=0.5,
+              wet=0.75, roof_wet=0.85, exposure=0.35, lamps=True)
+if NIGHT:
+    WX.update(plate=NIGHT_VIEWS[SEASON], strength=0.8, sat=1.0, mul=None, haze=0.0, hdri=OVERCAST, sky=0.03,
+              tint=(0.55, 0.62, 1.0), clamp=None, sun=0.0, exposure=0.8, lamps=True)
+    if WEATHER not in ("rain", "stormy"):
+        WX.update(wet=0.0, roof_wet=S["wet"])
 ORDER = ["spring", "summer", "autumn", "winter"]   # the wheel, clockwise from the top plate
 
 W, L = 1.8, 6.3              # inside: Inn wall to garden glass, lane end to sea end
@@ -266,8 +299,9 @@ def frosty_glass(name, wet, frost):
     return m
 
 
-def backdrop_mat(name, path, strength=1.0):
-    """The garden plate: glows by itself, fades out at the top so the real sky (the HDRI) takes over."""
+def backdrop_mat(name, path, strength=1.0, sat=1.12, mul=None, haze=0.0):
+    """The garden plate: glows by itself, fades out at the top so the real sky (the HDRI) takes over.
+    mul and haze grade it for the weather (very dry: warmer, bleached, hazy)."""
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -277,11 +311,26 @@ def backdrop_mat(name, path, strength=1.0):
     t.interpolation = "Cubic"
     t.extension = "EXTEND"
     hs = nt.nodes.new("ShaderNodeHueSaturation")
-    hs.inputs["Saturation"].default_value = 1.12
+    hs.inputs["Saturation"].default_value = sat
     nt.links.new(t.outputs["Color"], hs.inputs["Color"])
+    col = hs.outputs["Color"]
+    if mul:
+        mm = nt.nodes.new("ShaderNodeMix")
+        mm.data_type, mm.blend_type = "RGBA", "MULTIPLY"
+        mm.inputs["Factor"].default_value = 1.0
+        nt.links.new(col, mm.inputs[6])
+        mm.inputs[7].default_value = (*mul, 1)
+        col = mm.outputs[2]
+    if haze:
+        hz = nt.nodes.new("ShaderNodeMix")
+        hz.data_type = "RGBA"
+        hz.inputs["Factor"].default_value = haze
+        nt.links.new(col, hz.inputs[6])
+        hz.inputs[7].default_value = (0.82, 0.79, 0.72, 1)
+        col = hz.outputs[2]
     e = nt.nodes.new("ShaderNodeEmission")
     e.inputs["Strength"].default_value = strength
-    nt.links.new(hs.outputs["Color"], e.inputs["Color"])
+    nt.links.new(col, e.inputs["Color"])
     uv = nt.nodes.new("ShaderNodeTexCoord")
     sep = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(uv.outputs["UV"], sep.inputs["Vector"])
@@ -1038,8 +1087,8 @@ def build():
     iron = mat("iron", srgb("#2a2622"), 0.6, 0.8)
     twine = pbr("twine", "rough_linen", 0.1, tint=srgb("#b8a383"), tint_mix=1.0, bump=0.8)
     pot_mat = terracotta("terracotta")
-    side_glass = frosty_glass("glass", 0.0, S["frost"])
-    roof_glass = frosty_glass("roof_glass", S["wet"], 0.0)
+    side_glass = frosty_glass("glass", WX["wet"], WX["frost"])
+    roof_glass = frosty_glass("roof_glass", WX["roof_wet"], 0.0)
     pmats = plant_mats()
 
     # ---- Floor, the Inn wall (running past both glass ends, as the house does), its first-floor window
@@ -1059,7 +1108,8 @@ def build():
         pass
     elif os.path.exists(shop):
         glimpse_plate("shop_glimpse", shop, CAM, plate_target(SHOP_PLATE), SHOP_PLATE["fov"],
-                      SHOP_PLATE["corner"], SHOP_PLATE["along"], SHOP_PLATE["up"])
+                      SHOP_PLATE["corner"], SHOP_PLATE["along"], SHOP_PLATE["up"],
+                      strength=0.45 if NIGHT else 1.0, tint=(1.0, 0.78, 0.55) if NIGHT else (1, 1, 1))
     else:
         still_room(wx0, cd0, cd1, plaster)
     # first-floor landing window, seen up through the roof glass
@@ -1386,7 +1436,8 @@ def build():
             uvl.data[li].uv = ((vi // 2) / segs, vi % 2)
     plate = bpy.data.objects.new("garden_view", me)
     scene.collection.objects.link(plate)
-    plate.data.materials.append(backdrop_mat("garden_view", os.path.join(PACK, S["plate"]), 1.0))
+    plate.data.materials.append(backdrop_mat("garden_view", os.path.join(PACK, WX["plate"]), WX["strength"], WX["sat"],
+                                             WX["mul"], WX["haze"]))
     for attr in ("visible_shadow", "visible_diffuse", "visible_volume_scatter"):
         setattr(plate, attr, False)
     hotspot("garden-view", "The garden", (CAM[0] + 5, CAM[1] + 0.8, 1.3), kind="ambient")
@@ -1397,14 +1448,40 @@ def build():
     world.use_nodes = True
     wnt = world.node_tree
     env = wnt.nodes.new("ShaderNodeTexEnvironment")
-    env.image = bpy.data.images.load(os.path.join(ASSETS, "hdri", f"{S['hdri']}.hdr"))
+    env.image = bpy.data.images.load(os.path.join(ASSETS, "hdri", f"{WX['hdri']}.hdr"))
     tc = wnt.nodes.new("ShaderNodeTexCoord")
     mp = wnt.nodes.new("ShaderNodeMapping")
     wnt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
     wnt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
     mp.inputs["Rotation"].default_value = (0, 0, sun_turn(env.image))
-    wnt.links.new(env.outputs["Color"], wnt.nodes["Background"].inputs["Color"])
-    wnt.nodes["Background"].inputs["Strength"].default_value = S["sky"]
+    sky_col = env.outputs["Color"]
+    if WX["clamp"]:                                                 # cloud over the sun: cap the sky's brightest spots
+        cap = wnt.nodes.new("ShaderNodeMix")
+        cap.data_type, cap.blend_type = "RGBA", "DARKEN"
+        cap.inputs["Factor"].default_value = 1.0
+        wnt.links.new(sky_col, cap.inputs[6])
+        cap.inputs[7].default_value = (WX["clamp"],) * 3 + (1,)
+        sky_col = cap.outputs[2]
+    if WX["tint"]:                                                  # night: a dim, moonlit blue
+        tn = wnt.nodes.new("ShaderNodeMix")
+        tn.data_type, tn.blend_type = "RGBA", "MULTIPLY"
+        tn.inputs["Factor"].default_value = 1.0
+        wnt.links.new(sky_col, tn.inputs[6])
+        tn.inputs[7].default_value = (*WX["tint"], 1)
+        sky_col = tn.outputs[2]
+    wnt.links.new(sky_col, wnt.nodes["Background"].inputs["Color"])
+    wnt.nodes["Background"].inputs["Strength"].default_value = WX["sky"]
+    if WX["sun"]:                                                   # sunny intervals: a softer sun from the same place
+        el = math.radians(sun_turn.elevation)
+        to_sun = Vector((math.cos(el) * math.cos(math.radians(SUN_AZ)), math.cos(el) * math.sin(math.radians(SUN_AZ)), math.sin(el)))
+        sd = bpy.data.lights.new("sun_soft", "SUN")
+        sd.energy = WX["sun"]
+        sd.angle = math.radians(4)
+        sd.color = (1.0, 0.95, 0.86)
+        so = bpy.data.objects.new("sun_soft", sd)
+        so.rotation_euler = Vector((0, 0, -1)).rotation_difference(-to_sun).to_euler()
+        scene.collection.objects.link(so)
+    oil_lamps(scene, WX["lamps"])
     # portals on the glass help Cycles find the sky through it
     area_light("portal_roof", (W / 2 + 0.03, L / 2, (ROOF_HI + ROOF_LO) / 2 + 0.03),
                (0, math.atan2(ROOF_HI - ROOF_LO, W), 0), (W + 0.1, L), 0, (1, 1, 1), portal=True)
@@ -1422,7 +1499,7 @@ def build():
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = S["exposure"]
+    scene.view_settings.exposure = WX["exposure"]
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
 
@@ -1475,8 +1552,27 @@ def sun_turn(img):
     u, v = (ix + 0.5) / w, (iy + 0.5) / h
     beta_tex = 2 * math.pi * (0.5 - u)                              # Cycles: u = 0.5 - atan2(y, x) / 2pi
     rot = beta_tex - math.radians(SUN_AZ)
-    print(f"[whisked] sky sun at elevation {math.degrees(math.pi * (v - 0.5)):.0f}, turned {math.degrees(rot):.0f} deg")
+    sun_turn.elevation = math.degrees(math.pi * (v - 0.5))
+    print(f"[whisked] sky sun at elevation {sun_turn.elevation:.0f}, turned {math.degrees(rot):.0f} deg")
     return rot
+
+
+def oil_lamps(scene, lit):
+    """Two old oil lamps on the staging, there in every view; lit at night and in a storm."""
+    flame = mat("flame", (1, 0.6, 0.25, 1), emission=(1.0, 0.55, 0.2, 1), strength=8)
+    for name, at, rot in (("oil_lamp_lane", (1.47, 2.55, STAGE_Z), 20), ("oil_lamp_sea", (1.7, 4.7, STAGE_Z), -30)):
+        lamp = model("vintage_oil_lamp", at, rot_z=rot, scale=0.6)
+        for o in meshes_of(lamp):
+            if o.name.endswith("flame"):
+                if lit:
+                    o.data.materials.clear()
+                    o.data.materials.append(flame)
+                else:
+                    o.hide_render = True
+        if lit:
+            point_light(f"{name}_light", (at[0], at[1], at[2] + 0.36 * 0.6 / 0.65), 22, (1.0, 0.64, 0.33), radius=0.03)
+    if lit and NIGHT:
+        point_light("night_fill", (0.9, 3.15, 2.3), 5, (1.0, 0.7, 0.45), radius=0.8)   # the lamps' bounce off the glass
 
 
 def visible_from(cam, hs):
@@ -1528,9 +1624,14 @@ def main():
         print(f"[whisked] rendered the glimpse for the Chiapothecary, {SEASON}")
         return
     pano_camera(scene, CAM, CAM_YAW)
-    scene.render.filepath = os.path.join(OUT, f"glasshouse_pano_{SEASON}{'_preview' if PREVIEW else ''}.jpg")
+    scene.render.filepath = os.path.join(OUT, f"glasshouse_pano_{SEASON}_{WEATHER}{'_night' if NIGHT else ''}"
+                                              f"{'_preview' if PREVIEW else ''}.jpg")
     bpy.ops.render.render(write_still=True)
-    print(f"[whisked] rendered {SEASON}")
+    if BOTH and not PREVIEW:
+        scene.cycles.samples, scene.render.resolution_x, scene.render.resolution_y = 128, 2048, 1024
+        scene.render.filepath = scene.render.filepath.replace(".jpg", "_preview.jpg")
+        bpy.ops.render.render(write_still=True)
+    print(f"[whisked] rendered {SEASON} {WEATHER}{' night' if NIGHT else ''}")
     print("[whisked] done")
 
 

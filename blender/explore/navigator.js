@@ -16,7 +16,7 @@
  *   { kind: 'time',    id }          pushed the clock to a time of day (id = a key of world.times)
  *   { kind: 'clock',   id }          the device's own time of day, observed rather than chosen
  *   { kind: 'energy',  id }          picked one of the energy candles (id = a key of world.energies)
- *   { kind: 'season',  id }          turned the glasshouse's seasons wheel (id = a key of world.seasons)
+ *   { kind: 'season',  id }          turned the Conservatory's seasons wheel (id = a key of world.seasons)
  *   { kind: 'keep',    atom }        kept an idea in the recipe book (weighed through `book` below, not the trail)
  *
  * The recipe book and what the visitor told Gemma also steer serving (recipe-book-ux.md §6b), through localNavigate's options:

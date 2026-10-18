@@ -20,7 +20,16 @@
   "book": {
     "full": "Your book's full, so I've taken out the oldest one to make room.",
     "no_storage": "I can't keep a book on this device, so these are just for today.",
-    "cleared": "All cleared. A fresh book."
+    "cleared": "All cleared. A fresh book.",
+    "theme": {
+      "_when": "The book's This visit page, once something is kept this visit. Say `words` (if there are any) then one `kept_*` line. {words} = the theme words joined with `join`; {n} = the number kept, in words; {room} = the room's name as the dial shows it.",
+      "words": "This visit, by the look of it: {words}.",
+      "join": ", ",
+      "kept_one": "You've kept one, from {room}.",
+      "kept_all": "You've kept {n}, all from {room}.",
+      "kept_mostly": "You've kept {n}, mostly from {room}.",
+      "kept_mixed": "You've kept {n}, from around the Inn."
+    }
   },
   "room_empty": "That's everything I've got in here. Try next door.",
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",
@@ -32,5 +41,76 @@
     "at_cap": "That's three I've written out this visit. The short version's above.",
     "failed": "My pen's run dry. The short version's above. Try again in a bit.",
     "diet_question": "Anything I should avoid?"
+  },
+  "tell": {
+    "_about": "Tell Gemma V1 (tell-gemma-ux.md). {a} and {b} are the first two things named; never list more than two. {diet} joins with ' and '. Lists and the country examples are in tell-data.json.",
+    "menu": {
+      "chip": "+ Tell me about you",
+      "energy": "Energy", "pantry": "Pantry", "map": "The map", "dietary": "Dietary needs",
+      "not_yet": "not yet"
+    },
+    "buttons": { "done": "Done", "forget": "Forget this", "close": "Close" },
+    "pantry": {
+      "title": "What have you got to use?",
+      "helper": "A few things, with commas between them.",
+      "placeholder": "eggs, spinach, leftover rice",
+      "use_up": "Use these up first",
+      "privacy": "Only used for Gemma's ideas and the recipes she writes out for you."
+    },
+    "map": {
+      "title": "Where shall we take it?",
+      "helper": "Pick up to three.",
+      "country_label": "Shopping words for",
+      "country_choose": "Choose…"
+    },
+    "dietary": {
+      "title": "Anything I should avoid?",
+      "other_label": "Something else?",
+      "other_placeholder": "no mushrooms, say",
+      "other_note": "I'll pass that on when I write a recipe out. I can't check my cards for it."
+    },
+    "ack": {
+      "_when": "One line on Done, only if something changed.",
+      "pantry_1": "{a}. I'll work with that.",
+      "pantry_2": "{a} and {b}. I'll work with those.",
+      "pantry_more": "{a}, {b} and a few more. Noted.",
+      "pantry_use_up_1": "{a} first, then.",
+      "pantry_use_up_2": "{a} and {b} first, then.",
+      "pantry_use_up_more": "{a}, {b} and the rest first, then.",
+      "map_1": "{a} it is. I'll lean that way.",
+      "map_2": "{a} and {b}. I'll lean that way.",
+      "map_more": "{a}, {b} and one more. I'll lean that way.",
+      "map_country_only": "Shopping words for {country}, then.",
+      "dietary_1": "{a}. I'll keep to that.",
+      "dietary_2": "{a} and {b}. I'll keep to that.",
+      "dietary_more": "{a}, {b} and the rest. I'll keep to all of it.",
+      "dietary_other_only": "Noted. I'll pass it on when I write a recipe out.",
+      "forget": "Forgotten."
+    },
+    "offer": {
+      "_when": "Once per visit, after 2 ideas kept or set aside, only if no pantry, map or dietary answer is set.",
+      "line": "Want to tell me what's in your cupboard, or anything to avoid?",
+      "yes": "Tell me",
+      "no": "Not now"
+    },
+    "room_empty_diet": "Nothing in here fits {diet}, I'm afraid. {room} has a few.",
+    "nothing_fits": "I can't find anything on my shelves that fits all of that.",
+    "entry_fact": {
+      "_when": "On first entry to a room, one at most, after the room's intro: dietary > pantry (Cuddlecore and Flourish) > cuisine.",
+      "dietary": "I'll keep to {diet} in here.",
+      "pantry": "I'll look for things that use your {a}.",
+      "cuisine": "I'll lean {a} where I can."
+    },
+    "why": {
+      "_when": "Reasons for the navigator's 'Because you …' line.",
+      "pantry": "you've got {a} to use",
+      "cuisine": "you chose {a} on the map"
+    },
+    "objects": {
+      "_when": "Gemma's line when the visitor touches the object, just before its sheet opens.",
+      "pantry-cabinet": "Tell me what's in the cupboard, and I'll cook around it.",
+      "locale-map": "Pick a few places to cook from, and where you do your shopping.",
+      "dietary-shelf": "Tell me what to steer clear of, and I'll keep to it."
+    }
   }
 }

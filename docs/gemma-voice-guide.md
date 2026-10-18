@@ -101,6 +101,12 @@ The dietary filter is the strongest serving rule: a card that clashes is never s
   depend on certification, sourcing or portion size, which a card can't promise. A written-out recipe can
   still respect them when a visitor asks.
 
+## Cuisine tags
+
+The Map's chips (tell-data.json) give a small bonus to atoms tagged with a chosen cuisine. Tag a cuisine only when the dish
+really comes from it, or plainly borrows from it (matcha, golden milk). A cuisine with no atoms yet still helps written-out
+recipes, so it can stay on the list.
+
 ## Gemma's book lines
 
 Keep, dismiss, the book and the write-out lines live in `blender/explore/gemma-lines.json`, with when each one

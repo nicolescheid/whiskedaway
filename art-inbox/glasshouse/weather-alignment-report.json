@@ -1,0 +1,728 @@
+{
+  "date": "2026-10-19",
+  "composition_master": "13-outside-spring.png",
+  "method": "Ten visible-region grayscale gradient NCC checks against each matching season. Half-resolution search then full-resolution refinement plus independent full-resolution search within4pixels of zero. Technical canvas normalization and whole-image integer translations documented in weather-registration.json; no artistic script retouch, compositing or local warp.",
+  "limits": "Weather/water/frost and leaf droop change edges. Correlations below0.4 indicate uncertain matches. Measurements sample visible patches, not every stone/branch/pixel, and cannot prove mathematically exact registration.",
+  "results": [
+    {
+      "file": "20-outside-spring-wet.png",
+      "master": "13-outside-spring.png",
+      "generated_size": [
+        2169,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "528de831b5b2c9fadc3c898bf2c63058c3a95aba52851f26c218df17451da897",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.5441,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.5045,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.5306,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.5467,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.55,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.363,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.5317,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.4988,
+          "best_offset_px": [
+            0,
+            1
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.8006,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.6781,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 9,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1
+    },
+    {
+      "file": "21-outside-summer-wet.png",
+      "master": "14-outside-summer.png",
+      "generated_size": [
+        2169,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "96c0f157546fadb909063f2c208253220069c87a493a2b47ef5626fc59e1c45d",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.613,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.5772,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.5557,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.5881,
+          "best_offset_px": [
+            1,
+            -1
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.6185,
+          "best_offset_px": [
+            1,
+            -1
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.4548,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.6724,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.6057,
+          "best_offset_px": [
+            0,
+            -1
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.7586,
+          "best_offset_px": [
+            1,
+            -1
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.6431,
+          "best_offset_px": [
+            1,
+            -1
+          ]
+        }
+      },
+      "reliable_patches": 10,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1
+    },
+    {
+      "file": "22-outside-autumn-wet.png",
+      "master": "15-outside-autumn.png",
+      "generated_size": [
+        2169,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "0b4ab78c52eb7131b206151c1f1cd24b09c207de4268ec1ff72127c9cf70c301",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.6151,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.5972,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.5309,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.6098,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.5965,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.367,
+          "best_offset_px": [
+            1,
+            1
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.6295,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.6102,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.7936,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.7533,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 9,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1
+    },
+    {
+      "file": "23-outside-winter-wet.png",
+      "master": "16-outside-winter.png",
+      "generated_size": [
+        2170,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "0ae2b493c391d3c7d0801aeda0bcaeff582ae1b2342743ceda8b30a95aa9cbf3",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.5088,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.4656,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.4387,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.4683,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.5093,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.3391,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.5261,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.6268,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.7873,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.8339,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 9,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1
+    },
+    {
+      "file": "24-outside-spring-night.png",
+      "master": "13-outside-spring.png",
+      "generated_size": [
+        2169,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "02c67369692614a6ff9650727f85834f6ac87c49fcd407b8986731731f67503d",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.5485,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.4926,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.5307,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.5131,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.5324,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.387,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.622,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.5127,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.6558,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.6675,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 9,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1,
+      "night_garden_grayscale": {
+        "median_0_255": 11.0,
+        "p90_0_255": 31.0
+      }
+    },
+    {
+      "file": "25-outside-summer-night.png",
+      "master": "14-outside-summer.png",
+      "generated_size": [
+        2169,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "02d5a6f82c12938673ef075e91c499b94f15df2b71a7953c246bcb67bf371fbb",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.6093,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.534,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.5293,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.6054,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.5934,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.4245,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.6409,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.612,
+          "best_offset_px": [
+            -1,
+            -1
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.6463,
+          "best_offset_px": [
+            -1,
+            -1
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.6947,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 10,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1,
+      "night_garden_grayscale": {
+        "median_0_255": 10.0,
+        "p90_0_255": 32.0
+      }
+    },
+    {
+      "file": "26-outside-autumn-night.png",
+      "master": "15-outside-autumn.png",
+      "generated_size": [
+        2169,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "a881fd9b8bda1755e1d383d126cb7a646c470bf75489b65ae8d0c792f02cf996",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.6522,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.6167,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.559,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.6362,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.5949,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.4138,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.6461,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.5922,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.6197,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.6546,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 10,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1,
+      "night_garden_grayscale": {
+        "median_0_255": 10.0,
+        "p90_0_255": 31.0
+      }
+    },
+    {
+      "file": "27-outside-winter-night.png",
+      "master": "16-outside-winter.png",
+      "generated_size": [
+        2169,
+        725
+      ],
+      "delivered_size": [
+        2170,
+        725
+      ],
+      "sha256": "15a15f5bdeb3435a9dae60430d72424e8ac8d6db781aa2c2776c975272aef35f",
+      "patches": {
+        "wall_left_gap": {
+          "edge_correlation": 0.4016,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "wall_right_gap": {
+          "edge_correlation": 0.3689,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "wall_far_right": {
+          "edge_correlation": 0.4346,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "gap_left_edge": {
+          "edge_correlation": 0.4203,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "gap_right_edge": {
+          "edge_correlation": 0.4428,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "path": {
+          "edge_correlation": 0.3966,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        },
+        "elder_trunk": {
+          "edge_correlation": 0.4533,
+          "best_offset_px": [
+            -1,
+            0
+          ]
+        },
+        "elder_crown": {
+          "edge_correlation": 0.6362,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "left_headland_tip": {
+          "edge_correlation": 0.9032,
+          "best_offset_px": [
+            0,
+            0
+          ]
+        },
+        "right_headland_tip": {
+          "edge_correlation": 0.9191,
+          "best_offset_px": [
+            1,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 8,
+      "max_reliable_offset_px": 1,
+      "max_fixed_structure_offset_px": 1,
+      "night_garden_grayscale": {
+        "median_0_255": 18.0,
+        "p90_0_255": 43.0
+      }
+    }
+  ]
+}
