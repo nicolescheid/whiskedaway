@@ -96,8 +96,9 @@ INGREDIENTS = ["black chia", "white chia", "coconut flakes", "cacao nibs", "goji
                "hazelnuts", "pistachios", "sesame", "cacao powder", "maca", "turmeric", "ginger", "nutmeg", "star anise",
                "rose petals", "lavender", "dried blueberries", "dried cherries", "banana chips", "pineapple", "lime zest",
                "orange peel", "honey crystals", "carob", "sea salt"]
-OPEN = {(3, 0): (0.17, "black chia"), (3, 6): (0.12, "coconut flakes"), (2, 1): (0.15, "goji berries"),
-        (1, 5): (0.14, "cacao nibs"), (4, 3): (0.1, "white chia"), (2, 4): (0.13, "matcha")}
+# Only rows 1 and 2 open: lower ones hide behind the counter, higher ones are above the eye and show no contents.
+OPEN = {(2, 0): (0.22, "black chia"), (1, 1): (0.2, "goji berries"), (2, 3): (0.18, "white chia"),
+        (1, 5): (0.21, "cacao nibs"), (2, 6): (0.19, "coconut flakes"), (1, 7): (0.17, "matcha")}
 
 HOTSPOTS = {}
 
@@ -220,14 +221,18 @@ def _bm_obj(name, bm, material, loc=(0, 0, 0), rot=(0, 0, 0), smooth=True):
     return o
 
 
-def scatter(name, centre, half, n, size, material, seed=0, kind="seed", z_jitter=0.0, shape=(1, 1, 1)):
-    """Many small pieces in one mesh, lying in a box of half-extents half around centre.
+def scatter(name, centre, half, n, size, material, seed=0, kind="seed", z_jitter=0.0, shape=(1, 1, 1), mound=0.0):
+    """Many small pieces in one mesh, lying in a box of half-extents half around centre, heaped up to mound
+    metres in the middle.
     kind: seed (ellipsoid), chunk (rough broken piece), flake (thin curled sliver), pod (long capsule)."""
     rnd = random.Random(seed)
     bm = bmesh.new()
     for _ in range(n):
         p = Vector((centre[0] + rnd.uniform(-half[0], half[0]), centre[1] + rnd.uniform(-half[1], half[1]),
                     centre[2] + rnd.uniform(-half[2], half[2]) + rnd.uniform(0, z_jitter)))
+        if mound:
+            e = ((p.x - centre[0]) / half[0]) ** 2 + ((p.y - centre[1]) / half[1]) ** 2
+            p.z += mound * max(0.0, 1 - e) ** 0.5
         s = size * rnd.uniform(0.75, 1.25)
         rot = Matrix.Rotation(rnd.uniform(0, 6.28), 4, "Z") @ Matrix.Rotation(rnd.uniform(-0.5, 0.5), 4, "X")
         if kind == "seed":
@@ -473,21 +478,20 @@ def build():
                           box_span(f"drawer_side_r_{r}_{c}", x1 - 0.016, x1 - 0.005, fy + 0.02, by1, bz, z1 - 0.03, drawer_box),
                           box_span(f"drawer_back_{r}_{c}", x0 + 0.005, x1 - 0.005, by1 - 0.012, by1, bz, z1 - 0.03, drawer_box),
                           box_span(f"drawer_bottom_{r}_{c}", x0 + 0.005, x1 - 0.005, fy + 0.02, by1, bz, bz + 0.01, drawer_box)]
-                fz = z1 - 0.06                                        # level of the contents
-                cx, cy, hx, hy = xm, fy + 0.16, (x1 - x0) / 2 - 0.022, 0.13
+                fz = z1 - 0.022                                       # heaped a little above the front, so it shows
+                cx, cy, hx, hy = xm, fy + 0.13, (x1 - x0) / 2 - 0.022, 0.105   # the part pulled out of the case
                 if what in fills:
                     bed = box_span(f"drawer_fill_{r}_{c}", cx - hx, cx + hx, cy - hy, cy + hy, bz + 0.01, fz, fills[what], bevel=0.008)
-                    for v in bed.data.vertices:                       # heaped a little in the middle
-                        if v.co.z > 0:
-                            v.co.z += 0.012 * (1 - (abs(v.co.x) / hx) ** 2) * (1 - (abs(v.co.y) / hy) ** 2)
-                    parts.append(bed)
+                    heap = sphere(f"drawer_heap_{r}_{c}", (cx, cy, fz), hx * 0.95, fills[what], scale=(1, hy / hx, 0.36))
+                    parts += [bed, heap]                              # heaped up in the middle
                 else:
                     bed_m = {"coconut flakes": coconut, "cacao nibs": cacao, "goji berries": goji}[what]
                     parts.append(box_span(f"drawer_fill_{r}_{c}", cx - hx, cx + hx, cy - hy, cy + hy, bz + 0.01, fz - 0.012, bed_m))
-                    kind, size, n = {"coconut flakes": ("flake", 0.014, 140), "cacao nibs": ("chunk", 0.0045, 420),
-                                     "goji berries": ("pod", 0.0085, 160)}[what]
+                    parts.append(sphere(f"drawer_heap_{r}_{c}", (cx, cy, fz - 0.012), hx * 0.9, bed_m, scale=(1, hy / hx, 0.32)))
+                    kind, size, n = {"coconut flakes": ("flake", 0.014, 200), "cacao nibs": ("chunk", 0.0045, 600),
+                                     "goji berries": ("pod", 0.0085, 240)}[what]
                     parts.append(scatter(f"drawer_pieces_{r}_{c}", (cx, cy, fz - 0.006), (hx - 0.004, hy - 0.004, 0.004), n, size, bed_m,
-                                         seed=r * 10 + c, kind=kind, z_jitter=0.008))
+                                         seed=r * 10 + c, kind=kind, z_jitter=0.008, mound=0.035))
                 open_drawers[what] = parts
     for what, parts in open_drawers.items():
         hotspot(f"drawer-{what.replace(' ', '-')}", what.capitalize(), parts, kind="ambient")
@@ -557,6 +561,12 @@ def build():
     scatter("spilt_chia", (mx + 0.06, my - 0.12, TOP + 0.001), (0.16, 0.06, 0.0), 160, 0.0011, seed_m, seed=3)
     hotspot("mortar", "The mortar and pestle", [mortar, pestle], kind="ambient")
 
+    # Two little wooden bowls at the front of the counter, so a couple of the drawers' treasures show from the shop
+    for k, (bx_, by_, m_, kind, size, n) in enumerate(((1.7, 2.88, goji, "pod", 0.0085, 70), (2.45, 2.9, coconut, "flake", 0.013, 60))):
+        lathe(f"counter_bowl_{k}", [(0.0, 0.0), (0.03, 0.0), (0.05, 0.018), (0.062, 0.034), (0.064, 0.037)], oak, (bx_, by_, TOP), shell=0.005)
+        sphere(f"counter_bowl_bed_{k}", (bx_, by_, TOP + 0.022), 0.052, m_, scale=(1, 1, 0.3))
+        scatter(f"counter_bowl_pieces_{k}", (bx_, by_, TOP + 0.03), (0.042, 0.042, 0.002), n, size, m_, seed=70 + k, kind=kind, mound=0.016)
+
     # Paper parcels in the botanical kraft, tied with string
     for k, (px, py, sx, sy, sz, rz) in enumerate(((2.22, 3.18, 0.12, 0.09, 0.06, 12), (2.33, 3.08, 0.1, 0.08, 0.05, -20))):
         b = box(f"parcel_{k}", (px, py, TOP + sz / 2), (sx, sy, sz), kraft, bevel=0.006)
@@ -565,7 +575,7 @@ def build():
             s_ = box(f"parcel_string_{k}_{nm}", (px, py, TOP + sz / 2), size, string, bevel=0.0015)
             s_.rotation_euler = (0, 0, math.radians(rz))
         sphere(f"parcel_knot_{k}", (px, py, TOP + sz + 0.004), 0.007, string)
-    box("parcel_2", (2.27, 3.13, TOP + 0.13), (0.08, 0.07, 0.04), kraft, bevel=0.005).rotation_euler = (0, 0, math.radians(-4))
+    box("parcel_2", (2.22, 3.18, TOP + 0.08), (0.08, 0.07, 0.04), kraft, bevel=0.005).rotation_euler = (0, 0, math.radians(-4))
 
     # Four pudding jars on the counter: berry, mango, matcha, cacao, in layers, toppings on top
     puds = []
