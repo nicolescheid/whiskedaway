@@ -33,6 +33,8 @@ WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")),
 ONLY_STOP = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--stop=")), None)
 FLY = "--flythrough" in ARGS
 ROUGH = "--rough" in ARGS
+# The home page's door film (docs/front-door-spec.md): just the door opening, ending at the entrance stop
+DOOR_FILM = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--door-film=")), None)   # landscape or portrait
 ANIM = {}                    # the parts the fly-through moves: doors, the Cuddlecore dial pointer
 
 # The sea window shows the same coast as the Cuddlecore window (the two rooms sit either side of it)
@@ -130,6 +132,8 @@ def build():
     door_oak = pbr("door_oak", "medieval_wood", 2.0, tint=srgb("#9b693e"), tint_mix=0.55)
     tread_oak = pbr("tread_oak", "wood_table_worn", 1.2, tint=srgb("#8b5d35"), tint_mix=0.4)
     front_paint = pbr("front_paint", "wood_table_worn", 1.2, tint=srgb("#2c2416"), tint_mix=0.85, rough_add=0.05)
+    # Painted berry outside, to match the storybook picture; varnished wood inside, as the panoramas show it
+    front_berry = pbr("front_berry", "wood_table_worn", 1.2, tint=srgb("#7a2f45"), tint_mix=0.9, rough_add=0.12)
     berry_linen = pbr("berry_linen", "rough_linen", 0.5, tint=srgb("#8b4d5c"), tint_mix=1.0, bump=0.5)
     berry_linen.node_tree.nodes["Principled BSDF"].inputs["Subsurface Weight"].default_value = 0.25
     runner = image_mat("runner", os.path.join(KITCHEN, "13-rag-rug-tile-candidate.png"), rough=0.97,
@@ -471,6 +475,13 @@ def build():
     fd_parts.append(cyl("front_knob", (0.38, FRONT - 0.12, 1.0), 0.03, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
     fd_parts.append(box("front_letter_plate", (0, FRONT - 0.138, 1.02), (0.26, 0.006, 0.07), brass, bevel=0.003))
     hotspot("front-door", "The front door", fd_parts, kind="door")
+    # The outside face: berry paint, four raised panels, a brass knob and letter plate (seen only from the lane)
+    fd_parts.append(box_span("front_outside", -fd_w / 2 + 0.01, fd_w / 2 - 0.01, FRONT - 0.205, FRONT - 0.2, 0.01, fd_h - 0.005, front_berry, bevel=0.002))
+    for px in (-0.22, 0.22):
+        for pz0, pz1 in ((0.18, 0.9), (1.08, 1.95)):
+            fd_parts.append(box_span(f"front_out_panel_{px}_{pz0}", px - 0.17, px + 0.17, FRONT - 0.214, FRONT - 0.205, pz0, pz1, front_berry, bevel=0.006))
+    fd_parts.append(cyl("front_out_knob", (0.38, FRONT - 0.24, 1.0), 0.03, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
+    fd_parts.append(box("front_out_letter_plate", (0, FRONT - 0.208, 1.02), (0.26, 0.006, 0.07), brass, bevel=0.003))
     # Hinged on the side away from the knob, so the fly-through can swing it open into the hall
     hinge = bpy.data.objects.new("front_door_hinge", None)
     scene.collection.objects.link(hinge)
@@ -658,8 +669,31 @@ def flythrough(scene):
     print("[whisked] fly-through frames done")
 
 
+def door_film(scene, shape):
+    """The home page's door film: the door swings open and the camera steps in, ending exactly at the
+    entrance stop, looking down the hall, so the page can crossfade into the live panorama.
+    Portrait frames are for phones held upright."""
+    E = (0, 8, 1.6)                                    # level, like the panorama's yaw 0
+    fly_camera(scene, [
+        (1,   (0, -2.75, 1.55), E, 30),
+        (30,  (0, -2.75, 1.55), E, 30),
+        (120, STOPS["entrance"], E, 28),
+        (132, STOPS["entrance"], E, 28),               # a short hold to crossfade from
+    ])
+    key_rot_z(ANIM["door-front"], [(8, 0), (56, 95)])
+    out = os.path.join(OUT, "door-film", f"{shape}{'-rough' if ROUGH else ''}", "door_")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    video_settings(scene, ROUGH, out)
+    if shape == "portrait":
+        scene.render.resolution_x, scene.render.resolution_y = scene.render.resolution_y, scene.render.resolution_x
+    bpy.ops.render.render(animation=True)
+    print("[whisked] door film frames done")
+
+
 def main():
     build()
+    if DOOR_FILM:
+        return door_film(bpy.context.scene, DOOR_FILM)
     if FLY:
         return flythrough(bpy.context.scene)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "hallway.blend"))
