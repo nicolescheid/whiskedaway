@@ -979,6 +979,7 @@ function renderChat() {
     ? `<div class="cw-sys">${esc(m.text)}</div>`
     : `<div class="cw-who">Gemma · ${esc(m.at)}</div><div class="cw-msg">${esc(m.text)}</div>`).join('');
   log.scrollTop = log.scrollHeight;
+  fitCounter();                                // the chat may have grown: a phone that throttles ResizeObserver still gets it
 }
 function chatLine(who, text) {
   if (!text) return;
@@ -1056,8 +1057,9 @@ function serve({ atom, why }, mode) {
   state.cards = state.cards.slice(0, 4);
   renderCards();
 }
-function renderCards() {
-  const c = $('counter');
+let newestShown = null;
+function renderCards(focus = null) {
+  const c = $('counter'), keep = c.scrollTop;
   c.innerHTML = '';
   state.cards.slice().reverse().forEach(({ atom, why, opened }, i, arr) => {
     const a = atomsById[atom];
@@ -1072,7 +1074,7 @@ function renderCards() {
       const entry = state.cards.find(x => x.atom === atom);
       entry.opened = !entry.opened;
       if (entry.opened) { record({ kind: 'open', atom }); countAtom('atom_open', atom); }
-      renderCards();
+      renderCards(atom);
       store.save(state);
     };
     card.querySelector('[data-act=no]').onclick = () => {
@@ -1082,17 +1084,23 @@ function renderCards() {
       countAtom('atom_dismiss', atom);
       renderCards();
     };
+    card.dataset.atom = atom;
     c.appendChild(card);
   });
-  c.scrollTop = c.scrollHeight;              // on a phone the counter may scroll: keep the newest piece in view
+  // On a phone the counter may scroll: a new piece scrolls into view at the bottom; otherwise stay put,
+  // and an opened card shows its top
+  c.scrollTop = state.cards[0] && state.cards[0].atom !== newestShown ? c.scrollHeight : keep;
+  newestShown = state.cards[0]?.atom ?? null;
+  if (focus) c.querySelector(`[data-atom="${CSS.escape(focus)}"]`)?.scrollIntoView({ block: 'nearest' });
 }
 // The top bar's and the chat's heights, for the phone layout (the counter sits between them)
-const fitCounter = () => {
-  const s = document.documentElement.style;
+function fitCounter() {
+  const s = document.documentElement.style, c = $('counter');
+  const atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 4;
   s.setProperty('--bar-h', `${Math.round(document.querySelector('.bar').getBoundingClientRect().bottom)}px`);
   s.setProperty('--chat-h', `${Math.round(innerHeight - $('chatwin').getBoundingClientRect().top)}px`);
-  $('counter').scrollTop = $('counter').scrollHeight;
-};
+  if (atBottom) c.scrollTop = c.scrollHeight;            // only follow the bottom if the visitor was already there
+}
 const fitter = new ResizeObserver(fitCounter);
 fitter.observe(document.querySelector('.bar'));
 fitter.observe($('chatwin'));
