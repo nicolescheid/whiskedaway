@@ -633,7 +633,7 @@ async function handleRecipe(request, env) {
         
         recipeData = JSON.parse(jsonText);
       } catch (parseError) {
-        console.error('Failed to parse Claude response as JSON:', textContent.text);
+        console.error('Failed to parse Claude response as JSON', { length: textContent.text?.length });   // never the reply itself: it can echo what the visitor told Gemma
         throw new Error('Invalid response format from Alchemist');
       }
 
