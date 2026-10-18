@@ -16,6 +16,30 @@ This brief has **two stages**:
 
 Stop after stage 1 and wait for Nicole's choice.
 
+**Chosen 18 October 2026: Direction C, stylised 3D**, as in `art-inbox/gemma/03-direction-c-stylised-3d-v2.png`
+(the version with the cheek blush toned down). Paste the stage 2 message below into the same ChatGPT conversation.
+
+### Stage 2 message
+
+> We're going with **Direction C, the stylised 3D Gemma**, exactly as she is in
+> `03-direction-c-stylised-3d-v2.png` and `08-cohost-c-stylised-3d-v2.png`: the same face, hair,
+> clothes and proportions. Keep her cheeks soft blue like the rest of her skin, with no rosy blush,
+> in every image. Please make stage 2 from the brief (Prompts G3 to G6) in this order:
+>
+> 1. **The turnaround** (`10-turnaround.png`), with one change: she'll be built as a 3D model in
+>    Blender, so make it a **modelling reference**: relaxed A-pose, neutral expression, front, side,
+>    three-quarter and back, no perspective distortion, all at the same scale on one baseline,
+>    plain background, even light.
+> 2. **Expressions** (`11-expressions.png`) and **poses** (`12-poses.png`).
+> 3. **The avatar** at large and small sizes (`13-avatar-large.png`, `14-avatar-small.png`),
+>    transparent background.
+> 4. **The palette card** (`15-palette.png`), with the hex values in your notes.
+> 5. **The three icons**, handbell, shimmer and whisk (`16` to `18`), transparent backgrounds,
+>    in the same stylised 3D look.
+>
+> Update `notes.md` and `decision.json` with the choice, and note which parts of her would move
+> separately for a 3D rig.
+
 ---
 
 ## Who Gemma is
