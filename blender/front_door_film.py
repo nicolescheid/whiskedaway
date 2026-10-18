@@ -155,7 +155,7 @@ def make(shape, tmp):
     return n
 
 
-def encode(tmp, out, crf):
+def encode(tmp, out, crf, width=None):
     # Swirl and door frames, all JPEG, listed in order for the concat demuxer
     files = sorted(os.listdir(tmp))
     lst = os.path.join(tmp, "list.txt")
@@ -165,7 +165,7 @@ def encode(tmp, out, crf):
                 fh.write(f"file '{os.path.join(tmp, f)}'\nduration {1 / FPS:.6f}\n")
         fh.write(f"file '{os.path.join(tmp, files[-1])}'\n")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst,
-                    "-vf", f"fps={FPS},format=yuv420p", "-c:v", "libx264", "-crf", str(crf), "-preset", "slow",
+                    "-vf", f"fps={FPS}," + (f"scale={width}:-2:flags=lanczos," if width else "") + "format=yuv420p", "-c:v", "libx264", "-crf", str(crf), "-preset", "slow",
                     "-profile:v", "high", "-movflags", "+faststart", "-an", out], check=True)
     print(f"wrote {out} ({os.path.getsize(out) / 1e6:.1f} MB)")
 
@@ -179,7 +179,12 @@ def main():
             if PREVIEW:
                 encode(tmp, os.path.join(FRAMES, f"swirl-preview-{shape}.mp4"), 26)
                 continue
-            encode(tmp, os.path.join(SITE, f"film-{shape}.mp4"), 25)
+            # The portrait film only plays on phone-shaped screens: 720 wide keeps it ~1.4 MB instead of ~3.8 MB
+            # (frames are made at full size, so the stills below stay sharp)
+            if shape == "portrait":
+                encode(tmp, os.path.join(SITE, f"film-{shape}.mp4"), 26, width=720)
+            else:
+                encode(tmp, os.path.join(SITE, f"film-{shape}.mp4"), 25)
             # The page's stills: the first frame (the picture) and the last (the hall, for the no-film path)
             first = sorted(f for f in os.listdir(tmp) if f.startswith("f_"))
             Image.open(os.path.join(tmp, first[0])).convert("RGB").save(os.path.join(SITE, f"picture-{shape}.webp"), quality=86, method=6)
