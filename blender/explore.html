@@ -82,7 +82,7 @@
      "name": "Does it know where I am?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Only roughly. To match the Inn's weather to yours, our server looks up the weather for the area your connection comes from, to about 50 km, and keeps nothing. Your season comes from your time zone, checked against that rough area, keeping only \"north\" or \"south\"."
+      "text": "Only roughly. To match the Inn's weather to yours, our server looks up the weather for the area your connection comes from, to about 50 km, and keeps nothing about you. Your season comes from your time zone, checked against that rough area, and only \"north\" or \"south\" comes back."
      }
     },
     {
@@ -403,7 +403,7 @@
     </div>
   </div>
   <div class="fd-after">
-  <!-- The story (copy: homepage-story-copy.md v1.2). Plain HTML on purpose: it's what search engines and AI assistants read -->
+  <!-- The story (copy: homepage-story-copy.md v1.3). Plain HTML on purpose: it's what search engines and AI assistants read -->
   <section id="story" aria-labelledby="story-what">
     <h2 id="story-what">What is WhiskedAway?</h2>
     <p>WhiskedAway is a recipe site you explore. Instead of a menu, you wander a magic inn by the sea, held inside a
@@ -439,10 +439,10 @@
     <p>The Inn opens in your own weather, at your own time of day, in your own season.</p>
     <ul>
       <li><b>Weather:</b> our server looks up the current weather for the rough area your connection comes from, to about
-        50 km, using Open-Meteo. Only the area is sent, never anything that identifies you, and nothing is kept.</li>
+        50 km, using Open-Meteo. Only the area is sent, never anything that identifies you, and nothing about you is kept.</li>
       <li><b>Time:</b> the clocks follow your device's own clock.</li>
-      <li><b>Season:</b> your device's time zone tells the Inn which hemisphere you're in. Our server may check it against
-        the rough area of your connection, and keeps only "north" or "south".</li>
+      <li><b>Season:</b> your device's time zone gives a first guess at your hemisphere, and our server can confirm it from
+        the rough area of your connection. Only "north" or "south" comes back, and the server keeps nothing.</li>
     </ul>
     <p>Why? Because these change what you feel like eating. Soup when it's raining, something cold when it's hot,
       porridge in the morning, and whatever's in season.</p>
@@ -465,8 +465,9 @@
     <h2 id="story-kept">What's kept about you</h2>
     <p>There's no account, and nothing asks for your name. What you do in the Inn, and what you tell Gemma, is
       forgotten when you close the tab, apart from a note that you've been welcomed, so she doesn't say it twice. To
-      choose ideas, the Inn sends your wander to our server, with nothing that identifies you, and it isn't stored.
-      The Inn counts visits anonymously, without cookies, and never who. If your browser asks not to be tracked,
+      choose ideas, the Inn sends your wander to our server: what you touched and changed, never who you are. Our
+      server asks Claude, Anthropic's AI model, to pick an idea. It doesn't store your wander, and Anthropic handles it
+      under its own data policy. The Inn counts visits anonymously, without cookies, and never who. If your browser asks not to be tracked,
       nothing is counted.</p>
 
     <h2 id="story-faq">Questions</h2>
@@ -476,8 +477,8 @@
     <p>No. There's no account and no login. Your visit is forgotten when you close the tab.</p>
     <h3>Does it know where I am?</h3>
     <p>Only roughly. To match the Inn's weather to yours, our server looks up the weather for the area your connection
-      comes from, to about 50 km, and keeps nothing. Your season comes from your time zone, checked against that rough
-      area, keeping only "north" or "south".</p>
+      comes from, to about 50 km, and keeps nothing about you. Your season comes from your time zone, checked against
+      that rough area, and only "north" or "south" comes back.</p>
     <h3>Does it work on my phone?</h3>
     <p>Yes. It works on phones, tablets and computers. Drag to look around, and tap to touch things.</p>
 

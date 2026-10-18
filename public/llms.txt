@@ -24,12 +24,15 @@ recipes written for the Inn rather than inventing them.
 ## Weather, time and season
 
 The Inn opens in the visitor's own weather (looked up for the rough area of their connection, about 50 km, with
-Open-Meteo, and not kept), at their device's time of day, in their hemisphere's season (north or south only).
+Open-Meteo, and nothing about the visitor is kept), at their device's time of day, in their hemisphere's season
+(north or south only).
 Visitors can change all three, and Gemma's ideas change with them.
 
 ## Privacy
 
-No account and no name. A visit is forgotten when the tab closes. Visits are counted anonymously, without cookies.
+No account and no name. A visit is forgotten when the tab closes. To choose ideas, what the visitor touched is sent
+to Claude, Anthropic's AI model, never who they are, and WhiskedAway's server stores none of it. Visits are counted
+anonymously, without cookies.
 
 ## About
 
