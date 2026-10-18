@@ -62,12 +62,40 @@
     "yaw": -74.2,
     "pitch": 3.38
   },
-  "energy-candles": {
-    "label": "Energy level",
+  "candle-burnt-out": {
+    "label": "Burnt out",
     "overlay": "energy",
-    "type": "interactive",
-    "yaw": -84.14,
-    "pitch": -17.27
+    "type": "energy",
+    "yaw": -96.17,
+    "pitch": -19.39
+  },
+  "candle-low": {
+    "label": "Low",
+    "overlay": "energy",
+    "type": "energy",
+    "yaw": -91.86,
+    "pitch": -18.54
+  },
+  "candle-half": {
+    "label": "Half",
+    "overlay": "energy",
+    "type": "energy",
+    "yaw": -87.52,
+    "pitch": -17.73
+  },
+  "candle-three-quarters": {
+    "label": "Three quarters",
+    "overlay": "energy",
+    "type": "energy",
+    "yaw": -83.22,
+    "pitch": -16.97
+  },
+  "candle-full": {
+    "label": "Full",
+    "overlay": "energy",
+    "type": "energy",
+    "yaw": -78.99,
+    "pitch": -15.99
   },
   "cutting-board": {
     "label": "Chopping board",

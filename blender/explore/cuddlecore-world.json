@@ -184,16 +184,45 @@
         "warming"
       ]
     },
-    "energy-candles": {
-      "label": "Energy level",
-      "ref": "the candles",
-      "type": "interactive",
-      "tool": "energy",
-      "themes": [
-        "low-spoons",
-        "calm",
-        "evening"
-      ]
+    "candle-burnt-out": {
+      "label": "Burnt out",
+      "ref": "the burnt-out candle",
+      "type": "energy",
+      "energy": "burnt-out",
+      "themes": [],
+      "map_hide": true
+    },
+    "candle-low": {
+      "label": "Low",
+      "ref": "the low candle",
+      "type": "energy",
+      "energy": "low",
+      "themes": [],
+      "map_hide": true
+    },
+    "candle-half": {
+      "label": "Half",
+      "ref": "the half-burnt candle",
+      "type": "energy",
+      "energy": "half",
+      "themes": [],
+      "map": "The energy candles"
+    },
+    "candle-three-quarters": {
+      "label": "Three-quarters",
+      "ref": "the three-quarter candle",
+      "type": "energy",
+      "energy": "three-quarters",
+      "themes": [],
+      "map_hide": true
+    },
+    "candle-full": {
+      "label": "Full",
+      "ref": "the tall, bright candle",
+      "type": "energy",
+      "energy": "full",
+      "themes": [],
+      "map_hide": true
     },
     "dietary-shelf": {
       "label": "Dietary needs",
@@ -765,6 +794,66 @@
         "low-spoons"
       ],
       "moment": "Burning the midnight oil? Let's keep it gentle."
+    }
+  },
+  "energies": {
+    "burnt-out": {
+      "label": "Burnt out",
+      "candle": "burnt-out candle",
+      "themes": [
+        "rest",
+        "no-cook",
+        "low-spoons",
+        "calm"
+      ],
+      "spoon_bias": -3,
+      "moment": "Running on a stub today, love? Let's keep it simple."
+    },
+    "low": {
+      "label": "Low",
+      "candle": "low candle",
+      "themes": [
+        "low-spoons",
+        "rest",
+        "simple",
+        "calm"
+      ],
+      "spoon_bias": -2,
+      "moment": "Burning low. Nothing that needs you on your feet for long, then."
+    },
+    "half": {
+      "label": "Half",
+      "candle": "half-burnt candle",
+      "themes": [
+        "simple",
+        "gentle",
+        "warming"
+      ],
+      "spoon_bias": -0.5,
+      "moment": "Half a candle. Something easy, with a bit of care in it."
+    },
+    "three-quarters": {
+      "label": "Three-quarters",
+      "candle": "three-quarter candle",
+      "themes": [
+        "cooking",
+        "slow",
+        "hearty"
+      ],
+      "spoon_bias": 0.5,
+      "moment": "Plenty left in you today. We could make something proper."
+    },
+    "full": {
+      "label": "Full",
+      "candle": "tall, bright candle",
+      "themes": [
+        "cooking",
+        "hands-on",
+        "knife",
+        "learning"
+      ],
+      "spoon_bias": 1,
+      "moment": "Burning bright! Shall we get your hands busy?"
     }
   },
   "fixtures": {

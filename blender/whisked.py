@@ -151,18 +151,93 @@ def image_mat(name, path, rough=0.85, tile=None, normal_from=None, normal_streng
     return m
 
 
-def emission_mat(name, path, strength=1.0):
-    """An image that glows by itself: used for the views outside the windows."""
+def emission_mat(name, path, strength=1.0, saturation=1.0):
+    """An image that glows by itself: used for the views outside the windows.
+    saturation > 1 wins back the colour AgX takes out of bright values, so the view reads like the source image."""
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
     nt.nodes.remove(nt.nodes["Principled BSDF"])
     t = nt.nodes.new("ShaderNodeTexImage")
     t.image = bpy.data.images.load(path, check_existing=True)
+    t.interpolation = "Cubic"                        # the view is magnified a little in an 8K pano
+    col = t.outputs["Color"]
+    if saturation != 1.0:
+        hs = nt.nodes.new("ShaderNodeHueSaturation")
+        hs.inputs["Saturation"].default_value = saturation
+        nt.links.new(col, hs.inputs["Color"])
+        col = hs.outputs["Color"]
     e = nt.nodes.new("ShaderNodeEmission")
     e.inputs["Strength"].default_value = strength
-    nt.links.new(t.outputs["Color"], e.inputs["Color"])
+    nt.links.new(col, e.inputs["Color"])
     nt.links.new(e.outputs["Emission"], nt.nodes["Material Output"].inputs["Surface"])
+    return m
+
+
+def window_glass(name, wet=0.0):
+    """Clear window glass. Rays go straight through (no refraction, no tint), with a faint Fresnel reflection,
+    so the view outside stays sharp. A refractive glass box bends and blurs the view and reads as frosted.
+    wet: 0 dry .. 1 storm. Raindrops on the glass; only the drops refract, the glass between them stays clear."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.remove(nt.nodes["Principled BSDF"])
+    out = nt.nodes["Material Output"]
+    clear = nt.nodes.new("ShaderNodeBsdfTransparent")
+    shine = nt.nodes.new("ShaderNodeBsdfGlossy")
+    shine.inputs["Roughness"].default_value = 0.02
+    fres = nt.nodes.new("ShaderNodeFresnel")
+    fres.inputs["IOR"].default_value = 1.5
+    weak = nt.nodes.new("ShaderNodeMath")
+    weak.operation = "MULTIPLY"
+    weak.inputs[1].default_value = 0.5              # half of real glass: a hint of reflection, no veil
+    nt.links.new(fres.outputs["Fac"], weak.inputs[0])
+    pane = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(weak.outputs[0], pane.inputs[0])
+    nt.links.new(clear.outputs[0], pane.inputs[1])
+    nt.links.new(shine.outputs[0], pane.inputs[2])
+    surface = pane.outputs[0]
+    if wet:
+        # Drops: Voronoi cells stretched a little down the glass, thresholded to small beads
+        tc = nt.nodes.new("ShaderNodeTexCoord")
+        mp = nt.nodes.new("ShaderNodeMapping")
+        mp.inputs["Scale"].default_value = (55, 55, 30)
+        nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+        vor = nt.nodes.new("ShaderNodeTexVoronoi")
+        vor.feature = "F1"
+        vor.inputs["Randomness"].default_value = 1.0
+        nt.links.new(mp.outputs["Vector"], vor.inputs["Vector"])
+        sparse = nt.nodes.new("ShaderNodeTexNoise")       # drops gather in patches rather than evenly
+        sparse.inputs["Scale"].default_value = 6
+        nt.links.new(tc.outputs["Object"], sparse.inputs["Vector"])
+        r = nt.nodes.new("ShaderNodeMapRange")            # drop radius per patch: 0 (dry) .. 0.36 of a cell
+        r.inputs["From Min"].default_value = 0.55 - 0.25 * wet
+        r.inputs["From Max"].default_value = 0.75 - 0.25 * wet
+        r.inputs["To Max"].default_value = 0.36
+        nt.links.new(sparse.outputs["Fac"], r.inputs["Value"])
+        bead = nt.nodes.new("ShaderNodeMath")             # 1 inside a drop, 0 outside, soft rim
+        bead.operation = "SUBTRACT"
+        nt.links.new(r.outputs["Result"], bead.inputs[0])
+        nt.links.new(vor.outputs["Distance"], bead.inputs[1])
+        mask = nt.nodes.new("ShaderNodeMapRange")
+        mask.inputs["From Min"].default_value = 0.0
+        mask.inputs["From Max"].default_value = 0.05
+        nt.links.new(bead.outputs[0], mask.inputs["Value"])
+        bmp = nt.nodes.new("ShaderNodeBump")              # domed drop: height grows toward the centre
+        bmp.inputs["Strength"].default_value = 0.8
+        nt.links.new(bead.outputs[0], bmp.inputs["Height"])
+        drop = nt.nodes.new("ShaderNodeBsdfPrincipled")
+        drop.inputs["Base Color"].default_value = (1, 1, 1, 1)
+        drop.inputs["Roughness"].default_value = 0.12
+        drop.inputs["Transmission Weight"].default_value = 1.0
+        drop.inputs["IOR"].default_value = 1.33
+        nt.links.new(bmp.outputs["Normal"], drop.inputs["Normal"])
+        wetmix = nt.nodes.new("ShaderNodeMixShader")
+        nt.links.new(mask.outputs["Result"], wetmix.inputs[0])
+        nt.links.new(surface, wetmix.inputs[1])
+        nt.links.new(drop.outputs[0], wetmix.inputs[2])
+        surface = wetmix.outputs[0]
+    nt.links.new(surface, out.inputs["Surface"])
     return m
 
 

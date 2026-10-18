@@ -22,7 +22,7 @@ from mathutils import Matrix, Vector
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from whisked import (ART, OUT, area_light, blend_model, box, box_span, center_of, crop_image, curtain, cyl,  # noqa: E402
                      emission_mat, image_mat, look, mat, meshes_of, model, pano_camera, pbr, point_light, retint,
-                     sphere, srgb, text, use_gpu)
+                     sphere, srgb, text, use_gpu, window_glass)
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
@@ -35,6 +35,7 @@ VIEWS = {"rain": "14-window-rain.png", "fair": "15-window-fair.png", "change": "
          "stormy": "17-window-stormy.png", "very-dry": "18-window-very-dry.png"}
 SKY = {"rain": (1.1, 0.42, 70), "fair": (2.0, 0.66, 110), "change": (1.5, 0.5, 100),
        "stormy": (0.5, 0.27, 32), "very-dry": (2.3, 0.72, 100)}   # world strength, backdrop, window bounce W
+WET = {"rain": 0.5, "stormy": 0.75}   # raindrops on the sea window (whisked.window_glass)
 
 os.makedirs(OUT, exist_ok=True)
 PACK = os.path.join(ART, "inn-hallway")
@@ -131,7 +132,6 @@ def build():
     paint = mat("cream_paint", srgb("#eee5d3"), rough=0.55)
     brass = mat("brass", srgb("#b07f52"), rough=0.4, metal=1.0)
     brass_worn = mat("brass_worn", srgb("#bd9655"), rough=0.28, metal=1.0)
-    glass = mat("glass", (0.96, 0.98, 0.97, 1), rough=0.03, transmission=1.0, ior=1.5)
     ink = mat("engraving", srgb("#3a2a18"), rough=0.5, metal=0.6)
     coir = pbr("coir", "rough_linen", 0.25, tint=srgb("#5e4a33"), tint_mix=1.0, bump=1.2)
     frosted = mat("frosted", (0.92, 0.94, 0.94, 1), rough=0.35, transmission=1.0, ior=1.5)
@@ -197,7 +197,8 @@ def build():
     box("sea_muntin_v", (0, wy, zc), (0.025, 0.05, win_t - win_b), paint)
     for z in (win_b + (zc - win_b) / 2, zc + (win_t - zc) / 2):
         box(f"sea_muntin_{z:.2f}", (0, wy, z), (win_r - win_l, 0.05, 0.025), paint)
-    pane = box("sea_glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b), glass, bevel=0)
+    pane = box("sea_glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b),
+               window_glass("sea_glass", wet=WET.get(WEATHER, 0.0)), bevel=0)
     pane.visible_shadow = False
     sky, backdrop_strength, bounce_w = SKY[WEATHER]
     bd_w, bd_h, bd_y = 11.4, 3.8, SEA + 4.2

@@ -790,6 +790,8 @@ A "weather" event is the visitor turning the barometer to change the weather out
 
 Time of day works the same way. A "time" event is the visitor pushing the kitchen clock to a time of day (a deliberate choice: weigh it like the weather); a "clock" event is just their device's own time of day (observed, not chosen: weigh it lightly). Objects of type "time" describe each one. Mornings lean to breakfast and gentle starts, midday to light food, evenings to a proper meal, late night to gentle, low-effort things. If you mention a "clock" time in a why, phrase it as context ("and it's late where you are"), not as something they did. Never reveal a time object.
 
+An "energy" event is the visitor picking one of five candles to say how much energy they have today: burnt out, low, half, three-quarters or full (objects of type "energy" describe each one). It's a deliberate choice that holds until they pick another, like the weather. It's the strongest guide to effort: each energy object has a spoon_bias, and the lower it is, the more you should favour atoms with fewer spoons. For burnt out or low, serve only 0-spoon atoms (a 1-spoon atom at most, if nothing else fits); for full, hands-on cooking is welcome. In a why, say it plainly ("Because you picked the burnt-out candle"). Never reveal an energy object.
+
 Decide:
 - hypothesis: a short, plain-language reading of the wander (e.g. "something warm you don't have to stand up for").
 - cluster: the closest cluster id.

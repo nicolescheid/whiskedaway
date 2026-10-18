@@ -8,6 +8,7 @@
 | BUG-002 | Low | All recipe pages | "Conjure" button needs more margin/space above it when results are displayed below | Open |
 | BUG-003 | Medium | Sweet Spells (+ others) | Submit button too small to contain text on some pages - needs to auto-size to content | Open |
 | BUG-004 | Low | Home page | Remove "No accounts. No tracking. Your recipes are yours." text (prep for future accounts feature) | Open |
+| BUG-005 | Medium | Explore: kitchen and hallway windows | Can't see out: the view looks like frosted glass. The panes were refractive glass boxes (plus a streaky rain bump) that blurred and washed out the view; the pot's steam also ended in a hard-edged shell over the window. Now clear glass with a faint reflection, sparse raindrops only in Rain and Stormy, and soft steam | Fixed on branch energy-candles (needs re-render + deploy) |
 
 ---
 
@@ -36,7 +37,7 @@
 ### Explore room (the Inn), agreed with Nicole 2026-10-18
 | ID | Feature | Description | Priority |
 |----|---------|-------------|----------|
-| FEAT-013 | Energy candles | Five real candles on the dresser (burnt out, low with pooled wax, half, three-quarters, full and bright). Click the one that matches your energy; it feeds the navigator and the recipes' "spoons", like the barometer does for weather | High (next) |
+| FEAT-013 | Energy candles | Five real candles on the left-hand counter (burnt out with a curl of smoke, low with pooled wax, half, three-quarters, full and bright). Click the one that matches your energy; it feeds the navigator and the recipes' "spoons", like the barometer does for weather | Built on branch energy-candles; Worker prompt updated, not deployed |
 | FEAT-014 | Books that open | Books on the shelf open as a two-page spread over the room (illustration left, text right, page turns): Gemma's recipe book (what she's served this visit), kitchen wisdom (Nourish Academy), Gemma's journal (today's notebook panel, moved into the world). Widget design still to agree | High |
 | FEAT-015 | Choose, don't chat | Gemma asks, the visitor picks 90s-style canned replies. No free-text chat: it keeps costs down and keeps Gemma different from a general chatbot (she reads what you do, not what you type) | High |
 | FEAT-016 | "What's in your cupboard?" | The one focused text box: list your ingredients and Gemma builds a recipe from them, in one AI call | High |

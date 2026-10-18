@@ -15,6 +15,7 @@
  *   { kind: 'weather', id }          turned the barometer (id = a key of world.weathers)
  *   { kind: 'time',    id }          pushed the clock to a time of day (id = a key of world.times)
  *   { kind: 'clock',   id }          the device's own time of day, observed rather than chosen
+ *   { kind: 'energy',  id }          picked one of the energy candles (id = a key of world.energies)
  */
 
 const WEIGHTS = { touch: 3, linger: 1.5, map: 1, open: 2.5, dismiss: -2, choose: 4 };
@@ -24,6 +25,9 @@ const REVEAL_MIN = 1.2;
 const FORK_BELOW = 0.2;       // confidence below which Gemma offers a fork instead of a guess
 const WEATHER_WEIGHT = 3;     // the chosen weather is a standing mood: it holds until changed, it doesn't fade
 const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more than the device's clock
+const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signal like the weather
+// Each energy level also has a spoon_bias: added per spoon to an atom's score, so a burnt-out candle
+// (-3) all but rules out two-spoon pieces and a full one (+1) leans toward the hands-on ones.
 
 export function themeWeights(trail, world) {
   const w = {};
@@ -40,7 +44,17 @@ export function themeWeights(trail, world) {
   if (weather) add(world.weathers[weather].themes, WEATHER_WEIGHT);
   const time = currentTime(trail, world);
   if (time) add(world.times[time.id].themes, TIME_WEIGHT[time.kind]);
+  const energy = currentEnergy(trail, world);
+  if (energy) add(world.energies[energy].themes, ENERGY_WEIGHT);
   return w;
+}
+
+/** The energy candle the visitor last picked, if any. */
+export function currentEnergy(trail, world) {
+  for (let i = trail.length - 1; i >= 0; i--) {
+    if (trail[i].kind === 'energy' && world.energies && world.energies[trail[i].id]) return trail[i].id;
+  }
+  return null;
 }
 
 /** The weather the visitor last chose on the barometer, if any. */
@@ -69,10 +83,17 @@ function clusterScores(weights, world) {
 const score = (themes, weights) => themes.reduce((s, t) => s + (weights[t] || 0), 0);
 
 /** The objects in the trail whose themes overlap these themes, as readable reasons. */
-function reasonsFor(themes, trail, world) {
+function reasonsFor(themes, trail, world, spoons = null) {
   const seen = new Set();
   const why = [];
   let context = null;                 // something observed rather than done, e.g. the device's time
+  const energy = currentEnergy(trail, world);
+  if (energy) {
+    const e = world.energies[energy];
+    // The candle is a reason when its themes match, or when it's why the effort fits
+    const fitsEffort = spoons !== null && ((e.spoon_bias < 0 && spoons === 0) || (e.spoon_bias > 0 && spoons >= 2));
+    if (fitsEffort || e.themes.some(t => themes.includes(t))) why.push(`picked the ${e.candle}`);
+  }
   const weather = currentWeather(trail, world);
   if (weather && world.weathers[weather].themes.some(t => themes.includes(t))) {
     why.push(`turned the barometer to ${world.weathers[weather].label}`);
@@ -116,15 +137,17 @@ export function localNavigate(trail, world, { served = [], dismissed = [] } = {}
     .map(r => ({ object: r.id, reason: `fits ${top.label}` }));
 
   const lowSpoons = (weights['low-spoons'] || 0) + (weights.rest || 0) + (weights['no-cook'] || 0);
+  const energy = currentEnergy(trail, world);
+  const spoonBias = energy ? world.energies[energy].spoon_bias || 0 : 0;
   const skip = new Set([...served, ...dismissed, ...trail.filter(e => e.kind === 'dismiss').map(e => e.atom)]);
   const serve = world.atoms
     .filter(a => !skip.has(a.id))
-    .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) }))
+    .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons }))
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)
     .map(({ a }) => {
-      const { why, context } = reasonsFor(a.themes, trail, world);
+      const { why, context } = reasonsFor(a.themes, trail, world, a.spoons);
       const text = why.length ? `Because you ${listJoin(why)}${context ? `, and ${context}` : ''}.`
         : context ? `Because ${context}.` : `Because it fits ${top.label}.`;
       return { atom: a.id, why: text };
@@ -154,12 +177,18 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
+    const trailIds = new Set(trail.map(e => e.id).filter(Boolean));
     const payload = {
         room: world.name,
         trail: trail.slice(-30),
-        objects: Object.entries(world.objects).map(([id, o]) => ({ id, label: o.label, type: o.type, themes: o.themes }))
+        // The Worker reads at most 40 objects, so send the ones that mean something: objects with themes,
+        // the standing signals (weathers, times, energies), and whatever else the visitor has actually touched
+        objects: Object.entries(world.objects)
+          .filter(([id, o]) => o.type !== 'energy' && (o.themes.length || trailIds.has(id)))
+          .map(([id, o]) => ({ id, label: o.label, type: o.type, themes: o.themes }))
           .concat(Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: `Weather: ${w.label}`, type: 'weather', themes: w.themes })))
-          .concat(Object.entries(world.times || {}).map(([id, t]) => ({ id, label: `Time of day: ${t.label}`, type: 'time', themes: t.themes }))),
+          .concat(Object.entries(world.times || {}).map(([id, t]) => ({ id, label: `Time of day: ${t.label}`, type: 'time', themes: t.themes })))
+          .concat(Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: `Energy: ${e.label} (the ${e.candle})`, type: 'energy', themes: e.themes, spoon_bias: e.spoon_bias }))),
         atoms: world.atoms.map(({ id, title, kind, themes, spoons }) => ({ id, title, kind, themes, spoons })),
         clusters: Object.entries(world.clusters).map(([id, c]) => ({ id, label: c.label })),
         already_served: state.served || [],

@@ -18,6 +18,9 @@ import os
 import sys
 from mathutils import Vector
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from whisked import emission_mat, window_glass  # noqa: E402
+
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS   # rebuild .blend + hotspots only
@@ -27,19 +30,20 @@ WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")),
 # elevation deg, azimuth deg) or None; bounce: cool window fill; flames: candles and lamp lit; dial: needle angle.
 WEATHERS = {
     "rain":     dict(view="14-window-rain.png", dial=-30, sky=1.1, tint=(1.0, 1.0, 1.0), backdrop=0.7, sun=None,
-                     bounce=(70, (0.78, 0.86, 1.0)), wet=True, flames=1.0, fill=22, exposure=0.55),
+                     bounce=(70, (0.78, 0.86, 1.0)), wet=0.5, flames=1.0, fill=22, exposure=0.55),
     "fair":     dict(view="15-window-fair.png", dial=30, sky=2.0, tint=(1.0, 0.97, 0.92), backdrop=1.1,
-                     sun=(9.0, (1.0, 0.93, 0.8), 32, 25), bounce=(110, (1.0, 0.97, 0.92)), wet=False, flames=0.0,
+                     sun=(9.0, (1.0, 0.93, 0.8), 32, 25), bounce=(110, (1.0, 0.97, 0.92)), wet=0.0, flames=0.0,
                      fill=10, exposure=0.62),
     "change":   dict(view="16-window-change.png", dial=0, sky=1.5, tint=(0.95, 0.98, 1.0), backdrop=0.85, sun=None,
-                     bounce=(105, (0.92, 0.95, 1.0)), wet=False, flames=0.7, fill=16, exposure=0.55),
+                     bounce=(105, (0.92, 0.95, 1.0)), wet=0.0, flames=0.7, fill=16, exposure=0.55),
     "stormy":   dict(view="17-window-stormy.png", dial=-60, sky=0.5, tint=(0.85, 0.9, 1.0), backdrop=0.45, sun=None,
-                     bounce=(32, (0.7, 0.8, 1.0)), wet=True, flames=1.5, fill=18, exposure=0.62),
+                     bounce=(32, (0.7, 0.8, 1.0)), wet=0.75, flames=1.5, fill=18, exposure=0.62),
     "very-dry": dict(view="18-window-very-dry.png", dial=60, sky=2.3, tint=(1.0, 0.92, 0.8), backdrop=1.2,
-                     sun=(10.0, (1.0, 0.86, 0.66), 24, -20), bounce=(100, (1.0, 0.92, 0.82)), wet=False, flames=0.0,
+                     sun=(10.0, (1.0, 0.86, 0.66), 24, -20), bounce=(100, (1.0, 0.92, 0.82)), wet=0.0, flames=0.0,
                      fill=8, exposure=0.62),
 }
 WX = dict(WEATHERS[WEATHER])
+VIEW_SAT = 1.0   # backdrop saturation boost, per weather with view_sat
 
 # Late night: the same weather after dark. ChatGPT's night view outside, a near-black sky with a
 # little cool moonlight at the window, and every candle and the lamp lit, whatever the weather.
@@ -411,6 +415,109 @@ def drape(name, size, cuts, loc, rot, material, colliders, frames=70):
     return o
 
 
+# ---------------------------------------------------------------- the energy candles
+
+# Five pillar candles in a row, left to right as seen from the room: how much energy you have today.
+# (key, body height, wax pool radius, flame size, light watts). The keys match explore/cuddlecore-world.json.
+CANDLES = [("burnt-out", 0.016, 0.052, 0.0, 0.0),
+           ("low", 0.045, 0.06, 0.7, 2.5),
+           ("half", 0.09, 0.0, 1.0, 4.0),
+           ("three-quarters", 0.135, 0.0, 1.05, 4.5),
+           ("full", 0.18, 0.0, 1.35, 7.5)]
+
+
+def energy_candles(x, z0, cast_iron):
+    """The candles stand on the left counter (z0 = worktop) at x, spaced along the wall. They're always lit,
+    whatever the weather: the flames are part of what each one says. Each is its own hotspot."""
+    copper = mat("candle_dish", srgb("#8a5a35"), rough=0.45, metal=0.85)
+
+    def wax(name, hex_color, rough):
+        m = mat(name, srgb(hex_color), rough=rough)
+        p = m.node_tree.nodes["Principled BSDF"]
+        p.inputs["Subsurface Weight"].default_value = 0.45
+        p.inputs["Subsurface Radius"].default_value = (1.0, 0.75, 0.35)   # honey-warm glow, not the default red
+        p.inputs["Subsurface Scale"].default_value = 0.012
+        return m
+
+    candle_wax = wax("candle_wax", "#e6b04a", 0.45)
+    molten = wax("molten_wax", "#e0a038", 0.15)
+    flame = mat("candle_flame", (1, 0.6, 0.25, 1), emission=(1.0, 0.5, 0.16, 1), strength=6)
+    smoke = bpy.data.materials.new("smoke")
+    smoke.use_nodes = True
+    snt = smoke.node_tree
+    snt.nodes.remove(snt.nodes["Principled BSDF"])
+    haze = snt.nodes.new("ShaderNodeBsdfDiffuse")
+    haze.inputs["Color"].default_value = srgb("#c9c2b8")
+    see = snt.nodes.new("ShaderNodeBsdfTransparent")
+    mix = snt.nodes.new("ShaderNodeMixShader")
+    mix.inputs[0].default_value = 0.72                 # mostly see-through
+    snt.links.new(haze.outputs[0], mix.inputs[1])
+    snt.links.new(see.outputs[0], mix.inputs[2])
+    snt.links.new(mix.outputs[0], snt.nodes["Material Output"].inputs["Surface"])
+    r = 0.035
+    lit = WX["flames"] or 1.0                          # brighter at night, as the other candles are
+    for i, (key, h, pool, size, watts) in enumerate(CANDLES):
+        y = -0.2 + i * 0.14
+        parts = [cyl(f"candle_dish_{key}", (x, y, z0 + 0.007), 0.062, 0.014, copper, bevel=0.005)]
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.06, minor_radius=0.005, location=(x, y, z0 + 0.014))
+        bpy.context.active_object.data.materials.append(copper)
+        base = z0 + 0.014
+        if pool:                                       # wax that has run down and pooled in the dish
+            parts.append(cyl(f"candle_pool_{key}", (x, y, base + 0.003), pool, 0.006, molten, bevel=0.003))
+        body = cyl(f"candle_{key}", (x, y, base + h / 2), r, h, candle_wax, bevel=0.006)
+        parts.append(body)
+        top = base + h
+        cyl(f"candle_melt_{key}", (x, y, top + 0.0005), r * 0.78, 0.002, molten, bevel=0)   # proud of the top: no coplanar faces
+        # a few drips down the side that faces the room (+X)
+        for k, (ang, ln) in enumerate(((-35, 0.03), (10, 0.05), (40, 0.022))[: 1 if h < 0.05 else 3]):
+            a = math.radians(ang)
+            bpy.ops.mesh.primitive_uv_sphere_add(radius=0.0055, location=(x + r * math.cos(a), y + r * math.sin(a),
+                                                                          top - min(ln, h * 0.6) / 2))
+            d = bpy.context.active_object
+            d.scale = (1, 1, min(ln, h * 0.6) / 0.011)
+            bpy.ops.object.shade_smooth()
+            d.data.materials.append(candle_wax)
+        wick = cyl(f"candle_wick_{key}", (x, y, top + 0.006), 0.0016, 0.012, cast_iron, verts=8, bevel=0)
+        if size:
+            bpy.ops.mesh.primitive_uv_sphere_add(radius=0.009 * size, location=(x, y, top + 0.012 + 0.019 * size))
+            f = bpy.context.active_object
+            f.name = f"candle_flame_{key}"
+            f.scale = (1, 1, 2.3)
+            bpy.ops.object.shade_smooth()
+            f.data.materials.append(flame)
+            f.visible_shadow = False                   # the flame is the light: it mustn't shade its own candle
+            parts.append(f)
+            point_light(f"candle_light_{key}", (x + 0.02, y, top + 0.03 * size), watts * lit, (1.0, 0.52, 0.2), radius=0.012)
+        else:
+            wick.rotation_euler = (math.radians(25), 0, 0)   # spent and bent over
+            smoke_curl(f"candle_smoke_{key}", (x, y, top + 0.012), smoke)
+        hotspot(f"candle-{key}", key.replace("-", " ").capitalize(), "energy", parts, kind="energy")
+
+
+def smoke_curl(name, start, material):
+    """A thin wisp rising from a just-snuffed wick, drifting and thinning as it goes."""
+    curve = bpy.data.curves.new(name, "CURVE")
+    curve.dimensions = "3D"
+    curve.bevel_depth = 0.0022
+    curve.bevel_resolution = 3
+    spline = curve.splines.new("NURBS")
+    n = 14
+    spline.points.add(n - 1)
+    x0, y0, z0 = start
+    for k, pt in enumerate(spline.points):
+        t = k / (n - 1)
+        sway = 0.012 * math.sin(t * 7.0) * (0.3 + t)
+        pt.co = (x0 + 0.006 * t + sway * 0.4, y0 + sway, z0 + 0.16 * t, 1.0)
+        pt.radius = 1.0 - 0.85 * t
+    spline.use_endpoint_u = True
+    spline.order_u = 4
+    o = bpy.data.objects.new(name, curve)
+    o.data.materials.append(material)
+    o.visible_shadow = False
+    bpy.context.scene.collection.objects.link(o)
+    return o
+
+
 # ---------------------------------------------------------------- build
 
 def build():
@@ -446,24 +553,7 @@ def build():
     card = mat("card", srgb("#efe6d2"), rough=0.9)
     book_colours = ["#6e3b3b", "#3f5543", "#8b6b3e", "#2f3e4f", "#7d4a5a", "#a08155", "#4d3a2a", "#c2a878", "#5b5048"]
 
-    rain_glass = mat("rain_glass", (0.97, 0.99, 1.0, 1), rough=0.05, transmission=1.0, ior=1.5)
-    nt = rain_glass.node_tree
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = nt.nodes.new("ShaderNodeMapping")
-    mp.inputs["Scale"].default_value = (60, 60, 6)
-    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
-    nz = nt.nodes.new("ShaderNodeTexNoise")
-    nz.inputs["Scale"].default_value = 1.5
-    nz.inputs["Detail"].default_value = 2
-    nt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
-    ramp = nt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].position = 0.6
-    ramp.color_ramp.elements[1].position = 0.7
-    nt.links.new(nz.outputs["Fac"], ramp.inputs["Fac"])
-    bmp = nt.nodes.new("ShaderNodeBump")
-    bmp.inputs["Strength"].default_value = 0.4
-    nt.links.new(ramp.outputs["Color"], bmp.inputs["Height"])
-    nt.links.new(bmp.outputs["Normal"], nt.nodes["Principled BSDF"].inputs["Normal"])
+    window = window_glass("window_glass", wet=WX["wet"])
 
     # ---- Shell
     floor_obj = box("floor", (0, 0, -0.05), (W, D, 0.1), floor, bevel=0)
@@ -495,7 +585,7 @@ def build():
     box("meeting_rail", (0, wy, zc), (win_r - win_l, 0.07, 0.05), paint)
     for x in (-0.258, 0.258):
         box(f"muntin_{x}", (x, wy, zc), (0.025, 0.05, win_t - win_b), paint)
-    pane = box("glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b), rain_glass if WX["wet"] else glass, bevel=0)
+    pane = box("glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b), window, bevel=0)
     pane.visible_shadow = False                      # let sun and sky light through the pane
 
     # The view outside: ChatGPT's backdrop for this weather, emissive, horizon at eye height
@@ -507,17 +597,8 @@ def build():
     backdrop.scale = (bd_w, bd_h, 1)
     bpy.ops.object.transform_apply(scale=True)
     backdrop.visible_shadow = False
-    bm = bpy.data.materials.new("window_view")
-    bm.use_nodes = True
-    bnt = bm.node_tree
-    bnt.nodes.remove(bnt.nodes["Principled BSDF"])
-    btex = bnt.nodes.new("ShaderNodeTexImage")
-    btex.image = bpy.data.images.load(os.path.join(CONCEPT, WX["view"]))
-    emis = bnt.nodes.new("ShaderNodeEmission")
-    emis.inputs["Strength"].default_value = WX["backdrop"]
-    bnt.links.new(btex.outputs["Color"], emis.inputs["Color"])
-    bnt.links.new(emis.outputs["Emission"], bnt.nodes["Material Output"].inputs["Surface"])
-    backdrop.data.materials.append(bm)
+    backdrop.data.materials.append(emission_mat("window_view", os.path.join(CONCEPT, WX["view"]), WX["backdrop"],
+                                                saturation=WX.get("view_sat", VIEW_SAT)))
     hotspot("window", "The rain", None, pane, kind="ambient")
     box("curtain_rod", (0, HY - 0.12, win_t + 0.1), (2.3, 0.022, 0.022), cast_iron, bevel=0.009)
     curtain("curtain_l", win_l - 0.18, HY - 0.12, win_t + 0.08, 0.5, win_t - win_b + 0.32, berry_linen, seed=1)
@@ -560,7 +641,11 @@ def build():
     snt.links.new(stc.outputs["Object"], snz.inputs["Vector"])
     grad = snt.nodes.new("ShaderNodeTexGradient")
     grad.gradient_type = "SPHERICAL"
-    snt.links.new(stc.outputs["Object"], grad.inputs["Vector"])
+    unit = snt.nodes.new("ShaderNodeVectorMath")      # the mesh has radius 0.2: scale to 1 so the puff fades
+    unit.operation = "SCALE"                          # out before its edge instead of ending in a hard shell
+    unit.inputs["Scale"].default_value = 5.0
+    snt.links.new(stc.outputs["Object"], unit.inputs[0])
+    snt.links.new(unit.outputs[0], grad.inputs["Vector"])
     mul = snt.nodes.new("ShaderNodeMath")
     mul.operation = "MULTIPLY"
     snt.links.new(snz.outputs["Fac"], mul.inputs[0])
@@ -669,21 +754,7 @@ def build():
         cyl(f"lid_{i}", (-HX + 0.13, y, z0 + h + 0.015), r * 0.86, 0.03, cork)
     hotspot("symptom-jars", "How you're feeling", "symptoms", jars + shelf_objs)
 
-    candle_objs = []
-    for i, (y, h) in enumerate(zip((0.05, 0.19, 0.33), (0.09, 0.17, 0.125))):   # shortest, tallest, medium
-        x = -HX + 0.4
-        candle_objs.append(cyl(f"saucer_{i}", (x, y, 0.937), 0.06, 0.014, stoneware, bevel=0.005))
-        candle_objs.append(cyl(f"candle_{i}", (x, y, 0.944 + h / 2), 0.035, h, beeswax, bevel=0.006))
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.009, location=(x, y, 0.944 + h + 0.02))
-        f = bpy.context.active_object
-        f.scale = (1, 1, 2.3)
-        if WX["flames"]:
-            f.data.materials.append(flame)
-            point_light(f"candle_light_{i}", (x + 0.02, y, 0.944 + h + 0.035), 4 * WX["flames"], (1.0, 0.52, 0.2), radius=0.012)
-        else:
-            f.scale = (0.4, 0.4, 0.5)                 # unlit: just a blackened wick
-            f.data.materials.append(cast_iron)
-    hotspot("energy-candles", "Energy level", "energy", candle_objs)
+    energy_candles(-HX + 0.4, 0.93, cast_iron)
     model("jug_01", (-HX + 0.38, 0.62, 0.93), rot_z=100)
     board = model("wooden_cutting_board", (-HX + 0.4, 1.02, 0.93), rot_z=95)
     hotspot("cutting-board", "Chopping board", None, board, kind="ambient")
