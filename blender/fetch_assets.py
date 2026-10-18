@@ -22,7 +22,10 @@ MODELS = ["pot_enamel_01", "painted_wooden_cabinet", "wooden_bookshelf_worn", "A
           "painted_wooden_bench", "rubber_boots", "antique_ceramic_vase_01", "potted_plant_04",
           # Glasshouse (Oct 2026): planter boxes, seed trays, tools, the nettle and dandelion beds
           "planter_box_01", "planter_box_02", "planter_box_03", "seeding_tray_01", "trowel_01",
-          "watering_can_metal_01", "garden_gloves_01", "nettle_plant", "dandelion_01"]
+          "watering_can_metal_01", "garden_gloves_01", "nettle_plant", "dandelion_01",
+          # Flourish (Oct 2026): four mismatched chairs, the phonograph's side table, herb pots, bowls
+          "WoodenChair_01", "dining_chair_02", "painted_wooden_chair_01", "gallinera_chair", "side_table_01",
+          "planter_pot_clay", "wooden_bowl_02"]
 # Models whose glTF download is broken on Poly Haven (the .bin is short), fetched as .blend instead
 BLEND_MODELS = ["vintage_grandfather_clock_01"]
 TEXTURES = ["old_wooden_floor_01", "white_plaster_rough_01", "medieval_wood", "wood_table_worn",
