@@ -513,14 +513,15 @@ def fly_camera(scene, keys, name="fly"):
 
 
 def video_settings(scene, rough, out_prefix, frames_step=1):
-    """1080p video frames (rough: small, fast and noisy, every other frame, to check timing and moves)."""
+    """1080p video frames as JPEG (rough: small, fast and noisy, every other frame, to check timing and moves)."""
     scene.render.fps = 24
     scene.render.resolution_x, scene.render.resolution_y = (640, 360) if rough else (1920, 1080)
     scene.cycles.samples = 16 if rough else 128
     scene.frame_step = 2 if rough else frames_step
     scene.render.use_persistent_data = True
-    scene.render.image_settings.file_format = "JPEG" if rough else "PNG"
-    scene.render.image_settings.quality = 88
+    # JPEG even for the final: the cloud pod's results leave PNGs out, and at 96 it's clean for a video edit
+    scene.render.image_settings.file_format = "JPEG"
+    scene.render.image_settings.quality = 88 if rough else 96
     scene.render.filepath = out_prefix
 
 
