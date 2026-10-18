@@ -1,0 +1,254 @@
+[
+  {
+    "file": "01-table-sea-window.png",
+    "title": "Table and sea window",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2370000,
+    "sha256": "29c576bcb54fa4bf20cf4815e28062df265dd71f4157a03fbea5c725b7706c5a"
+  },
+  {
+    "file": "02-back-door.png",
+    "title": "Garden stable door",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2298265,
+    "sha256": "a85592e09ac4df0a6ad7b6a1d4d065e2226bd40396336e51f058850596f1287c"
+  },
+  {
+    "file": "03-range.png",
+    "title": "Range and copper pans",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2220100,
+    "sha256": "843e4f7990bb388fbb29ac6a27f611522f60245deaedbcbe0a10467457af0fec"
+  },
+  {
+    "file": "04-dresser-phonograph.png",
+    "title": "Dresser and phonograph",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2158785,
+    "sha256": "5c99cee46c168126534b81b70e3e68ae93ba17d7b3e0e2bee1fc24c05a8dc5d2"
+  },
+  {
+    "file": "05-hallway-door.png",
+    "title": "Oak hallway door",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2305530,
+    "sha256": "1435993557658c36879ca4a240236e00e55eecc1391d943b1349322d6386f495"
+  },
+  {
+    "file": "06-table-closeup.png",
+    "title": "Table close-up",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2325701,
+    "sha256": "0ceed80375e78cdffcd1c50a4479a43d05e2aff26858258c8b0600e00ee30720"
+  },
+  {
+    "file": "07-phonograph-closeup.png",
+    "title": "Wind-up phonograph close-up",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2022280,
+    "sha256": "3c6fb2ff8e99092947cd9fddfc1b32474aafa6cb5e096ee28ca65d4c6591e31a"
+  },
+  {
+    "file": "08-trug-closeup.png",
+    "title": "Wooden vegetable trug",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2694133,
+    "sha256": "cf7faa21a3c588662ebebfbf73877fd0d4c07439ba67700e0795c5f2f4acbf31"
+  },
+  {
+    "file": "09-materials-moodboard.png",
+    "title": "Materials and palette",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 3659847,
+    "sha256": "6580c91e48b5438e44bd8da456b849d4198dcdd6ab57783b1542cf2e2b229c95"
+  },
+  {
+    "file": "10-botanical-flat.png",
+    "title": "Framed botanical watercolour",
+    "width": 1122,
+    "height": 1402,
+    "mode": "RGB",
+    "bytes": 3164351,
+    "sha256": "3b9e09ba0e4ca45a3c6a9bac155cc12f39add3c305850a990c4cc0a39273dce1"
+  },
+  {
+    "file": "11-runner-tile.png",
+    "title": "Repeating runner stripes",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGB",
+    "bytes": 3087693,
+    "sha256": "04ca93a89cb990a26027786c8e35bd1de17f30209e2b78627bb94cf0535cfed8"
+  },
+  {
+    "file": "12-tea-towel-tile.png",
+    "title": "Repeating tea-towel check",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGB",
+    "bytes": 2955394,
+    "sha256": "52557dedbfe2d436d7d22669e3b1596beac099f5228b31775a3bd81961fd3692"
+  },
+  {
+    "file": "14-window-rain.png",
+    "title": "Sea · Rain",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2519687,
+    "sha256": "f85fce7359034f29b1ff38997086f2f206f60cc0a62e0cc6e0f3f23cb6ba6571"
+  },
+  {
+    "file": "15-window-fair.png",
+    "title": "Sea · Fair",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2692604,
+    "sha256": "1dc60bda79d9e0be8d286a3692963ae3834f682892d9d0befa3d975746edfd9a"
+  },
+  {
+    "file": "16-window-change.png",
+    "title": "Sea · Change",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2344614,
+    "sha256": "6de4da8d2952c7c06d2a1b8061cfba2c65a090aeaf6300ef996e36b4afe1e5a0"
+  },
+  {
+    "file": "17-window-stormy.png",
+    "title": "Sea · Stormy",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2768053,
+    "sha256": "180a950e8650569dc63c6530de9c049d40845ec0d73f1a83f6f078ea6621a621"
+  },
+  {
+    "file": "18-window-very-dry.png",
+    "title": "Sea · Very Dry",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2438779,
+    "sha256": "ac03a4e7418bfe092d147784a68ba9e561e3c936d1a16869629183876370cfb0"
+  },
+  {
+    "file": "19-night-rain.png",
+    "title": "Sea at night · Rain",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2156200,
+    "sha256": "24e3b69107be16e5646d22f2c0bc458d0fc280974b8b23ae77e02e2a29432d4d"
+  },
+  {
+    "file": "20-night-fair.png",
+    "title": "Sea at night · Fair",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2068149,
+    "sha256": "44b018b7ad4b7fe59a0768ed68f6f36ff826840916c3d87e53de25163608a8ab"
+  },
+  {
+    "file": "21-night-change.png",
+    "title": "Sea at night · Change",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 1924161,
+    "sha256": "6f51e6d7221c681bd15903ad977b5318d10c5a4acef7e7a2d98594529a25cc88"
+  },
+  {
+    "file": "22-night-stormy.png",
+    "title": "Sea at night · Stormy",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2336425,
+    "sha256": "28aaa41d6defb484a9c1643d3b32e0a3bf977f9d1d603799de3dc2fcf03653ce"
+  },
+  {
+    "file": "23-night-very-dry.png",
+    "title": "Sea at night · Very Dry",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 1858481,
+    "sha256": "da0a417fda58ecd73c41cfad79a8575200e4165fdea1412bf395232224ca06c0"
+  },
+  {
+    "file": "24-garden-rain.png",
+    "title": "Garden · Rain",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2934726,
+    "sha256": "88acd79fd1c3aa0c124a24fe2caad30b3d78d1be5a134b2ebc86c2958e13e683"
+  },
+  {
+    "file": "25-garden-fair.png",
+    "title": "Garden · Fair",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 3015093,
+    "sha256": "e1aa813f14f6e26a264e868ab876d6558b5d5184a48c7336ab3e9e1ca0c21050"
+  },
+  {
+    "file": "26-garden-change.png",
+    "title": "Garden · Change",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2798351,
+    "sha256": "74d0afdff4a53d9a664a3fdf6534dc691ea1c89324946843de589a23321c96a5"
+  },
+  {
+    "file": "27-garden-stormy.png",
+    "title": "Garden · Stormy",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2999079,
+    "sha256": "e15bf564182e0e51faf2f965f82bd1330bbae4de7af05161d305bf2cb992654b"
+  },
+  {
+    "file": "28-garden-very-dry.png",
+    "title": "Garden · Very Dry",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2865944,
+    "sha256": "16acbe8d103e3190c7c6e1a4a481647dc148576a154afe9c8e37388209d0ac50"
+  },
+  {
+    "file": "29-garden-night.png",
+    "title": "Garden at night",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 2350200,
+    "sha256": "0efc5544ca29309d94f4cc0955874a086426c27884242e50724b78983c2da59f"
+  }
+]

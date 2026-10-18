@@ -1,0 +1,157 @@
+{
+  "units": "metres",
+  "footprint": [
+    4.5,
+    4.5
+  ],
+  "ceiling_height_proposed": 2.7,
+  "axes": {
+    "x": "0 hallway/west →4.5 garden/east",
+    "y": "0 front/Chiapothecary/south →4.5 sea/north",
+    "z": "finished floor0"
+  },
+  "source_priority": [
+    "User Flourish brief #6",
+    "docs/inn-floorplan.html",
+    "01 main scene for material/hero identity; focused views for individual objects"
+  ],
+  "walls": {
+    "north_sea": {
+      "window": {
+        "centre": [
+          2.25,
+          4.5,
+          1.65
+        ],
+        "opening_width": 1.85,
+        "opening_height": 1.45,
+        "sill": 0.925,
+        "form": "timber double sash; six main lights",
+        "ledge": {
+          "depth": 0.33,
+          "herb_pots": 3
+        }
+      },
+      "blank_plaster": "reserve beside sash for later Blender barometer/clock/candles"
+    },
+    "east_garden": {
+      "stable_door": {
+        "centre": [
+          4.5,
+          2,
+          1.025
+        ],
+        "width": 0.9,
+        "height": 2.05,
+        "split_z": 1.03,
+        "lower": "closed",
+        "upper": "open",
+        "material": "old timber, worn cream paint"
+      },
+      "trug": {
+        "centre": [
+          4.05,
+          1.3,
+          0.15
+        ],
+        "type": "broad curved solid wood slats and bentwood arch handle"
+      }
+    },
+    "west_hallway": {
+      "door": {
+        "centre": [
+          0,
+          1.05,
+          1
+        ],
+        "width": 0.85,
+        "height": 2,
+        "panels": 4,
+        "inside_dial": false
+      },
+      "range": {
+        "centre": [
+          0.34,
+          3.15,
+          0.45
+        ],
+        "width_along_wall": 1.4,
+        "depth": 0.7,
+        "height": 0.9,
+        "copper_pan_count": 5,
+        "hood": "cream plaster"
+      }
+    },
+    "south_front": {
+      "dresser": {
+        "centre": [
+          2.65,
+          0.27,
+          1.1
+        ],
+        "width": 2.1,
+        "depth": 0.54,
+        "height": 2.2
+      },
+      "phonograph_side_table": {
+        "centre": [
+          0.9,
+          0.3,
+          0.38
+        ],
+        "width": 0.65,
+        "depth": 0.55,
+        "height": 0.76
+      }
+    }
+  },
+  "hero_table": {
+    "centre": [
+      2.35,
+      2.5,
+      0.385
+    ],
+    "dimensions": [
+      1.9,
+      0.95,
+      0.77
+    ],
+    "long_axis": "x",
+    "material": "scrubbed pine",
+    "chairs": "four mismatched old wooden chairs"
+  },
+  "masters": {
+    "interior": "01-table-sea-window.png",
+    "sea": "14-window-rain.png",
+    "garden": "24-garden-rain.png"
+  },
+  "canonical_objects": {
+    "range": "03-range.png",
+    "phonograph": "07-phonograph-closeup.png",
+    "trug": "08-trug-closeup.png",
+    "dresser": "04-dresser-phonograph.png"
+  },
+  "outdoor_swap_dimensions": [
+    2172,
+    724
+  ],
+  "numbering": {
+    "gap_13": "intentional, brief has no file13",
+    "sea_day": "14–18",
+    "sea_night": "19–23",
+    "garden_day": "24–28",
+    "garden_night": "29"
+  },
+  "constraints": [
+    "Sea window only on north wall",
+    "Stable garden door only on east wall",
+    "Oak four-panel hallway door only west wall",
+    "Dresser south wall; no door into Chiapothecary",
+    "Room-facing hallway door has no dial",
+    "No baked clock/barometer/candles or click glow",
+    "Garden crop positions/stage fixed across weather variants; seasons not added",
+    "Night versions start their rainy daylight master independently",
+    "Dimensions except4.5m room are proposed blockout dimensions, not measured photographs"
+  ],
+  "limits": "Generated wall views guide appearance, not a surveyed panorama. Written layout resolves incidental perspective/scale differences. Use shared Blender geometry/cameras for final360 renders."
+}

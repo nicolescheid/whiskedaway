@@ -1,0 +1,476 @@
+{
+  "date": "2026-10-18",
+  "png_count": 28,
+  "required_filenames_present": true,
+  "number13_intentionally_unused": true,
+  "all_exterior_sizes": [
+    2172,
+    724
+  ],
+  "prompt_records": 35,
+  "all_selected_files_have_prompts": true,
+  "visual_checks": {
+    "same_inn_material_family": true,
+    "marigold_accent": true,
+    "hero_table_readable": true,
+    "stable_door_top_open_bottom_closed": true,
+    "wooden_trug_solid_slats": true,
+    "hallway_door_four_panels_no_inside_dial": true,
+    "phonograph_side_crank_visible": true,
+    "canonical_copper_pans": 5,
+    "botanical_subjects": [
+      "beetroot",
+      "kale",
+      "rosemary"
+    ],
+    "night_moon_absent": true,
+    "no_people_animals_or_readable_garbled_lettering_observed": true
+  },
+  "gallery_local_refs_checked": 38,
+  "gallery_javascript": "syntax checked with Node; local preview not browser-verified",
+  "registration_summary": {
+    "method": "All16 outdoor plates normalized to2172x724. Each variant registered directly to its rainy master using high-pass normalized patch correlation and a conservative robust affine transform. Stationary wall/bed/brick/shore/architecture landmarks; sky, water and windblown foliage excluded where practical.",
+    "limits": "Metrics describe matched fixed patches, not all pixels. Fog/darkness obscure distant terrain, waves and wind change intentionally. Generative wall concepts are not a shared surveyed scene. Use locked Blender geometry/cameras for exact360 panoramas.",
+    "originals": "Generator sources preserved unchanged; output masters use only a one-pixel width normalization where required.",
+    "groups": [
+      {
+        "group": "sea",
+        "master": "14-window-rain.png",
+        "canvas": [
+          2172,
+          724
+        ],
+        "candidate_patches": 183,
+        "variants": [
+          {
+            "file": "15-window-fair.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 120,
+            "affine_inliers": 119,
+            "matched_patches_after": 140,
+            "median_before_px": 2.256,
+            "median_after_px": 0.206,
+            "p95_after_px": 0.583,
+            "output_to_input_affine": [
+              1.0006995613798724,
+              -0.0015896012194231604,
+              0.09884109900014547,
+              -7.472823402095249e-05,
+              1.0112679368344533,
+              -7.825568540593376
+            ]
+          },
+          {
+            "file": "16-window-change.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 134,
+            "affine_inliers": 134,
+            "matched_patches_after": 148,
+            "median_before_px": 1.398,
+            "median_after_px": 0.183,
+            "p95_after_px": 0.455,
+            "output_to_input_affine": [
+              1.0002673191895635,
+              0.000563537314045539,
+              -0.9197973855699116,
+              4.28578475593705e-06,
+              1.0010104045373438,
+              -1.861563385748772
+            ]
+          },
+          {
+            "file": "17-window-stormy.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 44,
+            "affine_inliers": 44,
+            "matched_patches_after": 51,
+            "median_before_px": 1.267,
+            "median_after_px": 0.157,
+            "p95_after_px": 0.322,
+            "output_to_input_affine": [
+              1.0005805147633002,
+              -0.0016526304020506794,
+              0.08779101025546934,
+              0.0008316330546009517,
+              0.9991459935053795,
+              -1.5552701420946673
+            ]
+          },
+          {
+            "file": "18-window-very-dry.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 124,
+            "affine_inliers": 124,
+            "matched_patches_after": 145,
+            "median_before_px": 0.796,
+            "median_after_px": 0.188,
+            "p95_after_px": 0.45,
+            "output_to_input_affine": [
+              0.9999550856863498,
+              0.000750876568177031,
+              -0.5259206878076486,
+              2.2281556918184216e-05,
+              1.0001977445504686,
+              -0.8608991197100052
+            ]
+          },
+          {
+            "file": "19-night-rain.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 136,
+            "affine_inliers": 136,
+            "matched_patches_after": 141,
+            "median_before_px": 1.368,
+            "median_after_px": 0.194,
+            "p95_after_px": 0.509,
+            "output_to_input_affine": [
+              1.000723763951975,
+              -0.002425704294017805,
+              0.7503832663512646,
+              8.584791673033596e-06,
+              1.001033728873919,
+              -1.8408063173402325
+            ],
+            "mean_luminance_0_to_255": 28.61,
+            "foreground_median_luminance": 11.0
+          },
+          {
+            "file": "20-night-fair.png",
+            "generated_size": [
+              2171,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 141,
+            "affine_inliers": 141,
+            "matched_patches_after": 149,
+            "median_before_px": 1.016,
+            "median_after_px": 0.204,
+            "p95_after_px": 0.475,
+            "output_to_input_affine": [
+              1.000755494072464,
+              0.00032257360340588726,
+              -0.6153720894762951,
+              0.00013232290445760553,
+              1.000901581604058,
+              -1.4722051017185662
+            ],
+            "mean_luminance_0_to_255": 23.45,
+            "foreground_median_luminance": 10.0
+          },
+          {
+            "file": "21-night-change.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 89,
+            "affine_inliers": 87,
+            "matched_patches_after": 84,
+            "median_before_px": 6.022,
+            "median_after_px": 0.307,
+            "p95_after_px": 0.744,
+            "output_to_input_affine": [
+              1.0002293713823638,
+              -0.0023947314510346382,
+              0.14417556574620938,
+              3.4722239175127997e-05,
+              1.008484215957354,
+              -10.024692015633077
+            ],
+            "mean_luminance_0_to_255": 34.69,
+            "foreground_median_luminance": 9.0
+          },
+          {
+            "file": "22-night-stormy.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 79,
+            "affine_inliers": 79,
+            "matched_patches_after": 89,
+            "median_before_px": 0.721,
+            "median_after_px": 0.241,
+            "p95_after_px": 0.5,
+            "output_to_input_affine": [
+              1.000437796079059,
+              -0.0004590110255723297,
+              -0.20200779142009503,
+              -4.9387394062212745e-05,
+              1.0015794716477533,
+              -1.3688354817098676
+            ],
+            "mean_luminance_0_to_255": 27.95,
+            "foreground_median_luminance": 8.0
+          },
+          {
+            "file": "23-night-very-dry.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 155,
+            "affine_inliers": 155,
+            "matched_patches_after": 159,
+            "median_before_px": 2.099,
+            "median_after_px": 0.191,
+            "p95_after_px": 0.548,
+            "output_to_input_affine": [
+              1.0009565474313655,
+              -0.00018301318923798606,
+              -1.7989567812206728,
+              -0.00021275470697695376,
+              1.0025085391662518,
+              -2.7683176831853773
+            ],
+            "mean_luminance_0_to_255": 18.87,
+            "foreground_median_luminance": 7.0
+          }
+        ]
+      },
+      {
+        "group": "garden",
+        "master": "24-garden-rain.png",
+        "canvas": [
+          2172,
+          724
+        ],
+        "candidate_patches": 279,
+        "variants": [
+          {
+            "file": "25-garden-fair.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 172,
+            "affine_inliers": 170,
+            "matched_patches_after": 185,
+            "median_before_px": 0.738,
+            "median_after_px": 0.186,
+            "p95_after_px": 0.519,
+            "output_to_input_affine": [
+              0.9999422746421645,
+              -1.4105408162658668e-05,
+              0.022261270765968694,
+              -7.243163027959974e-05,
+              0.9985703595766219,
+              0.11674718292236363
+            ]
+          },
+          {
+            "file": "26-garden-change.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 176,
+            "affine_inliers": 172,
+            "matched_patches_after": 173,
+            "median_before_px": 0.82,
+            "median_after_px": 0.158,
+            "p95_after_px": 0.659,
+            "output_to_input_affine": [
+              0.9998078465749656,
+              0.00011320273667846169,
+              0.37549828526881157,
+              -0.0001162704992769723,
+              0.9985546017987118,
+              0.13013306215892959
+            ]
+          },
+          {
+            "file": "27-garden-stormy.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 103,
+            "affine_inliers": 100,
+            "matched_patches_after": 120,
+            "median_before_px": 0.976,
+            "median_after_px": 0.284,
+            "p95_after_px": 1.266,
+            "output_to_input_affine": [
+              0.9981971457042851,
+              -0.0007585882993171016,
+              4.544630620350719,
+              -0.0008757953001826322,
+              0.9975683233396673,
+              2.3227360683405767
+            ]
+          },
+          {
+            "file": "28-garden-very-dry.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 153,
+            "affine_inliers": 152,
+            "matched_patches_after": 164,
+            "median_before_px": 0.698,
+            "median_after_px": 0.168,
+            "p95_after_px": 0.57,
+            "output_to_input_affine": [
+              1.0003352050950918,
+              -0.0001964718738893212,
+              -0.2009633606141181,
+              -0.0003343386393950931,
+              0.9981408159211012,
+              0.9318967563697418
+            ]
+          },
+          {
+            "file": "29-garden-night.png",
+            "generated_size": [
+              2172,
+              724
+            ],
+            "final_size": [
+              2172,
+              724
+            ],
+            "candidate_matches": 194,
+            "affine_inliers": 191,
+            "matched_patches_after": 194,
+            "median_before_px": 0.463,
+            "median_after_px": 0.189,
+            "p95_after_px": 0.486,
+            "output_to_input_affine": [
+              1.0007550246256238,
+              0.0008714085037725247,
+              -1.231775932855943,
+              -6.70459008819835e-05,
+              1.0007072808624466,
+              -0.2658163532071055
+            ],
+            "mean_luminance_0_to_255": 30.03,
+            "foreground_median_luminance": 21.0
+          }
+        ]
+      }
+    ]
+  },
+  "tile_summary": {
+    "method": "Generated fabric swatches phase-aligned by cropping whole design repeats, normalized to1254square and matching outer12pixel edge bands. Original swatches preserved. No vector/procedural substitute for image-generation source.",
+    "tiles": [
+      {
+        "file": "11-runner-tile.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "detected_period_x_px": 363,
+        "detected_period_y_px": null,
+        "repeat_crop": [
+          149,
+          82,
+          1238,
+          1171
+        ],
+        "repeat_count_x": 3,
+        "repeat_count_y": null,
+        "final_size": [
+          1254,
+          1254
+        ],
+        "boundary_blend_px": 12,
+        "left_right_edge_mean_absolute_difference": 0.0,
+        "top_bottom_edge_mean_absolute_difference": 0.0
+      },
+      {
+        "file": "12-tea-towel-tile.png",
+        "source_size": [
+          1254,
+          1254
+        ],
+        "detected_period_x_px": 142,
+        "detected_period_y_px": 146,
+        "repeat_crop": [
+          0,
+          0,
+          1136,
+          1168
+        ],
+        "repeat_count_x": 8,
+        "repeat_count_y": 8,
+        "final_size": [
+          1254,
+          1254
+        ],
+        "boundary_blend_px": 12,
+        "left_right_edge_mean_absolute_difference": 0.0,
+        "top_bottom_edge_mean_absolute_difference": 0.0
+      }
+    ]
+  },
+  "limits": "Visual QA of selected images and matched landmarks. Individual wall concepts can differ in perspective/scale; layout and canonical object references govern Blender. Texture sheets have photographic illumination, not calibrated PBR maps. Nearby backdrop parallax requires3D geometry if camera translates."
+}
