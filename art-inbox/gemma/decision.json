@@ -30,7 +30,8 @@
     "expression": "neutral",
     "projection": "orthographic reference",
     "same_scale_and_baseline": true,
-    "back_tie": "plain waistband; front/side knot only"
+    "back_tie": "plain waistband; front/side knot only",
+    "three_quarter_angle_degrees": 45
   },
   "palette_srgb": {
     "skin": "#8fb8ca",
@@ -58,5 +59,17 @@
     "runtime/14-avatar-24.png"
   ],
   "rig_notes": "notes.md",
-  "scope_note": "PNG modelling/acting references, avatars, palette and icons. No Blender mesh, rig or animation included."
+  "scope_note": "PNG modelling/acting references, avatars, palette and icons. No Blender mesh, rig or animation included.",
+  "revision": 2,
+  "small_avatar": {
+    "file": "14-avatar-small.png",
+    "style": "flat minimal icon",
+    "facial_detail": "simple eyes only",
+    "runtime": "runtime/14-avatar-24.png"
+  },
+  "latest_fixes": [
+    "flat 24px icon",
+    "soft blue cheeks on turnaround and poses",
+    "45-degree third turnaround view"
+  ]
 }

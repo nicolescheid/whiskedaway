@@ -26,5 +26,21 @@
     "Reference artwork is not measured geometry or a Blender model",
     "Palette notes give base-material sRGB targets"
   ],
-  "contact_sheet_visually_reviewed": true
+  "contact_sheet_visually_reviewed": true,
+  "revision": 2,
+  "unchanged_main_images_sha256_verified": [
+    "11-expressions.png",
+    "13-avatar-large.png",
+    "15-palette.png",
+    "16-handbell.png",
+    "17-shimmer.png",
+    "18-whisk.png"
+  ],
+  "runtime48_unchanged_sha256_verified": true,
+  "latest_fixes_review": [
+    "Flat icon with simple eyes; alpha and 24px dimensions verified",
+    "Cheek corrections on turnaround and six poses",
+    "Third turnaround view rotated to about 45 degrees"
+  ],
+  "refreshed_proof_review": "Reviewed at actual 24px size and enlarged on light/dark backgrounds; flat icon, soft blue face, ponytail, cuff and berry top retained."
 }

@@ -12,11 +12,11 @@ Start around **1.65 m apparent height from ponytail crown to steam tip**, then m
 
 ## Files
 
-- 10-turnaround.png: front, side, three-quarter and back, left to right; relaxed A-pose, neutral expression, parallel-projection appearance, even light, same scale and baseline. The arms project in depth in the side view; this does not change the bind pose.
+- 10-turnaround.png: front, side, 45-degree three-quarter and back, left to right; relaxed A-pose, neutral expression, parallel-projection appearance, even light, same scale and baseline. The arms project in depth in the side view; this does not change the bind pose.
 - 11-expressions.png: 4 × 2, left to right then top to bottom: welcoming hello; listening; thinking it over; delighted; gentle concern; laughing; a little oops; sleepy.
 - 12-poses.png: 3 × 2: rising from the whisk; pointing; offering a steaming bowl; stirring a pot; ringing a tiny brass handbell; waving goodbye.
 - 13-avatar-large.png: transparent 1024 × 1024 master for 48px display.
-- 14-avatar-small.png: separately simplified transparent 1024 × 1024 master for 24px display.
+- 14-avatar-small.png: flat, minimal transparent 1024 × 1024 icon for 24px display: bold silhouette, high ponytail/brass cuff, blue face, berry top and simple eyes only. No fine hair or other facial detail.
 - runtime/13-avatar-48.png and runtime/14-avatar-24.png: actual-size transparent PNG exports.
 - 15-palette.png: six swatches, ordered skin / hair / berry on top, apron / brass / glow below.
 - 16-handbell.png, 17-shimmer.png, 18-whisk.png: separate transparent 1024 × 1024 icons. The tea handbell has a turned wooden handle; the shimmer preserves partial transparency; the whisk has open transparent wire gaps.
@@ -64,3 +64,8 @@ Artwork used the **built-in image_gen tool**. Exact prompts, including correctio
 
 stage2-gallery.html presents the pack. stage2-size-check.png shows actual-size avatars and enlarged pixel checks on light/dark backgrounds. The Stage 2 ZIP also includes both approved v2 references. The earlier Stage 1 ZIP remains an archive of the direction study.
 
+
+
+## Stage 2 refinement
+
+Nicole requested three focused fixes: the 24px avatar is now a flat icon with simple eyes; returning cheek blush was removed from the turnaround and all six poses; and the third turnaround figure now turns about 45 degrees, showing face and ponytail depth. The other six main Stage 2 images and the 48px runtime avatar are unchanged. The 24px runtime export, proofs and pack were refreshed.

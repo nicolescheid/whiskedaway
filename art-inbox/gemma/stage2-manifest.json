@@ -5,8 +5,9 @@
     "width": 2169,
     "height": 725,
     "mode": "RGB",
-    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-cfabb05d-9317-4ee6-89e7-7a71ec7a4883.png",
-    "sha256": "c58f9f3806e1024cc2cdd1a860d57bfc781d05695269ba55cf83ce54f31b1204"
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-cb386d97-8a76-43fc-b117-9875a8368af1.png",
+    "sha256": "75d5002b1d081fe9718c5356b2244b19c2cc1e9a66602530be2c8ddb94de6c2a",
+    "revision": 2
   },
   {
     "file": "11-expressions.png",
@@ -23,8 +24,9 @@
     "width": 1536,
     "height": 1024,
     "mode": "RGB",
-    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-37b37108-d698-4d83-9eb7-5753b86356ec.png",
-    "sha256": "e518f4a40f1592f9c73d29ddd4b1d53c47f0347e17935e02b3deba35d1408124"
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-2f2612a7-b736-4a24-a395-9a3dc014fd37.png",
+    "sha256": "d1f16a649d35790dd085e88bb3dddaead3129b4ac5d4ba2a0bc4873cada730da",
+    "revision": 2
   },
   {
     "file": "13-avatar-large.png",
@@ -53,20 +55,21 @@
     "width": 1024,
     "height": 1024,
     "mode": "RGBA",
-    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-ffb9d227-d340-4e5c-874b-8a05b679e236.png",
-    "sha256": "8aad50c336f40d6288f538f3968afaf50b111ea939f229456db079f0756571f6",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-c824b44d-a3af-49ac-8675-e252f1d68b3e.png",
+    "sha256": "98b0c38e7aa5d58ab020bd087eed834b5203bc9fed3680bbc07783b59d0e6f11",
     "alpha": {
-      "zero": 422207,
-      "partial": 624975,
-      "opaque": 1394,
+      "zero": 448973,
+      "partial": 597038,
+      "opaque": 2565,
       "bounds": [
         0,
-        0,
+        12,
         1009,
         1024
       ],
       "corners_transparent": true
-    }
+    },
+    "revision": 2
   },
   {
     "file": "15-palette.png",
