@@ -1260,15 +1260,24 @@ function fillMap() {
     $(o.type === 'ambient' ? 'map-room' : 'map-tools').appendChild(item(id));
   });
 }
-// The notebook's "What you've told me": one line per thing in the visit store, each with its own "forget"
-const TOLD = { energy: v => world.energies?.[v] && `Energy: the ${world.energies[v].candle}` };
+// The notebook's "What you've told me" (its own block: it becomes the book's "This visit" page): what the visitor told
+// the Inn about themselves, in Gemma's words, each with its own "forget". An energy's line is its "told" in
+// cuddlecore-world.json when the content editor adds one; until then these.
+const TOLD_ENERGY = { 'burnt-out': "You're running on empty today.", low: "You're running low today.",
+                      half: "You've got about half your energy today.", 'three-quarters': "You've got plenty in you today.",
+                      full: "You're full of beans today." };
+const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]) };
 function renderTold() {
-  const rows = Object.entries(visit.all()).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
-  $('told').innerHTML = rows.length ? rows.map(([k, text]) => `<li>${esc(text)} <button class="link" data-forget="${esc(k)}">forget</button></li>`).join('')
-    : `<li>Nothing yet. The candles in the kitchen are one way to tell me how you are.</li>`;
-  $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.set(b.dataset.forget, null));
+  const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
+  $('told').innerHTML = rows.length ? rows.map(([k, text]) => `<li>${esc(text)} <button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
+    : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`;
+  $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
 }
-visit.subscribe('*', (value, key) => { renderTold(); if (key === 'energy') showCandle(); if (key === 'energy' && !value) scheduleNavigate(); });
+visit.subscribe(({ part, key, value }) => {
+  renderTold();
+  if (part === 'all' || key === 'energy') showCandle();               // forgetting the energy puts the candle out
+  if (part === 'about' && key === 'energy' && !value) scheduleNavigate();
+});
 function renderNotes() {
   renderTold();
   const r = state.result;
