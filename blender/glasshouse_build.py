@@ -570,7 +570,7 @@ def p_lavender(g, base, rnd, s, H=0.32):
             sd = dir_at(pts, t)
             for side in (-1, 1):
                 ld = (sd * 0.55 + sd.cross(UP).normalized() * side * 0.75 + UP * 0.1)
-                g.leaf(p, ld, 0.03 * (1.1 - 0.4 * t), 0.0032, leaf_col("lavender", rnd, s), shape="needle", droop=0.1, fold=0.0, seg=2)
+                g.leaf(p, ld, 0.034 * (1.1 - 0.4 * t), 0.0055, leaf_col("lavender", rnd, s), shape="needle", droop=0.1, fold=0.0, seg=2)
     spikes = {"spring": (9, "#9a8cc6", 0.6), "summer": (30, "#5e4596", 1.0), "autumn": (22, "#8b8174", 0.9), "winter": (0, "", 0)}[s]
     n, col, size = spikes
     for _ in range(n):
@@ -597,7 +597,7 @@ def p_rosemary(g, base, rnd, s, H=0.62):
                 ang = k * 1.9 + side * math.pi
                 side_v = sd.cross(UP).normalized()
                 rad = side_v * math.cos(ang) + side_v.cross(sd) * math.sin(ang)
-                g.leaf(p, sd * 0.45 + rad * 0.9, 0.024, 0.0026, leaf_col("rosemary", rnd, s, -0.1 if s != "winter" else 0),
+                g.leaf(p, sd * 0.45 + rad * 0.9, 0.026, 0.0042, leaf_col("rosemary", rnd, s, -0.1 if s != "winter" else 0),
                        shape="needle", droop=0.02, fold=0.25, seg=2)
         if s == "spring" and i % 2 == 0:
             for _ in range(5):
@@ -687,7 +687,7 @@ def p_chamomile(g, base, rnd, s, H=0.26):
             p = at(pts, k / 6)
             sd = dir_at(pts, k / 6)
             for _j in range(4):
-                g.leaf(p, sd * 0.6 + Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(0, 0.6))), 0.016, 0.0014,
+                g.leaf(p, sd * 0.6 + Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(0, 0.6))), 0.02, 0.0024,
                        leaf_col("chamomile", rnd, s), shape="needle", droop=0.05, fold=0, seg=2)
     heads = {"spring": 6, "summer": 26, "autumn": 9, "winter": 0}[s]
     for _ in range(heads):
@@ -797,7 +797,7 @@ def p_fennel(g, base, rnd, s, H=1.05):
             for _j in range(int(30 * (0.5 if s == "winter" else 1))):
                 q = mid + Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(-0.6, 1))) * fl * 0.45
                 c = leaf_col(col_name, rnd, s, 0.4 if s == "autumn" else 0)
-                g.leaf(q, Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(-0.3, 1))), 0.03, 0.0011, c,
+                g.leaf(q, Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(-0.3, 1))), 0.035, 0.0018, c,
                        shape="needle", droop=0.0, fold=0, seg=1)
         if s in ("summer", "autumn") and i % 2 == 0:                # umbels: yellow in flower, tan in seed
             top = pts[-1]
@@ -975,6 +975,8 @@ PLANTS = {
     "chamomile": p_chamomile, "calendula": p_calendula, "echinacea": p_echinacea, "borage": p_borage, "fennel": p_fennel,
     "ginger": p_ginger, "turmeric": p_turmeric, "aloe": p_aloe, "roselle": p_roselle,
 }
+BUSHY = {"lavender", "rosemary", "thyme", "sage", "mint", "balm", "basil", "chamomile", "calendula", "borage", "echinacea"}
+PLANT_SCALE = 1.35                                                  # the plants as modelled, scaled up to fill their pots
 HEIGHT = {"lavender": 0.42, "rosemary": 0.55, "thyme": 0.1, "sage": 0.3, "mint": 0.3, "balm": 0.3, "basil": 0.32, "chamomile": 0.24,
           "calendula": 0.28, "echinacea": 0.5, "borage": 0.35, "fennel": 0.8, "ginger": 0.6, "turmeric": 0.45, "aloe": 0.25, "roselle": 0.75}
 
@@ -998,6 +1000,13 @@ POTS = [
     ("roselle", 0.32, 0.42, 0.0, 0.19, 0.3), ("thyme", 0.2, 0.85, 0.0, 0.08, 0.12), ("mint", 0.25, 2.78, 0.0, 0.12, 0.2),
     ("balm", 0.22, 3.38, 0.0, 0.1, 0.16), ("borage", 0.27, 4.05, 0.0, 0.13, 0.2), ("lavender", 0.25, 4.7, 0.0, 0.13, 0.2),
     ("echinacea", 0.24, 5.3, 0.0, 0.12, 0.2), ("chamomile", 0.5, 4.38, 0.0, 0.08, 0.12),
+    # more, so it looks lived in: the staging's gaps, under the staging, along the wall
+    ("mint", 1.68, 0.55, STAGE, 0.07, 0.11), ("thyme", 1.69, 4.08, STAGE, 0.065, 0.1), ("basil", 1.67, 5.36, STAGE, 0.07, 0.11),
+    ("sage", 1.7, 2.05, STAGE, 0.065, 0.1),
+    ("chamomile", 1.62, 1.5, 0.0, 0.09, 0.14), ("thyme", 1.45, 2.2, 0.0, 0.08, 0.13), ("calendula", 1.6, 4.85, 0.0, 0.1, 0.15),
+    ("balm", 1.5, 5.62, 0.0, 0.11, 0.17),
+    ("calendula", 0.2, 3.75, 0.0, 0.09, 0.14), ("thyme", 0.45, 5.05, 0.0, 0.08, 0.12), ("basil", 0.48, 0.78, 0.0, 0.1, 0.15),
+    ("rosemary", 0.22, 1.3, 0.0, 0.11, 0.17),
 ]
 PASSION_POT = (W - 0.18, L - 0.2, 0.0, 0.15, 0.26)
 SEED_TRAYS = [(1.54, 1.18, 0.0), (1.55, 5.08, 90.0)]                 # on the staging: x, y, turn
@@ -1065,8 +1074,8 @@ def build():
     scene = bpy.context.scene
     rnd = random.Random(7)                                          # dressing that never moves between seasons
 
-    plaster = pbr("plaster", "white_plaster_rough_01", 3.0, tint=srgb("#efe7d6"), tint_mix=0.85, bump=0.6)
-    floor_m = pbr("floor", "terracotta_floor_tiles", 2.0, tint=srgb("#b56f4a"), tint_mix=0.25, rough_add=0.1, bump=0.7)
+    plaster = pbr("plaster", "white_plaster_rough_01", 3.0, tint=srgb("#e8dcc4"), tint_mix=0.85, bump=0.6)
+    floor_m = pbr("floor", "terracotta_floor_tiles", 0.9, tint=srgb("#b8794f"), tint_mix=0.3, rough_add=0.1, bump=0.7)
     staging = pbr("staging", "worn_planks", 1.6, tint=srgb("#a67c4e"), tint_mix=0.35, rough_add=0.1, rot_z=90)
     beam_wood = pbr("beam", "wood_table_worn", 1.5, tint=srgb("#8a6236"), tint_mix=0.4, rot_z=90)
     door_oak = pbr("door_oak", "medieval_wood", 2.0, tint=srgb("#9b693e"), tint_mix=0.55)
@@ -1265,9 +1274,14 @@ def build():
     for i, (kind, x, y, z, r, h) in enumerate(POTS):
         top, _pot = clay_pot(f"pot_{i:02d}_{kind}", x, y, z, r, h, pot_mat, soil, saucer=(z == 0 and r > 0.11))
         g = Geo()
-        PLANTS[kind](g, top, random.Random(100 + i), SEASON)
+        prnd = random.Random(100 + i)
+        PLANTS[kind](g, Vector((0, 0, 0)), prnd, SEASON)
+        if kind in BUSHY:                                           # a second growth from another seed: fuller, less regular
+            PLANTS[kind](g, Vector((0, 0, 0)), random.Random(1100 + i), SEASON)
         if g.f:
-            g.make(f"plant_{i:02d}_{kind}", pmats)
+            o = g.make(f"plant_{i:02d}_{kind}", pmats, loc=top)
+            o.scale = (PLANT_SCALE * prnd.uniform(0.9, 1.12),) * 3
+            o.rotation_euler = (0, 0, prnd.uniform(0, 6.28))
     clay_pot("pot_passionflower", *PASSION_POT, pot_mat, soil, saucer=True)
     passionflower("passionflower", pmats, SEASON, random.Random(42))
 
@@ -1303,7 +1317,6 @@ def build():
         for k, dy in enumerate((-0.12, 0.1)):
             model("dandelion_01", (gx - 0.25, 0.75 + dy, 0.2), rot_z=70 * k, scale=0.8 if SEASON != "autumn" else 0.6)
     model("watering_can_metal_01", (gx - 0.3, 3.92, 0), rot_z=200)
-    model("planter_box_03", (gx - 0.27, 5.62, 0), rot_z=90).scale = (0.9,) * 3
 
     # ---- Seed trays with seedlings, a trowel, twine and seed packets on the staging
     sd = {"spring": 1.0, "summer": 0.55, "autumn": 0.3, "winter": 0.25}[SEASON]
@@ -1368,8 +1381,8 @@ def build():
     wface.scale = (2 * WHEEL_R / 0.936,) * 2 + (1,)                  # the disc spans 93.6% of the flat image
     bpy.ops.object.transform_apply(scale=True)
     wface.data.materials.append(image_mat("seasons_wheel_face", os.path.join(PACK, "17-seasons-wheel-flat.png"), rough=0.5, circle=0.468))
-    wparts += [wface, cyl("seasons_wheel_back", (0, 0, 0.005), WHEEL_R, 0.012, beam_wood, verts=96, bevel=0.003),
-               cyl("seasons_wheel_rim", (0, 0, 0.007), WHEEL_R + 0.004, 0.016, brass, verts=96, bevel=0.003)]
+    wparts += [wface, cyl("seasons_wheel_back", (0, 0, 0.003), WHEEL_R - 0.002, 0.006, beam_wood, verts=96, bevel=0.002),
+               cyl("seasons_wheel_rim", (0, 0, 0.005), WHEEL_R + 0.004, 0.012, brass, verts=96, bevel=0.003)]
     for k, name in enumerate(ORDER):
         a = math.radians(90 * k)
         r = WHEEL_R * 0.74
