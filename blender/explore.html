@@ -983,7 +983,7 @@ function goRoom(id, yaw) {
     state.seasonTold = true;
     askHemisphere().then(() => say(state.season
       ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
-      : `It's ${seasonGuess} where you are, I think, so that's what's growing. The wheel by the door turns it to any season.`, [], true));
+      : `It's ${seasonGuess} where you are, I think. The wheel by the door turns it to any season.`, [], true));
   }
   introduce(id);
 }

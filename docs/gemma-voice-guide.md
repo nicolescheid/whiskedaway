@@ -31,6 +31,11 @@ She speaks as the owner in every room, Cuddlecore included: "I talk to it", not 
 - **No builder talk.** No "in the full site", "panel", "tool", "prototype". If something doesn't work yet she
   says so plainly, in her voice: "I can't open this one for you yet."
 
+## Length
+
+Every chat line is under 100 characters, so it fits the phone chat's one-line size without a "more". Object
+lines, intros and tool text too. Two short sentences is usually the most a line needs.
+
 ## Lines that have to work anywhere, any time
 
 Weather lines, time lines, energy lines and the navigator's lines play in **every room, by day and at night.**
@@ -54,6 +59,8 @@ Each atom is a **snippet**: a card brief enough to read at a glance, which the v
 recipe book or open as a full recipe. The full recipe is written later by the genie Worker from the atom's seed.
 
 - **Title:** what it is, plainly. "Tomato toast with basil", not "Sunny tomato toast".
+- **Short** (2 words at most, about 14 characters): the label a new idea bubble shows for 3 seconds on phones. "Baked pears".
+- **Icon:** one emoji that reads at 44 px, from Unicode 13 or older so older phones show it. No two in a room alike.
 - **Hook** (70 characters at most): the one line on the card. One sentence, no weather or time-of-day words.
 - **Time:** active minutes, as a number. **Wait** (optional): what happens without you, e.g. "overnight" or
   "2 hours in the fridge". For "why it works" and "ingredient story" cards, both belong to the seed dish.

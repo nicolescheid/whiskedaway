@@ -1,5 +1,9 @@
 {
-  "_about": "Gemma's lines for the recipe book (recipe-book-ux.md sections 7 and 8). Content editor owns the wording; docs/gemma-voice-guide.md applies. Where a value is a list, rotate without repeating in a visit. {placeholders} are filled by the page.",
+  "_about": "Gemma's lines for the recipe book (recipe-book-ux.md sections 7 and 8). Content editor owns the wording; docs/gemma-voice-guide.md applies. Where a value is a list, rotate without repeating in a visit. {placeholders} are filled by the page. Every line stays under 100 characters (the phone chat's Line size).",
+  "idea": {
+    "first": "I've had an idea for you. Tap it to have a look.",
+    "from_keep": ["That gave me an idea.", "That one gave me another idea."]
+  },
   "keep": {
     "_when": "Speak on the 1st keep of the visit, the 3rd, then every 4th (7th, 11th...). Otherwise stay quiet: the animation and the live region are enough.",
     "first_ever": "That's in your book now. It's up at the top, and it stays on this device.",
