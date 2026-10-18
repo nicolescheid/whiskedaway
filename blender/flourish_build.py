@@ -47,14 +47,14 @@ WEATHERS = {
     "rain":     dict(sea="14-window-rain.png", garden="24-garden-rain.png", dial=-30, sky=1.2, tint=(1.0, 1.0, 1.0),
                      backdrop=0.75, sun=None, bounce=(55, (0.8, 0.87, 1.0)), wet=0.5, lamps=1.0, fill=18, exposure=0.6),
     "fair":     dict(sea="15-window-fair.png", garden="25-garden-fair.png", dial=30, sky=2.0, tint=(1.0, 0.97, 0.93),
-                     backdrop=1.1, sun=(9.0, (1.0, 0.9, 0.76), 21, 38), bounce=(75, (1.0, 0.97, 0.93)), wet=0.0, lamps=0.0,
+                     backdrop=1.1, sun=(9.0, (1.0, 0.9, 0.76), 18, 25), bounce=(75, (1.0, 0.97, 0.93)), wet=0.0, lamps=0.0,
                      fill=8, exposure=0.55),
     "change":   dict(sea="16-window-change.png", garden="26-garden-change.png", dial=0, sky=1.6, tint=(0.96, 0.98, 1.0),
                      backdrop=0.9, sun=None, bounce=(75, (0.93, 0.96, 1.0)), wet=0.0, lamps=0.6, fill=14, exposure=0.6),
     "stormy":   dict(sea="17-window-stormy.png", garden="27-garden-stormy.png", dial=-60, sky=0.55, tint=(0.85, 0.9, 1.0),
                      backdrop=0.5, sun=None, bounce=(28, (0.72, 0.8, 1.0)), wet=0.75, lamps=1.4, fill=16, exposure=0.7),
     "very-dry": dict(sea="18-window-very-dry.png", garden="28-garden-very-dry.png", dial=60, sky=2.3, tint=(1.0, 0.93, 0.82),
-                     backdrop=1.15, sun=(10.0, (1.0, 0.86, 0.66), 27, 30), bounce=(70, (1.0, 0.93, 0.84)), wet=0.0, lamps=0.0,
+                     backdrop=1.15, sun=(10.0, (1.0, 0.86, 0.66), 22, 22), bounce=(70, (1.0, 0.93, 0.84)), wet=0.0, lamps=0.0,
                      fill=7, exposure=0.55),
 }
 WX = dict(WEATHERS[WEATHER])
@@ -301,15 +301,15 @@ def build():
     floor = pbr("floor", "old_wooden_floor_01", 2.5, tint=srgb("#8e6640"), tint_mix=0.3, rough_add=0.15, bump=0.8)
     beam_wood = pbr("beams", "wood_table_worn", 1.5, tint=srgb("#7a5536"), tint_mix=0.45, rot_z=90)
     oak = pbr("oak", "wood_table_worn", 1.0, tint=srgb("#a57543"), tint_mix=0.35, rot_z=90)
-    honey = pbr("honey_oak", "wood_table_worn", 1.2, tint=srgb("#b18451"), tint_mix=0.35)
-    pine = pbr("scrubbed_pine", "wood_table_worn", 1.4, tint=srgb("#c6a171"), tint_mix=0.3, rough_add=0.15, rot_z=90)
+    honey = pbr("honey_oak", "worn_planks", 1.2, tint=srgb("#b18451"), tint_mix=0.45, bump=0.4)
+    pine = pbr("scrubbed_pine", "worn_planks", 1.6, tint=srgb("#c9a676"), tint_mix=0.45, rough_add=0.1, bump=0.4)
     door_oak = pbr("door_oak", "medieval_wood", 2.0, tint=srgb("#9b693e"), tint_mix=0.55)
     door_dark = pbr("door_dark", "medieval_wood", 2.0, tint=srgb("#6e4a2b"), tint_mix=0.6)
     door_cream = pbr("door_cream", "worn_planks", 1.2, tint=srgb("#e6dcc4"), tint_mix=0.8, rough_add=0.1)
     walnut = pbr("walnut", "wood_table_worn", 0.6, tint=srgb("#6b4128"), tint_mix=0.6)
     trug_wood = pbr("trug_wood", "wood_table_worn", 0.5, tint=srgb("#aa8253"), tint_mix=0.5, rough_add=0.1, rot_z=90)
     jute = pbr("jute", "rough_linen", 0.3, tint=srgb("#a88a5c"), tint_mix=1.0, bump=1.2)
-    marigold_linen = pbr("marigold_linen", "rough_linen", 0.5, tint=srgb("#d9a441"), tint_mix=1.0, bump=0.5)
+    marigold_linen = pbr("marigold_linen", "rough_linen", 0.5, tint=srgb("#d9a441"), tint_mix=0.85, bump=0.5)
     runner_mat = image_mat("runner", os.path.join(PACK, "11-runner-tile.png"), rough=0.92, tile=0.42,
                            normal_from="rough_linen", normal_strength=0.5)
     towel_mat = image_mat("tea_towel", os.path.join(PACK, "12-tea-towel-tile.png"), rough=0.92, tile=0.25,
@@ -336,10 +336,10 @@ def build():
     ink = mat("ink", srgb("#2c2416"), rough=0.6)
     flame = mat("flame", (1, 0.6, 0.25, 1), emission=(1.0, 0.55, 0.2, 1), strength=30)
     bulb = mat("bulb", (1, 0.85, 0.6, 1), emission=(1.0, 0.72, 0.42, 1), strength=18 if WX["lamps"] else 0.0)
-    crust = color_noise_mat("crust", "#7e431c", "#c98f4e", rough=0.7, scale=25, bump=0.4)
+    crust = color_noise_mat("crust", "#5e3014", "#b8793c", rough=0.7, scale=18, bump=0.8)
     flour = mat("flour", srgb("#eee8dc"), rough=0.95)
     egg_mats = [mat(f"egg_{i}", srgb(c), rough=0.5) for i, c in enumerate(("#b67e55", "#a86f48", "#c29169", "#9c6640"))]
-    oats = color_noise_mat("oats", "#9c7d4e", "#d2b985", rough=0.85, scale=140, bump=1.0)
+    oats = color_noise_mat("oats", "#7f6038", "#c2a26c", rough=0.85, scale=140, bump=1.0)
     soil = color_noise_mat("soil", "#2c2416", "#514331", rough=0.95, scale=60, bump=0.5)
     kale = color_noise_mat("kale", "#1f3520", "#3f5e35", rough=0.55, scale=30, bump=0.4, sss=0.1)
     greens = color_noise_mat("greens", "#3f6b2a", "#6f9a3c", rough=0.5, scale=25, bump=0.2, sss=0.15)
@@ -751,9 +751,12 @@ def build():
     if WX["lamps"]:
         point_light("oil_lamp_light", (dx1 - 0.22, 0.28, 0.9 + 0.33), 20 * WX["lamps"], (1.0, 0.64, 0.33), radius=0.03)
     crock = lathe("utensil_crock", [(0.0, 0), (0.06, 0), (0.065, 0.15), (0.06, 0.16)], cream_glaze, (dx0 + 0.3, 0.3, 0.9), thick=0.005)
-    for k in range(4):
-        a = math.radians(k * 90 + 20)
-        model("wooden_spoon", (dx0 + 0.3 + 0.015 * math.cos(a), 0.3 + 0.015 * math.sin(a), 0.92), rot_z=k * 70)
+    for k in range(5):
+        a = math.radians(k * 72 + 20)
+        sp = cyl(f"crock_spoon_{k}", (dx0 + 0.3 + 0.02 * math.cos(a), 0.3 + 0.02 * math.sin(a), 0.9 + 0.17), 0.007, 0.3, honey,
+                 verts=10, rot=(math.radians(8 * math.sin(a)), math.radians(8 * math.cos(a)), 0))
+        if k % 2 == 0:
+            sphere(f"crock_spoon_head_{k}", (dx0 + 0.3 + 0.04 * math.cos(a), 0.3 + 0.04 * math.sin(a), 1.22), 0.022, honey, scale=(1, 0.5, 1.5))
     stock.append(crock)
     box_span("napkins", dx0 + 0.8, dx0 + 1.1, 0.12, 0.38, 0.9, 0.94, marigold_linen, bevel=0.01)
     hotspot("fl-dresser", "The dresser", [base, top] + shelves + stock, kind="ambient")
@@ -831,7 +834,7 @@ def build():
     # loaf on a board with a bread knife, flour on the board
     board = model("wooden_cutting_board", (cx + 0.05, cy - 0.15, z_on), rot_z=8, scale=1.05)
     loaf = sphere("loaf", (cx + 0.05, cy - 0.15, z_on + 0.06), 0.14, crust, scale=(1, 0.88, 0.55))
-    bumpy(loaf, strength=0.012, size=0.05)
+    bumpy(loaf, strength=0.022, size=0.12, subsurf=2)
     box("knife_blade", (cx + 0.12, cy - 0.27, z_on + 0.045), (0.2, 0.025, 0.002), chrome, bevel=0.001).rotation_euler = (0, 0, math.radians(-6))
     box("knife_handle", (cx - 0.02, cy - 0.26, z_on + 0.048), (0.11, 0.022, 0.016), walnut, bevel=0.005).rotation_euler = (0, 0, math.radians(-6))
     for k in range(12):
@@ -839,13 +842,14 @@ def build():
                scale=(rnd.uniform(1, 3), rnd.uniform(1, 2), 0.15))
     # wooden bowl of kale, greens and herbs just picked
     gb_at = (cx - 0.35, cy + 0.2)
-    gbowl = model("wooden_bowl_01", (*gb_at, z_on), scale=1.25)
+    gbowl = lathe("greens_bowl", [(0.0, 0.0), (0.07, 0.0), (0.12, 0.04), (0.14, 0.09), (0.145, 0.1)], green_glaze,
+                  (*gb_at, z_on), thick=0.006)
     gs = [gbowl]
     for i in range(20):                             # curly kale: short, frilly, flopping over the rim
         a = i * 2.39996
-        d_ = Vector((math.cos(a) * 0.9, math.sin(a) * 0.9, 0.7))
+        d_ = Vector((math.cos(a) * 0.45, math.sin(a) * 0.45, 1.0))
         gs.append(leaf(f"bowl_kale_{i}", (gb_at[0] + 0.05 * math.cos(a), gb_at[1] + 0.05 * math.sin(a), z_on + 0.05), d_,
-                       rnd.uniform(0.17, 0.25), rnd.uniform(0.09, 0.13), kale, crinkle=0.028, curl=1.3, seed=100 + i,
+                       rnd.uniform(0.17, 0.25), rnd.uniform(0.09, 0.13), kale, crinkle=0.024, curl=0.7, seed=100 + i,
                        nx=12, ny=18))
     for i in range(10):
         a = rnd.uniform(0, 6.28)
@@ -857,6 +861,10 @@ def build():
     obowl = lathe("oat_bowl", [(0.0, 0.0), (0.055, 0.0), (0.1, 0.035), (0.12, 0.08), (0.125, 0.09)], stoneware, (*ob_at, z_on), thick=0.006)
     oat_fill = cyl("oat_fill", (*ob_at, z_on + 0.072), 0.112, 0.012, oats, bevel=0.006)
     bumpy(oat_fill, strength=0.006, size=0.02, subsurf=2)
+    for k in range(110):
+        a, r = rnd.uniform(0, 6.28), 0.1 * math.sqrt(rnd.uniform(0, 1))
+        sphere(f"bowl_oat_{k}", (ob_at[0] + r * math.cos(a), ob_at[1] + r * math.sin(a), z_on + 0.079 + 0.012 * (1 - r / 0.1)),
+               0.007, oats, scale=(1.4, 1, 0.3)).rotation_euler = (rnd.uniform(-0.5, 0.5), rnd.uniform(-0.5, 0.5), rnd.uniform(0, 3))
     seed_mats = [mat("pumpkin_seed", srgb("#5d6b35"), rough=0.6), mat("sunflower_seed", srgb("#8a7d68"), rough=0.6)]
     for k in range(26):
         a, r = rnd.uniform(0, 6.28), rnd.uniform(0, 0.09)
