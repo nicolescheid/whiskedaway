@@ -956,7 +956,10 @@ const TURNSTILE_ACTION = 'whiskedaway-session';
 // ---------- the visitor's weather, for the Inn's opening view
 
 async function handleLocalWeather(request, ctx) {
-  const reply = weather => new Response(JSON.stringify({ weather }), {
+  // The two-letter country Cloudflare attaches to the request goes back too: only the Map's default (Tell Gemma V1),
+  // which the visitor can change. It's never cached, logged or kept
+  const country = /^[A-Z]{2}$/.test(request.cf?.country || '') && request.cf.country !== 'XX' && request.cf.country !== 'T1' ? request.cf.country : null;
+  const reply = weather => new Response(JSON.stringify({ weather, country }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' },
   });
   const lat = Number(request.cf?.latitude), lon = Number(request.cf?.longitude);
