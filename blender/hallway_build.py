@@ -154,7 +154,8 @@ def build():
     brass_worn = mat("brass_worn", srgb("#bd9655"), rough=0.28, metal=1.0)
     ink = mat("engraving", srgb("#3a2a18"), rough=0.5, metal=0.6)
     coir = pbr("coir", "rough_linen", 0.25, tint=srgb("#5e4a33"), tint_mix=1.0, bump=1.2)
-    frosted = mat("frosted", (0.92, 0.94, 0.94, 1), rough=0.35, transmission=1.0, ior=1.5)
+    # at night the fanlight is dark night glass, not frosted white
+    frosted = mat("frosted", (0.2, 0.23, 0.3, 1) if NIGHT else (0.92, 0.94, 0.94, 1), rough=0.35, transmission=1.0, ior=1.5)
     door_dark = pbr("door_dark", "medieval_wood", 2.0, tint=srgb("#6e4a2b"), tint_mix=0.6)
     umbrella_cloth = [mat("umbrella_green", srgb("#3c4a3a"), rough=0.8), mat("umbrella_black", srgb("#24221f"), rough=0.75)]
     bulb = mat("bulb", (1, 0.85, 0.6, 1), emission=(1.0, 0.72, 0.42, 1), strength=18)
