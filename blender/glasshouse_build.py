@@ -1389,8 +1389,9 @@ def build():
         wparts.append(text(f"seasons_name_{name}", name.capitalize(), (r * math.sin(a), r * math.cos(a), 0.0135), (0, 0, 0), 0.0105, ink))
     a = math.radians(90 * ORDER.index(SEASON))
     handle = [cyl("wheel_boss", (0, 0, 0.022), 0.018, 0.02, brass_worn, verts=32, bevel=0.004)]
-    handle.append(box("wheel_arm", (0, 0.04, 0.03), (0.016, 0.07, 0.008), brass_worn, bevel=0.003))
-    handle.append(cyl("wheel_grip", (0, 0.066, 0.05), 0.009, 0.04, beam_wood, verts=16, bevel=0.003))
+    # short enough that the grip, seen from the side, doesn't cover the name it points to
+    handle.append(box("wheel_arm", (0, 0.026, 0.03), (0.016, 0.045, 0.008), brass_worn, bevel=0.003))
+    handle.append(cyl("wheel_grip", (0, 0.042, 0.046), 0.008, 0.032, beam_wood, verts=16, bevel=0.003))
     wparts.append(group("wheel_handle", Matrix.Rotation(-a, 4, "Z"), handle))
     group("seasons_wheel", frame_matrix((WHEEL_AT[0] - 0.005, WHEEL_AT[1], WHEEL_AT[2]), (-1, 0, 0), (0, -1, 0)), wparts)
     hotspot("seasons-wheel", "The seasons wheel", [wface], kind="season", overlay="season")
