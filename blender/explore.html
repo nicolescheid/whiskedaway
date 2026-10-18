@@ -268,6 +268,7 @@
       <li><b>The glasshouse plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
       <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
+      <li><b>The weather where you are</b>: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, CC BY 4.0. Our server asks it about the rough area Cloudflare places your connection in, never anything that identifies you, and keeps nothing.</li>
       <li><b>Counting visitors</b>: Cloudflare Web Analytics and Google Analytics, with no cookies and nothing that identifies you. If your browser asks not to be tracked, nothing is sent.</li>
     </ul>
     <p>Copyleft spirit: take what helps you, credit what you borrow, share what you make.</p>
@@ -423,8 +424,20 @@ const store = {
   save(s) { try { sessionStorage.setItem('wa-explore', JSON.stringify(s)); } catch { /* private mode */ } },
   clear() { try { sessionStorage.removeItem('wa-explore'); } catch { /* ignore */ } },
 };
+const freshVisit = !store.load();
 const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
 state.weather = state.weather || world.default_weather || 'rain';
+// A new visit opens in the visitor's own weather, if the genie can guess it quickly (docs/local-weather.md).
+// state.weatherFrom: 'local' for the guess, 'visitor' once they've chosen one themselves
+if (freshVisit) {
+  const guess = await fetch(`${GENIE_URL}/local-weather`, { signal: AbortSignal.timeout(1500) })
+    .then(r => (r.ok ? r.json() : {})).then(j => j.weather).catch(() => null);
+  if (world.weathers[guess]) {
+    state.weather = guess;
+    state.weatherFrom = 'local';
+    track('weather_guess', { weather: guess, outcome: 'shown' });
+  }
+}
 state.time = state.time || null;
 state.energy = state.energy || null;        // the energy candle the visitor picked, or null
 state.room = window.__door?.active ? 'hall-entrance'                  // through the front door: the entrance hall
@@ -1081,6 +1094,7 @@ function chooseWeather(id) {
   $('dial').querySelectorAll('button').forEach(b => { const on = b.dataset.w === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   if (id === state.weather) return;
   state.weather = id;
+  state.weatherFrom = 'visitor';
   showWeather(id);
   say(world.weathers[id].moment, [], true);
   record({ kind: 'weather', id });
@@ -1197,9 +1211,32 @@ function chooseEnergy(id) {
 }
 
 // ---------- arrival: Gemma asks once about the visitor's weather
+// Gemma checks her guess at the visitor's weather, rather than asking from scratch (docs/gemma-voice-guide.md:
+// "love" only in the greeting, and nothing that only works by day)
+const GUESSED = {
+  rain: "Hello, love. Looks like rain where you are. Is that right?",
+  fair: "Hello, love. Clear skies where you are, by the look of it. Is that right?",
+  change: "Hello, love. Grey and still where you are, by the look of it. Is that right?",
+  stormy: "Hello, love. Sounds wild out where you are. Is that right?",
+  'very-dry': "Hello, love. Hot and dry where you are, by the look of it. Is that right?",
+};
+function confirmGuess(also) {
+  chatLine('gemma', GUESSED[state.weather]);
+  setChips([{ label: "That's right", act: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); } },
+            ...also]);
+}
 function arrive() {
   if (state.asked || state.trail.length) return;
-  if (state.room === 'cuddlecore') {
+  const guessed = state.weatherFrom === 'local' && GUESSED[state.weather];
+  if (state.room === 'cuddlecore' && guessed) {
+    state.asked = true;
+    store.save(state);
+    confirmGuess([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
+  } else if (guessed) {
+    state.asked = true;
+    store.save(state);
+    confirmGuess(Object.entries(world.weathers).filter(([id]) => id !== state.weather).map(([id, w]) => ({ label: w.label, act: () => chooseWeather(id) })));
+  } else if (state.room === 'cuddlecore') {
     state.asked = true;
     store.save(state);
     chatLine('gemma', "Hello, love. What's the weather like for you today?");

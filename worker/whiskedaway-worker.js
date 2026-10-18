@@ -526,6 +526,13 @@ export default {
       }), request, env);
     }
 
+    // The Inn opens in the visitor's own weather (docs/local-weather.md): today's conditions near the rough
+    // location Cloudflare attaches to the request, from Open-Meteo, as one of the Inn's five weathers.
+    // Only the weather goes back. Nothing is logged or kept, and anything that goes wrong just means no guess.
+    if (request.method === 'GET' && new URL(request.url).pathname === '/local-weather') {
+      return withCors(await handleLocalWeather(request, ctx), request, env);
+    }
+
     // Only accept POST
     if (request.method !== 'POST') {
       return withCors(new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -921,6 +928,46 @@ async function handleNavigate(request, env) {
 
 const PASS_TTL_SECONDS = 30 * 60;
 const TURNSTILE_ACTION = 'whiskedaway-session';
+
+// ---------- the visitor's weather, for the Inn's opening view
+
+async function handleLocalWeather(request, ctx) {
+  const reply = weather => new Response(JSON.stringify({ weather }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' },
+  });
+  const lat = Number(request.cf?.latitude), lon = Number(request.cf?.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || request.cf?.latitude == null) return reply(null);
+  // Rounded to half a degree (about 50 km), so Open-Meteo only ever sees an area, and nearby visitors share a cached answer
+  const area = `${(Math.round(lat * 2) / 2).toFixed(1)},${(Math.round(lon * 2) / 2).toFixed(1)}`;
+  const cacheKey = new Request(`https://local-weather.whiskedaway.internal/${area}`);
+  const cache = caches.default;
+  const hit = await cache.match(cacheKey).catch(() => null);
+  if (hit) return reply((await hit.json()).weather);
+  try {
+    const [la, lo] = area.split(',');
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}`
+      + '&current=weather_code,temperature_2m,precipitation,wind_gusts_10m&timezone=auto';
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
+    if (!res.ok) return reply(null);
+    const weather = innWeather((await res.json()).current || {});
+    ctx.waitUntil(cache.put(cacheKey, new Response(JSON.stringify({ weather }), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=1200' },
+    })));
+    return reply(weather);
+  } catch {
+    return reply(null);
+  }
+}
+
+/** Open-Meteo's current conditions as one of the Inn's five weathers (WMO weather codes). */
+function innWeather({ weather_code: code, temperature_2m: temp, precipitation: rain, wind_gusts_10m: gusts }) {
+  if (code == null) return null;
+  if (code >= 95 || gusts >= 60) return 'stormy';                     // thunder, or a proper gale
+  if ((code >= 51 && code <= 86) || rain >= 0.2) return 'rain';       // drizzle, rain, snow, showers
+  if (temp >= 27) return 'very-dry';                                  // sweltering
+  if (code === 3 || code === 45 || code === 48) return 'change';      // grey skies and sea fog
+  return 'fair';                                                      // clear to partly cloudy
+}
 
 function allowedOrigins(env) {
   return (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
