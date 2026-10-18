@@ -13,7 +13,7 @@
 #   --jobs J       jobs separated by ';', each the arguments after `--` for the build (required)
 #   --out D        where the renders go (default: blender/out)
 #   --gpu G        GPU type from `runpodctl gpu list` (default: NVIDIA GeForce RTX 4090)
-#   --cloud C      COMMUNITY or SECURE (default: COMMUNITY)
+#   --cloud C      SECURE or COMMUNITY (default: SECURE; Community 4090s often have CUDA that won't start)
 #   --max-min N    give up and delete the pod after N minutes (default: 120)
 #   --image I      container image (default: the whiskedaway-render image built from cloud/Dockerfile)
 #   --caps C       NVIDIA_DRIVER_CAPABILITIES for the pod (default: compute,utility,graphics)
@@ -27,7 +27,7 @@ RPC="${RUNPODCTL:-$HOME/tools/runpodctl/runpodctl.exe}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BRANCH="$(git -C "$ROOT" branch --show-current)"
 IMAGE="ghcr.io/nicolescheid/whiskedaway-render:5.1.0"   # Blender + assets baked in (cloud/Dockerfile)
-CAPS="compute,utility,graphics" BUILD="" JOBS="" OUT="$ROOT/blender/out" GPU="NVIDIA GeForce RTX 4090" CLOUD="COMMUNITY" MAX_MIN=120
+CAPS="compute,utility,graphics" BUILD="" JOBS="" OUT="$ROOT/blender/out" GPU="NVIDIA GeForce RTX 4090" CLOUD="SECURE" MAX_MIN=120
 while [ $# -gt 0 ]; do
   case "$1" in
     --branch) BRANCH="$2"; shift 2 ;;
