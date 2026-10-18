@@ -260,16 +260,20 @@ const params = new URLSearchParams(location.search);
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
   fetch('explore/hallway-world.json').then(r => r.json()),
   fetch('out/hallway_hotspots.json').then(r => r.json()),
   fetch('explore/glasshouse-world.json').then(r => r.json()),
   fetch('out/glasshouse_hotspots.json').then(r => r.json()),
+  fetch('explore/flourish-world.json').then(r => r.json()),
+  fetch('out/flourish_hotspots.json').then(r => r.json()),
 ]);
-// One world for the navigator: the kitchen's objects, the hallway's and the glasshouse's together
-Object.assign(world.objects, hallWorld.objects, glassWorld.objects);
+// One world for the navigator: every room's objects together, and Flourish's pieces beside the kitchen's
+Object.assign(world.objects, hallWorld.objects, glassWorld.objects, flWorld.objects);
+Object.assign(world.clusters, flWorld.clusters);
+world.atoms = world.atoms.concat(flWorld.atoms);
 world.seasons = glassWorld.seasons;
 
 // ---------- rooms: the kitchen, and the hallway's two camera stops
@@ -292,6 +296,14 @@ for (const [id, st] of Object.entries(glassWorld.stops)) {
     .filter(([k, h]) => glassWorld.objects[k] && (h.visible || glassWorld.objects[k].always_visible)));
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, dayOnly: true,
                 pano: (w, night, full) => `out/glasshouse_pano_${seasonNow()}${full ? '' : '_preview'}.jpg` };
+}
+// Flourish: the second kitchen, in every weather by day and night, like Cuddlecore
+for (const [id, st] of Object.entries(flWorld.stops)) {
+  const stop = flSpots.stops[st.stop];
+  const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
+    .filter(([k, h]) => flWorld.objects[k] && (h.visible || flWorld.objects[k].always_visible)));
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: flSpots.clock,
+                pano: (w, night, full) => `out/flourish_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
 const $ = id => document.getElementById(id);
@@ -609,7 +621,7 @@ function touch(id) {
   } else if (obj.type === 'dial') {
     openDial();
   } else if (obj.type === 'submit') {
-    openTool('Find Comfort', 'In the full site, the pot cooks up a full recipe with Gemma, using everything you\'ve told her.');
+    openTool(obj.tool_title || 'Find Comfort', obj.tool_text || 'In the full site, the pot cooks up a full recipe with Gemma, using everything you\'ve told her.');
   } else {
     openTool(obj.label, `This is one of the room's fixed tools. In the full site it opens the "${obj.label}" panel, exactly as it always does. Touching it still counts as part of your wander.`);
   }
@@ -656,11 +668,14 @@ function openDial() {
 function turnDial(o) {
   $('dialdlg').classList.remove('open');
   record({ kind: 'dial', id: o.star ? 'the star' : o.label });
-  // Only the kitchen is open so far, so for now the star's wander always leads there
-  const go = o.star ? 'cuddlecore' : o.go;
+  // The star: two kitchens are open so far. A wander toward building up, fresh food or busy hands opens Flourish;
+  // anything else, and a wander that hasn't said much yet, opens Cuddlecore
+  const lean = localNavigate(navTrail(), world, { served: state.served, dismissed: state.dismissed }).cluster;
+  const starGo = ['build-up', 'fresh', 'hands-on', 'morning'].includes(lean) ? 'flourish' : 'cuddlecore';
+  const go = o.star ? starGo : o.go;
   if (!go) return say(`${o.label} isn't open yet. Soon.`, [], true);
   if (go === state.room) return say("You're already here, love.", [], true);
-  say(o.star ? 'Your wander says the kitchen. In you go.' : 'In you go.', [], true);
+  say(o.star ? (go === 'flourish' ? 'Your wander says Flourish. In you go.' : 'Your wander says the kitchen. In you go.') : 'In you go.', [], true);
   setTimeout(() => goRoom(go), 700);
 }
 $('dial-ok').onclick = () => $('dialdlg').classList.remove('open');
