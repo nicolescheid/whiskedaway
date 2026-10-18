@@ -5,7 +5,7 @@ and writes hotspot angles (yaw/pitch) for the browser viewer.
 Needs the CC0 Poly Haven assets first:  python -I blender/fetch_assets.py
 Then run headless:
   blender -b --factory-startup --python blender/cuddlecore_build.py -- [--preview] [--no-render]
-Fly-through video frames instead of the panorama (docs/flythrough-plan.md, shots 7 and 8):
+Fly-through video frames instead of the panorama (docs/flythrough-plan.md, shots 6 and 7):
   blender -b --factory-startup --python blender/cuddlecore_build.py -- --flythrough [--rough]
 
 Room axes: X = left/right, Y = forward (front wall = +Y), Z = up. Metres.
@@ -869,14 +869,14 @@ def build():
 
 
 def flythrough(scene):
-    """Shots 7 and 8: in from the kitchen door, across the rug, up to the steaming pot."""
+    """Shots 6 and 7: in from the kitchen door, across the rug, up to the steaming pot."""
     sys.path.insert(0, HERE)
     from whisked import fly_camera, video_settings
     rough = "--rough" in ARGS
     fly_camera(scene, [
-        (1,   (-0.95, -1.9, 1.6), (0, 2.2, 1.0), 28),    # 7: just inside the door
+        (1,   (-0.95, -1.9, 1.6), (0, 2.2, 1.0), 28),    # 6: just inside the door
         (168, (0.1, 0.9, 1.5), (0.1, 2.2, 1.0), 28),     #    across the rug, past the armchair
-        (264, (0.15, 0.95, 1.62), (0.24, HY - 0.34, 1.2), 35),   # 8: the pot and its steam, and hold
+        (264, (0.15, 0.95, 1.62), (0.24, HY - 0.34, 1.2), 35),   # 7: the pot and its steam, and hold
     ])
     out = os.path.join(OUT, "flythrough", "rough" if rough else "final", "kitchen_")
     os.makedirs(os.path.dirname(out), exist_ok=True)

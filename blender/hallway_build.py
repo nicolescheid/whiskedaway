@@ -7,7 +7,7 @@ Layout from docs/inn-floorplan.html (1 plan unit = 3 cm) and art-inbox/inn-hallw
 concept pack, notes.md, dial-layout.json). Needs the Poly Haven assets:  python -I blender/fetch_assets.py
 Then run headless:
   blender -b --factory-startup --python blender/hallway_build.py -- [--preview] [--no-render] [--stop=middle]
-Fly-through video frames instead of panoramas (docs/flythrough-plan.md, shots 2 to 6):
+Fly-through video frames instead of panoramas (docs/flythrough-plan.md, shots 2 to 5):
   blender -b --factory-startup --python blender/hallway_build.py -- --flythrough [--rough]
 
 Axes: X = hill (-) to garden (+), Y = toward the sea, Z = up. Metres.
@@ -631,26 +631,25 @@ def stop_hotspots(cam):
 
 
 def flythrough(scene):
-    """Shots 2 to 6 of docs/flythrough-plan.md: front door, entrance hall, down the hall, the dial, the door."""
+    """Shots 2 to 5 of docs/flythrough-plan.md: the front door, down the hall, the dial, the Cuddlecore door."""
     E = (0, 8, 1.5)                          # straight down the hall to the sea window
     fly_camera(scene, [
         (1,   (0, -2.75, 1.55), E, 30),       # 2: the front door fills the frame
         (36,  (0, -2.75, 1.55), E, 30),
         (120, (0, -1.6, 1.6), E, 28),         #    ...and we step through
-        (150, (-0.4, -1.3, 1.6), (-2.5, -0.5, 1.3), 28),   # 3: a glance at the stairs
-        (216, (0, 0.4, 1.6), E, 28),          #    then down the hall
-        (330, (0.1, 3.4, 1.6), (0, 7.8, 1.5), 28),         # 4: the walk, the clock passing on the left
-        (384, (0.15, 4.7, 1.6), (-0.6, 6.2, 1.4), 28),
-        (430, (-0.45, 5.15, 1.4), (-0.9, 5.3, 1.3), 35),   # 5: close on the dial
-        (490, (-0.45, 5.15, 1.4), (-0.9, 5.3, 1.3), 35),
-        (530, (-0.2, 5.6, 1.6), (-0.9, 6.0, 1.1), 28),     # 6: ease back as the door opens
-        (600, (-0.85, 6.0, 1.6), (-3.0, 6.0, 1.5), 28),    #    and into the doorway
+        (190, (0, 0.4, 1.6), E, 28),          # 3: straight on into the hallway
+        (282, (0.1, 3.4, 1.6), (0, 7.8, 1.5), 28),         #    the walk, the clock passing on the left
+        (336, (0.15, 4.7, 1.6), (-0.6, 6.2, 1.4), 28),
+        (382, (-0.45, 5.15, 1.4), (-0.9, 5.3, 1.3), 35),   # 4: close on the dial
+        (442, (-0.45, 5.15, 1.4), (-0.9, 5.3, 1.3), 35),
+        (482, (-0.2, 5.6, 1.6), (-0.9, 6.0, 1.1), 28),     # 5: ease back as the door opens
+        (552, (-0.85, 6.0, 1.6), (-3.0, 6.0, 1.5), 28),    #    and into the doorway
     ])
     key_rot_z(ANIM["door-front"], [(12, 0), (60, 95)])
     # The Cuddlecore dial: from The Hall, a pause on the star, then on to Cuddlecore (clockwise = more negative)
-    key_rot_z(ANIM["pointer-cuddlecore"], [(430, -320), (455, -360), (465, -360), (485, -400)])
+    key_rot_z(ANIM["pointer-cuddlecore"], [(382, -320), (407, -360), (417, -360), (437, -400)])
     # The Cuddlecore door's root also carries the leaf's +90 degree turn onto the wall
-    key_rot_z(ANIM["door-cuddlecore"], [(510, 0), (546, 90)], base=90)
+    key_rot_z(ANIM["door-cuddlecore"], [(462, 0), (498, 90)], base=90)
     out = os.path.join(OUT, "flythrough", "rough" if ROUGH else "final", "hall_")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     video_settings(scene, ROUGH, out)
