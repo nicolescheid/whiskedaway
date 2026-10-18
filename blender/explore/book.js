@@ -81,6 +81,14 @@ export const book = {
     emit({ kind: 'clear' });
     return () => { data = before; save(); emit({ kind: 'sync' }); };
   },
+  /** Keep Gemma's written-out recipe with a kept one (stage 4) */
+  setFull(id, full) {
+    const k = data.kept.find(x => x.id === id);
+    if (!k) return;
+    k.full = full;
+    save();
+    emit({ kind: 'full', id });
+  },
   /** This visit's keeps (stage 3 weighs these ×3) */
   keptThisVisit() { return data.kept.filter(k => k.visit === visitId).map(k => ({ ...k })); },
   get hint() { return data.hint; },

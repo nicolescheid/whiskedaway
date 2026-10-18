@@ -640,6 +640,7 @@ import { createTags } from './explore/tags.js';
 import { book, snapshot } from './explore/book.js';
 import { createBookView } from './explore/book-view.js';
 import { visitTheme, themeSentence } from './explore/theme.js';
+import { createWriteOut } from './explore/writeout.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1105,6 +1106,7 @@ const SYS = {
   dial: e => `You turned the dial to ${e.id}`,
   dismiss: e => `You set aside "${atomsById[e.atom]?.title}"`,
   keep: e => `You kept "${atomsById[e.atom]?.title}"`,
+  recipe: e => `Gemma wrote out "${atomsById[e.atom]?.title}"`,
 };
 // ---------- counting (docs/analytics-plan.md): what happens to the site, never the wander itself
 const stepNow = () => stepBucket(state.trail.length);
@@ -1469,6 +1471,7 @@ function keepIdea(atom, why, method) {
   const a = atomsById[atom];
   const snap = a ? snapshot(a, why) : book.get(atom);
   if (!snap || book.has(atom)) return;
+  if (writer.written(atom)) snap.full = writer.written(atom);     // what Gemma wrote out goes into the book with it
   const { first, tuckedAway } = book.keep(snap);
   ideas.remove(atom);
   if (!state.served.includes(atom)) state.served.push(atom);
@@ -1529,7 +1532,24 @@ const ideas = createIdeas({
     countAtom('atom_dismiss', c.atom, { method, undone: undone ? 'yes' : 'no' });
   },
 });
+// "Write it out in full" (explore/writeout.js): the genie's recipe route, seeded by the card and the whole visit, 3 a visit
+const writer = createWriteOut({
+  book, visit, lines: LINES.write_out, track, bucket: n => (n >= 2 ? '2-3' : String(n)),
+  // window.__recipeFetch is a test seam (scripted checks without the Worker); the site always uses the genie
+  fetchRecipe: payload => (window.__recipeFetch || (p => genieFetch('/recipe', p, { signal: AbortSignal.timeout(45000) })))(payload),
+  payloadFor: rec => ({
+    tome_id: 'inn-idea', locale: navigator.language || 'en',
+    idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
+            method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why },
+    energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,
+    theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: visit.get('pantry') || [],
+    dietary_restrictions: [].concat(visit.get('dietary') || []), dish: visit.dish(rec.room),
+  }),
+  onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
+  onChange: () => bookView.refresh(),
+});
 const bookView = createBookView({
+  writeOut: (el, rec, seed) => writer.render(el, rec, seed),
   themeLine: () => themeNow().sentence, clashNote: rec => CLASH_NOTE[dietClash(rec)] || '',
   book, atoms: atomsById, chip: $('btn-book'), notes: $('notes'), track, bucket: sizeBucket,
   onKeep: rec => keepIdea(rec.id, rec.why, 'book'),
@@ -1608,7 +1628,8 @@ function fillMap() {
 const TOLD_ENERGY = { 'burnt-out': "You're running on empty today.", low: "You're running low today.",
                       half: "You've got about half your energy today.", 'three-quarters': "You've got plenty in you today.",
                       full: "You're full of beans today." };
-const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]) };
+const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]),
+               dietary: v => [].concat(v || []).length && `You're eating ${[].concat(v).join(' and ')}.` };
 function renderTold() {
   const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
   $('told').innerHTML = rows.length ? rows.map(([k, text]) => `<li>${esc(text)} <button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
@@ -1640,7 +1661,7 @@ function renderNotes() {
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', keep: 'Kept', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', keep: 'Kept', recipe: 'Had written out', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
   $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e =>
     `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (world.objects[e.id]?.ref || label(e.id)) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
@@ -1669,7 +1690,7 @@ $('forget').onclick = () => {
   renderChat(); setChips([]);
   setHands(handsHour());
   showWeather(state.weather);
-  ideas.clearAll(); renderNotes(); applyReveal([]);
+  ideas.clearAll(); writer.clear(); renderNotes(); applyReveal([]);
   chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
 };
 

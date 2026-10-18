@@ -323,6 +323,21 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 }
 @media (prefers-reduced-motion: reduce) { .bk-box, .idea-hl { animation: none; } }
 
+/* "Write it out in full" (stage 4) */
+.bk-write { margin-top: 16px; }
+.bk-writeout { min-height: 44px; padding: 6px 20px; border-radius: 999px; border: 1px solid var(--berry); background: #fff; color: var(--berry); font: 600 15px 'Quicksand'; }
+.bk-writing { font: italic 16px 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
+.bk-writing .dots { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
+.bk-failed { font: italic 15px 'Crimson Pro', Georgia, serif; color: #7a3e1d; }
+.bk-diet { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.bk-diet p { flex-basis: 100%; margin: 0; }
+.bk-diet button { min-height: 40px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 500 13px 'Quicksand'; }
+.bk-diet button[aria-pressed="true"] { background: var(--berry); border-color: var(--berry); color: var(--parchment); }
+.bk-steps { margin: 0; padding-left: 22px; }
+.bk-steps li { margin: 0 0 6px; }
+.bk-tip { margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; background: rgba(139, 77, 92, .07); }
+@media (prefers-reduced-motion: reduce) { .bk-writing .dots { animation: none; } }
+
 /* ---------- the tag picker */
 .tag-pick { position: fixed; z-index: 45; width: min(340px, calc(100vw - 16px)); background: var(--parchment); border: 1px solid var(--line);
             border-radius: 14px; padding: 12px 14px; box-shadow: 0 14px 40px rgba(0,0,0,.4); }

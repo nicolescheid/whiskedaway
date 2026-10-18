@@ -12,7 +12,7 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString([], { day: 'numeric', month: 'short' });
 
-export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote }) {
+export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut }) {
   const root = document.createElement('div');
   root.id = 'book';
   root.className = 'book';
@@ -91,9 +91,10 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
   }
   function recipeRight(r) {
     const ing = r.key_ingredients || r.seed?.ingredients || [];
-    return `${ing.length ? `<h4>You'll need</h4><ul class="bk-ing">${ing.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+    return `<div class="bk-seed">${ing.length ? `<h4>You'll need</h4><ul class="bk-ing">${ing.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
       <h4>How</h4><p class="bk-method">${esc(r.method_short || r.body)}</p>
-      ${r.seed?.time ? `<p class="small">${esc(r.seed.time)}</p>` : ''}`;
+      ${r.seed?.time ? `<p class="small">${esc(r.seed.time)}</p>` : ''}</div>
+      <div class="bk-write"></div>`;
   }
   function contentsPage() {
     const kept = book.list();
@@ -132,6 +133,8 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
       left.innerHTML = recipeLeft(rec) + (desk ? '' : `<hr>${recipeRight(rec)}`);
       right.innerHTML = desk ? recipeRight(rec) : '';
       right.hidden = !desk;
+      const slot = root.querySelector('.bk-write');
+      if (slot) writeOut?.(slot, rec, root.querySelector('.bk-seed'));   // "Write it out in full" (stage 4)
     }
     // Footer: Keep on a loose page, "Kept · Take it out" on a kept one
     const kb = $('.bk-keepbar');

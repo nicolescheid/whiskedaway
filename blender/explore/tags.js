@@ -3,6 +3,8 @@
 // header on desktop. Tap a tag to change or forget it from any room, with the same choices as the object that owns it.
 // A tag appears only once a value is set. New keys: add a renderer to KINDS.
 
+import { DIETS } from './writeout.js';
+
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export function createTags({ el, visit, world, choose }) {
@@ -13,6 +15,13 @@ export function createTags({ el, visit, world, choose }) {
       word: v => world.energies?.[v]?.label?.toLowerCase(),
       options: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
       pick: id => choose.energy(id),
+    },
+    // Dietary needs: from the book's "Anything I should avoid?" (stage 4), later the cookbook shelf too. Several at once
+    dietary: {
+      icon: '🌱', name: 'Dietary needs', title: 'Anything I should avoid?', multi: true,
+      word: v => [].concat(v || []).map(d => DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d).join(', '),
+      options: () => DIETS.map(([id, label]) => ({ id, label })),
+      pick: id => { const now = [].concat(visit.get('dietary') || []); const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id]; visit.set('dietary', next.length ? next : null); },
     },
   };
   el.setAttribute('role', 'list');
@@ -36,12 +45,18 @@ export function createTags({ el, visit, world, choose }) {
   }
   function openPick(k, from) {
     const K = KINDS[k], now = visit.get(k);
+    const on = id => (K.multi ? [].concat(now || []).includes(id) : id === now);
     opener = from;
     pick.dataset.k = k;
     pick.innerHTML = `<h3 id="tag-pick-title">${esc(K.title)}</h3>
-      <div class="dial">${K.options().map(o => `<button data-id="${esc(o.id)}" class="${o.id === now ? 'on' : ''}" aria-pressed="${o.id === now}">${esc(o.label)}</button>`).join('')}</div>
+      <div class="dial">${K.options().map(o => `<button data-id="${esc(o.id)}" class="${on(o.id) ? 'on' : ''}" aria-pressed="${on(o.id)}">${esc(o.label)}</button>`).join('')}</div>
       <p class="tag-acts"><button class="link" data-act="forget">Forget this</button><button class="ok" data-act="done">Done</button></p>`;
-    pick.querySelectorAll('[data-id]').forEach(b => b.onclick = () => { K.pick(b.dataset.id); closePick(); });
+    pick.querySelectorAll('[data-id]').forEach(b => b.onclick = () => {
+      K.pick(b.dataset.id);
+      if (!K.multi) return closePick();
+      const v = [].concat(visit.get(k) || []).includes(b.dataset.id);     // several: it stays open, the button shows the choice
+      b.classList.toggle('on', v); b.setAttribute('aria-pressed', String(v));
+    });
     pick.querySelector('[data-act=forget]').onclick = () => { visit.forget(k); closePick(); };
     pick.querySelector('[data-act=done]').onclick = () => closePick();
     // Above the tag, kept on screen

@@ -761,6 +761,25 @@ function buildUserMessage(payload) {
       parts.push(`Context: ${payload.context.join(', ')}`);
     }
     
+  } else if (payload.tome_id === 'inn-idea') {
+    // The Inn's "Write it out in full" (recipe-book-ux.md §8): one idea from Gemma's book, seeded by its card and the visit.
+    // Every field is short text from the page; anything else is ignored. Nothing here is logged or kept.
+    const idea = payload.idea || {};
+    const txt = (v, n = 160) => String(v ?? '').slice(0, n);
+    const list = (v, n = 8) => (Array.isArray(v) ? v : []).slice(0, n).map(x => txt(x, 60)).filter(Boolean);
+    parts.push(`The idea: ${txt(idea.name, 100)}${idea.kind ? ` (${txt(idea.kind, 40)})` : ''}`);
+    if (idea.hook) parts.push(`What it is: ${txt(idea.hook)}`);
+    if (list(idea.key_ingredients).length) parts.push(`Key ingredients: ${list(idea.key_ingredients).join(', ')}`);
+    if (idea.method_short) parts.push(`The short version: ${txt(idea.method_short, 400)}`);
+    if (idea.time) parts.push(`Time: ${txt(idea.time, 40)}`);
+    if (idea.why) parts.push(`Why it suits: ${txt(idea.why)}`);
+    if (payload.energy) parts.push(`Energy today: ${txt(payload.energy, 40)} (keep the effort to match)`);
+    if (payload.weather) parts.push(`Weather: ${txt(payload.weather, 40)}`);
+    if (payload.time_of_day) parts.push(`Time of day: ${txt(payload.time_of_day, 40)}`);
+    if (list(payload.theme, 2).length) parts.push(`The visit's theme: ${list(payload.theme, 2).join(', ')}`);
+    if (list(payload.cuisines, 4).length) parts.push(`Cuisines they fancy: ${list(payload.cuisines, 4).join(', ')}`);
+    if (list(payload.pantry_ingredients, 12).length) parts.push(`Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
+    for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
   } else if (payload.tome_id === 'nourish-academy') {
     // Nourish Academy specific fields
     parts.push(`Question: ${payload.question}`);
@@ -794,6 +813,11 @@ function buildUserMessage(payload) {
     parts.push('\nPlease create a nourishing meal that supports my goal. Include a "nourishment_note" explaining why this meal is great for my goal with specific nutrients/benefits (warm tone, not clinical). Add 2-3 "boosts" for optional ways to level up the meal. If I provided pantry ingredients, incorporate them and mention that you did. Be encouraging — eating well is self-care. Use ingredient names appropriate for my location.');
   } else if (payload.tome_id === 'cravings-decoded') {
     parts.push('\nPlease decode this craving for me. Explain what might be behind it (nutrients, emotions, habits), give me a verdict (honor/redirect/caution), and suggest 2-4 recipes that would satisfy it well. Make the recipe teasers enticing so I want to click to see more. Be warm and non-judgmental — cravings are information, not failures.');
+  } else if (payload.tome_id === 'inn-idea') {
+    parts.push('\nWrite out this one recipe in full, as Gemma, the Inn\'s genie: warm, brief, practical, no health claims. Keep to the idea and its key ingredients, '
+      + 'scale to 2 servings, respect every dietary restriction, and use ingredient names for my location. '
+      + 'Respond with JSON only, in exactly this shape: {"name": "...", "serves": 2, "time": "25 min", "ingredients": [{"item": "ripe pears", "amount": "2"}], '
+      + '"steps": ["..."], "tip": "one short tip"}. 4 to 12 ingredients, 3 to 8 steps, each step one or two sentences.');
   } else if (payload.tome_id === 'nourish-academy') {
     parts.push('\nPlease teach me about this topic in a friendly, accessible way. Use simple language, helpful analogies, and practical examples. Give me key takeaways I can remember and actionable tips I can try. Suggest 2-3 follow-up questions I might want to explore. No jargon, no shame, just helpful knowledge from a friend.');
   }

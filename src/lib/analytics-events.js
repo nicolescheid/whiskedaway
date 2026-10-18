@@ -34,6 +34,8 @@ export const EVENTS = {
   chat_size: ['panel_size', 'method'],                             // panel_size: line, short, full; method: drag, tap, button, auto
   book_open: ['from', 'book_size'],                                // from: chip, card, notice_board
   book_clear: ['book_size'],
+  recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3
+  recipe_full_failed: ['atom', 'room', 'reason'],                  // reason: timeout, bot_check, rate_limited, error
 
   // The front door at / (docs/front-door-spec.md)
   door_view: [],
