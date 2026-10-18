@@ -30,9 +30,9 @@
           "label": "The weather",
           "type": "weather",
           "overlay": "weather",
-          "yaw": 29.03,
-          "pitch": -2.11,
-          "distance": 3.48,
+          "yaw": 28.79,
+          "pitch": -1.83,
+          "distance": 3.47,
           "visible": true
         },
         "fl-clock": {
@@ -48,9 +48,9 @@
           "label": "The hallway",
           "type": "door",
           "overlay": null,
-          "yaw": -59.93,
-          "pitch": -12.03,
-          "distance": 2.65,
+          "yaw": -59.83,
+          "pitch": -12.07,
+          "distance": 2.64,
           "visible": true
         },
         "fl-range": {
@@ -111,8 +111,8 @@
           "label": "The greens",
           "type": "ambient",
           "overlay": null,
-          "yaw": -8.1,
-          "pitch": -27.11,
+          "yaw": -8.04,
+          "pitch": -27.77,
           "distance": 1.59,
           "visible": true
         },
