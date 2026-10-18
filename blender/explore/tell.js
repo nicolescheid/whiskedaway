@@ -217,9 +217,10 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   // iOS Safari ignores interactive-widget and doesn't shrink the layout viewport for the keyboard: follow visualViewport
   function fit() {
     const box = $('.tl-box'), vv = window.visualViewport;
-    if (root.hidden || !vv || mode() === 'desk') { box.style.removeProperty('bottom'); box.style.removeProperty('max-height'); return; }
+    if (root.hidden || !vv || mode() === 'desk') { ['bottom', 'top', 'height', 'max-height'].forEach(k => box.style.removeProperty(k)); return; }
     const under = Math.max(0, innerHeight - (vv.height + vv.offsetTop));
     if (mode() === 'phone') box.style.bottom = `${under}px`;
+    else { box.style.top = `${vv.offsetTop}px`; box.style.bottom = 'auto'; box.style.height = `${vv.height}px`; }   // landscape: follow iOS scrolling the page for the keyboard (mobile lead)
     box.style.maxHeight = `${Math.max(160, (mode() === 'phone' ? Math.min(vv.height * 0.7 + under, vv.height - 16) : vv.height - 16))}px`;
   }
   window.visualViewport?.addEventListener('resize', fit);
