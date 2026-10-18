@@ -913,6 +913,9 @@ setInterval(() => {
 
 function touch(id) {
   const obj = world.objects[id];
+  // A visitor who skipped the weather question and started looking around still hears what this room is for, before
+  // the object's own line (the barometer answers the question itself; a door introduces the room it opens)
+  if (!['weather', 'door', 'walk'].includes(obj.type)) introduce();
   if (obj.type === 'energy') return chooseEnergy(obj.energy);   // the candle is the event: no separate touch
   record({ kind: 'touch', id });
   track('hotspot_touch', { room: state.room, object: id, object_type: obj.type });
@@ -980,7 +983,8 @@ function goRoom(id, yaw) {
   introduce(id);
 }
 // First time in a room this visit: Gemma says what it's for, in the words of its blurb (ux-journey J3).
-// From goRoom, and on arrival once the weather question is answered (or straight away if she didn't ask one)
+// From goRoom, on arrival once the weather question is answered (or straight away if she didn't ask one), and on the
+// first touch in the room if the question was left unanswered
 function introduce(id = state.room) {
   const intro = { cuddlecore: world.intro, flourish: flWorld.intro, 'sweet-spells': sweetWorld.intro, chiapothecary: chiaWorld.intro }[id];
   if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); say(intro, [], true); }
