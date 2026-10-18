@@ -33,18 +33,31 @@ function loadTurnstile() {
 
 async function solveChallenge() {
   const turnstile = await loadTurnstile();
+  // Turnstile stays invisible unless it needs the visitor to tick its box. Then it sits on a small paper card
+  // with one plain line, in the Inn's colours, instead of floating on its own
   const box = document.createElement('div');
-  box.setAttribute('aria-live', 'polite');
-  box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483000;';
+  box.setAttribute('role', 'status');
+  box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483000;'
+    + 'display:none;flex-direction:column;align-items:center;gap:8px;padding:12px 14px 10px;border-radius:14px;'
+    + 'background:#f4efe4;border:1px solid rgba(139,77,92,.25);box-shadow:0 10px 30px rgba(0,0,0,.3);'
+    + "font:500 13px Quicksand,system-ui,sans-serif;color:#2c2416;max-width:calc(100vw - 32px);";
+  const note = document.createElement('p');
+  note.style.cssText = 'margin:0;text-align:center;';
+  note.textContent = 'One quick check that you’re a person, then the Inn carries on.';
+  const slot = document.createElement('div');
+  box.append(note, slot);
   document.body.appendChild(box);
   try {
     return await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('turnstile_timeout')), 60000);
       let errors = 0;
-      const id = turnstile.render(box, {
+      const id = turnstile.render(slot, {
         sitekey: SITEKEY,
         action: ACTION,
         appearance: 'interaction-only',   // invisible unless the visitor needs to tick a box
+        theme: 'light',
+        'before-interactive-callback': () => { box.style.display = 'flex'; },
+        'after-interactive-callback': () => { box.style.display = 'none'; },
         callback: token => { clearTimeout(timer); resolve(token); },
         // Turnstile retries by itself; only give up after repeated failures
         'error-callback': code => {

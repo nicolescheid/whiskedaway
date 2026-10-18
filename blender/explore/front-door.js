@@ -22,7 +22,9 @@ export function frontDoor({ active, track }) {
   const shown = new Promise(r => { shownDone = r; });
   const entered = new Promise(r => { enteredDone = r; });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const shape = matchMedia('(max-aspect-ratio: 3/2)').matches ? 'portrait' : 'landscape';
+  // Portrait or landscape film, and whether it fills the screen or sits whole on paper (explore.html sets this up)
+  const layout = () => window.__doorLayout?.() ?? { shape: innerWidth <= innerHeight ? 'portrait' : 'landscape', fit: 'cover' };
+  let shape = layout().shape;
   let welcomed = false;
   try { welcomed = localStorage.getItem('wa-welcomed') === '1'; } catch { /* storage blocked: welcome every visit */ }
 
@@ -148,6 +150,8 @@ export function frontDoor({ active, track }) {
     video.setAttribute('aria-hidden', 'true');
     video.preload = 'auto';
     video.src = `${ASSETS}film-${shape}.mp4`;
+    // Once the film is indoors, any bands around it turn from paper to the hall's dark
+    video.addEventListener('timeupdate', () => { if (video.currentTime > 2.6) door.classList.add('indoors'); });
     button.prepend(video);                                // under the picture until it plays
     return video;
   }
@@ -163,11 +167,13 @@ export function frontDoor({ active, track }) {
     hall.src = `${ASSETS}hall-${shape}.webp`;
     button.append(hall);
     await hall.decode().catch(() => {});
-    door.classList.add('short');
+    door.classList.add('short', 'indoors');
     await wait(550);
   }
 
   async function playFilm() {
+    if (video && layout().shape !== shape) { video.remove(); video = null; }   // the screen turned since the film preloaded
+    shape = layout().shape;
     const v = makeVideo();
     door.classList.add('playing');
     if (v.readyState < 3) door.classList.add('waiting');
@@ -190,16 +196,19 @@ export function frontDoor({ active, track }) {
     if (how !== 'ended') { hush(); v.pause(); await showHall(); }
   }
 
-  // The film's last frame, cropped to this screen the way object-fit: cover crops it: the same view the panorama starts on
+  // The film's last frame as this screen shows it (cropped by cover, or whole with bands by contain):
+  // the same view the panorama starts on
   function filmFov() {
     const f = FILM[shape];
-    const scale = Math.max(innerWidth / f.w, innerHeight / f.h);
+    const scale = (door.classList.contains('contain') ? Math.min : Math.max)(innerWidth / f.w, innerHeight / f.h);
     const half = Math.atan(Math.tan(f.vfov * Math.PI / 360) * innerHeight / (f.h * scale));
     return half * 360 / Math.PI;
   }
 
   button.addEventListener('click', async () => {
     track('door_open', { film: short ? 'short' : 'full' });
+    door.dataset.locked = '1';                            // the fit stays put from here, whatever the window does
+    if (short) shape = layout().shape;
     try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* fine */ }
     const url = new URL(location.href);
     if (url.searchParams.has('door')) { url.searchParams.delete('door'); history.replaceState(null, '', url); }

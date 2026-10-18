@@ -179,7 +179,10 @@
 </style>
 <style>
   /* The front door (docs/front-door-spec.md): the storybook picture, the film, the welcome and the bell */
-  #front-door { position: fixed; inset: 0; z-index: 50; background: #fcf6e5; transition: opacity .6s ease; }
+  #front-door { position: fixed; inset: 0; z-index: 50; background: #fcf6e5; transition: opacity .6s ease, background-color .6s ease; }
+  /* Screens far from the film's shape (4:3, square, ultra-wide) see the whole film with paper bands, which turn dark indoors */
+  #front-door.contain img, #front-door.contain video { object-fit: contain; }
+  #front-door.indoors { background-color: #1a1410; }
   #front-door[hidden] { display: none; }
   #front-door.leaving { opacity: 0; pointer-events: none; }
   #front-door .fd-enter { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; padding: 0; background: none; cursor: pointer; }
@@ -232,7 +235,7 @@
 <div id="front-door" hidden>
   <button class="fd-enter" id="fd-enter" aria-label="Step inside the Inn">
     <picture>
-      <source media="(max-aspect-ratio: 3/2)" srcset="explore/assets/front-door/picture-portrait.webp">
+      <source media="(max-aspect-ratio: 1/1)" srcset="explore/assets/front-door/picture-portrait.webp">
       <img id="fd-pic" src="explore/assets/front-door/picture-landscape.webp" alt="The WhiskedAway Inn, a stone cottage by the sea, held inside a balloon whisk" fetchpriority="high">
     </picture>
   </button>
@@ -247,6 +250,17 @@
     const on = !q.has('room') && (q.get('door') === '1' || (location.pathname === '/' && !done));
     document.getElementById('front-door').hidden = !on;
     window.__doorActive = on;
+    // Which film fits this screen: portrait on upright screens, landscape otherwise. Close to the film's own
+    // shape it fills the screen (a little cropped); further off (4:3, square, ultra-wide) it's shown whole
+    window.__doorLayout = () => {
+      const a = innerWidth / innerHeight, shape = a <= 1 ? 'portrait' : 'landscape';
+      const r = a / (shape === 'portrait' ? 9 / 16 : 16 / 9);
+      return { shape, fit: r >= 0.8 && r <= 1.2 ? 'cover' : 'contain' };
+    };
+    const door = document.getElementById('front-door');
+    const fit = () => { if (!door.dataset.locked) door.classList.toggle('contain', window.__doorLayout().fit === 'contain'); };
+    fit();
+    addEventListener('resize', fit);
   })();
 </script>
 <div id="stage"></div>
