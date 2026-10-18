@@ -68,23 +68,14 @@
     { "id": "chia-warm-spiced", "kind": "recipe idea", "spoons": 1, "title": "Warm cinnamon and cardamom chia",
       "themes": ["warming", "spiced", "cosy", "porridge", "breakfast"],
       "body": "Warm a cup of milk with cinnamon and a crushed cardamom pod, take out the pod, then stir in the chia and let it thicken for ten minutes off the heat. Like porridge, but quicker." },
-    { "id": "chia-golden", "kind": "recipe idea", "spoons": 1, "title": "Golden chia with turmeric and ginger",
-      "themes": ["warming", "spiced", "honey", "calming"],
-      "body": "A quarter teaspoon of turmeric, a little grated ginger and a pinch of black pepper in warm milk with honey. Stir in the chia and eat it warm or cold." },
     { "id": "chia-mango-coconut", "kind": "recipe idea", "spoons": 1, "title": "Mango and coconut chia",
       "themes": ["tropical", "fruity", "sunny", "coconut", "creamy"],
       "body": "Make it with coconut milk, then blitz a ripe mango and spoon it over the top. Toasted coconut flakes and a squeeze of lime to finish." },
-    { "id": "chia-berry-jam", "kind": "recipe idea", "spoons": 1, "title": "Ten-minute chia jam",
-      "themes": ["fruity", "breakfast", "simple", "sweet"],
-      "body": "Warm a cup of berries in a pan until they collapse, mash them, stir in a tablespoon of chia and a little honey. Ten minutes later it's jam. Keeps a week in the fridge." },
     { "id": "chia-tonight", "kind": "ritual", "spoons": 0, "title": "Make tomorrow's breakfast tonight",
       "themes": ["low-spoons", "rest", "evening", "breakfast", "no-cook"],
       "body": "Two minutes before bed: chia, milk, a stir, a lid. Tomorrow you open the fridge and breakfast is already made." },
     { "id": "why-chia-sets", "kind": "the why", "spoons": 0, "title": "Why chia turns liquid into pudding",
       "themes": ["learning", "why"],
-      "body": "Each seed has a coat of soluble fibre that soaks up liquid and swells into a soft gel, many times the seed's own weight. That's the whole trick, and it's also why chia keeps you full for a while." },
-    { "id": "chia-layers", "kind": "level up", "spoons": 0, "title": "Level up: build it in layers",
-      "themes": ["learning", "hands-on", "treat", "fruity"],
-      "body": "Pudding, fruit, pudding, crunch, in a clear jar. It tastes the same either way, but people eat it more slowly when it's pretty." }
+      "body": "Each seed has a coat of soluble fibre that soaks up liquid and swells into a soft gel, many times the seed's own weight. That's the whole trick, and it's also why chia keeps you full for a while." }
   ]
 }
