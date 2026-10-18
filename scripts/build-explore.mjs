@@ -1,8 +1,8 @@
 // Copies the exploratory 360° room (blender/explore.html and friends) into public/explore/,
 // so `vite build` ships it at whiskedaway.com/explore/. The sources stay in blender/;
 // public/explore/ is generated (gitignored). Run automatically by `npm run build`.
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, readdirSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -37,3 +37,24 @@ const keep = new RegExp([
 const files = readdirSync(join(src, 'out')).filter(f => keep.test(f));
 for (const f of files) cpSync(join(src, 'out', f), join(out, 'out', f));
 console.log(`explore: page + ${files.length} render files -> public/explore/`);
+
+// The phone tier: each 8K panorama at 4096x2048 (~0.5 MB instead of ~3.5 MB, and 43 MB of GPU memory instead of ~170).
+// Made from the 8K files here rather than rendered; kept in blender/out/phone/ (gitignored) and only remade when the 8K changes.
+let sharp;
+try { sharp = (await import('sharp')).default; } catch { throw new Error('explore: sharp is missing. Run `npm install` first.'); }
+const phone = join(src, 'out', 'phone');
+mkdirSync(phone, { recursive: true });
+const fulls = files.filter(f => f.endsWith('.jpg') && !f.endsWith('_preview.jpg'));
+let made = 0;
+const queue = [...fulls];
+await Promise.all(Array.from({ length: 4 }, async () => {
+  for (let f; (f = queue.shift());) {
+    const from = join(src, 'out', f), to = join(phone, f.replace(/\.jpg$/, '_4k.jpg'));
+    if (!existsSync(to) || statSync(to).mtimeMs < statSync(from).mtimeMs) {
+      await sharp(from).resize(4096, 2048, { kernel: 'lanczos3' }).jpeg({ quality: 80, mozjpeg: true }).toFile(to);
+      made++;
+    }
+    cpSync(to, join(out, 'out', basename(to)));
+  }
+}));
+console.log(`explore: ${fulls.length} phone panoramas (4096x2048), ${made} made fresh`);
