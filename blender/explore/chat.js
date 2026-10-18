@@ -198,6 +198,7 @@ export function createChat({ win, track, onSize }) {
     get size() { return size; },
     tags,
     /** Show the tags above the Line strip for a moment (arriving in a room) */
-    flashTags() { if (!tags.childElementCount) return; win.classList.add('tags-flash'); clearTimeout(this._ft); this._ft = setTimeout(() => win.classList.remove('tags-flash'), 4000); },
+    // Only what they've told her flashes, never the "+ Tell me about you" chip alone
+    flashTags() { if (!tags.querySelector('.tag[data-k]')) return; win.classList.add('tags-flash'); clearTimeout(this._ft); this._ft = setTimeout(() => win.classList.remove('tags-flash'), 4000); },
   };
 }

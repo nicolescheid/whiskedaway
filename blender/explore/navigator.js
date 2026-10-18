@@ -21,7 +21,8 @@
  *
  * The recipe book and what the visitor told Gemma also steer serving (recipe-book-ux.md §6b), through localNavigate's options:
  *   book:  { now: [snapshot], before: [snapshot] }   this visit's keeps (×3 on their themes) and older ones (×1)
- *   about: { pantry: [...], cuisines: [...] }        a bonus per key ingredient they have (+2 each, max +4), and per cuisine (+2)
+ *   about: { pantry: [...], useUp, cuisines: [...], synonyms }   a bonus per key ingredient they have (+2 each, max +4; doubled
+ *                                                                with "use these up first"), and for a chosen cuisine (+2)
  * Dietary needs are a hard filter: the page leaves clashing atoms out (they arrive as served).
  */
 
@@ -78,8 +79,15 @@ function keptReason(atom, book) {
   const t = best.k.title.replace(/,.*$/, '');                    // "One square of dark chocolate, slowly" → "one square of dark chocolate"
   return `kept ${best.k.ref || `the ${t.charAt(0).toLowerCase()}${t.slice(1)}`}`;
 }
-/** What the visitor has in the cupboard that this atom uses */
-const pantryHits = (atom, pantry = []) => pantry.filter(p => (atom.key_ingredients || []).some(i => i.toLowerCase().includes(String(p).toLowerCase())));
+/** What the visitor has in the cupboard that this atom uses ("spinach" matches "baby spinach"; synonyms: courgette = zucchini …) */
+const singular = w => w.replace(/ies$/, 'y').replace(/(oes|ches|shes|xes)$/, m => m.slice(0, -2)).replace(/([^s])s$/, '$1');
+const pantryHits = (atom, pantry = [], synonyms = {}) => pantry.filter(p => {
+  const w0 = singular(String(p).toLowerCase());
+  const words = [w0, ...(synonyms[w0] || synonyms[String(p).toLowerCase()] || []).map(singular)];
+  return (atom.key_ingredients || []).some(i => words.some(w => i.toLowerCase().includes(w)));
+});
+/** A chosen cuisine on the atom (its `cuisines`, from the content editor, or a theme of the same name) */
+const cuisineHit = (atom, cuisines = []) => cuisines.some(c => [...(atom.cuisines || []), ...atom.themes].some(t => t.toLowerCase() === String(c).toLowerCase()));
 
 /** The season the visitor last turned the seasons wheel to, if any. */
 export function currentSeason(trail, world) {
@@ -200,17 +208,19 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
     .filter(a => !skip.has(a.id))
     .filter(a => awayOk || !room || a.room === room || !world.atoms.some(x => x.room === room))   // an away idea only while none is out
     .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons
-                       + Math.min(PANTRY_MAX, pantryHits(a, about.pantry).length * PANTRY_EACH)
-                       + ((about.cuisines || []).some(c => a.themes.includes(c)) ? CUISINE : 0) }))
+                       + Math.min(PANTRY_MAX * (about.useUp ? 2 : 1), pantryHits(a, about.pantry, about.synonyms).length * PANTRY_EACH * (about.useUp ? 2 : 1))
+                       + (cuisineHit(a, about.cuisines) ? CUISINE : 0) }))
     .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: from the room's *-world.json
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)
     .map(({ a }) => {
       // The strongest reason first: what they told Gemma, then a keep, then the trail; never more than two (§6b)
-      const hits = pantryHits(a, about.pantry);
+      const hits = pantryHits(a, about.pantry, about.synonyms);
       const kept = keptReason(a, book);
-      const first = [...(hits.length ? [`'ve got ${listJoin(hits.slice(0, 2))}`] : []), ...(kept ? [kept] : [])];
+      const cuisine = !hits.length && !kept && (about.cuisines || []).find(c => cuisineHit(a, [c]));
+      const first = [...(hits.length ? [`'ve got ${listJoin(hits.slice(0, 2))}${about.useUp ? ' to use' : ''}`] : []), ...(kept ? [kept] : []),
+                     ...(cuisine ? [`fancied ${cuisine}`] : [])];
       const { why, context } = reasonsFor(a.themes, trail, world, a.spoons, first.slice(0, 2));
       const parts = shareVerbs(why.slice(0, 2));
       const text = (parts.length ? `Because you ${listJoin(parts)}${context && parts.length < 2 ? `, and ${context}` : ''}.`

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 <title>WhiskedAway: wander Gemma's Inn and find something to cook</title>
 <meta name="description" content="A recipe site you explore. Wander a magic inn by the sea, touch what catches your eye, and Gemma finds you something to cook. Free, with no account.">
 <link rel="canonical" href="https://whiskedaway.com/">
@@ -643,6 +643,7 @@ import { book, snapshot } from './explore/book.js';
 import { createBookView } from './explore/book-view.js';
 import { visitTheme, themeSentence } from './explore/theme.js';
 import { createWriteOut } from './explore/writeout.js';
+import { createTell, countryFromLanguage, COUNTRIES } from './explore/tell.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1177,6 +1178,8 @@ function touch(id) {
     openDial();
   } else if (obj.type === 'submit') {
     openTool(obj.tool_title || 'Find Comfort', obj.tool_text || "The pot can't cook you a full recipe yet. Soon. For now, keep looking around and I'll leave ideas out for you.");
+  } else if (TELL_TOOLS[obj.tool]) {
+    tell.open(TELL_TOOLS[obj.tool], 'object');                    // the pantry, the map and the cookbooks (Tell Gemma V1)
   } else {
     openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
   }
@@ -1217,7 +1220,7 @@ function goRoom(id, yaw) {
 // first touch in the room if the question was left unanswered
 function introduce(id = state.room) {
   const intro = { cuddlecore: world.intro, flourish: flWorld.intro, 'sweet-spells': sweetWorld.intro, chiapothecary: chiaWorld.intro }[id];
-  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); say(intro, [], true); }
+  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); say([intro, entryFact(id)].filter(Boolean).join(' '), [], true); }
 }
 function setRoomText() {
   $('room-title').textContent = room().title;
@@ -1297,7 +1300,14 @@ async function navigate() {
   // A keep, set-aside or undo line stays up for 3 s before her next one (UX T1), unless a newer step comes along
   const speak = () => {
     if (seq !== navSeq) return;
-    if (state.askDifferent) {
+    const empty = emptyRoomLine();
+    if (empty) say(empty, [], true);
+    else if (state.offerTell) {
+      // Once a visit, after two keeps or set-asides, if nothing about them is set (tell-gemma-ux §2.5)
+      state.offerTell = false;
+      say(TL.offer, [], true);
+      setTimeout(() => setChips([{ label: TL.offerYes, do: ['tell'] }, { label: TL.offerNo, do: ['later'] }]), 400);
+    } else if (state.askDifferent) {
       // Three set aside in a row: instead of her reading, Gemma asks what they'd like (§9); a pick counts like a choice
       state.askDifferent = false;
       say(LINES.dismiss?.different || 'Something different?', [], true);
@@ -1352,6 +1362,8 @@ function chatLine(who, text) {
 // back after a reload (J9)
 const CHIP_ACTS = {
   choose: cluster => record({ kind: 'choose', cluster }),
+  tell: () => tell.openMenu('offer'),                   // "Want to tell me what's in your cupboard…?" [Tell me]
+  later: () => {},                                      // [Not now]: the offer is over for the visit
   weather: id => chooseWeather(id),
   barometer: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); },
   confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); introduce(); },
@@ -1442,10 +1454,10 @@ const sizeBucket = n => (n <= 0 ? '0' : n <= 2 ? '1-2' : n <= 5 ? '3-5' : n <= 1
 function steer() {
   const kept = book.list();
   return {
-    awayOk: !awayOut(),
+    awayOk: !awayOut() || !!state.awayLift?.[homeOf(state.room)],
     served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
-    about: { pantry: visit.get('pantry') || [], cuisines: visit.get('cuisines') || [] },
+    about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS },
   };
 }
 // The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
@@ -1459,7 +1471,7 @@ const awayOut = () => state.cards.some(c => atomsById[c.atom] && isAway(atomsByI
 function serve({ atom, why, fromKeep }, mode) {
   const a = atomsById[atom];
   if (!a || state.served.includes(atom) || book.has(atom)) return;
-  if (isAway(a) && awayOut()) return;                    // not served, so it can come another time
+  if (isAway(a) && awayOut() && !state.awayLift?.[homeOf(state.room)]) return;   // not served, so it can come another time
   state.served.push(atom);
   servedBy[atom] = mode;
   countAtom('atom_served', atom);
@@ -1491,6 +1503,7 @@ function keepIdea(atom, why, method) {
   ideas.remove(atom);
   if (!state.served.includes(atom)) state.served.push(atom);
   state.keeps = (state.keeps || 0) + 1;
+  maybeOfferTell();
   record({ kind: 'keep', atom });
   countAtom('atom_capture', atom, { method, book_size: sizeBucket(book.count) });
   ideas.say(`Kept. ${book.count} in your book.`);
@@ -1528,6 +1541,7 @@ const ideas = createIdeas({
     state.dismissals = (state.dismissals || 0) + 1;
     record({ kind: 'dismiss', atom: c.atom });
     if (state.dismissals === 1) { say(L.dismissFirst, [], true); holdLine(); }
+    maybeOfferTell();
     // Three set aside in a row: Gemma asks what they'd like instead (§9); a pick counts like a choice
     state.dismissRun = (state.dismissRun || 0) + 1;
     if (state.dismissRun === 3) { state.dismissRun = 0; state.askDifferent = true; }   // she asks in her next line (navigate)
@@ -1558,8 +1572,9 @@ const writer = createWriteOut({
     idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
             method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why },
     energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,
-    theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: visit.get('pantry') || [],
-    dietary_restrictions: [].concat(visit.get('dietary') || []), dish: visit.dish(rec.room),
+    theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
+    dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
+    country: COUNTRIES.find(([c]) => c === (visit.get('country') || countryFromLanguage()))?.[1] || '', dish: visit.dish(rec.room),
   }),
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
@@ -1573,7 +1588,88 @@ const bookView = createBookView({
   onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); say(L.cleared, [], true); },
 });
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
-createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) } });
+// ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
+const TL = {
+  offer: "Want to tell me what's in your cupboard, or anything to avoid?", offerYes: 'Tell me', offerNo: 'Not now',
+  forgot: 'Forgotten.', nothingAnywhere: "I can't find anything on my shelves that fits all of that.",
+  roomNone: 'Nothing in here fits {diet}, I\'m afraid. {room} has a few.',
+  ...(LINES.tell || {}),
+};
+const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary' };
+// A few words that mean the same in the kitchen (the content editor's list replaces these)
+const SYNONYMS = LINES.tell?.synonyms || { courgette: ['zucchini'], zucchini: ['courgette'], coriander: ['cilantro'], cilantro: ['coriander'],
+  aubergine: ['eggplant'], eggplant: ['aubergine'], capsicum: ['pepper'], kumara: ['kūmara', 'sweet potato'], 'sweet potato': ['kumara', 'kūmara'],
+  mince: ['ground beef'], yoghurt: ['yogurt'], yogurt: ['yoghurt'], chickpea: ['garbanzo'], prawn: ['shrimp'], shrimp: ['prawn'] };
+const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : { items: p?.items || [], useUp: !!p?.useUp }; };
+const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
+// Her one line on Done, naming two things at most, never the list (§4); the content editor's `tell.ack` lines replace these
+function acknowledge(kind, { after, forgot }) {
+  const A = LINES.tell?.ack || {};
+  if (forgot) return say(TL.forgot, [], true);
+  let line = '';
+  if (kind === 'pantry') {
+    const xs = after.items;
+    const two = titleCase(listOf(xs.slice(0, 2))), many = `${titleCase(xs[0])}, ${xs[1]} and a few more`;
+    line = after.useUp ? (A.pantryUseUp || '{two} first, then.').replace('{two}', two)
+      : xs.length >= 3 ? (A.pantryMany || '{many}. Noted.').replace('{many}', many) : (A.pantry || "{two}. I'll work with those.").replace('{two}', two);
+  } else if (kind === 'map') {
+    const c = after.cuisines;
+    line = c.length ? (A.map || "{c} it is. I'll lean that way.").replace('{c}', listOf(c.slice(0, 2)))
+      : (A.country || 'Shopping words for {country}, then.').replace('{country}', COUNTRIES.find(([x]) => x === after.country)?.[1] || 'everywhere');
+  } else if (kind === 'dietary') {
+    const d = after.dietary;
+    line = d.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', titleCase(listOf(d.slice(0, 2)))) : (A.dietaryOther || "Noted. I'll tell my pen.");
+  }
+  say(line, [], true);
+  holdLine();
+  scheduleNavigate();                                   // the next idea leans on it
+}
+// One fact on a room's first visit: dietary, then the pantry (in the kitchens that cook), then a cuisine (Inn rule 11)
+function entryFact(id) {
+  const F = LINES.tell?.entry || {};
+  const d = [].concat(visit.get('dietary') || []), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
+  if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', listOf(d.slice(0, 2)));
+  if (p.length && ['cuddlecore', 'flourish'].includes(id)) return (F.pantry || "I'll see what I can do with your {p}.").replace('{p}', listOf(p.slice(0, 2)));
+  if (c.length) return (F.cuisine || "I'll lean {c} where I can.").replace('{c}', c[0]);
+  return '';
+}
+function maybeOfferTell() {
+  if (state.tellOffered || (state.keeps || 0) + (state.dismissals || 0) < 2) return;
+  if (pantryNow().items.length || visit.get('cuisines') || visit.get('dietary') || visit.get('dietaryOther')) return;
+  state.tellOffered = true;
+  state.offerTell = true;                               // she asks in her next line (navigate), after the keep line's 3 s
+}
+// When the diet filter (or the visit) has emptied this room: once per room, name the room with most that fit, and let other
+// rooms' ideas in here; once per visit, say when nothing anywhere fits. Never a bubble that breaks the filter (§5)
+const fits = a => !dietClash(a) && !state.served.includes(a.id) && !state.dismissed.includes(a.id) && !book.has(a.id);
+function emptyRoomLine() {
+  const home = homeOf(state.room);
+  if (!hasOwn()) return null;
+  if (world.atoms.some(a => a.room === home && fits(a))) return null;
+  const diet = [].concat(visit.get('dietary') || []);
+  if (!world.atoms.some(fits)) {
+    if (!diet.length || state.nothingSaid) return null;
+    state.nothingSaid = true;
+    return TL.nothingAnywhere;
+  }
+  if ((state.emptySaid ||= {})[home]) return null;
+  state.emptySaid[home] = true;
+  (state.awayLift ||= {})[home] = true;
+  const counts = {};
+  world.atoms.filter(fits).forEach(a => { counts[a.room] = (counts[a.room] || 0) + 1; });
+  const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const name = { cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'The Chiapothecary' }[best] || 'Next door';
+  if (!diet.length) return LINES.room_empty || "That's everything I've got in here. Try next door.";
+  return TL.roomNone.replace('{diet}', listOf(diet.slice(0, 2))).replace('{room}', name);
+}
+const tell = createTell({
+  visit, lines: LINES.tell, track,
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
+  onDone: acknowledge,
+  openEnergy: () => tagsUI.openEnergy(),
+  energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
+});
+const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) }, tell });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
 // the book's "This visit" page and the hallway notice board, once something's been kept
@@ -1645,12 +1741,20 @@ const TOLD_ENERGY = { 'burnt-out': "You're running on empty today.", low: "You'r
                       half: "You've got about half your energy today.", 'three-quarters': "You've got plenty in you today.",
                       full: "You're full of beans today." };
 const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]),
-               dietary: v => [].concat(v || []).length && `You're eating ${[].concat(v).join(' and ')}.` };
+               dietary: v => [].concat(v || []).length && `You're eating ${[].concat(v).join(' and ')}.`,
+               dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
+               pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
+               cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v))}.`,
+               country: v => v && `Shopping words for ${COUNTRIES.find(([c]) => c === v)?.[1] || v}.` };
+const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map' };
+const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 function renderTold() {
   const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
-  $('told').innerHTML = rows.length ? rows.map(([k, text]) => `<li>${esc(text)} <button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
-    : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`;
+  $('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
+    : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
   $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
+  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = () => tell.open(b.dataset.change, 'book'));
+  $('told').querySelector('[data-menu]')?.addEventListener('click', () => tell.openMenu('book'));
 }
 visit.subscribe(({ part, key, value }) => {
   renderTold();

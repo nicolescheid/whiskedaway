@@ -257,7 +257,7 @@
       ]
     },
     "locale-map": {
-      "label": "Location",
+      "label": "The map",
       "ref": "the map",
       "type": "interactive",
       "tool": "locale",

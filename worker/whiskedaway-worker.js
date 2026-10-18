@@ -778,7 +778,11 @@ function buildUserMessage(payload) {
     if (payload.time_of_day) parts.push(`Time of day: ${txt(payload.time_of_day, 40)}`);
     if (list(payload.theme, 2).length) parts.push(`The visit's theme: ${list(payload.theme, 2).join(', ')}`);
     if (list(payload.cuisines, 4).length) parts.push(`Cuisines they fancy: ${list(payload.cuisines, 4).join(', ')}`);
-    if (list(payload.pantry_ingredients, 12).length) parts.push(`Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
+    if (list(payload.pantry_ingredients, 12).length) parts.push(payload.use_up
+      ? `Use these up first, where they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`
+      : `Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
+    if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
+    if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
   } else if (payload.tome_id === 'nourish-academy') {
     // Nourish Academy specific fields

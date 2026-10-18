@@ -1,13 +1,14 @@
 // "What you've told Gemma" as tags (ux-journey-stage1.md, Inn rule 11; recipe-book-ux.md v4 §4b): one small tag per
 // about-you value in the visit store (🕯 low · 🌱 vegetarian …), shown in the chat's Short and Full sizes on phones and in its
 // header on desktop. Tap a tag to change or forget it from any room, with the same choices as the object that owns it.
-// A tag appears only once a value is set. New keys: add a renderer to KINDS.
+// A tag appears only once a value is set. New keys: add a renderer to KINDS. Pantry, the map and dietary needs open their
+// Tell Gemma sheet (tell.js); energy keeps its small picker. "+ Tell me about you" always ends the row (the empty state too).
 
 import { DIETS } from './writeout.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function createTags({ el, visit, world, choose }) {
+export function createTags({ el, visit, world, choose, tell }) {
   // Each kind: its icon, its words for a value, the picker's options and how a pick is made
   const KINDS = {
     energy: {
@@ -16,13 +17,20 @@ export function createTags({ el, visit, world, choose }) {
       options: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
       pick: id => choose.energy(id),
     },
-    // Dietary needs: from the book's "Anything I should avoid?" (stage 4), later the cookbook shelf too. Several at once
+    // Dietary needs: the cookbook shelf's sheet, or the recipe page's "Anything I should avoid?". "Something else" shows as +1
     dietary: {
-      icon: '🌱', name: 'Dietary needs', title: 'Anything I should avoid?', multi: true,
-      word: v => [].concat(v || []).map(d => DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d).join(', '),
+      icon: '🌱', name: 'Dietary needs', title: 'Anything I should avoid?', multi: true, sheet: 'dietary',
+      word: v => [].concat(v || []).map(d => DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d).join(', ') + (visit.get('dietaryOther') ? ' +1' : ''),
       options: () => DIETS.map(([id, label]) => ({ id, label })),
       pick: id => { const now = [].concat(visit.get('dietary') || []); const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id]; visit.set('dietary', next.length ? next : null); },
     },
+    // "Something else" on its own (no chips chosen) still gets the dietary tag
+    dietaryOther: { icon: '🌱', name: 'Dietary needs', sheet: 'dietary', word: v => (v && !visit.get('dietary') ? 'something else' : '') },
+    pantry: {
+      icon: '🥫', name: 'Pantry', sheet: 'pantry',
+      word: v => { const items = Array.isArray(v) ? v : v?.items || []; return items.length ? items.slice(0, 2).join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '') : ''; },
+    },
+    cuisines: { icon: '🗺', name: 'The map', sheet: 'map', word: v => [].concat(v || []).join(', ') },   // the country is in the sheet only
   };
   el.setAttribute('role', 'list');
   el.setAttribute('aria-label', "What you've told Gemma");
@@ -38,9 +46,16 @@ export function createTags({ el, visit, world, choose }) {
     const about = visit.all().about;
     const rows = Object.entries(about).filter(([k, v]) => KINDS[k] && KINDS[k].word(v));
     el.innerHTML = rows.map(([k, v]) => `<span role="listitem"><button class="tag" data-k="${esc(k)}" aria-label="${esc(KINDS[k].name)}: ${esc(KINDS[k].word(v))}. Change or forget">`
-      + `<span aria-hidden="true">${KINDS[k].icon}</span> ${esc(KINDS[k].word(v))}</button></span>`).join('');
-    el.querySelectorAll('.tag').forEach(b => b.onclick = e => { e.stopPropagation(); openPick(b.dataset.k, b); });
-    el.hidden = !rows.length;
+      + `<span aria-hidden="true">${KINDS[k].icon}</span> ${esc(KINDS[k].word(v))}</button></span>`).join('')
+      + (tell ? `<span role="listitem"><button class="tag tag-add">+ Tell me about you</button></span>` : '');
+    el.querySelectorAll('.tag[data-k]').forEach(b => b.onclick = e => {
+      e.stopPropagation();
+      const K = KINDS[b.dataset.k];
+      if (K.sheet && tell) return tell.open(K.sheet, 'tag');
+      openPick(b.dataset.k, b);
+    });
+    el.querySelector('.tag-add')?.addEventListener('click', e => { e.stopPropagation(); tell.openMenu('menu'); });
+    el.hidden = !rows.length && !tell;
     if (!pick.hidden && !about[pick.dataset.k]) closePick();
   }
   function openPick(k, from) {
@@ -77,5 +92,5 @@ export function createTags({ el, visit, world, choose }) {
   document.addEventListener('pointerdown', e => { if (!pick.hidden && !pick.contains(e.target) && !e.target.closest('.tag')) closePick(); }, true);
   visit.subscribe(render);
   render();
-  return { render, kinds: KINDS };
+  return { render, kinds: KINDS, openEnergy: () => { const b = el.querySelector('.tag[data-k="energy"]') || el.querySelector('.tag-add'); if (b) openPick('energy', b); } };
 }

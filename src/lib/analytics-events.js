@@ -34,6 +34,8 @@ export const EVENTS = {
   chat_size: ['panel_size', 'method'],                             // panel_size: line, short, full; method: drag, tap, button, auto
   book_open: ['from', 'book_size'],                                // from: chip, card, notice_board
   book_clear: ['book_size'],
+  tell_open: ['kind', 'from'],                                     // Tell Gemma: kind pantry|map|dietary; from object|tag|menu|book|offer
+  tell_set: ['kind', 'count', 'use_up'],                           // count 0|1|2-3|4+; never the values (no ingredients, cuisines, country or diets)
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3
   recipe_full_failed: ['atom', 'room', 'reason'],                  // reason: timeout, bot_check, rate_limited, error
 
