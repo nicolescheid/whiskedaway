@@ -211,5 +211,6 @@ Setup done:
 - GA4 web stream `G-PBDF79MT72` (stream URL says www.whiskedaway.com, which doesn't matter for the Measurement Protocol). Enhanced measurement off. Google Signals off. Granular location and device data off. Ads personalisation off in every region. Event and user data retention 2 months. Account data sharing all off. No Google Ads links.
 - Measurement Protocol secret `whiskedaway-genie` created and stored as the Worker secret `GA_API_SECRET`.
 - Cloudflare Web Analytics site for whiskedaway.com (JS snippet), token in `analytics.js`.
+- All 20 event-scoped custom dimensions registered. `country` and `device` show in GA4 as `country_code` and `device_type`, so they don't get mixed up with GA's own Country and Device category.
 
 Tested locally (dist preview on 4177 against `wrangler dev` on 8797, `?analytics=debug`): every explore event and `scene_view` reached `/m` with only allow-listed parameters, the energy candle went as `object_type: energy` only, and Google's Measurement Protocol validator accepted the payload. Not tested locally: the real forward to GA4 (the secret only exists on the deployed Worker) and the visitor pass (Turnstile doesn't issue passes to localhost:4177). Both are on the post-deploy checklist.
