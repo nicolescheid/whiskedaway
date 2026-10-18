@@ -33,6 +33,7 @@ PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
 SEASON = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--season=")), "spring")
 GLIMPSE = "--glimpse" in ARGS      # render the glasshouse as the Chiapothecary sees it through the glazed door
+BOTH = "--both" in ARGS            # render the 8K view and then its preview from one build
 WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")), "fair")
 NIGHT = "--night" in ARGS and not GLIMPSE   # the Chiapothecary's glimpse is always a fair day
 
@@ -1626,6 +1627,10 @@ def main():
     scene.render.filepath = os.path.join(OUT, f"glasshouse_pano_{SEASON}_{WEATHER}{'_night' if NIGHT else ''}"
                                               f"{'_preview' if PREVIEW else ''}.jpg")
     bpy.ops.render.render(write_still=True)
+    if BOTH and not PREVIEW:
+        scene.cycles.samples, scene.render.resolution_x, scene.render.resolution_y = 128, 2048, 1024
+        scene.render.filepath = scene.render.filepath.replace(".jpg", "_preview.jpg")
+        bpy.ops.render.render(write_still=True)
     print(f"[whisked] rendered {SEASON} {WEATHER}{' night' if NIGHT else ''}")
     print("[whisked] done")
 

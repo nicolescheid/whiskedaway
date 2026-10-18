@@ -1,12 +1,12 @@
 {
   "room": "glasshouse",
-  "name": "The glasshouse",
+  "name": "The Conservatory",
   "stops": {
-    "glasshouse": { "stop": "middle", "title": "The glasshouse", "where": "In the glasshouse", "yaw": 45 }
+    "glasshouse": { "stop": "middle", "title": "The Conservatory", "where": "In the Conservatory", "yaw": 45 }
   },
   "objects": {
     "seasons-wheel": { "label": "The seasons wheel", "ref": "the seasons wheel", "type": "season", "themes": [] },
-    "gh-dial": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial in the glasshouse", "type": "dial", "themes": [] },
+    "gh-dial": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial in the Conservatory", "type": "dial", "themes": [] },
     "gh-chiapothecary-door": { "label": "Into the Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": -15,
                                "themes": [], "always_visible": true },
     "garden-door": { "label": "The garden door", "ref": "the garden door", "type": "door", "themes": [],
@@ -50,7 +50,7 @@
     "seedlings": { "label": "Seedlings", "ref": "the seedlings", "type": "ambient", "themes": ["learning", "hands-on", "fresh"],
                    "moment": "Whatever comes up gets potted on. Eventually." },
     "seed-packets": { "label": "Seed packets", "ref": "the seed packets", "type": "ambient", "themes": ["learning", "why"],
-                      "moment": "Next year's glasshouse, if I remember where I put them." },
+                      "moment": "Next year's planting, if I remember where I put them." },
     "drying-herbs": { "label": "Drying herbs", "ref": "the drying herbs", "type": "ambient", "themes": ["tea", "herbs", "slow"],
                       "moment": "Bunches drying for the winter: lavender, rosemary, sage, whatever's spare." },
     "wind-chime": { "label": "The wind chime", "ref": "the wind chime", "type": "ambient", "themes": ["calm"],
