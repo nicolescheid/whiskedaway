@@ -36,6 +36,12 @@
   #tint.evening { background-color: rgba(255, 150, 70, 0.4); }
   #tint.night { mix-blend-mode: multiply; background-color: rgba(30, 36, 70, 0.62); }
   #stage.dragging { cursor: grabbing; }
+  /* A room without a render for the chosen weather (the glasshouse has seasons only) still follows the barometer */
+  #stage canvas { transition: filter 1.4s ease; }
+  #stage.wx-rain canvas { filter: saturate(.75) brightness(.9); }
+  #stage.wx-stormy canvas { filter: saturate(.6) brightness(.72) contrast(1.05); }
+  #stage.wx-change canvas { filter: saturate(.7) brightness(.95) contrast(.85); }
+  #stage.wx-very-dry canvas { filter: saturate(1.1) brightness(1.05) sepia(.15); }
   button { font: inherit; color: inherit; cursor: pointer; }
 
   /* Hotspots */
@@ -205,6 +211,18 @@
   /* Phones: the room's name on its own line, so the chips and the bell fit beneath it */
   @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; column-gap: 6px; justify-content: flex-end; } .bar h1 { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; }
     .panel { top: calc(var(--bar-h, 70px) + 8px); } }   /* the bar is two rows here: open the map and notebook below it */
+  .chip .short { display: none; }
+  @media (max-width: 400px) { .chip .long { display: none; } .chip .short { display: inline; } }   /* five chips in one row at 375 */
+  /* Touch screens: every chip in the bar gets a 44 px tall tap area, whatever it looks like */
+  @media (pointer: coarse) { .bar .chip { position: relative; } .bar .chip::after { content: ''; position: absolute; inset: -8px -3px; } }
+  /* Phones on their side: chat on the left, the counter on the right between the bar and the bottom, both shorter */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .chatwin { width: min(360px, calc(50vw - 24px)); }
+    .cw-log, body:has(.counter .card) .cw-log { max-height: 30vh; }
+    .counter { left: auto; right: 16px; width: min(340px, calc(50vw - 24px)); top: calc(var(--bar-h, 64px) + 8px); bottom: 16px;
+               justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; }
+    .counter > :first-child { margin-top: auto; }
+  }
   @media (prefers-reduced-motion: reduce) { .chip.speaker.nudge { animation: none; box-shadow: 0 0 0 3px rgba(139, 77, 92, .45); } .chip.bell.ring img { animation: none; } #front-door { transition-duration: .2s; } }
 </style>
 </head>
@@ -238,7 +256,7 @@
   <span class="mode" id="mode"></span>
   <a class="chip" id="btn-inn" href="/?door=1">Front door</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
-  <button class="chip" id="btn-notes" aria-expanded="false">Gemma's notebook</button>
+  <button class="chip" id="btn-notes" aria-expanded="false"><span class="long">Gemma's notebook</span><span class="short">Notebook</span></button>
   <button class="chip bell" id="btn-bell" aria-label="Ring for Gemma: welcome and help" aria-haspopup="dialog"><img src="explore/assets/front-door/bell.webp" alt=""></button>
   <button class="chip speaker" id="btn-sound" aria-pressed="false" aria-label="Sound off. Turn the Inn's sounds on" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg></button>
 </div>
@@ -380,8 +398,6 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
 ]);
-// Each piece remembers its room, so the navigator can lean toward the room the visitor is standing in
-for (const w of [world, flWorld, sweetWorld, chiaWorld]) w.atoms.forEach(a => { a.room = w.room; });
 // One world for the navigator: every room's objects together, and Flourish's pieces beside the kitchen's
 Object.assign(world.objects, hallWorld.objects, glassWorld.objects, flWorld.objects);
 Object.assign(world.clusters, flWorld.clusters);
@@ -442,6 +458,8 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
                 pano: (w, night, full) => `out/chiapothecary_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
+// Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
+const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -453,6 +471,10 @@ const store = {
 };
 const freshVisit = !store.load();
 const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
+// A visit saved before a piece was retired still holds its id: drop those quietly
+state.cards = state.cards.filter(c => atomsById[c.atom]);
+state.served = state.served.filter(id => atomsById[id]);
+state.dismissed = state.dismissed.filter(id => atomsById[id]);
 state.weather = state.weather || world.default_weather || 'rain';
 // A new visit opens in the visitor's own weather, if the genie can guess it quickly (docs/local-weather.md).
 // state.weatherFrom: 'local' for the guess, 'visitor' once they've chosen one themselves
@@ -598,6 +620,7 @@ async function showWeather(w, { fade = true } = {}) {
   if (!preview && w !== 'rain') { shown = 'rain'; preview = await loadTex(R.pano('rain', false, false)); }
   if (stale()) return;
   $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
+  stage.className = stage.className.replace(/\s*wx-\S+/g, '') + (R.dayOnly || shown !== w ? ` wx-${w}` : '');
   if (preview) fade && sphere.material.map ? crossFade(preview) : (showTex(preview), render());
   if (useFull) {
     const full = await loadTex(fullUrl(R.pano(shown, haveNight, true)));
@@ -903,7 +926,7 @@ function scheduleNavigate() {
 }
 async function navigate() {
   const seq = ++navSeq;
-  const opts = { served: state.served, dismissed: state.dismissed, here: Object.keys(spots), room: state.room, roomName: room().title };
+  const opts = { served: state.served, dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
   if (AI) {
@@ -925,7 +948,8 @@ async function navigate() {
   // Right after a barometer turn, Gemma reacts to the weather first, then says what she's put out
   const last = state.trail[state.trail.length - 1];
   // In the chat the weather or clock line is its own message, so this one is the follow-up double-text
-  const reacted = last?.kind === 'weather' || last?.kind === 'time' || last?.kind === 'energy';
+  const reacted = last?.kind === 'weather' || last?.kind === 'time' || last?.kind === 'energy'
+    || (last?.kind === 'touch' && world.objects[last.id]?.type === 'ambient');
   const gemma = reacted && r.gemma ? r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase()) : r.gemma;
   if (gemma) say(gemma, r.fork);
   // One new piece per step (two to start), so the counter fills at the pace of the wander
@@ -978,16 +1002,20 @@ function setChips(chips) {
 }
 function typing(on) { $('cw-typing').hidden = !on; }
 let sayTimer;
+let sayPending = null;
 function say(text, fork = [], brief = false) {
   // Locally Gemma takes a beat to "type"; with the AI on, the typing indicator already covered the wait
   clearTimeout(sayTimer);
+  sayPending?.();                       // a line still waiting (an object's own moment) goes out first, never replaced
   const post = () => {
+    sayPending = null;
     typing(false);
     chatLine('gemma', text);
     setChips(fork.map(c => ({ label: world.clusters[c].label.replace(/^./, x => x.toUpperCase()), act: () => record({ kind: 'choose', cluster: c }) })));
   };
   if (AI && !brief) return post();
   typing(true);
+  sayPending = post;
   sayTimer = setTimeout(post, brief ? 350 : 650);
 }
 
@@ -1033,6 +1061,7 @@ function renderCards() {
   c.innerHTML = '';
   state.cards.slice().reverse().forEach(({ atom, why, opened }, i, arr) => {
     const a = atomsById[atom];
+    if (!a) return;
     const card = document.createElement('article');
     card.className = `card${opened ? ' opened' : ''}${i < arr.length - 2 ? ' faded' : ''}`;
     const spoons = a.spoons ? '🥄'.repeat(a.spoons) : 'no spoons needed';
@@ -1130,11 +1159,12 @@ addEventListener('keydown', e => { if (e.key === 'Escape') $('tool').classList.r
 // (the welcome card does its own focus and Escape, in front-door.js)
 let opener = null;
 document.addEventListener('focusin', e => { if (!e.target.closest('.tool')) opener = e.target; });
+document.addEventListener('click', e => { const t = e.target.closest?.('button, a[href]'); if (t && !t.closest('.tool')) opener = t; }, true);
 const openDialog = () => [...document.querySelectorAll('.tool.open')].at(-1);
 const focusables = el => [...el.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled && x.offsetParent);
 document.querySelectorAll('.tool').forEach(d => new MutationObserver(() => {
   const at = document.activeElement;
-  if (d.classList.contains('open')) { if (!d.contains(at)) (d.querySelector('.dial .on') || focusables(d)[0])?.focus(); }
+  if (d.classList.contains('open')) { if (!d.contains(at)) (d.querySelector('.dial .on') || d.querySelector('.dial button, .ok') || focusables(d)[0])?.focus(); }
   else if (opener?.isConnected && (!at || at === document.body || d.contains(at))) opener.focus();
 }).observe(d, { attributes: true, attributeFilter: ['class'] }));
 addEventListener('keydown', e => {
