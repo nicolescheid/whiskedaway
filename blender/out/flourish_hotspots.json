@@ -1,0 +1,145 @@
+{
+  "room": "flourish",
+  "stops": {
+    "middle": {
+      "position": [
+        2.2,
+        1.4,
+        1.6
+      ],
+      "hotspots": {
+        "fl-window": {
+          "label": "The sea",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 0.87,
+          "pitch": 0.87,
+          "distance": 3.31,
+          "visible": true
+        },
+        "fl-herbs": {
+          "label": "The herbs",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 11.06,
+          "pitch": -10.14,
+          "distance": 3.07,
+          "visible": true
+        },
+        "fl-barometer": {
+          "label": "The weather",
+          "type": "weather",
+          "overlay": "weather",
+          "yaw": 29.03,
+          "pitch": -2.11,
+          "distance": 3.48,
+          "visible": true
+        },
+        "fl-clock": {
+          "label": "The time",
+          "type": "time",
+          "overlay": "time",
+          "yaw": 28.35,
+          "pitch": 11.86,
+          "distance": 3.55,
+          "visible": true
+        },
+        "fl-hall-door": {
+          "label": "The hallway",
+          "type": "door",
+          "overlay": null,
+          "yaw": -59.93,
+          "pitch": -12.03,
+          "distance": 2.65,
+          "visible": true
+        },
+        "fl-range": {
+          "label": "The range",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -36.89,
+          "pitch": -11.73,
+          "distance": 3.15,
+          "visible": true
+        },
+        "fl-back-door": {
+          "label": "The garden door",
+          "type": "door",
+          "overlay": null,
+          "yaw": 49.5,
+          "pitch": -10.68,
+          "distance": 3.08,
+          "visible": true
+        },
+        "fl-trug": {
+          "label": "The trug",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 66.23,
+          "pitch": -33.19,
+          "distance": 2.48,
+          "visible": true
+        },
+        "fl-dresser": {
+          "label": "The dresser",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 158.11,
+          "pitch": -19.94,
+          "distance": 1.28,
+          "visible": true
+        },
+        "fl-phonograph": {
+          "label": "The phonograph",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -128.95,
+          "pitch": -13.94,
+          "distance": 1.71,
+          "visible": true
+        },
+        "fl-eggs": {
+          "label": "The eggs",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -17.96,
+          "pitch": -34.28,
+          "distance": 1.37,
+          "visible": true
+        },
+        "fl-greens": {
+          "label": "The greens",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -8.1,
+          "pitch": -27.11,
+          "distance": 1.59,
+          "visible": true
+        },
+        "fl-table": {
+          "label": "The table",
+          "type": "submit",
+          "overlay": null,
+          "yaw": 7.13,
+          "pitch": -38.96,
+          "distance": 1.56,
+          "visible": false
+        }
+      }
+    }
+  },
+  "clock": {
+    "center": [
+      3.85,
+      4.458,
+      2.33
+    ],
+    "normal": [
+      0,
+      -1,
+      0
+    ],
+    "radius": 0.14,
+    "in_render": true
+  }
+}
