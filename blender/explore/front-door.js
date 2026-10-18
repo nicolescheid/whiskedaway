@@ -9,6 +9,7 @@
 // `entered` before Gemma's arrival question, and offers settle(fov) for the hand-over from the film.
 
 import { sound } from './sound.js';
+import { slowLink } from './data-budget.js';
 
 const ASSETS = 'explore/assets/front-door/';
 // The film's last frame is a 28 mm lens on a 36 mm sensor: its vertical view in degrees, before cropping to the screen
@@ -21,7 +22,6 @@ export function frontDoor({ active, track }) {
   const shown = new Promise(r => { shownDone = r; });
   const entered = new Promise(r => { enteredDone = r; });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const saveData = navigator.connection?.saveData === true;
   const shape = matchMedia('(max-aspect-ratio: 3/2)').matches ? 'portrait' : 'landscape';
   let welcomed = false;
   try { welcomed = localStorage.getItem('wa-welcomed') === '1'; } catch { /* storage blocked: welcome every visit */ }
@@ -138,7 +138,7 @@ export function frontDoor({ active, track }) {
   track('door_view');
 
   let video = null;
-  const short = reduced || saveData;
+  const short = reduced || slowLink;                     // no film: the picture fades into the hall (data-budget.js)
   function makeVideo() {
     if (video) return video;
     video = document.createElement('video');

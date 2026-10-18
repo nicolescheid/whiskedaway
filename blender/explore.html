@@ -350,6 +350,7 @@ import { genieFetch, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
 import { sound } from './explore/sound.js';
+import { saveData } from './explore/data-budget.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -521,11 +522,11 @@ scene.add(fader);
 const loader = new THREE.TextureLoader();
 // Which full render to fetch after the preview: the 8K, or the 4096 phone tier (~0.5 MB, 43 MB of GPU memory instead of ~170).
 // Phones get the phone tier even when their GPU could take 8K: the screen can't show the difference, the data plan and memory can.
-// ?pano=8k or ?pano=phone overrides, for testing.
+// Data Saver or a 2G connection keeps to the preview (explore/data-budget.js). ?pano=8k|phone|none overrides, for testing.
 const maxTex = renderer.capabilities.maxTextureSize;
 const isPhone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
 const panoTier = new URLSearchParams(location.search).get('pano')
-  || (maxTex >= 8192 && !isPhone ? '8k' : maxTex >= 4096 ? 'phone' : 'none');
+  || (saveData ? 'none' : maxTex >= 8192 && !isPhone ? '8k' : maxTex >= 4096 ? 'phone' : 'none');
 const useFull = panoTier !== 'none';
 const fullUrl = url => panoTier === 'phone' ? url.replace(/\.jpg$/, '_4k.jpg') : url;
 // Textures stay in a small most-recently-used cache; older ones are freed from the GPU (an 8K one is ~170 MB, and phones
