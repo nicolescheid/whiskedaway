@@ -6,6 +6,8 @@
 <title>WhiskedAway: Gemma's Inn</title>
 <meta name="description" content="Step inside Gemma's Inn: wander the rooms, and the kitchen genie finds you something to cook from what you're drawn to.">
 <link rel="canonical" href="https://whiskedaway.com/">
+<meta property="og:site_name" content="WhiskedAway">
+<meta property="og:locale" content="en_NZ">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://whiskedaway.com/">
 <meta property="og:title" content="WhiskedAway: Gemma's Inn">
@@ -74,7 +76,7 @@
   /* Top bar */
   .bar { position: fixed; top: 12px; left: 16px; right: 16px; display: flex; gap: 8px; align-items: center; z-index: 20; pointer-events: none; }
   .bar > * { pointer-events: auto; }
-  .bar h1 { margin: 0 auto 0 0; font: 600 15px 'Quicksand'; color: var(--parchment); text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+  .bar .room-title { margin: 0 auto 0 0; font: 600 15px 'Quicksand'; color: var(--parchment); text-shadow: 0 1px 6px rgba(0,0,0,.6); }
   .chip { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 13px; }
   a.chip { color: var(--ink); text-decoration: none; }
   .chip.on { background: var(--berry); color: var(--parchment); }
@@ -231,7 +233,7 @@
   .welcome .help { margin: 4px 0 14px; padding-left: 18px; font-size: 14px; color: var(--ink-soft); }
   .welcome .help li { margin: 4px 0; }
   /* Phones: the room's name on its own line, so the chips and the bell fit beneath it */
-  @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; column-gap: 6px; justify-content: flex-end; } .bar h1 { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; }
+  @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; column-gap: 6px; justify-content: flex-end; } .bar .room-title { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; }
     .panel { top: calc(var(--bar-h, 70px) + 8px); } }   /* the bar is two rows here: open the map and notebook below it */
   .chip .short { display: none; }
   @media (max-width: 400px) { .chip .long { display: none; } .chip .short { display: inline; } }   /* five chips in one row at 375 */
@@ -255,7 +257,7 @@
 </head>
 <body>
 <!-- The front door: shown at / on a new visit (or with ?door=1), never with ?room= -->
-<div id="front-door" hidden>
+<div id="front-door">   <!-- shown in the source, so search engines and readers without JavaScript get the door and its story -->
   <button class="fd-enter" id="fd-enter" aria-label="Step inside the Inn">
     <picture>
       <source media="(max-aspect-ratio: 1/1)" srcset="explore/assets/front-door/picture-portrait.webp">
@@ -297,7 +299,7 @@
 <div id="tint" aria-hidden="true"></div>
 
 <div class="bar">
-  <h1 id="room-title">Cuddlecore</h1>
+  <p class="room-title" id="room-title">Cuddlecore</p>   <!-- not a heading: the page has one h1, on the front door -->
   <span class="mode" id="mode"></span>
   <a class="chip" id="btn-inn" href="/?door=1">Front door</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
@@ -406,7 +408,7 @@
 
 <div class="tool" id="tool" role="dialog" aria-modal="true">
   <div class="box">
-    <h2 id="tool-title"></h2>
+    <h2 id="tool-title">The room</h2>
     <p id="tool-text"></p>
     <button class="ok" id="tool-ok">Back to the room</button>
   </div>
