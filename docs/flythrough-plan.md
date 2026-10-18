@@ -27,28 +27,28 @@ back in the whisk.
 |---|---|---|---|---|
 | 1 | **The Inn in the whisk** | 5 s | Slow push in on the storybook picture, toward the front door. Dissolve. | Storybook image, moved in the edit |
 | 2 | **The front door opens** | 5 s | Black-brown door fills the frame. It swings open inward, lamplight spills out, and the camera steps through. | Hallway |
-| 3 | **The entrance hall** | 4 s | The camera glides in, glancing left to the stairs and the plant by the newel, then turns down the hall. | Hallway |
-| 4 | **Down the hallway** | 7 s | A slow walk down the runner, eye height. The clock passes on the left, the lamps glow, rain on the sea window at the end. | Hallway |
-| 5 | **The magic dial** | 5 s | The camera turns left and drifts up close to the dial by the Cuddlecore door. The pointer turns from The Hall, past the star, to Cuddlecore. | Hallway |
-| 6 | **The door opens** | 4 s | The camera eases back, the Cuddlecore door swings open into warm light, and the camera moves into the doorway. Dissolve on the bright frame. | Hallway |
-| 7 | **Into the kitchen** | 7 s | From the kitchen door, the camera moves slowly across the rag rug, past the armchair and the sleeping cat, toward the range. | Kitchen |
-| 8 | **The pot** | 4 s | A gentle push in on the steaming cast-iron pot. Hold. Dissolve. | Kitchen |
-| 9 | **Back to the whisk** | 3 s | The storybook picture again, pulled back to show the whole whisk. Space for the title. | Storybook image |
+| 3 | **Down the hallway** | 9 s | Straight on through the entrance hall and down the runner, eye height. The clock passes on the left, the lamps glow, rain on the sea window at the end. | Hallway |
+| 4 | **The magic dial** | 4 s | The camera turns left and drifts up close to the dial by the Cuddlecore door. The pointer turns from The Hall, past the star, to Cuddlecore. | Hallway |
+| 5 | **The door opens** | 4.5 s | The camera eases back, the Cuddlecore door swings open onto a glimpse of the kitchen, and the camera moves into the doorway. Dissolve. | Hallway |
+| 6 | **Into the kitchen** | 7 s | From the kitchen door, the camera moves slowly across the rag rug, past the armchair, toward the range. | Kitchen |
+| 7 | **The pot** | 4 s | The camera rises a little onto the steaming cast-iron pot. Hold. Dissolve. | Kitchen |
+| 8 | **Back to the whisk** | 3 s | The storybook picture again, pulled back to show the whole whisk. Space for the title. | Storybook image |
+
+About 40 seconds in all. The 18 October rough cut had a glance at the stairs in the entrance hall; Nicole cut it so the walk goes straight to the kitchen.
 
 ## Camera path (metres, in each scene's own coordinates)
 
 Hallway: X = hill side (−) to garden side (+), Y = toward the sea, eye height 1.6 m.
 Kitchen: X = left/right, Y = toward the window and range, the door on the back wall at (−0.95, −2.25).
 
-| Shot | Camera starts | Camera ends | Looking at | Lens |
+| Shot | Frames | Camera | Looking at | Lens |
 |---|---|---|---|---|
-| 2 | (0, −2.75, 1.55), just outside the front door | (0, −1.6, 1.6) | straight down the hall (0, 8, 1.5) | 30 mm |
-| 3 | (0, −1.6, 1.6) | (0, 0.4, 1.6) | swings from the stairs (−2.5, −0.5, 1.3) back to the hall (0, 8, 1.5) | 28 mm |
-| 4 | (0, 0.4, 1.6) | (0.15, 4.7, 1.6) | the sea window (0, 7.8, 1.5), drifting left at the end | 28 mm |
-| 5 | (0.15, 4.7, 1.6) | (−0.45, 5.15, 1.4) | the dial (−0.9, 5.3, 1.3) | 35 mm |
-| 6 | (−0.45, 5.15, 1.4) | (−0.75, 6.0, 1.6), in the doorway | the open door, then straight through it (−3, 6, 1.5) | 28 mm |
-| 7 | (−0.95, −1.9, 1.6), just inside the kitchen door | (0.1, 0.9, 1.5) | the range (0, 2.2, 1.0) | 28 mm |
-| 8 | (0.1, 0.9, 1.5) | (0.2, 1.4, 1.35) | the pot (0.24, 1.9, 1.05) | 35 mm |
+| 2 | 1 to 120 | (0, −2.75, 1.55), just outside the front door, to (0, −1.6, 1.6) | straight down the hall (0, 8, 1.5) | 30 to 28 mm |
+| 3 | 120 to 336 | on to (0, 0.4, 1.6), (0.1, 3.4, 1.6) and (0.15, 4.7, 1.6) | down the hall, drifting left at the end | 28 mm |
+| 4 | 336 to 442 | to (−0.45, 5.15, 1.4) and hold | the dial (−0.9, 5.3, 1.3) | 35 mm |
+| 5 | 442 to 552 | back to (−0.2, 5.6, 1.6), then into the doorway (−0.85, 6.0, 1.6) | the door, then straight through it | 28 mm |
+| 6 | 1 to 168 (kitchen) | (−0.95, −1.9, 1.6), just inside the kitchen door, to (0.1, 0.9, 1.5) | the range | 28 mm |
+| 7 | 168 to 264 (kitchen) | up to (0.15, 0.95, 1.62) | the pot and its steam (0.24, 1.91, 1.2) | 35 mm |
 
 All moves use eased starts and stops (Bezier keyframes), no handheld shake. The camera follows a
 "look at" point that moves on its own keyframes, which keeps the turns smooth.
@@ -56,9 +56,9 @@ All moves use eased starts and stops (Bezier keyframes), no handheld shake. The 
 ## What moves in the scene
 
 - **Front door** (shot 2): swings 95° inward on its hinge, over about 2 s, starting slowly.
-- **The dial pointer** (shot 5): turns clockwise from The Hall (320°) through the star (0°) to
+- **The dial pointer** (shot 4): turns clockwise from The Hall (320°) through the star (0°) to
   Cuddlecore (40°), with a short pause on the star.
-- **The Cuddlecore door** (shot 6): swings about 90° into the room, over about 1.5 s.
+- **The Cuddlecore door** (shot 5): swings about 90° into the room, over about 1.5 s. Behind it, a crop of the kitchen panorama fills the far wall, so the door opens onto the kitchen before the dissolve.
 - **Clock hands:** the panoramas leave the clock without hands (the website draws them), so the
   fly-through gives the grandfather clock real hands set to about 4:40, a rainy late afternoon.
 - Steam, candle flames and rain stay as they are in the stills. Moving steam and flickering
