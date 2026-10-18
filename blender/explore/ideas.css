@@ -46,9 +46,12 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .idea-hl h4 { margin: 3px 0 4px; padding-right: 30px; font: 600 19px/1.2 'Crimson Pro', Georgia, serif; }
 .idea-hl .read { all: unset; cursor: pointer; }
 .idea-hl .read:focus-visible { outline: 3px solid var(--amber-glow); outline-offset: 2px; border-radius: 4px; }
-.idea-hl .hook { margin: 0 0 4px; font: 16px/1.4 'Crimson Pro', Georgia, serif; }
+.idea-hl .hook { margin: 0 0 4px; font: 16px/1.4 'Crimson Pro', Georgia, serif;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }   /* the whole text is one tap away */
 .idea-hl .why { margin: 0; font: italic 14px/1.35 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
-.idea-hl .readmore { border: 0; background: none; color: var(--berry); font: 600 13px 'Quicksand'; padding: 0 0 0 4px; font-style: normal; white-space: nowrap; }
+.idea-hl .readmore { border: 0; background: none; color: var(--berry); font: 600 13px 'Quicksand'; padding: 0 0 0 4px; font-style: normal; white-space: nowrap;
+                      position: relative; }
+.idea-hl .readmore::after { content: ''; position: absolute; inset: -14px -8px; }   /* a 44 px tall target */
 .idea-hl .acts { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 .idea-hl .acts button { min-height: 44px; border-radius: 999px; font: 600 14px 'Quicksand'; }
 .idea-hl .no { min-width: 100px; background: #fff; border: 1px solid var(--line); color: var(--ink-soft); }
@@ -60,7 +63,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
              background: var(--ink); color: var(--parchment); font: 500 13px 'Quicksand'; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
 .idea-undo[hidden] { display: none; }
 .idea-undo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.idea-undo button { flex: none; min-height: 40px; min-width: 64px; border: 0; border-radius: 999px; background: var(--parchment); color: var(--berry); font: 700 13px 'Quicksand'; }
+.idea-undo button { flex: none; min-height: 44px; min-width: 64px; border: 0; border-radius: 999px; background: var(--parchment); color: var(--berry); font: 700 13px 'Quicksand'; }
 
 /* ---------- Gemma's chat: three sizes */
 .cw-sizes { display: flex; gap: 3px; }
@@ -83,9 +86,13 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .cw-newest b { flex: none; font: 600 12px 'Quicksand'; color: var(--berry); }
 .cw-scrim { position: fixed; inset: 0; z-index: 21; background: rgba(20, 14, 10, .4); }
 .cw-scrim[hidden] { display: none; }
+.cw-bar .cw-sizes button[aria-disabled="true"] { opacity: .35; cursor: default; }
 @media (pointer: coarse) {
-  .cw-bar .cw-sizes button { position: relative; }
-  .cw-bar .cw-sizes button::after { content: ''; position: absolute; inset: -12px -10px; }
+  .cw-bar .cw-sizes { gap: 4px; }
+  .cw-bar .cw-sizes button { position: relative; width: 36px; height: 26px; }
+  .cw-bar .cw-sizes button::after { content: ''; position: absolute; inset: -9px -4px; }   /* 44 x 44 */
+  .chatwin .cw-bar { position: relative; min-height: 28px; }
+  .chatwin .cw-bar::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -8px; }   /* a 44 px tall drag area */
 }
 
 /* Line on phones has no window: only what's drawn takes taps, so the room shows (and works) between them */
@@ -134,7 +141,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
   .chatwin .cw-bar > span:not(.cw-sizes):not(.cw-grip) { display: none; }
   /* Line: no window, just the handle, her speech bubble, and her avatar beside the answer chips */
   .chatwin.size-line { background: none; border: 0; box-shadow: none; }
-  .chatwin.size-line .cw-bar { background: var(--parchment-90); color: var(--berry); border: 1px solid var(--line); border-radius: 999px; margin-bottom: 4px; width: 132px; }
+  .chatwin.size-line .cw-bar { background: var(--parchment-90); color: var(--berry); border: 1px solid var(--line); border-radius: 999px; margin-bottom: 2px; width: 140px; }
   .chatwin.size-line .cw-body { grid-template-columns: 44px 1fr; grid-template-areas: "tags tags" "line line" "typing typing" "av chips"; column-gap: 6px; row-gap: 6px; }
   .chatwin.size-line .cw-tags { grid-area: tags; padding: 0; }
   .chatwin.size-line .cw-line { grid-area: line; padding: 8px 12px; background: var(--parchment); border: 1px solid var(--line);
@@ -262,14 +269,14 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-list i, .bk-filter i { width: 10px; height: 10px; border-radius: 50%; background: var(--ring); align-self: center; grid-row: span 2; display: inline-block; }
 .bk-list small { font: 12px 'Quicksand'; color: var(--ink-soft); }
 .bk-filter { display: flex; flex-wrap: wrap; gap: 6px; }
-.bk-filter button { min-height: 36px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 500 13px 'Quicksand'; display: inline-flex; align-items: center; gap: 6px; }
+.bk-filter button { min-height: 44px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 500 13px 'Quicksand'; display: inline-flex; align-items: center; gap: 6px; }
 .bk-filter button[aria-pressed="true"] { border-color: var(--berry); background: var(--berry); color: var(--parchment); }
 .bk-foot { border-top: 1px solid var(--line); padding: 4px 10px; display: flex; flex-direction: column; gap: 2px; font-family: 'Quicksand'; position: relative; }
 .bk-keepbar { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; }
 .bk-keepbar:empty { display: none; }
 .bk-keep { min-height: 44px; padding: 6px 22px; border-radius: 999px; border: 0; background: var(--berry); color: var(--parchment); font: 600 15px 'Quicksand'; }
 .bk-turns { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
-.bk-tabs button { border: 0; background: none; color: var(--berry); text-decoration: underline; min-height: 40px; font: 500 13px 'Quicksand'; padding: 0 4px; }
+.bk-tabs button { border: 0; background: none; color: var(--berry); text-decoration: underline; min-height: 44px; font: 500 13px 'Quicksand'; padding: 0 4px; }
 .bk-dots { display: none; gap: 5px; }
 .bk-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
 .bk-dots i.on { background: var(--berry); }
@@ -277,13 +284,18 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
            min-height: 44px; padding: 4px 6px 4px 14px; border-radius: 12px; background: var(--ink); color: var(--parchment); font: 500 13px 'Quicksand';
            box-shadow: 0 6px 18px rgba(0,0,0,.3); white-space: nowrap; }
 .bk-undo[hidden] { display: none; }
-.bk-undo button { min-height: 40px; min-width: 64px; border: 0; border-radius: 999px; background: var(--parchment); color: var(--berry); font: 700 13px 'Quicksand'; }
+.bk-undo button { min-height: 44px; min-width: 64px; border: 0; border-radius: 999px; background: var(--parchment); color: var(--berry); font: 700 13px 'Quicksand'; }
 .book .link { background: none; border: 0; color: var(--berry); text-decoration: underline; padding: 0; font: 13px 'Quicksand'; }
 @media (pointer: coarse) { .book .link { position: relative; } .book .link::after { content: ''; position: absolute; inset: -14px -6px; } }
 /* Phones: one page at a time, a full-height sheet */
 .book:not(.desk) .bk-box { width: 100vw; height: 100dvh; border-radius: 0; max-width: none; }
 .book:not(.desk) .bk-spread { grid-template-columns: 1fr; }
-.book:not(.desk) .bk-left { border-right: 0; box-shadow: none; touch-action: pan-y; }   /* sideways swipes turn the page */
+.book:not(.desk) .bk-left { border-right: 0; box-shadow: none; }
+@media (pointer: coarse) { .bk-page { touch-action: pan-y; } }   /* sideways drags stay with the page swipe, not the browser */
+/* F2: the two clear buttons are real buttons, in outline (they clear things) */
+.bk-outline { min-height: 44px; padding: 4px 16px; margin: 4px 0; border-radius: 999px; border: 1px solid var(--ink-soft); background: #fff;
+              color: var(--ink); font: 600 13px 'Quicksand'; }
+.bk-outline + .small { display: block; margin: 0 0 8px; }
 .book:not(.desk) .bk-page { padding: 14px 18px; }
 .book:not(.desk) .bk-ribbon { margin-left: -18px; padding-left: 18px; }
 .book:not(.desk) .bk-head { padding: 0 4px; padding-top: env(safe-area-inset-top); }

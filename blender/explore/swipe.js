@@ -88,10 +88,12 @@ export function swipeable(el, { onKeep, onDismiss, onClose, canClose = () => fal
   };
 }
 
-/** Horizontal page swipes (the phone book): the same axis lock; vertical drags scroll the page as usual. */
+/** Horizontal page swipes (the phone book): the same axis lock; vertical drags scroll the page as usual.
+ *  A swipe can start anywhere, on a button too: once it has locked sideways, the click that follows is swallowed. */
 export function pageSwipe(el, onTurn) {
-  let g = null;
-  el.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse' && !e.target.closest('button, a')) g = { id: e.pointerId, x: e.clientX, y: e.clientY, lock: null }; });
+  let g = null, swallow = false;
+  el.addEventListener('click', e => { if (swallow) { e.preventDefault(); e.stopPropagation(); } }, true);
+  el.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') g = { id: e.pointerId, x: e.clientX, y: e.clientY, lock: null }; });
   el.addEventListener('pointermove', e => {
     if (!g || e.pointerId !== g.id || g.lock) return;
     const dx = e.clientX - g.x, dy = e.clientY - g.y;
@@ -101,6 +103,7 @@ export function pageSwipe(el, onTurn) {
     if (!g || e.pointerId !== g.id) return;
     const dx = e.clientX - g.x, lock = g.lock;
     g = null;
+    if (lock === 'x') { swallow = true; setTimeout(() => { swallow = false; }, 80); }
     if (lock === 'x' && Math.abs(dx) > 60) onTurn(dx < 0 ? 1 : -1);
   });
   el.addEventListener('pointercancel', () => { g = null; });

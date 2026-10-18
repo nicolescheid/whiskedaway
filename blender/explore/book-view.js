@@ -48,11 +48,17 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
   visitPage.className = 'bk-visit';
   visitPage.innerHTML = `<h3 class="bk-h">This visit</h3><p class="bk-theme"></p>`;
   [...notes.children].filter(el => el.tagName !== 'H2').forEach(el => visitPage.appendChild(el));
+  // "Visitor check" is the builder's (it reports the bot check): only with ?debug
+  if (!new URLSearchParams(location.search).has('debug')) {
+    const vh = [...visitPage.querySelectorAll('h3')].find(h => /visitor check/i.test(h.textContent));
+    if (vh) { vh.hidden = true; visitPage.querySelector('#visitor')?.setAttribute('hidden', ''); }
+  }
   const forget = visitPage.querySelector('#forget');
   if (forget) {
     forget.textContent = 'Forget this visit';
-    forget.insertAdjacentHTML('afterend', `<span class="small"> The wander, my ideas and what you've told me. Not your book.</span>
-      <br><button class="link bk-clear2">Clear my book</button><span class="small"> Every recipe you've kept, on this device.</span>`);
+    forget.className = 'bk-outline';
+    forget.insertAdjacentHTML('afterend', `<span class="small">The wander, my ideas and what you've told me. Not your book.</span>
+      <button class="bk-outline bk-clear2">Clear my book</button><span class="small">Every recipe you've kept, on this device.</span>`);
   }
   notes.remove();
   // Off-page, the visit page waits in a hidden stash inside the book, so its ids stay in the document for the page's renderers
@@ -96,7 +102,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     return `<h3 class="bk-h">Contents</h3>
       ${rooms.length > 1 ? `<div class="bk-filter" role="group" aria-label="Show recipes from"><button data-f="" aria-pressed="${!filter}">All</button>${rooms.map(r => `<button data-f="${esc(r)}" aria-pressed="${filter === r}" style="--ring:${RIBBONS[r].colour}"><i></i>${esc(RIBBONS[r].name)}</button>`).join('')}</div>` : ''}
       <ul class="bk-list">${shown.map(k => `<li><button data-open="${esc(k.id)}" style="--ring:${RIBBONS[k.room]?.colour || 'var(--berry)'}"><i></i><span>${esc(k.title)}</span><small>${esc(RIBBONS[k.room]?.name || '')} · ${esc(day(k.kept))}</small></button></li>`).join('')}</ul>
-      <p><button class="link bk-clear">Clear my book</button> <span class="small">Every recipe you've kept, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.</span></p>`;
+      <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">Every recipe you've kept, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.</span></p>`;
   }
   function theme() {
     const mine = book.keptThisVisit();
@@ -216,7 +222,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
       if (!pushed) { history.pushState({ ...(history.state || {}), book: true }, ''); pushed = true; }
       if (!reduce()) $('.bk-box').animate(isDesk() ? [{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }]
         : [{ transform: 'translateY(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'ease-out' });
-      track?.('book_open', { opened_from: from, book_size: bucket(book.count) });
+      track?.('book_open', { from, book_size: bucket(book.count) });
     }
     (loose || at !== 'visit' ? left : $('.bk-close')).focus({ preventScroll: true });
   }
@@ -243,7 +249,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
   });
   addEventListener('resize', () => { if (isOpen()) draw(); });
   book.subscribe(() => { chipCount(); if (isOpen()) draw(); });
-  chip.onclick = () => (isOpen() ? close() : open('visit', { from: 'chip' }));
+  chip.onclick = () => (isOpen() ? close() : open(book.count ? 'contents' : 'visit', { from: 'chip' }));   // an empty book opens at This visit
   chipCount();
 
   return { open, close, refresh: () => { chipCount(); if (isOpen()) draw(); }, get isOpen() { return isOpen(); }, visitPage };

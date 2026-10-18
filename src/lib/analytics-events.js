@@ -21,7 +21,7 @@ export const EVENTS = {
   season_change: ['season'],
   dial_turn: ['dial_choice'],
   atom_served: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],
-  atom_open: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'opened_from'],     // opened_from: highlight ("Read ›") or book
+  atom_open: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'from'],     // from: highlight ("Read ›") or book
   atom_dismiss: ['atom', 'atom_kind', 'nav_mode', 'room', 'method', 'undone'],     // sent when the 5 s undo closes; undone: yes or no
   nav_fallback: ['reason'],
   map_open: ['room'],
@@ -32,7 +32,7 @@ export const EVENTS = {
   atom_highlight: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],   // an idea's bubble opened into its highlight
   atom_capture: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'method', 'book_size'],   // kept; method: button, swipe or book
   chat_size: ['panel_size', 'method'],                             // panel_size: line, short, full; method: drag, tap, button, auto
-  book_open: ['opened_from', 'book_size'],                         // opened_from: chip, card, notice_board
+  book_open: ['from', 'book_size'],                                // from: chip, card, notice_board
   book_clear: ['book_size'],
 
   // The front door at / (docs/front-door-spec.md)

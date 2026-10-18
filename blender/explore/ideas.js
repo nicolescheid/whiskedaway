@@ -29,7 +29,7 @@ export const minutesOf = a => (a.time ? `${a.time} min` : '');
 /** "SWEET SPELLS · recipe idea · 25 min · 🥄" */
 export const metaLine = (a, room = true) => [room && RIBBONS[a.room]?.name, a.kind, minutesOf(a), spoonsOf(a)].filter(Boolean).map(esc).join(' · ');
 
-export function createIdeas({ state, atoms, save, onKeep, onDismiss, onUndo, onRead, onHighlight, onFirst, avatar, bookChip, layout, wantHint, onHint }) {
+export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUndo, onRead, onHighlight, onFirst, avatar, bookChip, layout, wantHint, onHint }) {
   const col = document.createElement('div');
   col.className = 'ideas';
   col.id = 'ideas';
@@ -175,10 +175,10 @@ export function createIdeas({ state, atoms, save, onKeep, onDismiss, onUndo, onR
     hl.style.setProperty('--ring', RIBBONS[a.room]?.colour || 'var(--berry)');
     // The ✕ comes last in the DOM, so the Tab order is Read, Not this, Keep, ✕ (it's drawn in the corner)
     hl.innerHTML = `<div class="stamp s-keep" aria-hidden="true">♥ Into the book</div><div class="stamp s-no" aria-hidden="true">Not today ⟲</div>
-      <div class="meta">${metaLine(a)}</div>
+      <div class="meta">${metaLine(a, a.room !== here?.())}</div>
       <h4 id="idea-hl-title"><button class="read" data-act="read">${esc(a.title)}</button></h4>
-      <p class="hook">${esc(a.hook || a.body)}${c.why ? '' : ' <button class="readmore" data-act="read" tabindex="-1" aria-hidden="true">Read ›</button>'}</p>
-      ${c.why ? `<p class="why">${esc(c.why)} <button class="readmore" data-act="read" tabindex="-1" aria-hidden="true">Read ›</button></p>` : ''}
+      <p class="hook">${esc(a.hook || a.body)}</p>
+      <p class="why">${c.why ? `${esc(c.why)} ` : ''}<button class="readmore" data-act="read" tabindex="-1" aria-hidden="true">Read ›</button></p>
       <div class="acts"><button class="no" data-act="no">Not this</button><button class="keep" data-act="keep"><span aria-hidden="true">♥</span> Keep</button></div>
       <button class="x" data-act="close" aria-label="Close this idea">✕</button>`;
     hl.hidden = false;

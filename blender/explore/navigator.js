@@ -173,7 +173,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
     });
 
   const recent = [...new Set(trail.filter(e => e.id && world.objects[e.id]).map(e => e.id))]
-    .slice(-3).map(id => world.objects[id].ref);
+    .slice(-1).map(id => world.objects[id].ref);   // the most recent thing only, so her line fits three lines on a phone
   const lead = recent.length ? `${recent.join(', ').replace(/^./, c => c.toUpperCase())}… ` : '';
 
   let gemma, fork = [];

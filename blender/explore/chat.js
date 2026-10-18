@@ -1,5 +1,5 @@
 // Gemma's chat in three sizes (recipe-book-ux.md v4 §4b): Line (her newest words), Short (the last few messages and
-// her answer chips) and Full (the whole log). Her newest line shows in every size. Phones default to Line, desktop to Short;
+// her answer chips) and Full (the whole log). Her newest line shows in every size. Every screen opens at Line;
 // a question raises Line to Short until it's answered, unless the visitor chose the size themselves. It never opens Full by itself.
 // Change size by dragging or tapping the handle, the ▴ ▾ buttons, tapping her line, Escape or back (down one size).
 // The page keeps the log (state.chat) and calls update() when it changes; this module owns the window's size and scroll.
@@ -49,7 +49,7 @@ export function createChat({ win, track, onSize }) {
   let chosen = SIZES.includes(saved.chosen) ? saved.chosen : null;   // what the visitor picked, for the visit
   let size = null, asking = false, held = false, prevSize = null, lastGemma = null, pinned = true, fullPushed = false;
   const persist = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ chosen })); } catch { /* storage blocked */ } };
-  const base = () => chosen || (screenMode() === 'desk' ? 'short' : 'line');
+  const base = () => chosen || 'line';
   // What the size should be now: the visitor's choice, else the screen's default, raised to Short while she's asking
   const wanted = () => {
     if (held) return 'line';
@@ -65,7 +65,7 @@ export function createChat({ win, track, onSize }) {
     for (const s of SIZES) win.classList.toggle(`size-${s}`, s === size);
     document.body.dataset.chat = size;
     const i = SIZES.indexOf(size);
-    less.disabled = i === 0;
+    less.setAttribute('aria-disabled', String(i === 0));   // still focusable, so focus isn't lost at Line
     more.setAttribute('aria-label', size === 'full' ? "Gemma's chat: full. Back to her newest line" : `More of Gemma's chat (now ${size})`);
     less.setAttribute('aria-label', `Less of Gemma's chat (now ${size})`);
     more.setAttribute('aria-expanded', String(size !== 'line'));
@@ -90,7 +90,7 @@ export function createChat({ win, track, onSize }) {
     choose(SIZES[Math.max(0, Math.min(2, i + d))], 'button');
   };
   more.onclick = e => { e.stopPropagation(); size === 'full' ? choose('line', 'button') : step(1); };
-  less.onclick = e => { e.stopPropagation(); step(-1); };
+  less.onclick = e => { e.stopPropagation(); if (size !== 'line') step(-1); };
   said.parentElement.onclick = e => { if (size === 'line' && !e.target.closest('.cw-chips')) choose('short', 'tap'); };
   moreLine.onclick = e => { e.stopPropagation(); choose('short', 'tap'); };
   scrim.onclick = () => choose(prevSize && prevSize !== 'full' ? prevSize : 'short', 'tap');
@@ -128,7 +128,7 @@ export function createChat({ win, track, onSize }) {
 
   // Escape goes down one size, unless something above the chat is open
   addEventListener('keydown', e => {
-    if (e.key !== 'Escape' || size === 'line' || (size === 'short' && screenMode() === 'desk')) return;
+    if (e.key !== 'Escape' || size === 'line') return;
     if (document.querySelector('.tool.open, #book.open, .panel.open, .tag-pick:not([hidden])') || document.getElementById('idea-hl')?.hidden === false) return;
     if (size === 'full' && fullPushed) return history.back();
     step(-1);
