@@ -52,6 +52,9 @@ let queue = [];
 let timer = null;
 let lastAt = performance.now();
 let lastPass = null;
+let lastPassAt = 0;
+// A pass lasts 30 minutes. An older copy would be quietly dropped by the Worker, so treat it as none
+const currentPass = () => (Date.now() - lastPassAt < 28 * 60 * 1000 ? lastPass : null);
 
 /** Count one thing that happened. Unknown events and parameters are dropped. */
 export function track(name, params = {}) {
@@ -82,14 +85,14 @@ async function flush() {
   sending = true;
   const pass = await Promise.race([getPass().catch(() => null), new Promise(r => setTimeout(() => r(null), 8000))]);
   sending = false;
-  if (pass) lastPass = pass;
-  if (!lastPass && !debug) {
+  if (pass) { lastPass = pass; lastPassAt = Date.now(); }
+  if (!currentPass() && !debug) {
     queue = queue.slice(-50);
     timer = setTimeout(flush, 15000);
     return;
   }
   const events = queue.splice(0, 25);
-  fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: payload(events, lastPass), keepalive: true })
+  fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: payload(events, currentPass()), keepalive: true })
     .catch(() => { /* counting never gets in the way */ });
   if (queue.length) flush();
 }
@@ -98,8 +101,9 @@ async function flush() {
 if (enabled) {
   addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden' || !queue.length) return;
+    if (!currentPass() && !debug) return;          // no fresh pass: keep the events, in case the visitor comes back
     clearTimeout(timer);
-    navigator.sendBeacon(ENDPOINT, new Blob([payload(queue.splice(0, 25), lastPass)], { type: 'text/plain' }));
+    navigator.sendBeacon(ENDPOINT, new Blob([payload(queue.splice(0, 25), currentPass())], { type: 'text/plain' }));
   });
 }
 
