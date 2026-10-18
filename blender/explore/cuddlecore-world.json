@@ -365,6 +365,9 @@
         "dairy-free",
         "nut-free"
       ],
+      "cuisines": [
+        "Japanese"
+      ],
       "themes": [
         "broth",
         "warming",
@@ -373,8 +376,7 @@
         "comfort",
         "unwell",
         "quick",
-        "rain",
-        "japanese"
+        "rain"
       ],
       "seed": {
         "name": "Miso broth with tofu and greens",
@@ -403,6 +405,9 @@
         "vegetarian",
         "nut-free"
       ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
       "themes": [
         "bread",
         "simple",
@@ -411,8 +416,7 @@
         "breakfast",
         "comfort",
         "quick",
-        "unwell",
-        "kiwi"
+        "unwell"
       ],
       "seed": {
         "name": "Soft-boiled egg with toast soldiers",
@@ -443,6 +447,9 @@
         "dairy-free",
         "nut-free"
       ],
+      "cuisines": [
+        "Chinese"
+      ],
       "themes": [
         "broth",
         "warming",
@@ -450,8 +457,7 @@
         "cosy",
         "comfort",
         "unwell",
-        "simple",
-        "chinese"
+        "simple"
       ],
       "seed": {
         "name": "Quick chicken and ginger congee",
@@ -586,6 +592,9 @@
       "diet": [
         "nut-free"
       ],
+      "cuisines": [
+        "Italian"
+      ],
       "themes": [
         "pantry",
         "simple",
@@ -594,8 +603,7 @@
         "quick",
         "stress",
         "evening",
-        "hearty",
-        "italian"
+        "hearty"
       ],
       "seed": {
         "name": "One-pot tomato pasta",
@@ -858,6 +866,9 @@
         "vegetarian",
         "nut-free"
       ],
+      "cuisines": [
+        "Greek"
+      ],
       "themes": [
         "cooling",
         "fresh",
@@ -865,8 +876,7 @@
         "no-cook",
         "light",
         "snack",
-        "midday",
-        "mediterranean"
+        "midday"
       ],
       "seed": {
         "name": "Tzatziki with flatbread",
@@ -936,6 +946,9 @@
         "dairy-free",
         "nut-free"
       ],
+      "cuisines": [
+        "Chinese"
+      ],
       "themes": [
         "quick",
         "stress",
@@ -944,8 +957,7 @@
         "pantry",
         "what-you-have",
         "cooking",
-        "warming",
-        "chinese"
+        "warming"
       ],
       "seed": {
         "name": "Egg fried rice with peas",
@@ -973,6 +985,9 @@
       "diet": [
         "nut-free"
       ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
       "themes": [
         "hearty",
         "cosy",
@@ -980,8 +995,7 @@
         "warming",
         "simple",
         "comfort",
-        "quick",
-        "kiwi"
+        "quick"
       ],
       "seed": {
         "name": "Cheese toastie",
