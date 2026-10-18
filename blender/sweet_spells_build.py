@@ -43,22 +43,22 @@ HALL = os.path.join(ART, "inn-hallway")
 # bounce: cool fill from the bay; wet: raindrops on the glass; fill: warm room fill; exposure.
 WEATHERS = {
     "rain":     dict(view="14-lane-rain.png", sky=1.1, tint=(1.0, 1.0, 1.0), backdrop=0.75, sun=None,
-                     bounce=(60, (0.78, 0.86, 1.0)), wet=0.5, fill=14, exposure=0.6),
+                     bounce=(60, (0.78, 0.86, 1.0)), wet=0.5, fill=5, lamps=0.6, exposure=0.15),
     "fair":     dict(view="15-lane-fair.png", sky=2.0, tint=(1.0, 0.97, 0.92), backdrop=1.05,
-                     sun=(7.0, (1.0, 0.93, 0.8), 30, 20), bounce=(95, (1.0, 0.97, 0.92)), wet=0.0, fill=8, exposure=0.6),
+                     sun=(7.0, (1.0, 0.93, 0.8), 30, 20), bounce=(95, (1.0, 0.97, 0.92)), wet=0.0, fill=3, lamps=0.0, exposure=0.1),
     "change":   dict(view="16-lane-change.png", sky=1.5, tint=(0.95, 0.98, 1.0), backdrop=0.85, sun=None,
-                     bounce=(85, (0.92, 0.95, 1.0)), wet=0.0, fill=12, exposure=0.6),
+                     bounce=(85, (0.92, 0.95, 1.0)), wet=0.0, fill=4, lamps=0.4, exposure=0.15),
     "stormy":   dict(view="17-lane-stormy.png", sky=0.5, tint=(0.85, 0.9, 1.0), backdrop=0.5, sun=None,
-                     bounce=(28, (0.7, 0.8, 1.0)), wet=0.75, fill=14, exposure=0.7),
+                     bounce=(28, (0.7, 0.8, 1.0)), wet=0.75, fill=5, lamps=1.0, exposure=0.25),
     "very-dry": dict(view="18-lane-very-dry.png", sky=2.3, tint=(1.0, 0.92, 0.8), backdrop=1.1,
-                     sun=(8.0, (1.0, 0.86, 0.66), 24, -25), bounce=(90, (1.0, 0.92, 0.82)), wet=0.0, fill=6, exposure=0.6),
+                     sun=(8.0, (1.0, 0.86, 0.66), 24, -25), bounce=(90, (1.0, 0.92, 0.82)), wet=0.0, fill=2, lamps=0.0, exposure=0.1),
 }
 WX = dict(WEATHERS[WEATHER])
 NIGHT_VIEWS = {"rain": "19-lane-night-rain.png", "fair": "20-lane-night-fair.png", "change": "21-lane-night-change.png",
                "stormy": "22-lane-night-stormy.png", "very-dry": "23-lane-night-very-dry.png"}
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
-              bounce=(4, (0.55, 0.62, 1.0)), fill=5, exposure=0.85)
+              bounce=(4, (0.55, 0.62, 1.0)), fill=1.5, lamps=1.0, exposure=0.2)
 GLOW = 1.4 if NIGHT else 1.0          # candles, fire and lamps are lit whatever the weather; a touch brighter at night
 
 W, D, H = 4.5, 4.5, 2.7               # inside the room
@@ -234,17 +234,17 @@ def marble(name):
     mp.inputs["Rotation"].default_value = (0.3, 0.2, 0.7)
     nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
     wave = nt.nodes.new("ShaderNodeTexWave")
-    wave.inputs["Scale"].default_value = 1.6
+    wave.inputs["Scale"].default_value = 2.6
     wave.inputs["Distortion"].default_value = 14
     wave.inputs["Detail"].default_value = 8
     wave.inputs["Detail Scale"].default_value = 1.5
     nt.links.new(mp.outputs["Vector"], wave.inputs["Vector"])
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     el = ramp.color_ramp.elements
-    el[0].position, el[0].color = 0.0, srgb("#8f877b")
-    el[1].position, el[1].color = 0.12, srgb("#efe7da")
-    mid = el.new(0.05)
-    mid.color = srgb("#c9b89a")
+    el[0].position, el[0].color = 0.0, srgb("#a89f92")
+    el[1].position, el[1].color = 0.06, srgb("#efe7da")
+    mid = el.new(0.025)
+    mid.color = srgb("#d6c8ae")
     nt.links.new(wave.outputs["Fac"], ramp.inputs["Fac"])
     nt.links.new(ramp.outputs["Color"], p.inputs["Base Color"])
     p.inputs["Roughness"].default_value = 0.3
@@ -260,7 +260,7 @@ def stone(name):
     p = nt.nodes["Principled BSDF"]
     tc = nt.nodes.new("ShaderNodeTexCoord")
     mp = nt.nodes.new("ShaderNodeMapping")
-    mp.inputs["Scale"].default_value = (5.0, 5.0, 7.5)          # blocks longer than tall
+    mp.inputs["Scale"].default_value = (2.2, 2.2, 3.6)          # blocks longer than tall
     nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
     vor = nt.nodes.new("ShaderNodeTexVoronoi")
     vor.feature = "DISTANCE_TO_EDGE"
@@ -283,8 +283,8 @@ def stone(name):
     nt.links.new(tone.outputs["Color"], gmix.inputs[6])
     nt.links.new(grit.outputs["Color"], gmix.inputs[7])
     joint = nt.nodes.new("ShaderNodeMapRange")                  # 1 on the stone, 0 in the joint
-    joint.inputs["From Min"].default_value = 0.02
-    joint.inputs["From Max"].default_value = 0.07
+    joint.inputs["From Min"].default_value = 0.015
+    joint.inputs["From Max"].default_value = 0.045
     nt.links.new(vor.outputs["Distance"], joint.inputs["Value"])
     mortar = nt.nodes.new("ShaderNodeMix")
     mortar.data_type = "RGBA"
@@ -501,7 +501,7 @@ def build():
     wire = mat("whisk_steel", srgb("#c9c6bf"), rough=0.25, metal=1.0)
     w_tip = Vector((bx + 0.01, by - 0.01, TABLE_TOP + 0.11))        # the wires dip into the chocolate
     w_axis = Vector((0.22, 0.14, 1.0)).normalized()
-    L, R = 0.21, 0.045
+    L, R = 0.26, 0.058
     side = w_axis.cross(Vector((0, 0, 1))).normalized()
     up2 = w_axis.cross(side)
     whisk = []
@@ -514,7 +514,7 @@ def build():
             ax_ = L * (1 + math.cos(th)) / 2                       # 0 at the tip, L at the handle
             r_ = R * math.sin(th) * (1.15 - 0.5 * ax_ / L)
             pts.append(w_tip + w_axis * ax_ + rad * r_)
-        whisk.append(tube(f"whisk_wire_{k}", pts, 0.0011, wire, caps=False, res=2))
+        whisk.append(tube(f"whisk_wire_{k}", pts, 0.0016, wire, caps=False, res=2))
     hb = w_tip + w_axis * L
     hlen = 0.13
     hc = hb + w_axis * (hlen / 2 + 0.01)
@@ -529,7 +529,7 @@ def build():
         rr = 0.07 * (1 - t) + 0.025
         ribbon_pts.append((bx + 0.04 + rr * math.cos(ang), by - 0.02 + rr * math.sin(ang), TABLE_TOP + 0.5 - 0.39 * t))
         radii.append(0.55 + 0.6 * t)
-    ribbon = tube("chocolate_ribbon", ribbon_pts, 0.008, chocolate, radii=radii)
+    ribbon = tube("chocolate_ribbon", ribbon_pts, 0.012, chocolate, radii=radii)
     ribbon.data.bevel_mode = "ROUND"
     drop = sphere("chocolate_drop", (bx + 0.12, by - 0.06, TABLE_TOP + 0.3), 0.006, chocolate, scale=(1, 1, 1.4))
     berries = []
@@ -560,8 +560,8 @@ def build():
     for k in range(3):
         sphere(f"egg_{k}", (tx - 0.65 + 0.035 * math.cos(k * 2.1), ty - 0.2 + 0.035 * math.sin(k * 2.1), TABLE_TOP + 0.05), 0.025,
                mat(f"egg_{k}", srgb("#d9a77a"), rough=0.5), scale=(1, 1, 1.3))
-    cloth = box("rose_cloth", (tx + 0.15, ty + 0.4, TABLE_TOP - 0.06), (0.32, 0.01, 0.16), linen, bevel=0.004)
-    box("rose_cloth_top", (tx + 0.15, ty + 0.3, TABLE_TOP + 0.003), (0.32, 0.22, 0.006), linen, bevel=0.002)
+    cloth = box("rose_cloth", (tx + 0.3, ty + 0.28, TABLE_TOP + 0.006), (0.26, 0.16, 0.012), linen, bevel=0.005)
+    cloth.rotation_euler = (0, 0, math.radians(14))
 
     candles = []
 
@@ -998,7 +998,7 @@ def build():
     # ---- Wall lamps: brass sconces with warm bulbs (hallway wall, and either end of the bookshelves)
     bulb = mat("bulb", (1, 0.85, 0.6, 1), emission=(1.0, 0.72, 0.42, 1), strength=18)
 
-    def wall_lamp(name, at_, normal, watts=18):
+    def wall_lamp(name, at_, normal, watts=10):
         n = Vector(normal)
         right = Vector((0, 0, 1)).cross(n)
         parts_ = [cyl(f"{name}_plate", (0, 0, 0.008), 0.05, 0.016, brass, bevel=0.003),
@@ -1011,9 +1011,10 @@ def build():
         shade.modifiers.new("thick", "SOLIDIFY").thickness = 0.003
         bpy.ops.object.shade_smooth()
         shade.data.materials.append(brass)
-        parts_ += [shade, sphere(f"{name}_bulb", (0, 0.1, 0.22), 0.024, bulb)]
+        parts_ += [shade, sphere(f"{name}_bulb", (0, 0.1, 0.22), 0.024, bulb if WX["lamps"] else glass)]
         group(name, frame_matrix(at_, normal, right), parts_)
-        point_light(f"{name}_light", Vector(at_) + n * 0.22 + Vector((0, 0, 0.1)), watts * GLOW, (1.0, 0.66, 0.38), radius=0.04)
+        if WX["lamps"]:                                          # on when it's dark out, off on a bright day
+            point_light(f"{name}_light", Vector(at_) + n * 0.22 + Vector((0, 0, 0.1)), watts * WX["lamps"], (1.0, 0.66, 0.38), radius=0.04)
 
     wall_lamp("lamp_hall", (W, 2.1, 1.85), (-1, 0, 0))
     wall_lamp("lamp_back_l", (0.35, D, 1.85), (0, -1, 0))
