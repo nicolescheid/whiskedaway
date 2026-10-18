@@ -1,0 +1,46 @@
+{
+  "stage": 1,
+  "status": "awaiting_Nicole_choice",
+  "selected_direction": null,
+  "stage2_started": false,
+  "order_left_to_right": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+  ],
+  "directions": {
+    "A": "refined pixel art",
+    "B": "storybook ink/watercolour/gouache",
+    "C": "stylised3D adult with painterly materials",
+    "D": "hand-drawn2D cel animation",
+    "E": "translucent golden steam presence"
+  },
+  "shortlist_for_cohost_tests": [
+    "B",
+    "C"
+  ],
+  "shortlist_is_final_choice": false,
+  "provisional_palette": {
+    "skin": "#8fb8ca",
+    "hair": "#25232b",
+    "berry": "#8b4d5c",
+    "apron": "#e5d9c3",
+    "brass": "#b07f52",
+    "glow": "#e8bd72"
+  },
+  "physical_scale_target_m": 1.65,
+  "stage2_deferred": [
+    "turnaround",
+    "eight expressions",
+    "six poses",
+    "48px-readable avatar",
+    "24px-readable avatar",
+    "palette card image",
+    "transparent handbell icon",
+    "transparent shimmer icon",
+    "transparent whisk icon"
+  ],
+  "scope_note": "Eight Stage1 PNG direction/comparison/cohost tests only. Selection must come from Nicole before Stage2."
+}

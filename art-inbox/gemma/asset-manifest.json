@@ -1,0 +1,74 @@
+[
+  {
+    "file": "01-direction-a-pixel.png",
+    "title": "A · Pixel art",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 1977339,
+    "sha256": "1bdc81c3c31b7cee2ea1c0faa9754f4f95f551d2f54c970396d01f30db90f952"
+  },
+  {
+    "file": "02-direction-b-storybook.png",
+    "title": "B · Storybook painting",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2074000,
+    "sha256": "8edb15eacf9d377c98f63184a669a4b3d230b0372a9554f95bcdbc0ac3f9edff"
+  },
+  {
+    "file": "03-direction-c-stylised-3d.png",
+    "title": "C · Stylised3D",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2002349,
+    "sha256": "a6af48d2316c1c35ca5fabd2eaf0e34a916aeb7545c3729fcc285337dbc1a276"
+  },
+  {
+    "file": "04-direction-d-cel-animation.png",
+    "title": "D · Hand-drawn cel2D",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2021406,
+    "sha256": "1c4424aec6d61af13d327ab09b283a8943317dbd1381327ebcfb75e1d7aac417"
+  },
+  {
+    "file": "05-direction-e-steam-presence.png",
+    "title": "E · Steam presence",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2030435,
+    "sha256": "3e8471dd3528c0b51d20f6bab8fa59e4c2bb15f6ca6aa35421a1388d5c519d37"
+  },
+  {
+    "file": "06-style-lineup.png",
+    "title": "Five-style lineup · A to E",
+    "width": 2172,
+    "height": 724,
+    "mode": "RGB",
+    "bytes": 1924798,
+    "sha256": "2b0574d232f0abca0713e5971061b4ba9a2097037ca5c0aca97a5fc929f6f319"
+  },
+  {
+    "file": "07-cohost-b-storybook.png",
+    "title": "B · Daylight co-host test",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2194802,
+    "sha256": "81733e72bdc5169b5247aae96caccac910fa11db379431245176df0a73d44ea1"
+  },
+  {
+    "file": "08-cohost-c-stylised-3d.png",
+    "title": "C · Daylight co-host test",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "bytes": 2102436,
+    "sha256": "531baa9f457900020efeaed4b3aa9cf8307a40d1d928ab145a4315e5af22c247"
+  }
+]

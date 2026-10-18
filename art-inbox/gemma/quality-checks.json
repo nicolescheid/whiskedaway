@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-18",
+  "stage": 1,
+  "image_count": 8,
+  "five_room_directions": 5,
+  "lineup_order": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+  ],
+  "cohost_tests": [
+    "B",
+    "C"
+  ],
+  "selected_direction": null,
+  "stage2_started": false,
+  "prompt_records": 11,
+  "all_selected_files_have_prompts": true,
+  "visual_review": {
+    "same_character_blue_skin_dark_highponytail_berry_brass": true,
+    "adult_cook_clothes_rolled_sleeves_linen_apron": true,
+    "same_welcome_pose_room_views": true,
+    "kitchen_remains_photographic": true,
+    "presence_mostly_vapour": true,
+    "no_people_in_cohost_backgrounds": true,
+    "no_lettering_or_watermarks_observed": true,
+    "lineup_artwork_unlabelled": true
+  },
+  "gallery_local_links_checked": 12,
+  "gallery_javascript": "Syntax checked with Node; interactive controls not browser-verified.",
+  "limits": "Stage1 visual composites, with baked backgrounds/light, not transparent production characters or rigs. Pixel treatment is a64px-class direction study, not a validated64px spritesheet.48px/24px avatar readability and icon alpha checks are deferred to Stage2. Home-kitchen background is a generated photographic mockup, not footage/photo of Nicole’s actual home."
+}
