@@ -1,0 +1,38 @@
+{
+  "method": "Opposite-edge RGB difference diagnostics plus 2x2 repeat preview, no source pixels stitched or edited by scripts.",
+  "limits": "Visual repeats, not mathematically periodic or calibrated PBR maps. Ceramic grout and tile thickness belong in Blender.",
+  "textures": [
+    {
+      "file": "12-chia-botanical-kraft-tile.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "vertical_join_rgb_mae": 9.100478172302246,
+      "horizontal_join_rgb_mae": 9.67889404296875,
+      "interior_vertical_median": 7.852737903594971,
+      "interior_horizontal_median": 9.677565574645996,
+      "interior_vertical_p95": 12.169059753417969,
+      "interior_horizontal_p95": 11.007070541381836,
+      "repeat_preview": "12-chia-botanical-kraft-tile-repeat.jpg",
+      "source_modified": false
+    },
+    {
+      "file": "13-encaustic-floor-tile.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "vertical_join_rgb_mae": 4.670122146606445,
+      "horizontal_join_rgb_mae": 5.514354228973389,
+      "interior_vertical_median": 5.194311618804932,
+      "interior_horizontal_median": 5.350611209869385,
+      "interior_vertical_p95": 7.2759175300598145,
+      "interior_horizontal_p95": 7.733015060424805,
+      "repeat_preview": "13-encaustic-floor-tile-repeat.jpg",
+      "source_modified": false
+    }
+  ],
+  "visual_review": "Both2x2 repeats inspected. No conspicuous clipped-motif joins at preview scale. Floor first-pass dark bottom edge rejected and removed in selected revision. Fine paper/ceramic microtexture is not mathematically periodic.",
+  "status": "Visually reviewed colour-pattern repeats; final shader/UV scale and physical floor joints remain Blender work."
+}

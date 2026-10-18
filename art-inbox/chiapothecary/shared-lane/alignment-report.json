@@ -1,0 +1,639 @@
+{
+  "master": "14-lane-rain.png",
+  "delivered_size": [
+    2172,
+    724
+  ],
+  "normalizations": [
+    {
+      "file": "14-lane-rain.png",
+      "generated_size": [
+        2171,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": true
+    },
+    {
+      "file": "15-lane-fair.png",
+      "generated_size": [
+        2171,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": true
+    },
+    {
+      "file": "16-lane-change.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": false
+    },
+    {
+      "file": "17-lane-stormy.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": false
+    },
+    {
+      "file": "18-lane-very-dry.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": false
+    },
+    {
+      "file": "19-lane-night-rain.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": false
+    },
+    {
+      "file": "20-lane-night-fair.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": false
+    },
+    {
+      "file": "21-lane-night-change.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": false
+    },
+    {
+      "file": "22-lane-night-stormy.png",
+      "generated_size": [
+        2173,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": true
+    },
+    {
+      "file": "23-lane-night-very-dry.png",
+      "generated_size": [
+        2172,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "resized": false
+    }
+  ],
+  "method": "NCC of grayscale gradient-magnitude patches; half-resolution search +/-14 delivered pixels, 2-pixel sampling. Matches are diagnostic, not a geometric proof.",
+  "limits": "Weather, wetness, fog, window illumination and low night contrast alter edges. Low correlations indicate uncertainty rather than confirmed movement. This samples seven fixed visible regions, not every pixel or distant hill.",
+  "results": [
+    {
+      "file": "15-lane-fair.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.8113,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.7832,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8409,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.754,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.7635,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.8392,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6123,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 0
+    },
+    {
+      "file": "16-lane-change.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.8015,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.7241,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8215,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7736,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.6913,
+          "best_offset_at_delivery_px": [
+            0,
+            -2
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.8255,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6715,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 2
+    },
+    {
+      "file": "17-lane-stormy.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.8493,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.8178,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8434,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7952,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.8166,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.875,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.488,
+          "best_offset_at_delivery_px": [
+            2,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 2
+    },
+    {
+      "file": "18-lane-very-dry.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.7532,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.6471,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.7673,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7112,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.6898,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.7043,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6047,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 0
+    },
+    {
+      "file": "19-lane-night-rain.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.7973,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.7143,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8167,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7197,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.7666,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.788,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6409,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 0
+    },
+    {
+      "file": "20-lane-night-fair.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.8174,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.7306,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8482,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7286,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.7697,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.807,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6001,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 0
+    },
+    {
+      "file": "21-lane-night-change.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.8428,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.7755,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8517,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7977,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.7796,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.8631,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.688,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 0
+    },
+    {
+      "file": "22-lane-night-stormy.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.7576,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.6594,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8131,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7306,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.6885,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.7766,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6206,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 0
+    },
+    {
+      "file": "23-lane-night-very-dry.png",
+      "patches": {
+        "left_door_porch": {
+          "edge_correlation": 0.8214,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.7398,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.8571,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.7192,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.7911,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.8359,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6714,
+          "best_offset_at_delivery_px": [
+            0,
+            0
+          ]
+        }
+      },
+      "reliable_patch_count": 7,
+      "max_reliable_offset_px": 0
+    }
+  ],
+  "visual_review": "Rain/fair and rain/fog-night crossfades inspected; doorway distortion in fog-night rejected and final regenerated directly from master. Gallery supplies all variants for flicker/crossfade review.",
+  "summary": "All seven sampled patches in final fog-night matched at zero measured offset. Other states measured 0\u20132 pixels on reliable sampled patches; not a claim of pixel-identical weather edits."
+}
