@@ -181,9 +181,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
     fork = [top.id, clusters[1].id];
     gemma = `${lead}I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;
   } else {
-    const putOut = ["I've left something out for you.", "There's something here for you.",
-      "Have a look at what I've put out.", "I found you something."][trail.length % 4];   // no counter in the hallway or glasshouse
-    gemma = `${lead}I think you're after ${top.label}. ${putOut}`;
+    gemma = `${lead}I think you're after ${top.label}.`;   // no "I found you something": the rising idea says that (Ideas, v4)
   }
 
   return { mode: 'local', hypothesis: top.label, cluster: top.id, confidence, gemma, fork, reveal, serve };

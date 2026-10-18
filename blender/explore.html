@@ -523,7 +523,7 @@
 
 <aside class="panel" id="notes" aria-label="Gemma's notebook" hidden><!-- moved into the book's "This visit" page by book-view.js -->
   <h2>Gemma's notebook</h2>
-  <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave, except a note that you've been welcomed, so I don't say it twice. The inn does count, anonymously, which rooms and recipes get visited, but never who.</p>
+  <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave, except a note that you've been welcomed and the recipes you save to your book. Those stay on this device, never on our server, and "Clear my book" removes them. The inn does count, anonymously, which rooms and recipes get visited, but never who.</p>
   <h3>My best guess</h3>
   <div id="guess" class="small">Nothing yet. Have a wander.</div>
   <div class="meter"><i id="conf" style="width:0"></i></div>
@@ -1107,9 +1107,9 @@ const SYS = {
 // ---------- counting (docs/analytics-plan.md): what happens to the site, never the wander itself
 const stepNow = () => stepBucket(state.trail.length);
 const servedBy = {};                      // which navigator served each card, kept for this page only
-function countAtom(name, atom) {
+function countAtom(name, atom, more = {}) {
   track(name, { atom, atom_kind: atomsById[atom]?.kind, nav_mode: servedBy[atom] || state.result?.mode || (AI ? 'ai' : 'local'),
-                room: state.room, step: stepNow() });
+                room: state.room, step: stepNow(), ...more });
 }
 
 function record(e) {
@@ -1415,7 +1415,6 @@ function pickLine(key, list, fill = {}) {
   return t.replace(/\{(\w+)\}/g, (_, k) => fill[k]);
 }
 const sizeBucket = n => (n <= 0 ? '0' : n <= 2 ? '1-2' : n <= 5 ? '3-5' : n <= 10 ? '6-10' : '11+');
-const navMode = atom => servedBy[atom] || state.result?.mode || (AI ? 'ai' : 'local');
 
 function serve({ atom, why }, mode) {
   const a = atomsById[atom];
@@ -1448,7 +1447,7 @@ function keepIdea(atom, why, method) {
   if (!state.served.includes(atom)) state.served.push(atom);
   state.keeps = (state.keeps || 0) + 1;
   record({ kind: 'keep', atom });
-  track('card_capture', { atom, room: a?.room || snap.room, method, nav_mode: navMode(atom), book_size: sizeBucket(book.count) });
+  countAtom('atom_capture', atom, { method, book_size: sizeBucket(book.count) });
   ideas.say(`Kept. ${book.count} in your book.`);
   const n = state.keeps;
   let line = null;
@@ -1465,11 +1464,11 @@ const ideas = createIdeas({
   avatar: () => $('cw-av'), bookChip: () => $('btn-book'),
   layout: (what, on) => { if (what === 'highlight') chatUI.hold(on); },
   onFirst: () => say(L.ideaFirst, [], true),
-  onHighlight: c => track('idea_highlight', { atom: c.atom, room: atomsById[c.atom]?.room, atom_kind: atomsById[c.atom]?.kind, nav_mode: navMode(c.atom) }),
+  onHighlight: c => countAtom('atom_highlight', c.atom),
   onRead: c => {
     const a = atomsById[c.atom];
     record({ kind: 'open', atom: c.atom });
-    track('card_read', { atom: c.atom, room: a.room });
+    countAtom('atom_open', c.atom, { opened_from: 'highlight' });
     bookView.open(c.atom, { from: 'card', loosePage: book.has(c.atom) ? null : snapshot(a, c.why) });
   },
   onKeep: (c, method) => keepIdea(c.atom, c.why, method),
@@ -1490,12 +1489,13 @@ const ideas = createIdeas({
       store.save(state);
       renderNotes();
     }
-    track('card_dismiss', { atom: c.atom, room: atomsById[c.atom]?.room, method, undone: undone ? 'yes' : 'no', nav_mode: navMode(c.atom) });
+    countAtom('atom_dismiss', c.atom, { method, undone: undone ? 'yes' : 'no' });
   },
 });
 const bookView = createBookView({
   book, atoms: atomsById, chip: $('btn-book'), notes: $('notes'), track, bucket: sizeBucket,
   onKeep: rec => keepIdea(rec.id, rec.why, 'book'),
+  onRead: id => countAtom('atom_open', id, { opened_from: 'book' }),     // a kept recipe opened from Contents
   onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); say(L.cleared, [], true); },
 });
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room

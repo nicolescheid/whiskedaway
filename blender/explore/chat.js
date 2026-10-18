@@ -74,7 +74,7 @@ export function createChat({ win, track, onSize }) {
     if (size !== 'line') requestAnimationFrame(() => { if (pinned) log.scrollTop = log.scrollHeight; });
     if (was && !reduce()) win.animate([{ opacity: 0.85 }, { opacity: 1 }], { duration: 180 });
     fitLine();
-    if (was && how) track?.('chat_size', { size, how });
+    if (was && how) track?.('chat_size', { panel_size: size, method: how });
     onSize?.(size);
   }
   function choose(next, how) {

@@ -21,20 +21,18 @@ export const EVENTS = {
   season_change: ['season'],
   dial_turn: ['dial_choice'],
   atom_served: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],
-  atom_open: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],
-  atom_dismiss: ['atom', 'atom_kind', 'nav_mode', 'room'],
+  atom_open: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'opened_from'],     // opened_from: highlight ("Read ›") or book
+  atom_dismiss: ['atom', 'atom_kind', 'nav_mode', 'room', 'method', 'undone'],     // sent when the 5 s undo closes; undone: yes or no
   nav_fallback: ['reason'],
   map_open: ['room'],
   notebook_open: ['room'],
   visit_forget: [],
   leave_to_inn: ['room', 'step'],         // "Front door": back out to the picture
   // Ideas and the recipe book (recipe-book-ux.md v4 §10). No recipe text, no diet answers
-  idea_highlight: ['atom', 'room', 'atom_kind', 'nav_mode'],        // a bubble opened into its highlight
-  card_read: ['atom', 'room'],                                     // "Read ›": the book opens at its page (was atom_open)
-  card_capture: ['atom', 'room', 'method', 'nav_mode', 'book_size'],   // method: button, swipe or book
-  card_dismiss: ['atom', 'room', 'method', 'undone', 'nav_mode'],     // sent when the 5 s undo closes; undone: yes or no
-  chat_size: ['size', 'how'],                                      // size: line, short, full; how: drag, tap, button, auto
-  book_open: ['from', 'book_size'],                                // from: chip, card, notice_board
+  atom_highlight: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],   // an idea's bubble opened into its highlight
+  atom_capture: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'method', 'book_size'],   // kept; method: button, swipe or book
+  chat_size: ['panel_size', 'method'],                             // panel_size: line, short, full; method: drag, tap, button, auto
+  book_open: ['opened_from', 'book_size'],                         // opened_from: chip, card, notice_board
   book_clear: ['book_size'],
 
   // The front door at / (docs/front-door-spec.md)
