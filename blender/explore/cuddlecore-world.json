@@ -1,6 +1,6 @@
 {
   "room": "cuddlecore",
-  "name": "Cuddlecore Kitchen",
+  "name": "Cuddlecore",
   "intro": "Quick comfort in here, for when you're tired, unwell or busy. Juices and snacks too.",
   "clusters": {
     "warm-slow": {

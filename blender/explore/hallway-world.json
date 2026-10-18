@@ -13,12 +13,12 @@
   "objects": {
     "walk-hall": { "label": "Down the hall", "ref": "the hallway", "type": "walk", "go": "hall-middle", "themes": [] },
     "walk-front": { "label": "To the front door", "ref": "the entrance hall", "type": "walk", "go": "hall-entrance", "arrive_yaw": 180, "themes": [] },
-    "door-cuddlecore": { "label": "Cuddlecore", "blurb": "Quick comfort, juices and snacks", "ref": "the kitchen door", "type": "door", "go": "cuddlecore", "themes": [] },
+    "door-cuddlecore": { "label": "Cuddlecore", "blurb": "Quick comfort, juices and snacks", "ref": "the Cuddlecore door", "type": "door", "go": "cuddlecore", "themes": [] },
     "door-flourish": { "label": "Flourish", "blurb": "Proper meals from whole foods", "ref": "the Flourish door", "type": "door", "go": "flourish", "themes": [] },
     "door-sweet-spells": { "label": "Sweet Spells", "blurb": "For the sweet tooth", "ref": "the Sweet Spells door", "type": "door", "go": "sweet-spells", "themes": [] },
     "door-chiapothecary": { "label": "Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": 45,
                             "themes": [], "always_visible": true },
-    "dial-cuddlecore": { "label": "The dial", "map": "The dial by the kitchen door", "ref": "the dial by the kitchen door", "type": "dial", "door": "door-cuddlecore", "themes": [] },
+    "dial-cuddlecore": { "label": "The dial", "map": "The dial by the Cuddlecore door", "ref": "the dial by the Cuddlecore door", "type": "dial", "door": "door-cuddlecore", "themes": [] },
     "dial-flourish": { "label": "The dial", "map": "The dial by the Flourish door", "ref": "the dial by the Flourish door", "type": "dial", "door": "door-flourish", "themes": [] },
     "dial-sweet-spells": { "label": "The dial", "map": "The dial by the Sweet Spells door", "ref": "the dial by the Sweet Spells door", "type": "dial", "door": "door-sweet-spells", "themes": [] },
     "dial-chiapothecary": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial by the Chiapothecary door", "type": "dial", "door": "door-chiapothecary", "themes": [] },
@@ -32,7 +32,7 @@
     "notice-board": { "label": "The notice board", "ref": "the notice board", "type": "ambient", "themes": [],
                       "moment": "What's in season, the soup of the day, and anything I pin up for you. Nothing pinned yet." },
     "sea-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": [],
-                    "moment": "The same bay you can see from the kitchen." }
+                    "moment": "The same bay you can see from Cuddlecore." }
   },
   "dial": [
     { "label": "Cuddlecore", "go": "cuddlecore", "blurb": "Quick comfort, juices and snacks" },

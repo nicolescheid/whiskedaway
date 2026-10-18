@@ -1,9 +1,9 @@
 {
   "room": "flourish",
-  "name": "The Flourish kitchen",
+  "name": "Flourish",
   "intro": "This is where I cook properly. Whole foods, and a bit more prep.",
   "stops": {
-    "flourish": { "stop": "middle", "title": "The Flourish kitchen", "where": "In the Flourish kitchen", "yaw": 0 }
+    "flourish": { "stop": "middle", "title": "Flourish", "where": "In Flourish", "yaw": 0 }
   },
   "clusters": {
     "build-up": { "label": "a proper meal, made from scratch", "themes": ["nourishing", "whole-food", "meal", "protein", "pulses", "eggs", "garden"] }

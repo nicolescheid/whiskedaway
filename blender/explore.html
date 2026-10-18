@@ -290,7 +290,7 @@
 <div id="tint" aria-hidden="true"></div>
 
 <div class="bar">
-  <h1 id="room-title">Cuddlecore Kitchen</h1>
+  <h1 id="room-title">Cuddlecore</h1>
   <span class="mode" id="mode"></span>
   <a class="chip" id="btn-inn" href="/?door=1">Front door</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
@@ -320,11 +320,11 @@
 </aside>
 
 <section class="chatwin" id="chatwin" aria-label="Chat with Gemma">
-  <div class="cw-bar"><span id="cw-title">Gemma · Cuddlecore Kitchen</span><span><button id="cw-min" aria-label="Minimise the chat" aria-expanded="true">_</button></span></div>
+  <div class="cw-bar"><span id="cw-title">Gemma · Cuddlecore</span><span><button id="cw-min" aria-label="Minimise the chat" aria-expanded="true">_</button></span></div>
   <div class="cw-body">
     <div class="cw-status">
       <img id="cw-av" src="explore/assets/gemma-pixel.png" alt="Gemma, a pixel-art kitchen genie">
-      <div><b>Gemma</b><small><i aria-hidden="true"></i><span id="cw-where">In the kitchen</span></small></div>
+      <div><b>Gemma</b><small><i aria-hidden="true"></i><span id="cw-where">In Cuddlecore</span></small></div>
     </div>
     <div class="cw-log" id="cw-log" role="log" aria-live="polite"></div>
     <div class="cw-typing" id="cw-typing" hidden>Gemma is typing <span>• • •</span></div>
@@ -456,7 +456,7 @@ world.atoms.push(...chiaWorld.atoms);
 
 // ---------- rooms: the kitchen, and the hallway's two camera stops
 const ROOMS = {
-  cuddlecore: { title: 'Cuddlecore Kitchen', where: 'In the kitchen', eye: [0, 0, 1.6], spots: kitchenSpots,
+  cuddlecore: { title: 'Cuddlecore', where: 'In Cuddlecore', eye: [0, 0, 1.6], spots: kitchenSpots,
                 pano: (w, night, full) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` },
 };
 for (const [id, st] of Object.entries(hallWorld.stops)) {
@@ -965,7 +965,11 @@ function goRoom(id, yaw) {
       ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
       : `It's ${seasonGuess} where you are, I think, so that's what's growing. The wheel by the door turns it to any season.`, [], true));
   }
-  // First time in a room this visit: Gemma says what it's for, in the words of its blurb (ux-journey J3)
+  introduce(id);
+}
+// First time in a room this visit: Gemma says what it's for, in the words of its blurb (ux-journey J3).
+// From goRoom, and on arrival once the weather question is answered (or straight away if she didn't ask one)
+function introduce(id = state.room) {
   const intro = { cuddlecore: world.intro, flourish: flWorld.intro, 'sweet-spells': sweetWorld.intro, chiapothecary: chiaWorld.intro }[id];
   if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); say(intro, [], true); }
 }
@@ -998,7 +1002,7 @@ function turnDial(o) {
   if (go === state.room) return say("You're already here.", [], true);
   const starSays = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',
                      chiapothecary: 'Your wander says the Chiapothecary. In you go.' };
-  say(o.star ? (starSays[go] || 'Your wander says the kitchen. In you go.') : 'In you go.', [], true);
+  say(o.star ? (starSays[go] || 'Your wander says Cuddlecore. In you go.') : 'In you go.', [], true);
   setTimeout(() => goRoom(go), 700);
 }
 $('dial-ok').onclick = () => $('dialdlg').classList.remove('open');
@@ -1090,7 +1094,7 @@ const CHIP_ACTS = {
   choose: cluster => record({ kind: 'choose', cluster }),
   weather: id => chooseWeather(id),
   barometer: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); },
-  confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); },
+  confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); introduce(); },
 };
 function setChips(chips) {
   const box = $('cw-chips');
@@ -1327,13 +1331,14 @@ function openWeather() {
 function chooseWeather(id) {
   if (!world.weathers[id]) return;
   $('dial').querySelectorAll('button').forEach(b => { const on = b.dataset.w === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-  if (id === state.weather) return;
+  if (id === state.weather) return introduce();
   state.weather = id;
   state.weatherFrom = 'visitor';
   showWeather(id);
   say(world.weathers[id].moment, [], true);
   record({ kind: 'weather', id });
   track('weather_change', { room: state.room, weather: id });
+  introduce();
 }
 $('weather-ok').onclick = () => $('weather').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('weather').classList.remove('open'); });
@@ -1483,6 +1488,8 @@ function arrive() {
     store.save(state);
     chatLine('gemma', "Hello, love. What's the weather like for you today?");
     setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, do: ['weather', id] })));
+  } else {
+    introduce();
   }
 }
 // The film ends looking level down the hall through a narrower lens: start there, then ease out to the usual view
