@@ -3,20 +3,101 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WhiskedAway: Gemma's Inn</title>
-<meta name="description" content="Step inside Gemma's Inn: wander the rooms, and the kitchen genie finds you something to cook from what you're drawn to.">
+<title>WhiskedAway: wander Gemma's Inn and find something to cook</title>
+<meta name="description" content="A recipe site you explore. Wander a magic inn by the sea, touch what catches your eye, and Gemma finds you something to cook. Free, with no account.">
 <link rel="canonical" href="https://whiskedaway.com/">
 <meta property="og:site_name" content="WhiskedAway">
 <meta property="og:locale" content="en_NZ">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://whiskedaway.com/">
-<meta property="og:title" content="WhiskedAway: Gemma's Inn">
-<meta property="og:description" content="Step inside Gemma's Inn: wander the rooms, and the kitchen genie finds you something to cook from what you're drawn to.">
+<meta property="og:title" content="WhiskedAway: wander Gemma's Inn and find something to cook">
+<meta property="og:description" content="A recipe site you explore. Wander a magic inn by the sea, touch what catches your eye, and Gemma finds you something to cook. Free, with no account.">
 <meta property="og:image" content="https://whiskedaway.com/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="The WhiskedAway Inn, a stone cottage by the sea, held inside a balloon whisk">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WhiskedAway: wander Gemma's Inn and find something to cook">
+<meta name="twitter:description" content="A recipe site you explore. Wander a magic inn by the sea, touch what catches your eye, and Gemma finds you something to cook. Free, with no account.">
+<meta name="twitter:image" content="https://whiskedaway.com/og-image.jpg">
+<!-- What the site is, for search engines and AI assistants: the same facts as the story on the front door -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "WebSite",
+   "@id": "https://whiskedaway.com/#site",
+   "name": "WhiskedAway",
+   "url": "https://whiskedaway.com/",
+   "description": "WhiskedAway is a recipe site you explore. Instead of a menu, you wander a magic inn by the sea, held inside a balloon whisk. Gemma, the Inn's kitchen genie, notices what you're drawn to and leaves you ideas for what to cook. It's free, there's no account, and it works on phones and computers. Made by Praxilogue in Aotearoa New Zealand.",
+   "inLanguage": "en-NZ",
+   "creator": {
+    "@type": "Organization",
+    "@id": "https://praxilogue.com/#org",
+    "name": "Praxilogue",
+    "url": "https://praxilogue.com"
+   },
+   "publisher": {
+    "@id": "https://praxilogue.com/#org"
+   }
+  },
+  {
+   "@type": "WebPage",
+   "@id": "https://whiskedaway.com/#page",
+   "url": "https://whiskedaway.com/",
+   "name": "WhiskedAway: wander Gemma's Inn and find something to cook",
+   "description": "A recipe site you explore. Wander a magic inn by the sea, touch what catches your eye, and Gemma finds you something to cook. Free, with no account.",
+   "inLanguage": "en-NZ",
+   "isPartOf": {
+    "@id": "https://whiskedaway.com/#site"
+   },
+   "primaryImageOfPage": "https://whiskedaway.com/og-image.jpg"
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://whiskedaway.com/#faq",
+   "isPartOf": {
+    "@id": "https://whiskedaway.com/#site"
+   },
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "Is WhiskedAway free?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. There's nothing to buy and nothing to sign up for. Step through the door and wander."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Do I need an account?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No. There's no account and no login. Your visit is forgotten when you close the tab."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does it know where I am?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Only roughly. To match the Inn's weather to yours, our server looks up the weather for the area your connection comes from, to about 50 km, and keeps nothing. Your season comes from your time zone, checked against that rough area, keeping only \"north\" or \"south\"."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "Does it work on my phone?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. It works on phones, tablets and computers. Drag to look around, and tap to touch things."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -198,7 +279,13 @@
 </style>
 <style>
   /* The front door (docs/front-door-spec.md): the storybook picture, the film, the welcome and the bell */
-  #front-door { position: fixed; inset: 0; z-index: 50; background: #fcf6e5; transition: opacity .6s ease, background-color .6s ease; }
+  #front-door { position: fixed; inset: 0; z-index: 50; background: #fcf6e5; transition: opacity .6s ease, background-color .6s ease;
+                overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; }
+  /* The first screen is the picture, a little under full height so the story peeks up; the film takes the whole screen */
+  #front-door .fd-first { position: relative; height: calc(100vh - 40px); height: calc(100dvh - 40px); transition: height .25s ease; }
+  #front-door.playing, #front-door.short { overflow: hidden; }
+  #front-door.playing .fd-first, #front-door.short .fd-first { height: 100vh; height: 100dvh; }
+  #front-door.playing .fd-after, #front-door.short .fd-after { display: none; }
   /* Screens far from the film's shape (4:3, square, ultra-wide) see the whole film with paper bands, which turn dark indoors */
   #front-door.contain img, #front-door.contain video { object-fit: contain; }
   #front-door.indoors { background-color: #1a1410; }
@@ -208,13 +295,56 @@
   #front-door img, #front-door video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   #front-door .fd-hall { opacity: 0; transition: opacity .5s ease; }
   #front-door.short .fd-hall { opacity: 1; }
-  #front-door .fd-words { position: absolute; left: 0; right: 0; bottom: max(4vh, 18px); margin: 0; text-align: center; pointer-events: none;
+  #front-door .fd-words { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 56px 16px max(2vh, 8px); text-align: center; pointer-events: none;
+                          background: linear-gradient(to top, rgba(252, 246, 229, .94) 0%, rgba(252, 246, 229, .86) 62%, rgba(252, 246, 229, 0) 100%);
                           color: #5c3a2e; transition: opacity .4s; }
-  #front-door .fd-words h1 { margin: 0; font: 600 clamp(26px, 4vw, 44px) 'Crimson Pro', Georgia, serif; letter-spacing: .02em; }
-  #front-door .fd-words p { margin: 2px 0 0; font: 500 clamp(14px, 1.6vw, 17px) 'Quicksand', system-ui, sans-serif; }
+  #front-door .fd-words h1 { margin: 0; font: 600 clamp(26px, 4vw, 44px) 'Crimson Pro', Georgia, serif; letter-spacing: .02em; line-height: 1.05; }
+  #front-door .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #front-door .fd-words h1 .what { display: block; font: 500 clamp(13px, 1.4vw, 15px) 'Quicksand', system-ui, sans-serif; letter-spacing: .04em; opacity: .85; }
+  #front-door .fd-words .promise { margin: 6px auto 0; max-width: 34em; font: 500 clamp(17px, 1.8vw, 20px) 'Crimson Pro', Georgia, serif; color: #2c2416; }
+  #front-door .fd-words .how { pointer-events: auto; display: inline-block; margin-top: 2px; padding: 12px 14px; min-height: 44px;
+                               font: 600 14px 'Quicksand', system-ui, sans-serif; color: #8b4d5c; text-decoration: none; }
+  #front-door .fd-words .how:hover { text-decoration: underline; }
+  #front-door .fd-words .how:focus-visible { outline: 3px solid #8b4d5c; outline-offset: 2px; border-radius: 8px; }
+  @media (max-width: 560px) { #front-door .fd-words .cue-where { display: none; } #front-door .fd-first { height: calc(100vh - 32px); height: calc(100dvh - 32px); } }
+  #front-door .fd-words .cue { margin: 4px 0 0; font: 500 clamp(14px, 1.6vw, 17px) 'Quicksand', system-ui, sans-serif; }
   #front-door.playing .fd-words, #front-door.short .fd-words { opacity: 0; }
   #front-door .fd-enter:focus-visible { outline: 3px solid #8b4d5c; outline-offset: -6px; }
-  #front-door.waiting .fd-words p::after { content: ' …'; }
+  #front-door.waiting .fd-words .cue::after { content: ' …'; }
+  /* The story: parchment under the picture, one calm column */
+  #story { position: relative; background: #f4efe4; color: #2c2416; box-shadow: 0 -10px 24px rgba(60, 40, 20, .14);
+           padding: 40px 16px 24px; font: 400 17px/1.6 'Crimson Pro', Georgia, serif; }
+  #story > * { max-width: 680px; margin-left: auto; margin-right: auto; }
+  #story h2 { font: 600 22px/1.25 'Crimson Pro', Georgia, serif; color: #5c3a2e; margin: 34px auto 8px; }
+  #story h2:first-child { margin-top: 0; }
+  #story h3 { font: 600 17px/1.3 'Quicksand', system-ui, sans-serif; margin: 18px auto 4px; }
+  #story p, #story ol, #story ul, #story dl { margin-top: 0; margin-bottom: 12px; }
+  #story ol, #story ul { padding-left: 1.4em; }
+  #story li { margin: 4px 0; }
+  #story dt { font: 600 16px 'Quicksand', system-ui, sans-serif; margin-top: 10px; }
+  #story dd { margin: 2px 0 0; }
+  #story blockquote { margin: 0 auto 12px; padding: 4px 0 4px 16px; border-left: 3px solid rgba(139, 77, 92, .4); font-style: italic; }
+  #story a { color: #8b4d5c; }
+  #story .fd-foot { margin-top: 36px; padding-top: 16px; border-top: 1px solid rgba(139, 77, 92, .25); font: 500 14px 'Quicksand', system-ui, sans-serif;
+                    display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  #story .fd-foot button { font: inherit; background: none; border: 0; padding: 10px 0; color: #8b4d5c; text-decoration: underline; cursor: pointer; }
+  #story .fd-foot .step { background: #8b4d5c; color: #f4efe4; text-decoration: none; border-radius: 999px; padding: 10px 18px; }
+  #story .nojs { font-size: 15px; color: #5c5040; }
+  @media (min-width: 720px) {
+    #story { padding: 56px 24px 32px; font-size: 19px; }
+    #story h2 { font-size: 26px; }
+    #story dl.rooms { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+    #story dl.rooms > div { break-inside: avoid; }
+  }
+  /* "Step inside" stays to hand while reading: bottom of the screen on phones, top-right on computers */
+  #front-door .fd-pill { position: fixed; z-index: 2; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); min-height: 44px;
+                         padding: 10px 20px; border: 0; border-radius: 999px; background: #8b4d5c; color: #f4efe4;
+                         font: 600 15px 'Quicksand', system-ui, sans-serif; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); cursor: pointer;
+                         opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .25s, transform .25s; }
+  #front-door .fd-pill.show { opacity: 1; transform: none; pointer-events: auto; }
+  #front-door .fd-pill:focus-visible { outline: 3px solid #2c2416; outline-offset: 2px; }
+  @media (min-width: 720px) { #front-door .fd-pill { top: 16px; bottom: auto; } }
+  @media (prefers-reduced-motion: reduce) { #front-door { scroll-behavior: auto; } #front-door .fd-pill { transition: none; } }
   .chip.bell { padding: 3px 8px; line-height: 0; }
   .chip.bell img { width: 26px; height: 26px; transform-origin: 50% 12%; }
   .chip.bell.ring img { animation: ring .9s ease-in-out; }
@@ -258,13 +388,109 @@
 <body>
 <!-- The front door: shown at / on a new visit (or with ?door=1), never with ?room= -->
 <div id="front-door">   <!-- shown in the source, so search engines and readers without JavaScript get the door and its story -->
-  <button class="fd-enter" id="fd-enter" aria-label="Step inside the Inn">
-    <picture>
-      <source media="(max-aspect-ratio: 1/1)" srcset="explore/assets/front-door/picture-portrait.webp">
-      <img id="fd-pic" src="explore/assets/front-door/picture-landscape.webp" alt="The WhiskedAway Inn, a stone cottage by the sea, held inside a balloon whisk" fetchpriority="high">
-    </picture>
-  </button>
-  <div class="fd-words"><h1>WhiskedAway</h1><p>Gemma's Inn. Step inside.</p></div>
+  <div class="fd-first">
+    <button class="fd-enter" id="fd-enter" aria-label="Step inside the Inn">
+      <picture>
+        <source media="(max-aspect-ratio: 1/1)" srcset="explore/assets/front-door/picture-portrait.webp">
+        <img id="fd-pic" src="explore/assets/front-door/picture-landscape.webp" alt="The WhiskedAway Inn, a stone cottage by the sea, held inside a balloon whisk" fetchpriority="high">
+      </picture>
+    </button>
+    <div class="fd-words">
+      <h1>WhiskedAway<span class="what"><span class="sr-only">: </span>A recipe site you explore</span></h1>
+      <p class="promise">Wander Gemma's Inn, and she'll find you something to cook.</p>
+      <p class="cue" id="fd-cue"><span class="cue-where">Gemma's Inn. </span>Step inside.</p>
+      <a class="how" id="fd-how" href="/#story">How it works ⌄</a>
+    </div>
+  </div>
+  <div class="fd-after">
+  <!-- The story (copy: homepage-story-copy.md v1.2). Plain HTML on purpose: it's what search engines and AI assistants read -->
+  <section id="story" aria-labelledby="story-what">
+    <h2 id="story-what">What is WhiskedAway?</h2>
+    <p>WhiskedAway is a recipe site you explore. Instead of a menu, you wander a magic inn by the sea, held inside a
+      balloon whisk. Gemma, the Inn's kitchen genie, notices what you're drawn to and leaves you ideas for what to cook.
+      It's free, there's no account, and it works on phones and computers. Made by Praxilogue in Aotearoa New Zealand.</p>
+
+    <h2>How the Inn works</h2>
+    <ol>
+      <li>Step through the front door.</li>
+      <li>Look around, and touch whatever catches your eye: the window, the armchair, a jar on the shelf.</li>
+      <li>Gemma notices, and leaves you an idea that fits.</li>
+    </ol>
+    <p>You don't type anything. She reads where you go and what you touch, and when she asks you something, you answer
+      with a tap. She picks from recipes written for the Inn rather than inventing them. Sound is off until you turn it on.</p>
+
+    <h2>The rooms</h2>
+    <dl class="rooms">
+      <div><dt>Cuddlecore</dt><dd>Quick comfort, juices and snacks. For a day when you're unwell, tired or short of time.</dd></div>
+      <div><dt>Flourish</dt><dd>Proper meals from whole foods. The kitchen where a bit more prep goes in.</dd></div>
+      <div><dt>Sweet Spells</dt><dd>For the sweet tooth. Treats for any time of day, and a few for later.</dd></div>
+      <div><dt>The Chiapothecary</dt><dd>Your chia routine. Jars to set the night before, or keep in the fridge for any time.</dd></div>
+      <div><dt>The glasshouse</dt><dd>What's growing this season. Herbs and plants for the time of year where you are.</dd></div>
+      <div><dt>The hallway</dt><dd>The way between them all. A magic dial by each door takes you to any room, or wherever your wander points.</dd></div>
+    </dl>
+    <p>Upstairs, the library and the turret are coming.</p>
+
+    <h2 id="story-ideas">Ideas from Gemma</h2>
+    <p>As you wander, Gemma leaves ideas out for you: a short recipe, a ritual, or the reason something works. Each one
+      says why she chose it, such as "Because you lingered by the window." Open one to read it, or tap "Not this" and
+      she'll move on. She keeps track for this visit only, so the ideas follow you from room to room.</p>
+
+    <h2>Your weather, your time, your season</h2>
+    <p>The Inn opens in your own weather, at your own time of day, in your own season.</p>
+    <ul>
+      <li><b>Weather:</b> our server looks up the current weather for the rough area your connection comes from, to about
+        50 km, using Open-Meteo. Only the area is sent, never anything that identifies you, and nothing is kept.</li>
+      <li><b>Time:</b> the clocks follow your device's own clock.</li>
+      <li><b>Season:</b> your device's time zone tells the Inn which hemisphere you're in. Our server may check it against
+        the rough area of your connection, and keeps only "north" or "south".</li>
+    </ul>
+    <p>Why? Because these change what you feel like eating. Soup when it's raining, something cold when it's hot,
+      porridge in the morning, and whatever's in season.</p>
+
+    <h2>Change anything</h2>
+    <p>It's your Inn, so it's yours to change. Turn the barometer to change the weather. Push the hands of a clock to
+      cook for another time of day. Turn the seasons wheel in the glasshouse. Pick an energy candle to say how you're
+      feeling. Gemma's ideas change with you, and what you tell her follows you through every room for the visit.
+      Telling her what's in your pantry, where you live and what you can't eat is coming.</p>
+
+    <h2>Meet Gemma</h2>
+    <blockquote>
+      <p>Hello, love. I'm Gemma, and this is my Inn. I grow the herbs, I light the range, and I know which door
+        sticks. Have a wander. I'll notice what you're drawn to and leave you something to cook. I won't tell you
+        what's good for you, and I won't diagnose anything. I'll just help you find something you feel like eating.</p>
+    </blockquote>
+    <p>Gemma is an AI kitchen genie. Her suggestions are chosen with Claude, an AI model made by Anthropic. When it's
+      unavailable, a simpler picker built into the page stands in.</p>
+
+    <h2 id="story-kept">What's kept about you</h2>
+    <p>There's no account, and nothing asks for your name. What you do in the Inn, and what you tell Gemma, is
+      forgotten when you close the tab, apart from a note that you've been welcomed, so she doesn't say it twice. To
+      choose ideas, the Inn sends your wander to our server, with nothing that identifies you, and it isn't stored.
+      The Inn counts visits anonymously, without cookies, and never who. If your browser asks not to be tracked,
+      nothing is counted.</p>
+
+    <h2 id="story-faq">Questions</h2>
+    <h3>Is WhiskedAway free?</h3>
+    <p>Yes. There's nothing to buy and nothing to sign up for. Step through the door and wander.</p>
+    <h3>Do I need an account?</h3>
+    <p>No. There's no account and no login. Your visit is forgotten when you close the tab.</p>
+    <h3>Does it know where I am?</h3>
+    <p>Only roughly. To match the Inn's weather to yours, our server looks up the weather for the area your connection
+      comes from, to about 50 km, and keeps nothing. Your season comes from your time zone, checked against that rough
+      area, keeping only "north" or "south".</p>
+    <h3>Does it work on my phone?</h3>
+    <p>Yes. It works on phones, tablets and computers. Drag to look around, and tap to touch things.</p>
+
+    <noscript><p class="nojs">The Inn itself needs JavaScript to open its door. Everything above says what you'll find inside.</p></noscript>
+
+    <footer class="fd-foot">
+      <button type="button" class="step" id="fd-step">Step inside</button>
+      <button type="button" id="fd-credits">Made with open things</button>
+      <span>Made by <a href="https://praxilogue.com/">Praxilogue</a> in Aotearoa New Zealand</span>
+    </footer>
+  </section>
+  </div>
+  <button type="button" class="fd-pill" id="fd-pill" tabindex="-1" aria-hidden="true">Step inside</button>
 </div>
 <script>
   // Decide before anything paints, so the Inn never flashes up first
@@ -279,7 +505,8 @@
     let back = false;
     try { back = (JSON.parse(sessionStorage.getItem('wa-explore') || 'null')?.trail || []).length > 0; } catch { /* storage blocked */ }
     if (on && back) {
-      document.querySelector('#front-door .fd-words p').textContent = "Gemma's Inn. Come back in.";
+      document.getElementById('fd-cue').innerHTML = '<span class="cue-where">Gemma\'s Inn. </span>Come back in.';
+      document.getElementById('fd-step').textContent = document.getElementById('fd-pill').textContent = 'Come back in';
       document.getElementById('fd-enter').setAttribute('aria-label', 'Come back into the Inn');
     }
     // Which film fits this screen: portrait on upright screens, landscape otherwise. Close to the film's own

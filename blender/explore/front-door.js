@@ -61,6 +61,7 @@ export function frontDoor({ active, track }) {
             <li>"Front door" takes you back outside.</li>
             <li>The speaker beside the bell turns the Inn's sounds on. They start off.</li>
           </ul>
+          <p><a href="/?door=1#story">About the Inn</a>: what it is, where the weather comes from, and what's kept.</p>
         </div>
         <button class="ok" id="welcome-ok">Come in</button>
       </div>`;
@@ -210,8 +211,45 @@ export function frontDoor({ active, track }) {
     return half * 360 / Math.PI;
   }
 
-  button.addEventListener('click', async () => {
-    track('door_open', { film: short ? 'short' : 'full' });
+  // ---------- the story below the picture (homepage-story-ux.md): a link down to it, "Step inside" while reading,
+  // the credits from its footer, and two counts: the story seen, and the link used
+  const how = $('fd-how'), pill = $('fd-pill'), first = door.querySelector('.fd-first');
+  // Scrolled here rather than followed: the page's <base href="/explore/"> would turn "#story" into another page
+  const toStory = smooth => $('story')?.scrollIntoView({ behavior: smooth && !reduced ? 'smooth' : 'auto', block: 'start' });
+  how?.addEventListener('click', e => { e.preventDefault(); toStory(true); track('story_link'); });
+  if (location.hash === '#story') requestAnimationFrame(() => toStory(false));   // the bell card's "About the Inn" link
+  if ('IntersectionObserver' in window) {
+    const seen = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { track('story_view'); seen.disconnect(); }
+    }, { root: door, threshold: 0.5 });
+    const lead = $('story-what');
+    if (lead) seen.observe(lead);
+    // The pill shows once the picture has scrolled mostly out of view
+    new IntersectionObserver(([e]) => {
+      const show = !e.isIntersecting;
+      pill.classList.toggle('show', show);
+      pill.tabIndex = show ? 0 : -1;
+      pill.setAttribute('aria-hidden', String(!show));
+    }, { root: door, threshold: 0.15 }).observe(first);
+  }
+  const fromStory = () => { door.style.scrollBehavior = 'auto'; door.scrollTop = 0; enter('story'); };
+  pill.addEventListener('click', fromStory);
+  $('fd-step')?.addEventListener('click', fromStory);
+  $('fd-credits')?.addEventListener('click', () => {
+    const credits = $('credits');
+    if (!credits) return;
+    credits.inert = false;
+    credits.style.zIndex = '60';                         // above the door
+    credits.classList.add('open');
+    $('credits-ok')?.focus();
+  });
+
+  let entering = false;
+  button.addEventListener('click', () => enter('picture'));
+  async function enter(from) {
+    if (entering) return;
+    entering = true;
+    track('door_open', { film: short ? 'short' : 'full', from });
     door.dataset.locked = '1';                            // the fit stays put from here, whatever the window does
     if (short) shape = layout().shape;
     try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* fine */ }
@@ -228,7 +266,7 @@ export function frontDoor({ active, track }) {
     video?.load();
     if (!welcomed) await openWelcome();
     enteredDone();
-  }, { once: true });
+  }
 
   return api;
 }
