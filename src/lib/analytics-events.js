@@ -1,0 +1,55 @@
+/**
+ * Every analytics event WhiskedAway can send, and the only parameters each may carry.
+ * See docs/analytics-plan.md for why each one exists and what is deliberately left out.
+ *
+ * The browser (src/lib/analytics.js) and the genie Worker (POST /m) both import this file,
+ * so this list is the one place to audit. Anything not here is dropped, in the browser and
+ * again in the Worker.
+ *
+ * Plain ES module with no imports, like genie.js, so the explore world can load it too.
+ */
+
+export const EVENTS = {
+  // The explore world (/explore)
+  explore_start: ['room', 'nav_mode', 'load_ms', 'full_res'],
+  room_enter: ['room', 'from_room', 'step'],
+  hotspot_touch: ['room', 'object', 'object_type'],   // energy candles: object_type only, never which candle
+  door_closed: ['room', 'object'],
+  weather_change: ['room', 'weather'],
+  time_change: ['room', 'time_of_day'],
+  season_change: ['season'],
+  dial_turn: ['dial_choice'],
+  atom_served: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],
+  atom_open: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],
+  atom_dismiss: ['atom', 'atom_kind', 'nav_mode', 'room'],
+  nav_fallback: ['reason'],
+  map_open: ['room'],
+  notebook_open: ['room'],
+  visit_forget: [],
+  leave_to_inn: ['room', 'step'],
+
+  // The React Inn (/)
+  scene_view: ['scene'],
+  recipe_request: ['scene'],
+  recipe_result: ['scene', 'outcome'],
+};
+
+// Short IDs from the world files and the code, never free text
+const VALUE = /^[a-z0-9][a-z0-9 ._-]{0,39}$/i;
+
+/** The event with only its allowed parameters, or null if the event isn't on the list. */
+export function cleanEvent(name, params = {}) {
+  const allowed = EVENTS[name];
+  if (!allowed) return null;
+  const out = {};
+  for (const key of allowed) {
+    const v = params[key];
+    if (typeof v === 'string' && VALUE.test(v)) out[key] = v;
+  }
+  return { name, params: out };
+}
+
+/** Steps so far in the visit, in buckets, so "after how many steps" never becomes a timeline. */
+export function stepBucket(n) {
+  return n <= 1 ? '1' : n <= 3 ? '2-3' : n <= 7 ? '4-7' : n <= 15 ? '8-15' : '16+';
+}

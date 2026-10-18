@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useProfile } from '../contexts/ProfileContext';
 
 import { genieFetch } from '../lib/genie';
+import { track } from '../lib/analytics.js';
 
 /**
  * Shared hook for submitting kitchen forms to the Cloudflare Worker.
@@ -20,9 +21,15 @@ export default function useKitchenSubmit(kitchenId) {
     setLoading(true);
     setError(null);
 
+    // Counted: that a recipe was asked for and how it went. Never what was in the form.
+    track('recipe_request', { scene: kitchenId });
+    let answered = false;
     try {
       const response = await genieFetch('/', payload);
 
+      answered = true;
+      track('recipe_result', { scene: kitchenId, outcome: response.ok ? 'ok'
+        : response.status === 429 ? 'rate_limited' : response.status === 403 ? 'bot_check' : 'error' });
       if (!response.ok) throw new Error(`Request failed: ${response.status}`);
 
       const data = await response.json();
@@ -36,6 +43,7 @@ export default function useKitchenSubmit(kitchenId) {
 
       return data;
     } catch (err) {
+      if (!answered) track('recipe_result', { scene: kitchenId, outcome: 'error' });
       setError(err.message);
       return null;
     } finally {

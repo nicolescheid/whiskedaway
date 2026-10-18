@@ -1,6 +1,9 @@
 // WhiskedAway Genie - Cloudflare Worker
 // This worker proxies requests to Claude with Gemma's personality
 
+// The analytics allow-list, shared with the browser (docs/analytics-plan.md)
+import { cleanEvent } from '../src/lib/analytics-events.js';
+
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 // Gemma's Constitution - the soul of the kitchen genie
@@ -507,7 +510,7 @@ const corsHeaders = {
 };
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return withCors(new Response(null, { headers: corsHeaders }), request, env);
@@ -536,6 +539,11 @@ export default {
     // Turnstile token in, signed visitor pass out
     if (path === '/session') {
       return withCors(await handleSession(request, env), request, env);
+    }
+
+    // Anonymous visit counting, forwarded to Google Analytics (see handleMeasure)
+    if (path === '/m') {
+      return withCors(await handleMeasure(request, env, ctx), request, env);
     }
 
     // Everything else costs money: check the visitor before doing any work
@@ -1007,6 +1015,71 @@ async function handleSession(request, env) {
   }
   const pass = await signPass(env, crypto.randomUUID());
   return jsonResponse({ pass, expires_in: PASS_TTL_SECONDS });
+}
+
+// ---------------------------------------------------------------------------
+// Analytics. The browser sends a batch of allow-listed events here (as text/plain,
+// with the visitor pass in the body so sendBeacon can send it), and this forwards
+// them to the GA4 Measurement Protocol. Google gets the events from Cloudflare,
+// never the visitor's IP, browser or cookies. Always answers 204, so a broken
+// counter never shows up as an error on the page. With no GA_API_SECRET it does
+// nothing at all.
+// ---------------------------------------------------------------------------
+
+const MP_URL = 'https://www.google-analytics.com/mp/collect';
+
+async function handleMeasure(request, env, ctx) {
+  const done = () => new Response(null, { status: 204, headers: corsHeaders });
+  const text = await request.text().catch(() => '');
+  if (!text || text.length > 16384) return done();
+  let body;
+  try { body = JSON.parse(text); } catch { return done(); }
+
+  // Same bot guard as the paid routes: an allowed Origin and a visitor pass
+  const origin = request.headers.get('Origin') || '';
+  const pass = await verifyPass(env, typeof body.pass === 'string' ? body.pass : null);
+  let problem = null;
+  if (!allowedOrigins(env).includes(origin)) problem = 'bad_origin';
+  else if (!pass) problem = 'no_pass';
+  else if (!(await underLimit(env.MEASURE_LIMIT, `m:${pass.sid}`))) problem = 'visitor_rate';
+  if (problem) {
+    console.log(JSON.stringify({ guard: problem, route: 'm', enforce: enforcing(env), origin: origin || null }));
+    if (enforcing(env)) return done();
+  }
+  const visit = typeof body.visit === 'string' && /^[0-9a-f-]{36}$/.test(body.visit) ? body.visit : null;
+  const session = Number.isInteger(body.session) && body.session > 0 ? body.session : null;
+  if (!visit || !session) return done();
+  const surface = body.surface === 'explore' ? 'explore' : 'inn';
+  const device = body.device === 'mobile' ? 'mobile' : 'desktop';
+  const country = /^[A-Z]{2}$/.test(request.cf?.country || '') ? request.cf.country : null;
+
+  const events = (Array.isArray(body.events) ? body.events : []).slice(0, 25).map(e => {
+    const clean = cleanEvent(e?.name, e?.params);
+    if (!clean) return null;
+    Object.assign(clean.params, {
+      session_id: String(session),
+      engagement_time_msec: Math.max(1, Math.min(60000, Math.round(Number(e.ms) || 1))),
+      surface, device,
+      ...(country ? { country } : {}),
+      ...(body.debug === true ? { debug_mode: 1 } : {}),
+    });
+    return clean;
+  }).filter(Boolean);
+  if (!events.length) return done();
+  if (body.debug === true) console.log(JSON.stringify({ measure: 'debug', events }));
+  if (!env.GA_API_SECRET || !env.GA_MEASUREMENT_ID) return done();
+
+  const url = `${MP_URL}?measurement_id=${encodeURIComponent(env.GA_MEASUREMENT_ID)}&api_secret=${encodeURIComponent(env.GA_API_SECRET)}`;
+  const mp = {
+    client_id: visit,                                  // the page's in-memory visit ID: one visit, never a person
+    ...(country ? { user_location: { country_id: country } } : {}),
+    device: { category: device },
+    events,
+  };
+  ctx.waitUntil(fetch(url, { method: 'POST', body: JSON.stringify(mp) })
+    .then(r => { if (!r.ok) console.log(JSON.stringify({ measure: 'mp_status', status: r.status })); })
+    .catch(err => console.log(JSON.stringify({ measure: 'mp_error', error: String(err) }))));
+  return done();
 }
 
 /** Returns a Response to send instead of doing the work, or null to carry on. */
