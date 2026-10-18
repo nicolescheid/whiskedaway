@@ -95,7 +95,8 @@ straight on, and the analytics counts one visit rather than two.
 | `/archive/cuddlecore` and the other old scenes | The old Inn's scenes |
 | `/archive/original/…` | The older form-based site |
 | `/cuddlecore`, `/flourish`, `/sweet-spells` | 301 to the same room in the 360° Inn (question 7) |
-| `/cravings`, `/chiapothecary`, `/academy` | 301 to `/archive/<scene>` until those rooms exist |
+| `/chiapothecary` | 301 to `/?room=chiapothecary` (the room went live 18 Oct) |
+| `/cravings`, `/academy` | 301 to `/archive/<scene>` until those rooms exist |
 | `/original/*` | 301 to `/archive/original/*` |
 
 Reloading inside the same tab keeps you where you were (the visit state is in `sessionStorage`
