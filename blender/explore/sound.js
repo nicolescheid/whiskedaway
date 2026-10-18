@@ -1,4 +1,4 @@
-// The Inn's sound (docs: the sound plan in the team notes, stages A to C).
+// The Inn's sound (docs: the sound plan in the team notes, stages A to D).
 // Off until the visitor turns it on with the speaker chip by the bell (or "Sound" in Gemma's chat).
 // The choice lives in this tab only, like the rest of the visit. Everything here is synthesised in
 // Web Audio: no files to fetch, nothing to license, nothing to fail on a phone.
@@ -266,6 +266,84 @@ function startBed() {
   }, 150);
 }
 
+// ---------- music (stage D): things in the rooms that play when you touch them
+// The music box in Sweet Spells: steel tines plucked by a turning drum. The tunes are public-domain
+// compositions written out here note by note, so there's no recording to license.
+// Notation: NOTE:length, in the tune's unit; R is a rest.
+const TUNES = {
+  // Any weather: Mozart's "Ah vous dirai-je, maman" (the tune of "Twinkle, Twinkle"). Unit: a crotchet
+  twinkle: { unit: 0.42, up: 12, voices: [
+    'C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4 F4 F4 E4 E4 D4:2 G4 G4 F4 F4 E4 E4 D4:2 C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2',
+    'C3:2 C3:2 F3:2 C3:2 F3:2 C3:2 G3:2 C3:2 C3:2 G3:2 C3:2 G3:2 C3:2 G3:2 C3:2 G3:2 C3:2 C3:2 F3:2 C3:2 F3:2 C3:2 G3:2 C3:2'] },
+  // Rain: Beethoven, Für Elise, the opening. Unit: a semiquaver
+  elise: { unit: 0.16, up: 0, voices: [
+    'E5 D#5 E5 D#5 E5 B4 D5 C5 A4:3 C4 E4 A4 B4:3 E4 G#4 B4 C5:3 E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:3 C4 E4 A4 B4:3 E4 C5 B4 A4:6',
+    'R:8 A3 E4 A4 R:3 E3 E4 G#4 R:3 A3 E4 A4 R:3 R:6 A3 E4 A4 R:3 E3 E4 G#4 R:3 A3 E4 A4 R:3'] },
+  // Night: Brahms, Lullaby (Wiegenlied, Op. 49 No. 4). Unit: a quaver
+  brahms: { unit: 0.33, up: 12, voices: [
+    'E4 E4 G4:4 E4 E4 G4:4 E4 G4 C5:3 B4 A4:2 A4:2 G4:2 D4 E4 F4:2 D4:2 D4 E4 F4:4 D4 F4 B4 A4 G4:2 B4:2 C5:4 C4 C4 C5:4 A4 F4 G4:4 E4 C4 F4:2 G4:2 A4:2 G4:4 C4 C4 C5:4 A4 F4 G4:4 E4 C4 F4:2 E4:2 D4:2 C4:6',
+    'R:2 C3:6 C3:6 F3:6 C3:6 G3:6 G3:6 G3:6 C3:6 F3:6 C3:6 F3:6 C3:6 F3:6 C3:6 G3:6 C3:6'] },
+};
+const SEMI = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+function parseTune({ unit, up, voices }) {
+  const events = [];
+  let total = 0;
+  for (const voice of voices) {
+    let at = 0;
+    for (const tok of voice.trim().split(/\s+/)) {
+      const [name, len = '1'] = tok.split(':');
+      const m = /^([A-G])(#?)(\d)$/.exec(name);
+      if (m) events.push({ t: at * unit, f: 440 * 2 ** ((12 * (+m[3] + 1) + SEMI[m[1]] + (m[2] ? 1 : 0) + up - 69) / 12) });
+      at += +len;
+    }
+    total = Math.max(total, at * unit);
+  }
+  return { events: events.sort((a, b) => a.t - b.t), total };
+}
+// A tine: bright, quick to speak, ringing on; the higher it is, the sooner it fades
+function tine(f, t, out) {
+  note(f, t + rnd(-0.006, 0.006), { gain: 0.05, decay: Math.min(1.6, 900 / f), partials: [[1, 1], [2, 0.12], [4.2, 0.06]], out });
+}
+
+const MUSIC = {
+  'music-box': { room: 'sweet-spells', pick: s => s?.night ? 'brahms' : s?.weather === 'rain' || s?.weather === 'stormy' ? 'elise' : 'twinkle' },
+};
+let playing = null;                              // { id, out, tune, start, i, timer }
+function stopMusic(fade = 0.6) {
+  if (!playing) return;
+  clearInterval(playing.timer);
+  const { out } = playing;
+  out.gain.setTargetAtTime(0, ctx.currentTime, fade / 4);
+  setTimeout(() => out.disconnect(), fade * 1000 + 300);
+  playing = null;
+}
+function startMusic(id) {
+  stopMusic(0.2);
+  if (!on || !audio()) return;
+  const out = ctx.createGain();
+  out.connect(master);
+  const p = { id, out, start: ctx.currentTime + 0.15, i: 0 };
+  p.tune = parseTune(TUNES[MUSIC[id].pick(scene)]);
+  p.timer = setInterval(() => {
+    if (ctx.state !== 'running') return;
+    const now = ctx.currentTime;
+    if (p.start + p.tune.total < now - 1) { p.start = now + 0.1; p.i = 0; }   // the tab slept: start the tune again
+    while (true) {
+      const ev = p.tune.events[p.i];
+      if (!ev) {                                   // the end of the tune: a breath, then again, in whatever suits the weather now
+        p.start += p.tune.total + 1.6;
+        p.tune = parseTune(TUNES[MUSIC[id].pick(scene)]);
+        p.i = 0;
+        continue;
+      }
+      if (p.start + ev.t > now + 0.5) break;
+      tine(ev.f, p.start + ev.t, out);
+      p.i++;
+    }
+  }, 100);
+  playing = p;
+}
+
 // A hidden tab goes quiet (and stops using the battery), and picks up again when you come back
 if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => {
   if (!ctx || !on) return;
@@ -277,7 +355,7 @@ export const sound = {
   set(value) {
     on = !!value;
     try { on ? sessionStorage.setItem(KEY, '1') : sessionStorage.removeItem(KEY); } catch { /* ignore */ }
-    if (on) { audio(); startTicking(); startBed(); } else { stopTicking(); stopStriking(); stopBed(0.4); }   // inside the click, so the browser allows it
+    if (on) { audio(); startTicking(); startBed(); } else { stopTicking(); stopStriking(); stopBed(0.4); stopMusic(0.3); }   // inside the click, so the browser allows it
     dispatchEvent(new CustomEvent('wa-sound', { detail: on }));
   },
   toggle() { this.set(!on); if (on) { lastShimmer = -Infinity; this.shimmer(); } },
@@ -336,6 +414,18 @@ export const sound = {
   place(id) {
     place = id;
     if (hallway()) startTicking(); else { stopTicking(); stopStriking(); }
+    if (playing && MUSIC[playing.id].room !== id) stopMusic(1.2);   // the music stays in its room
+  },
+
+  // Touch a thing that plays (the music box): starts it, or stops it if it's playing.
+  // Returns whether it's playing now. With sound off it stays quiet.
+  music(id) {
+    if (!MUSIC[id] || !on) return false;
+    try {
+      if (playing?.id === id) { stopMusic(); return false; }
+      startMusic(id);
+      return !!playing;
+    } catch { return false; }
   },
 
   // The room's ambience: call whenever the room, the weather, the hour or the season changes

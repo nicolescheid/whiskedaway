@@ -190,6 +190,8 @@
   .chip.speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
   .chip.speaker .waves, .chip.speaker[aria-pressed="true"] .hush { display: none; }
   .chip.speaker[aria-pressed="true"] .waves { display: inline; }
+  .chip.speaker.nudge { animation: nudge 1s ease-in-out 2; }
+  @keyframes nudge { 50% { box-shadow: 0 0 0 4px rgba(139, 77, 92, .45); transform: scale(1.12); } }
   @keyframes ring { 15% { transform: rotate(18deg); } 35% { transform: rotate(-15deg); } 55% { transform: rotate(10deg); } 75% { transform: rotate(-6deg); } }
   .tool .box.welcome { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
   .welcome .who { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
@@ -198,7 +200,7 @@
   .welcome .help li { margin: 4px 0; }
   /* Phones: the room's name on its own line, so the chips and the bell fit beneath it */
   @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; justify-content: flex-end; } .bar h1 { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; } }
-  @media (prefers-reduced-motion: reduce) { .chip.bell.ring img { animation: none; } #front-door { transition-duration: .2s; } }
+  @media (prefers-reduced-motion: reduce) { .chip.speaker.nudge { animation: none; box-shadow: 0 0 0 3px rgba(139, 77, 92, .45); } .chip.bell.ring img { animation: none; } #front-door { transition-duration: .2s; } }
 </style>
 </head>
 <body>
@@ -279,7 +281,7 @@
       <li><b>The kitchen's furniture and materials</b>: Poly Haven, CC0. Given to everyone, no strings.</li>
       <li><b>The room</b>: built and rendered in Blender, free and open source (GPL).</li>
       <li><b>The 360° view</b>: three.js, MIT licence.</li>
-      <li><b>The Inn's sounds</b>: Gemma's shimmer, the bell, the doors, the grandfather clock and every room's rain, wind, fire and garden are synthesised in your browser with the Web Audio API, made for WhiskedAway and given away as CC0.</li>
+      <li><b>The Inn's sounds</b>: Gemma's shimmer, the bell, the doors, the grandfather clock, every room's rain, wind, fire and garden, and the music box are synthesised in your browser with the Web Audio API, made for WhiskedAway and given away as CC0.</li>
       <li><b>The glasshouse plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
       <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
@@ -786,7 +788,12 @@ function touch(id) {
   if (obj.type === 'energy') return chooseEnergy(obj.energy);   // the candle is the event: no separate touch
   record({ kind: 'touch', id });
   track('hotspot_touch', { room: state.room, object: id, object_type: obj.type });
-  if (obj.type === 'ambient') {
+  if (obj.type === 'ambient' && obj.plays) {
+    // Something that plays (the music box). With the sound off, the speaker by the bell glows to say where it is
+    const now = sound.music(id);
+    if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
+    say(!sound.on ? obj.moment_quiet || obj.moment : now ? obj.moment : obj.moment_stop || obj.moment, [], true);
+  } else if (obj.type === 'ambient') {
     say(obj.moment, [], true);
   } else if (obj.type === 'weather') {
     openWeather();
