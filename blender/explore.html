@@ -1583,7 +1583,7 @@ function themeNow() {
   const { words } = visitTheme({ keptNow: now, keptBefore: kept.filter(k => k.visit !== book.visitId),
     dismissed: state.dismissed.map(id => atomsById[id]).filter(Boolean), lean: world.clusters[state.result?.cluster]?.themes || [] });
   const roomName = r => ({ cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'the Chiapothecary' }[r] || r);
-  return { words, now, sentence: themeSentence(words, now, roomName) };
+  return { words, now, sentence: themeSentence(words, now, roomName, LINES.book?.theme) };
 }
 function renderTheme() {
   const { words } = themeNow();

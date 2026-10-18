@@ -40,15 +40,15 @@ export function bookTastes(kept = []) {
 }
 
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
-/** Gemma's sentence for the book's "This visit" page: "Today, by the look of it: sweet, evening. You've kept three, mostly from Sweet Spells."
- *  (A stand-in until the content editor writes the theme lines; `book.theme` in gemma-lines.json.) */
-export function themeSentence(words, keptNow, roomName) {
+/** Gemma's sentence for the book's "This visit" page, from gemma-lines.json `book.theme`:
+ *  "This visit, by the look of it: sweet, evening. You've kept three, mostly from Sweet Spells." */
+export function themeSentence(words, keptNow, roomName, T = {}) {
   if (!keptNow.length) return '';
   const rooms = {};
   keptNow.forEach(k => { rooms[k.room] = (rooms[k.room] || 0) + 1; });
   const [top, n] = Object.entries(rooms).sort((a, b) => b[1] - a[1])[0];
-  const count = NUM[keptNow.length] || keptNow.length;
-  const where = keptNow.length === 1 ? ` It's from ${roomName(top)}.` : n === keptNow.length ? `, all from ${roomName(top)}.` : n > keptNow.length / 2 ? `, mostly from ${roomName(top)}.` : '.';
-  const after = words.length ? `Today, by the look of it: ${words.join(', ')}. ` : '';
-  return keptNow.length === 1 ? `${after}You've kept one.${where}` : `${after}You've kept ${count}${where}`;
+  const fill = s => s.replace('{n}', NUM[keptNow.length] || keptNow.length).replace('{room}', roomName(top)).replace('{words}', words.join(T.join || ', '));
+  const kept = keptNow.length === 1 ? (T.kept_one || "You've kept one, from {room}.") : n === keptNow.length ? (T.kept_all || "You've kept {n}, all from {room}.")
+    : n > keptNow.length / 2 ? (T.kept_mostly || "You've kept {n}, mostly from {room}.") : (T.kept_mixed || "You've kept {n}, from around the Inn.");
+  return [words.length ? fill(T.words || 'This visit, by the look of it: {words}.') : '', fill(kept)].filter(Boolean).join(' ');
 }
