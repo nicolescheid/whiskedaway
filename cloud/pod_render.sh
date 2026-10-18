@@ -92,6 +92,7 @@ runpy.run_path('blender/fetch_assets.py', run_name='__main__')" >assets.log 2>&1
   log "assets ready ($(grep -c '^  got' assets.log) new files)"
 fi
 
+touch /srv/render_start   # only files written after this go back (blender/out also holds committed renders)
 IFS=';' read -ra JOBS <<<"$WA_JOBS"
 for job in "${JOBS[@]}"; do
   log "rendering: ${job}"
@@ -123,7 +124,12 @@ done
 
 log "packing results"
 cd blender/out
-tar -cf /srv/results.tar --exclude='*.blend*' --exclude='*.png' . || fail "tar"
+find . -type f -newer /srv/render_start ! -name '*.blend*' ! -name '*.png' -printf '%P
+' >/srv/results.list
+[ -s /srv/results.list ] || fail "the render wrote nothing to blender/out"
+log "results: $(tr '
+' ' ' </srv/results.list)"
+tar -cf /srv/results.tar -T /srv/results.list || fail "tar"
 log "sending results (code ${WA_CODE})"
 # send waits until the local machine has received; give up after an hour
 timeout 3600 runpodctl send /srv/results.tar --code "$WA_CODE" >>"$LOG" 2>&1 || fail "send"
