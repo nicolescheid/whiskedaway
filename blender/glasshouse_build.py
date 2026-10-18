@@ -38,10 +38,10 @@ HALL = os.path.join(ART, "inn-hallway")
 # Per season: sky (Poly Haven HDRI and its strength), the plate outside the glass, condensation on the roof,
 # frost on the walls, exposure. Sun heights follow notes.md: spring ~30-38, summer ~40-48, autumn low, winter cloud.
 SEASONS = {
-    "spring": dict(hdri="kloofendal_38d_partly_cloudy_puresky", sky=1.0, plate="13-outside-spring.png", wet=0.1, frost=0.0, exposure=-0.6),
-    "summer": dict(hdri="kloofendal_48d_partly_cloudy_puresky", sky=1.0, plate="14-outside-summer.png", wet=0.06, frost=0.0, exposure=-0.7),
-    "autumn": dict(hdri="kloofendal_28d_misty_puresky", sky=1.1, plate="15-outside-autumn.png", wet=0.14, frost=0.0, exposure=-0.4),
-    "winter": dict(hdri="kloofendal_overcast_puresky", sky=1.3, plate="16-outside-winter.png", wet=0.2, frost=0.35, exposure=0.1),
+    "spring": dict(hdri="kloofendal_38d_partly_cloudy_puresky", sky=1.0, plate="13-outside-spring.png", wet=0.1, frost=0.0, exposure=0.0),
+    "summer": dict(hdri="kloofendal_48d_partly_cloudy_puresky", sky=1.0, plate="14-outside-summer.png", wet=0.06, frost=0.0, exposure=-0.1),
+    "autumn": dict(hdri="kloofendal_28d_misty_puresky", sky=1.1, plate="15-outside-autumn.png", wet=0.14, frost=0.0, exposure=0.2),
+    "winter": dict(hdri="kloofendal_overcast_puresky", sky=1.3, plate="16-outside-winter.png", wet=0.2, frost=0.35, exposure=0.5),
 }
 S = SEASONS[SEASON]
 ORDER = ["spring", "summer", "autumn", "winter"]   # the wheel, clockwise from the top plate
@@ -1474,8 +1474,7 @@ def sun_turn(img):
     lum = px[..., 0] + px[..., 1] + px[..., 2]
     iy, ix = np.unravel_index(int(np.argmax(lum)), lum.shape)
     u, v = (ix + 0.5) / w, (iy + 0.5) / h
-    phi = 2 * math.pi * (u - 0.5)
-    beta_tex = math.atan2(math.sin(phi), -math.cos(phi))
+    beta_tex = 2 * math.pi * (0.5 - u)                              # Cycles: u = 0.5 - atan2(y, x) / 2pi
     rot = beta_tex - math.radians(SUN_AZ)
     print(f"[whisked] sky sun at elevation {math.degrees(math.pi * (v - 0.5)):.0f}, turned {math.degrees(rot):.0f} deg")
     return rot
