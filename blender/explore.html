@@ -167,7 +167,8 @@
   /* Fixed tool stub */
   .tool { position: fixed; inset: 0; display: none; place-items: center; z-index: 30; background: rgba(20, 14, 10, .35); }
   .tool.open { display: grid; }
-  .tool .box { background: var(--parchment); border-radius: 16px; padding: 20px 22px; width: min(380px, calc(100vw - 32px)); box-shadow: 0 20px 50px rgba(0,0,0,.4); }
+  .tool .box { background: var(--parchment); border-radius: 16px; padding: 20px 22px; width: min(380px, calc(100vw - 32px)); box-shadow: 0 20px 50px rgba(0,0,0,.4);
+              max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; }   /* tall dialogs scroll on phones */
   .tool h2 { margin: 0 0 6px; font: 600 22px 'Crimson Pro', Georgia, serif; }
   .tool p { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
   .tool .ok { background: var(--berry); color: var(--parchment); border: 0; border-radius: 999px; padding: 8px 18px; }
@@ -558,7 +559,9 @@ const showRoomInUrl = () => {
 };
 // A room link walks straight in, so the front door counts as done for this tab
 if (params.has('room') && !window.__door?.active) try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* storage blocked */ }
-showRoomInUrl();
+// At the front door the address stays "/" (a reload or a copied link gets the door); front-door.js
+// calls showRoomInUrl() once the visitor is inside
+if (!window.__door?.active) showRoomInUrl();
 state.chat = state.chat || [];             // Gemma's chat log for this visit
 delete state.sound;                        // sound on or off lives in explore/sound.js now, off by default
 
@@ -1543,7 +1546,7 @@ function settle(fromFov) {
   dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
-window.__explore = { state, visit, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, visit, settle, showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();

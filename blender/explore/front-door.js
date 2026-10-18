@@ -135,6 +135,11 @@ export function frontDoor({ active, track }) {
 
   // ---------- the door
   const door = $('front-door'), button = $('fd-enter'), pic = door.querySelector('picture');
+  {
+    // The door has been decided for this load, so ?door=1 goes; otherwise the address stays "/" behind the door
+    const u = new URL(location.href);
+    if (u.searchParams.has('door')) { u.searchParams.delete('door'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); }
+  }
   const behind = [...document.body.children].filter(el => el !== door && el.tagName !== 'SCRIPT');
   behind.forEach(el => { el.inert = true; });
   track('door_view');
@@ -210,12 +215,11 @@ export function frontDoor({ active, track }) {
     door.dataset.locked = '1';                            // the fit stays put from here, whatever the window does
     if (short) shape = layout().shape;
     try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* fine */ }
-    const url = new URL(location.href);
-    if (url.searchParams.has('door')) { url.searchParams.delete('door'); history.replaceState(null, '', url); }
     if (short) { sound.door(); await showHall(); }
     else await playFilm();
     await Promise.race([shown, wait(15000)]);           // the hall's first view (it has had the whole film to load)
     window.__explore?.settle(filmFov());
+    window.__explore?.showRoomInUrl?.();                 // inside now: the address names the room
     behind.forEach(el => { el.inert = false; });
     door.classList.add('leaving');
     await wait(reduced ? 250 : 650);
