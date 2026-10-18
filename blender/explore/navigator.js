@@ -150,6 +150,7 @@ function reasonsFor(themes, trail, world, spoons = null, first = []) {
     const e = trail[i];
     const obj = e.id && world.objects[e.id];
     if (!obj || seen.has(e.id) || !obj.themes.some(t => themes.includes(t))) continue;
+    if (first.some(f => f.endsWith(obj.ref.replace(/^the /, '')))) continue;   // not "kept the truffles and went to the truffles"
     seen.add(e.id);
     why.push(`${e.kind === 'linger' ? 'lingered by' : 'went to'} ${obj.ref}`);
   }
