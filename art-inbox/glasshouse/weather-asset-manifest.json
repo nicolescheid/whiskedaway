@@ -1,0 +1,240 @@
+{
+  "date": "2026-10-19",
+  "room_name": "The Conservatory",
+  "asset_folder": "art-inbox/glasshouse/",
+  "generation_tool": "Built-in image_gen",
+  "canvas": [
+    2170,
+    725
+  ],
+  "format": "PNG RGB",
+  "assets": [
+    {
+      "file": "20-outside-spring-wet.png",
+      "season": "spring",
+      "state": "wet-day",
+      "source_master": "13-outside-spring.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "528de831b5b2c9fadc3c898bf2c63058c3a95aba52851f26c218df17451da897",
+      "bytes": 2517220,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        0,
+        1
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-a6b3027e-8f45-444c-9638-e7323b323624.png"
+    },
+    {
+      "file": "21-outside-summer-wet.png",
+      "season": "summer",
+      "state": "wet-day",
+      "source_master": "14-outside-summer.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "96c0f157546fadb909063f2c208253220069c87a493a2b47ef5626fc59e1c45d",
+      "bytes": 2588377,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        0,
+        0
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-e1868a81-cfa8-4b02-a167-4bc29660b52a.png"
+    },
+    {
+      "file": "22-outside-autumn-wet.png",
+      "season": "autumn",
+      "state": "wet-day",
+      "source_master": "15-outside-autumn.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "0b4ab78c52eb7131b206151c1f1cd24b09c207de4268ec1ff72127c9cf70c301",
+      "bytes": 2644997,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        1,
+        1
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-338e9a90-1a40-420f-928a-7364f0d7c7dc.png"
+    },
+    {
+      "file": "23-outside-winter-wet.png",
+      "season": "winter",
+      "state": "wet-day",
+      "source_master": "16-outside-winter.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "0ae2b493c391d3c7d0801aeda0bcaeff582ae1b2342743ceda8b30a95aa9cbf3",
+      "bytes": 2587535,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        0,
+        1
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-609a6c9e-4fe2-4bec-840b-d712b8691f50.png"
+    },
+    {
+      "file": "24-outside-spring-night.png",
+      "season": "spring",
+      "state": "night",
+      "source_master": "13-outside-spring.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "02c67369692614a6ff9650727f85834f6ac87c49fcd407b8986731731f67503d",
+      "bytes": 1912542,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        -1,
+        1
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-349b1a5f-8114-4b78-8771-5254fff0e854.png"
+    },
+    {
+      "file": "25-outside-summer-night.png",
+      "season": "summer",
+      "state": "night",
+      "source_master": "14-outside-summer.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "02d5a6f82c12938673ef075e91c499b94f15df2b71a7953c246bcb67bf371fbb",
+      "bytes": 1936226,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        1,
+        0
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-ca25dd4d-b7ab-41c7-a167-ca1a09f8191a.png"
+    },
+    {
+      "file": "26-outside-autumn-night.png",
+      "season": "autumn",
+      "state": "night",
+      "source_master": "15-outside-autumn.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "a881fd9b8bda1755e1d383d126cb7a646c470bf75489b65ae8d0c792f02cf996",
+      "bytes": 1989485,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        2,
+        2
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-9924a182-bcb7-4111-ac3f-456e0089e043.png"
+    },
+    {
+      "file": "27-outside-winter-night.png",
+      "season": "winter",
+      "state": "night",
+      "source_master": "16-outside-winter.png",
+      "size": [
+        2170,
+        725
+      ],
+      "sha256": "15a15f5bdeb3435a9dae60430d72424e8ac8d6db781aa2c2776c975272aef35f",
+      "bytes": 2178178,
+      "max_sampled_reliable_fixed_offset_px": 1,
+      "translation_px": [
+        1,
+        3
+      ],
+      "generated_source": "C:\\Users\\nicol\\.codex\\generated_images\\01a14da9-6811-7bc0-ac92-2eb0ff73feaf\\exec-024bdd00-7bae-4caf-ae3c-94a82c3078cb.png"
+    }
+  ],
+  "references": [
+    {
+      "file": "weather-references/glasshouse/13-outside-spring.png",
+      "source": "C:\\dev\\www\\WhiskedAway\\whiskedaway-conservatory-brief\\art-inbox\\glasshouse\\13-outside-spring.png",
+      "sha256": "e35377bf95d8714c118a2bb55294c4771ce8fab2395db18c7d8cd0595684f5c5",
+      "unchanged_copy": true
+    },
+    {
+      "file": "weather-references/cuddlecore/14-window-rain.png",
+      "source": "C:\\dev\\www\\WhiskedAway\\whiskedaway-conservatory-brief\\art-inbox\\cuddlecore\\14-window-rain.png",
+      "sha256": "b51ed8f66e88f2d607bc4dc3ca8f0db562bed259bf4a2c4bfb8f6fbf75edbe3b",
+      "unchanged_copy": true
+    },
+    {
+      "file": "weather-references/glasshouse/14-outside-summer.png",
+      "source": "C:\\dev\\www\\WhiskedAway\\whiskedaway-conservatory-brief\\art-inbox\\glasshouse\\14-outside-summer.png",
+      "sha256": "765a90086f505d751a6f10955901d8086860de2ab97ab45e5df29a42a8e54cea",
+      "unchanged_copy": true
+    },
+    {
+      "file": "weather-references/details/summer-headland-detail.png",
+      "source": "C:\\Users\\nicol\\Documents\\Codex\\2026-10-18\\ok-2\\work\\conservatory-weather\\summer-headland-detail.png",
+      "sha256": "edc052eaaeb052240164fb658d89101282f062332a49043a5a08bd1fced99786",
+      "unchanged_copy": true
+    },
+    {
+      "file": "weather-references/glasshouse/15-outside-autumn.png",
+      "source": "C:\\dev\\www\\WhiskedAway\\whiskedaway-conservatory-brief\\art-inbox\\glasshouse\\15-outside-autumn.png",
+      "sha256": "1866079eb1ac42c11c5e77b7e0bc8bc05ff22684eafacbfa58f43008ae90f23b",
+      "unchanged_copy": true
+    },
+    {
+      "file": "weather-references/glasshouse/16-outside-winter.png",
+      "source": "C:\\dev\\www\\WhiskedAway\\whiskedaway-conservatory-brief\\art-inbox\\glasshouse\\16-outside-winter.png",
+      "sha256": "7255488fb7b1e1869d575497154d4f4c0188c0f53dfaf9c9be827d7fd405685e",
+      "unchanged_copy": true
+    },
+    {
+      "file": "weather-references/cuddlecore/20-night-fair.png",
+      "source": "C:\\dev\\www\\WhiskedAway\\whiskedaway-conservatory-brief\\art-inbox\\cuddlecore\\20-night-fair.png",
+      "sha256": "6a319409d401d2f702c503d39135d6a77a819bfe9c7d47ad581b4f46cbaeb48d",
+      "unchanged_copy": true
+    },
+    {
+      "file": "weather-references/details/spring-headland-detail.png",
+      "source": "C:\\Users\\nicol\\Documents\\Codex\\2026-10-18\\ok-2\\work\\conservatory-weather\\spring-headland-detail.png",
+      "sha256": "c0ab1d0e2c06f01771eb6ab7fcdbd0dd4d6a8efbae8306f66542e056e69e6483",
+      "unchanged_copy": true
+    }
+  ],
+  "runtime_mapping": [
+    {
+      "season": "spring",
+      "day_fair_changeable_very_dry": "13-outside-spring.png",
+      "day_rain_storm": "20-outside-spring-wet.png",
+      "all_night_weathers": "24-outside-spring-night.png"
+    },
+    {
+      "season": "summer",
+      "day_fair_changeable_very_dry": "14-outside-summer.png",
+      "day_rain_storm": "21-outside-summer-wet.png",
+      "all_night_weathers": "25-outside-summer-night.png"
+    },
+    {
+      "season": "autumn",
+      "day_fair_changeable_very_dry": "15-outside-autumn.png",
+      "day_rain_storm": "22-outside-autumn-wet.png",
+      "all_night_weathers": "26-outside-autumn-night.png"
+    },
+    {
+      "season": "winter",
+      "day_fair_changeable_very_dry": "16-outside-winter.png",
+      "day_rain_storm": "23-outside-winter-wet.png",
+      "all_night_weathers": "27-outside-winter-night.png"
+    }
+  ],
+  "verification": {
+    "generated_png_count": 8,
+    "source_project_unchanged": true,
+    "source_project_file_count": 26,
+    "max_sampled_reliable_fixed_landmark_offset_px": 1,
+    "limit": "Sampled visible regions, not a proof of exact identity at every pixel."
+  }
+}
