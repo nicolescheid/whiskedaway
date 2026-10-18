@@ -56,7 +56,12 @@ async function solveChallenge() {
         action: ACTION,
         appearance: 'interaction-only',   // invisible unless the visitor needs to tick a box
         theme: 'light',
-        'before-interactive-callback': () => { box.style.display = 'flex'; },
+        'before-interactive-callback': () => {
+          // At the front door the words sit at the bottom (or top left on landscape phones), so the card goes top right
+          const door = document.getElementById('front-door');
+          if (door && !door.hidden) Object.assign(box.style, { top: '16px', right: '16px', left: 'auto', bottom: 'auto', transform: 'none' });
+          box.style.display = 'flex';
+        },
         'after-interactive-callback': () => { box.style.display = 'none'; },
         callback: token => { clearTimeout(timer); resolve(token); },
         // Turnstile retries by itself; only give up after repeated failures
