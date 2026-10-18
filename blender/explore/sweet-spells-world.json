@@ -1,6 +1,7 @@
 {
   "room": "sweet-spells",
   "name": "Sweet Spells",
+  "intro": "This room is for the sweet tooth, whatever the time of day.",
   "stops": {
     "sweet-spells": { "stop": "middle", "title": "Sweet Spells", "where": "In Sweet Spells", "yaw": 0 }
   },

@@ -1,6 +1,7 @@
 {
   "room": "chiapothecary",
   "name": "The Chiapothecary",
+  "intro": "This is for your chia routine. Set a jar the night before, or keep one in the fridge for any time.",
   "stops": {
     "chiapothecary": { "stop": "middle", "title": "The Chiapothecary", "where": "In the Chiapothecary", "yaw": 0 }
   },

@@ -13,7 +13,7 @@
   "objects": {
     "walk-hall": { "label": "Down the hall", "ref": "the hallway", "type": "walk", "go": "hall-middle", "themes": [] },
     "walk-front": { "label": "To the front door", "ref": "the entrance hall", "type": "walk", "go": "hall-entrance", "arrive_yaw": 180, "themes": [] },
-    "door-cuddlecore": { "label": "Cuddlecore Kitchen", "blurb": "Quick comfort, juices and snacks", "ref": "the kitchen door", "type": "door", "go": "cuddlecore", "themes": [] },
+    "door-cuddlecore": { "label": "Cuddlecore", "blurb": "Quick comfort, juices and snacks", "ref": "the kitchen door", "type": "door", "go": "cuddlecore", "themes": [] },
     "door-flourish": { "label": "Flourish", "blurb": "Proper meals from whole foods", "ref": "the Flourish door", "type": "door", "go": "flourish", "themes": [] },
     "door-sweet-spells": { "label": "Sweet Spells", "blurb": "For the sweet tooth", "ref": "the Sweet Spells door", "type": "door", "go": "sweet-spells", "themes": [] },
     "door-chiapothecary": { "label": "Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": 45,

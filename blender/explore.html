@@ -169,6 +169,7 @@
   /* A room's one-line description under its name: dial stations, the Map, and door hotspots (desktop only) */
   .blurb { display: block; font: 500 12px 'Quicksand'; letter-spacing: 0; text-transform: none; opacity: .8; margin-top: 2px; }
   .spot .name:has(.blurb) { border-radius: 12px; }
+  .spot .blurb { white-space: normal; max-width: 190px; }
   @media (max-width: 720px) { .spot .blurb { display: none; } }
 
   @media (max-width: 720px) {
@@ -906,6 +907,9 @@ function goRoom(id, yaw) {
       ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
       : `It's ${seasonGuess} where you are, I think, so that's what's growing. The wheel by the door turns it to any season.`, [], true));
   }
+  // First time in a room this visit: Gemma says what it's for, in the words of its blurb (ux-journey J3)
+  const intro = { cuddlecore: world.intro, flourish: flWorld.intro, 'sweet-spells': sweetWorld.intro, chiapothecary: chiaWorld.intro }[id];
+  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); say(intro, [], true); }
 }
 function setRoomText() {
   $('room-title').textContent = room().title;
@@ -917,7 +921,7 @@ function setRoomText() {
 // ---------- the magic dial beside every hallway door: any room, or wherever the wander points
 function openDial() {
   const opts = hallWorld.dial.concat([{ label: 'Wherever my wander points', star: true }]);
-  $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}">${o.star ? '✦ ' : ''}${esc(o.label)}${o.blurb ? `<span class="blurb">${esc(o.blurb)}</span>` : ''}</button>`).join('');
+  $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}"${o.blurb ? ` aria-label="${esc(o.label)}: ${esc(o.blurb)}"` : ''}>${o.star ? '✦ ' : ''}${esc(o.label)}${o.blurb ? `<span class="blurb">${esc(o.blurb)}</span>` : ''}</button>`).join('');
   $('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
   $('dialdlg').classList.add('open');
 }
@@ -1159,7 +1163,7 @@ function fillMap() {
     const li = document.createElement('li');
     const b = document.createElement('button');
     b.textContent = world.objects[id]?.map || label(id);
-    if (world.objects[id]?.blurb) b.insertAdjacentHTML('beforeend', `<span class="blurb">${esc(world.objects[id].blurb)}</span>`);
+    if (world.objects[id]?.blurb) { b.insertAdjacentHTML('beforeend', `<span class="blurb">${esc(world.objects[id].blurb)}</span>`); b.setAttribute('aria-label', `${b.firstChild.textContent}: ${world.objects[id].blurb}`); }
     b.onclick = () => { const s = spots[id]; hasLooked = true; lookTo(s.yaw, s.pitch); record({ kind: 'map', id }); };
     li.appendChild(b);
     return li;
@@ -1196,7 +1200,7 @@ $('btn-inn').onclick = () => track('leave_to_inn', { room: state.room, step: ste
 $('forget').onclick = () => {
   track('visit_forget');
   store.clear();
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, energy: null, season: null, seasonTold: false, asked: false, chat: [] });
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, energy: null, season: null, seasonTold: false, introduced: [], asked: false, chat: [] });
   showCandle();
   renderChat(); setChips([]);
   setHands(handsHour());
