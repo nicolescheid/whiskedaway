@@ -103,7 +103,7 @@ The dietary filter is the strongest serving rule: a card that clashes is never s
 
 ## Cuisine tags
 
-The Map's chips (tell-data.json) give a small bonus to atoms tagged with a chosen cuisine. Tag a cuisine only when the dish
+The Map's chips (gemma-lines.json tell.cuisines) give a small bonus to atoms whose `cuisines` field names a chosen one. Add a cuisine only when the dish
 really comes from it, or plainly borrows from it (matcha, golden milk). A cuisine with no atoms yet still helps written-out
 recipes, so it can stay on the list.
 

@@ -2,14 +2,28 @@
   "_about": "Gemma's lines for the recipe book (recipe-book-ux.md sections 7 and 8). Content editor owns the wording; docs/gemma-voice-guide.md applies. Where a value is a list, rotate without repeating in a visit. {placeholders} are filled by the page. Every line stays under 100 characters (the phone chat's Line size).",
   "idea": {
     "first": "I've had an idea for you. Tap it to have a look.",
-    "from_keep": ["That gave me an idea.", "That one gave me another idea."]
+    "from_keep": [
+      "That gave me an idea.",
+      "That one gave me another idea."
+    ]
   },
   "keep": {
     "_when": "Speak on the 1st keep of the visit, the 3rd, then every 4th (7th, 11th...). Otherwise stay quiet: the animation and the live region are enough.",
     "first_ever": "That's in your book now. It's up at the top, and it stays on this device.",
-    "first_this_visit": ["In the book it goes.", "Kept. It's in your book."],
-    "third": ["Three in the book. I'm starting to see what you like.", "Three kept. I'd say you're after {cluster_label}."],
-    "later": ["Kept.", "Good one.", "That's in.", "In it goes."]
+    "first_this_visit": [
+      "In the book it goes.",
+      "Kept. It's in your book."
+    ],
+    "third": [
+      "Three in the book. I'm starting to see what you like.",
+      "Three kept. I'd say you're after {cluster_label}."
+    ],
+    "later": [
+      "Kept.",
+      "Good one.",
+      "That's in.",
+      "In it goes."
+    ]
   },
   "dismiss": {
     "_when": "Speak on the 1st dismiss of the visit only. After that, the undo line is enough.",
@@ -43,74 +57,324 @@
     "diet_question": "Anything I should avoid?"
   },
   "tell": {
-    "_about": "Tell Gemma V1 (tell-gemma-ux.md). {a} and {b} are the first two things named; never list more than two. {diet} joins with ' and '. Lists and the country examples are in tell-data.json.",
+    "_about": "Tell Gemma V1, keyed as tell.js and explore.html read them (tell-gemma/v1). {two} = the first two things, joined; {many} = 'A, b and a few more'; {c} = cuisines; {d} = diets; {p} = pantry words; {diet} and {room} as named. Every line stays under 100 characters.",
     "menu": {
-      "chip": "+ Tell me about you",
-      "energy": "Energy", "pantry": "Pantry", "map": "The map", "dietary": "Dietary needs",
-      "not_yet": "not yet"
+      "title": "Tell me about you",
+      "energy": "Energy",
+      "pantry": "Pantry",
+      "map": "The map",
+      "dietary": "Dietary needs",
+      "none": "not yet"
     },
-    "buttons": { "done": "Done", "forget": "Forget this", "close": "Close" },
     "pantry": {
       "title": "What have you got to use?",
-      "helper": "A few things, with commas between them.",
       "placeholder": "eggs, spinach, leftover rice",
-      "use_up": "Use these up first",
+      "useUp": "Use these up first",
       "privacy": "Only used for Gemma's ideas and the recipes she writes out for you."
     },
     "map": {
       "title": "Where shall we take it?",
-      "helper": "Pick up to three.",
-      "country_label": "Shopping words for",
-      "country_choose": "Choose…"
+      "shop": "Shopping words for:",
+      "choose": "Choose…"
     },
     "dietary": {
       "title": "Anything I should avoid?",
-      "other_label": "Something else?",
-      "other_placeholder": "no mushrooms, say",
-      "other_note": "I'll pass that on when I write a recipe out. I can't check my cards for it."
+      "other": "Something else?",
+      "otherNote": "I'll pass that on when I write a recipe out. I can't check my cards for it."
     },
     "ack": {
-      "_when": "One line on Done, only if something changed.",
-      "pantry_1": "{a}. I'll work with that.",
-      "pantry_2": "{a} and {b}. I'll work with those.",
-      "pantry_more": "{a}, {b} and a few more. Noted.",
-      "pantry_use_up_1": "{a} first, then.",
-      "pantry_use_up_2": "{a} and {b} first, then.",
-      "pantry_use_up_more": "{a}, {b} and the rest first, then.",
-      "map_1": "{a} it is. I'll lean that way.",
-      "map_2": "{a} and {b}. I'll lean that way.",
-      "map_more": "{a}, {b} and one more. I'll lean that way.",
-      "map_country_only": "Shopping words for {country}, then.",
-      "dietary_1": "{a}. I'll keep to that.",
-      "dietary_2": "{a} and {b}. I'll keep to that.",
-      "dietary_more": "{a}, {b} and the rest. I'll keep to all of it.",
-      "dietary_other_only": "Noted. I'll pass it on when I write a recipe out.",
-      "forget": "Forgotten."
+      "pantry": "{two}. I'll work with those.",
+      "pantryMany": "{many}. Noted.",
+      "pantryUseUp": "{two} first, then.",
+      "map": "{c} it is. I'll lean that way.",
+      "country": "Shopping words for {country}, then.",
+      "dietary": "{d}. I'll keep to that.",
+      "dietaryOther": "Noted. I'll pass it on when I write a recipe out."
     },
-    "offer": {
-      "_when": "Once per visit, after 2 ideas kept or set aside, only if no pantry, map or dietary answer is set.",
-      "line": "Want to tell me what's in your cupboard, or anything to avoid?",
-      "yes": "Tell me",
-      "no": "Not now"
+    "entry": {
+      "dietary": "I'll keep to {d} in here too.",
+      "pantry": "I'll look for things that use your {p}.",
+      "cuisine": "I'll lean {c} where I can."
     },
-    "room_empty_diet": "Nothing in here fits {diet}, I'm afraid. {room} has a few.",
-    "nothing_fits": "I can't find anything on my shelves that fits all of that.",
-    "entry_fact": {
-      "_when": "On first entry to a room, one at most, after the room's intro: dietary > pantry (Cuddlecore and Flourish) > cuisine.",
-      "dietary": "I'll keep to {diet} in here.",
-      "pantry": "I'll look for things that use your {a}.",
-      "cuisine": "I'll lean {a} where I can."
+    "offer": "Want to tell me what's in your cupboard, or anything to avoid?",
+    "offerYes": "Tell me",
+    "offerNo": "Not now",
+    "forgot": "Forgotten.",
+    "nothingAnywhere": "I can't find anything on my shelves that fits all of that.",
+    "roomNone": "Nothing in here fits {diet}, I'm afraid. {room} has a few.",
+    "cuisines": [
+      "Kiwi classics",
+      "Italian",
+      "Chinese",
+      "Japanese",
+      "Korean",
+      "Thai",
+      "Indian",
+      "Middle Eastern",
+      "Greek",
+      "French",
+      "Mexican",
+      "Pacific Islands"
+    ],
+    "countries": [
+      {
+        "code": "NZ",
+        "name": "New Zealand",
+        "example": "courgette, coriander, kūmara, capsicum"
+      },
+      {
+        "code": "AU",
+        "name": "Australia",
+        "example": "zucchini, coriander, capsicum, rockmelon"
+      },
+      {
+        "code": "GB",
+        "name": "United Kingdom",
+        "example": "courgette, coriander, aubergine, spring onions"
+      },
+      {
+        "code": "IE",
+        "name": "Ireland",
+        "example": "courgette, coriander, aubergine, scallions"
+      },
+      {
+        "code": "US",
+        "name": "United States",
+        "example": "zucchini, cilantro, eggplant, bell pepper"
+      },
+      {
+        "code": "CA",
+        "name": "Canada",
+        "example": "zucchini, cilantro, eggplant, green onions"
+      },
+      {
+        "code": "other",
+        "name": "Other",
+        "example": "everyday names, nothing too local"
+      }
+    ],
+    "_countries": "The Map's select, with a one-line example of the shopping words under it (tell-gemma-ux.md §3).",
+    "synonyms": {
+      "courgette": [
+        "zucchini"
+      ],
+      "zucchini": [
+        "courgette"
+      ],
+      "coriander": [
+        "cilantro"
+      ],
+      "cilantro": [
+        "coriander"
+      ],
+      "mince": [
+        "ground beef",
+        "beef mince"
+      ],
+      "ground beef": [
+        "mince",
+        "beef mince"
+      ],
+      "beef mince": [
+        "mince",
+        "ground beef"
+      ],
+      "capsicum": [
+        "bell pepper",
+        "red pepper",
+        "green pepper"
+      ],
+      "bell pepper": [
+        "capsicum",
+        "red pepper",
+        "green pepper"
+      ],
+      "red pepper": [
+        "capsicum",
+        "bell pepper",
+        "green pepper"
+      ],
+      "green pepper": [
+        "capsicum",
+        "bell pepper",
+        "red pepper"
+      ],
+      "kūmara": [
+        "kumara",
+        "sweet potato"
+      ],
+      "kumara": [
+        "kūmara",
+        "sweet potato"
+      ],
+      "sweet potato": [
+        "kūmara",
+        "kumara"
+      ],
+      "aubergine": [
+        "eggplant"
+      ],
+      "eggplant": [
+        "aubergine"
+      ],
+      "spring onion": [
+        "scallion",
+        "green onion"
+      ],
+      "scallion": [
+        "spring onion",
+        "green onion"
+      ],
+      "green onion": [
+        "spring onion",
+        "scallion"
+      ],
+      "rocket": [
+        "arugula"
+      ],
+      "arugula": [
+        "rocket"
+      ],
+      "chickpea": [
+        "garbanzo"
+      ],
+      "garbanzo": [
+        "chickpea"
+      ],
+      "yoghurt": [
+        "yogurt"
+      ],
+      "yogurt": [
+        "yoghurt"
+      ],
+      "silverbeet": [
+        "chard",
+        "spinach beet"
+      ],
+      "chard": [
+        "silverbeet",
+        "spinach beet"
+      ],
+      "spinach beet": [
+        "silverbeet",
+        "chard"
+      ],
+      "beetroot": [
+        "beet"
+      ],
+      "beet": [
+        "beetroot"
+      ],
+      "prawn": [
+        "shrimp"
+      ],
+      "shrimp": [
+        "prawn"
+      ],
+      "tinned tomatoes": [
+        "canned tomatoes",
+        "chopped tomatoes"
+      ],
+      "canned tomatoes": [
+        "tinned tomatoes",
+        "chopped tomatoes"
+      ],
+      "chopped tomatoes": [
+        "tinned tomatoes",
+        "canned tomatoes"
+      ],
+      "stock": [
+        "broth"
+      ],
+      "broth": [
+        "stock"
+      ],
+      "rolled oats": [
+        "oats",
+        "porridge oats"
+      ],
+      "oats": [
+        "rolled oats",
+        "porridge oats"
+      ],
+      "porridge oats": [
+        "rolled oats",
+        "oats"
+      ],
+      "plain flour": [
+        "all-purpose flour",
+        "flour"
+      ],
+      "all-purpose flour": [
+        "plain flour",
+        "flour"
+      ],
+      "flour": [
+        "plain flour",
+        "all-purpose flour"
+      ],
+      "caster sugar": [
+        "superfine sugar"
+      ],
+      "superfine sugar": [
+        "caster sugar"
+      ],
+      "rice": [
+        "cooked rice",
+        "leftover rice",
+        "brown rice"
+      ],
+      "cooked rice": [
+        "rice",
+        "leftover rice",
+        "brown rice"
+      ],
+      "leftover rice": [
+        "rice",
+        "cooked rice",
+        "brown rice"
+      ],
+      "brown rice": [
+        "rice",
+        "cooked rice",
+        "leftover rice"
+      ],
+      "noodles": [
+        "egg noodles"
+      ],
+      "egg noodles": [
+        "noodles"
+      ],
+      "chocolate": [
+        "dark chocolate"
+      ],
+      "dark chocolate": [
+        "chocolate"
+      ],
+      "peanut butter": [
+        "peanut"
+      ],
+      "peanut": [
+        "peanut butter"
+      ],
+      "kiwifruit": [
+        "kiwi fruit"
+      ],
+      "kiwi fruit": [
+        "kiwifruit"
+      ]
     },
+    "_synonyms": "word → words that mean the same; a pantry word matches an atom when it or one of these is in its key_ingredients (after singularising).",
     "why": {
-      "_when": "Reasons for the navigator's 'Because you …' line.",
-      "pantry": "you've got {a} to use",
-      "cuisine": "you chose {a} on the map"
+      "pantry": "you've got {p} to use",
+      "cuisine": "you chose {c} on the map"
     },
+    "_why": "Reasons for the navigator's 'Because you …' line, when a pantry or cuisine match is the strongest reason.",
     "objects": {
-      "_when": "Gemma's line when the visitor touches the object, just before its sheet opens.",
       "pantry-cabinet": "Tell me what's in the cupboard, and I'll cook around it.",
       "locale-map": "Pick a few places to cook from, and where you do your shopping.",
       "dietary-shelf": "Tell me what to steer clear of, and I'll keep to it."
-    }
+    },
+    "_objects": "Gemma's line when the visitor touches the object, as its sheet opens (optional)."
   }
 }
