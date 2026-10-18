@@ -44,6 +44,16 @@ SKY = {"rain": (1.1, 0.42, 70), "fair": (2.0, 0.66, 110), "change": (1.5, 0.5, 1
        "stormy": (0.5, 0.27, 32), "very-dry": (2.3, 0.72, 100)}   # world strength, backdrop, window bounce W
 WET = {"rain": 0.5, "stormy": 0.75}   # raindrops on the sea window (whisked.window_glass)
 
+# Late night, as the kitchen does it: the kitchen's night view of the same coast in the sea window, a near-black
+# sky and fanlight, the lamps a little brighter. Rain still beads on the sea window in rain and storm.
+NIGHT = "--night" in ARGS
+NIGHT_VIEWS = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change": "21-night-change.png",
+               "stormy": "22-night-stormy.png", "very-dry": "23-night-very-dry.png"}
+if NIGHT:
+    VIEWS = NIGHT_VIEWS
+    SKY = {k: (0.04, 0.8, 5) for k in SKY}
+LAMP = 1.3 if NIGHT else 1.0   # wall lamps and the oil lamp, brighter at night
+
 os.makedirs(OUT, exist_ok=True)
 PACK = os.path.join(ART, "inn-hallway")
 KITCHEN = os.path.join(ART, "cuddlecore")
@@ -401,7 +411,7 @@ def build():
         g = group(name, frame_matrix(at, normal, right), parts)
         # local: z out of the wall, y up. The light sits in the bulb.
         light_at = Vector(at) + n * 0.22 + Vector((0, 0, 0.1))
-        point_light(f"{name}_light", light_at, watts, (1.0, 0.68, 0.4), radius=0.04)
+        point_light(f"{name}_light", light_at, watts * LAMP, (1.0, 0.68, 0.4), radius=0.04)
         return g
 
     for name, at, normal in (("lamp_cl0", (-CW, 0.8, 1.9), (1, 0, 0)), ("lamp_cr1", (CW, 4.0, 1.9), (-1, 0, 0)),
@@ -466,7 +476,7 @@ def build():
     lane_sky.scale = (4, 2, 1)
     for attr in ("visible_shadow", "visible_diffuse", "visible_glossy", "visible_transmission", "visible_volume_scatter"):
         setattr(lane_sky, attr, False)
-    sky_m = mat("fanlight_sky", (0, 0, 0, 1), emission=srgb("#c9d1d6"), strength=0.55)
+    sky_m = mat("fanlight_sky", (0, 0, 0, 1), emission=srgb("#1d2533" if NIGHT else "#c9d1d6"), strength=0.06 if NIGHT else 0.55)
     lane_sky.data.materials.append(sky_m)
     fd_parts = [box_span("front_leaf", -fd_w / 2 + 0.01, fd_w / 2 - 0.01, FRONT - 0.2, FRONT - 0.15, 0.01, fd_h - 0.005, front_paint, bevel=0.004)]
     for px in (-0.22, 0.22):
@@ -578,7 +588,7 @@ def build():
         if o.name.endswith("flame"):
             o.data.materials.clear()
             o.data.materials.append(flame)
-    point_light("hall_oil_lamp", (HALL_X - 0.33, -0.85, 1.18 + 0.36), 18, (1.0, 0.64, 0.33), radius=0.03)
+    point_light("hall_oil_lamp", (HALL_X - 0.33, -0.85, 1.18 + 0.36), 18 * LAMP, (1.0, 0.64, 0.33), radius=0.03)
     model("potted_plant_04", (HALL_X - 0.33, -1.4, 1.18), rot_z=20, scale=1.6)
 
     # ---- Light: overcast sky through the sea window and fanlight, warm lamps, light under doors
@@ -610,7 +620,7 @@ def build():
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = 0.75
+    scene.view_settings.exposure = 0.95 if NIGHT else 0.75
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
 
@@ -714,7 +724,7 @@ def main():
         if cam:
             bpy.data.objects.remove(cam)
         cam = pano_camera(scene, loc, 0)
-        scene.render.filepath = os.path.join(OUT, f"hallway_pano_{stop}_{WEATHER}{suffix}.jpg")
+        scene.render.filepath = os.path.join(OUT, f"hallway_pano_{stop}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
         bpy.ops.render.render(write_still=True)
         print(f"[whisked] rendered {stop}")
     print("[whisked] done")
