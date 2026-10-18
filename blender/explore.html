@@ -168,8 +168,10 @@
            background: var(--parchment-90); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; z-index: 19;
            box-shadow: 0 10px 30px rgba(0,0,0,.3); display: none; }
   .panel.open { display: block; }
-  .panel h2 { margin: 0 0 8px; font: 600 14px 'Quicksand'; color: var(--berry); text-transform: uppercase; letter-spacing: .06em; }
-  .panel h3 { margin: 12px 0 4px; font: 600 12px 'Quicksand'; color: var(--ink-soft); }
+  /* The Inn's panel and dialog titles aren't headings: the page's outline belongs to the front-door story (QA P3-7).
+     Dialogs keep their names through aria-labelledby, panels through aria-label */
+  .panel .panel-title { margin: 0 0 8px; font: 600 14px 'Quicksand'; color: var(--berry); text-transform: uppercase; letter-spacing: .06em; }
+  .panel .panel-sub { margin: 12px 0 4px; font: 600 12px 'Quicksand'; color: var(--ink-soft); }
   .panel ul { list-style: none; margin: 0; padding: 0; }
   .panel li button { width: 100%; text-align: left; background: none; border: 0; padding: 6px 4px; border-radius: 8px; font-size: 14px; }
   .panel li button:hover { background: rgba(139, 77, 92, .08); }
@@ -236,7 +238,7 @@
   .tool.open { display: grid; }
   .tool .box { background: var(--parchment); border-radius: 16px; padding: 20px 22px; width: min(380px, calc(100vw - 32px)); box-shadow: 0 20px 50px rgba(0,0,0,.4);
               max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; }   /* tall dialogs scroll on phones */
-  .tool h2 { margin: 0 0 6px; font: 600 22px 'Crimson Pro', Georgia, serif; }
+  .tool h2, .tool .tool-title { margin: 0 0 6px; font: 600 22px 'Crimson Pro', Georgia, serif; }
   .tool p { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
   .tool .ok { background: var(--berry); color: var(--parchment); border: 0; border-radius: 999px; padding: 8px 18px; }
 
@@ -519,23 +521,23 @@
 </div>
 
 <aside class="panel" id="map" aria-label="Map">
-  <h2>Map</h2>
+  <p class="panel-title">Map</p>
   <p class="small">Everything in this room, always in the same place.</p>
-  <h3>Tools</h3><ul id="map-tools"></ul>
-  <h3>In the room</h3><ul id="map-room"></ul>
+  <p class="panel-sub">Tools</p><ul id="map-tools"></ul>
+  <p class="panel-sub">In the room</p><ul id="map-room"></ul>
 </aside>
 
 <aside class="panel" id="notes" aria-label="Gemma's notebook" hidden><!-- moved into the book's "This visit" page by book-view.js -->
-  <h2>Gemma's notebook</h2>
+  <p class="panel-title">Gemma's notebook</p>
   <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave, except small notes so I don't repeat myself, and the recipes you save to your book. Those stay on this device, never on our server, and "Clear my book" removes them. The Inn does count, anonymously, which rooms and recipes get visited, but never who.</p>
-  <h3>My best guess</h3>
+  <p class="panel-sub">My best guess</p>
   <div id="guess" class="small">Nothing yet. Have a wander.</div>
   <div class="meter"><i id="conf" style="width:0"></i></div>
-  <h3>Visitor check</h3>
+  <p class="panel-sub">Visitor check</p>
   <div id="visitor" class="small">Not needed yet.</div>
-  <h3>What you've told me</h3>
+  <p class="panel-sub">What you've told me</p>
   <ul class="trail told" id="told"></ul>
-  <h3>Your wander</h3>
+  <p class="panel-sub">Your wander</p>
   <ul class="trail" id="trail"></ul>
   <p><button class="link" id="forget">Forget this visit</button></p>
 </aside>
@@ -556,7 +558,7 @@
 
 <div class="tool" id="credits" role="dialog" aria-modal="true" aria-labelledby="credits-title">
   <div class="box credits">
-    <h2 id="credits-title">Made with open things</h2>
+    <p class="tool-title" id="credits-title">Made with open things</p>
     <p>WhiskedAway stands on the shoulders of people who share their work.</p>
     <ul>
       <li><b>Gemma</b>: made with ChatGPT for WhiskedAway.</li>
@@ -580,7 +582,7 @@
 
 <div class="tool" id="clockdlg" role="dialog" aria-modal="true" aria-labelledby="clock-title">
   <div class="box">
-    <h2 id="clock-title">The clock</h2>
+    <p class="tool-title" id="clock-title">The clock</p>
     <p id="clock-text">Push the hands to whatever time you're cooking for.</p>
     <div class="dial" id="clockdial"></div>
     <p style="margin:12px 0 0"><button class="ok" id="clock-ok">Done</button></p>
@@ -589,7 +591,7 @@
 
 <div class="tool" id="dialdlg" role="dialog" aria-modal="true" aria-labelledby="dial-title">
   <div class="box">
-    <h2 id="dial-title">The dial</h2>
+    <p class="tool-title" id="dial-title">The dial</p>
     <p>Turn the pointer to a room and open the door. Or set it to the star, and the door opens wherever your wander points.</p>
     <div class="dial" id="roomdial"></div>
     <p style="margin:12px 0 0"><button class="ok" id="dial-ok">Leave it</button></p>
@@ -598,7 +600,7 @@
 
 <div class="tool" id="seasondlg" role="dialog" aria-modal="true" aria-labelledby="season-title">
   <div class="box">
-    <h2 id="season-title">The seasons wheel</h2>
+    <p class="tool-title" id="season-title">The seasons wheel</p>
     <p id="season-text">Turn it to any season.</p>
     <div class="dial" id="seasondial"></div>
     <p style="margin:12px 0 0"><button class="ok" id="season-ok">Done</button></p>
@@ -607,7 +609,7 @@
 
 <div class="tool" id="weather" role="dialog" aria-modal="true" aria-labelledby="weather-title">
   <div class="box">
-    <h2 id="weather-title">The barometer</h2>
+    <p class="tool-title" id="weather-title">The barometer</p>
     <p>Turn it to the weather you'd like outside. The room and Gemma will follow.</p>
     <div class="dial" id="dial"></div>
     <p style="margin:12px 0 0"><button class="ok" id="weather-ok">Done</button></p>
@@ -616,7 +618,7 @@
 
 <div class="tool" id="tool" role="dialog" aria-modal="true">
   <div class="box">
-    <h2 id="tool-title">The room</h2>
+    <p class="tool-title" id="tool-title">The room</p>
     <p id="tool-text"></p>
     <button class="ok" id="tool-ok">Back to the room</button>
   </div>

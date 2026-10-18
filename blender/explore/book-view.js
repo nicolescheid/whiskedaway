@@ -47,10 +47,10 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
   const visitPage = document.createElement('div');
   visitPage.className = 'bk-visit';
   visitPage.innerHTML = `<h3 class="bk-h">This visit</h3><p class="bk-theme"></p>`;
-  [...notes.children].filter(el => el.tagName !== 'H2').forEach(el => visitPage.appendChild(el));
+  [...notes.children].filter(el => !el.classList.contains('panel-title')).forEach(el => visitPage.appendChild(el));
   // "Visitor check" is the builder's (it reports the bot check): only with ?debug
   if (!new URLSearchParams(location.search).has('debug')) {
-    const vh = [...visitPage.querySelectorAll('h3')].find(h => /visitor check/i.test(h.textContent));
+    const vh = [...visitPage.querySelectorAll('h3, .panel-sub')].find(h => /visitor check/i.test(h.textContent));
     if (vh) { vh.hidden = true; visitPage.querySelector('#visitor')?.setAttribute('hidden', ''); }
   }
   const forget = visitPage.querySelector('#forget');
