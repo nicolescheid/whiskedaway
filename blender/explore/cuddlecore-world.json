@@ -15,7 +15,7 @@
       ]
     },
     "rest": {
-      "label": "rest, with as little effort as possible",
+      "label": "rest, with no effort",
       "themes": [
         "rest",
         "no-cook",
@@ -25,7 +25,7 @@
       ]
     },
     "fresh": {
-      "label": "a juice, a smoothie or something fresh",
+      "label": "a juice or something fresh",
       "themes": [
         "fresh",
         "green",
@@ -37,7 +37,7 @@
       ]
     },
     "hands-on": {
-      "label": "actually cooking something, with your hands busy",
+      "label": "some proper cooking",
       "themes": [
         "cooking",
         "hands-on",
@@ -45,7 +45,7 @@
       ]
     },
     "sweet": {
-      "label": "a little sweetness, an evening kind of comfort",
+      "label": "a little sweetness",
       "themes": [
         "sweet",
         "honey",
@@ -61,7 +61,7 @@
       ]
     },
     "pantry": {
-      "label": "something quick from the cupboard",
+      "label": "something from the cupboard",
       "themes": [
         "pantry",
         "simple",
@@ -72,7 +72,7 @@
       ]
     },
     "cool": {
-      "label": "something cool and refreshing",
+      "label": "something cool and light",
       "themes": [
         "cooling",
         "hydrating",

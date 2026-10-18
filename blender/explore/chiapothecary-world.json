@@ -7,11 +7,11 @@
   },
   "clusters": {
     "energising": { "label": "a pudding to wake you up", "themes": ["energising", "energy", "breakfast", "green", "protein"] },
-    "calming": { "label": "something restorative for the end of the day", "themes": ["calming", "restorative", "calm", "evening", "rest", "honey"] },
+    "calming": { "label": "a calming evening jar", "themes": ["calming", "restorative", "calm", "evening", "rest", "honey"] },
     "indulgent": { "label": "a rich, chocolatey pudding", "themes": ["indulgent", "chocolate", "creamy", "treat"] },
-    "refreshing": { "label": "something cold and refreshing", "themes": ["refreshing", "chilled", "fruity", "cooling"] },
-    "focus": { "label": "a steady breakfast for a day of thinking", "themes": ["focus", "breakfast", "crunchy", "protein", "overnight"] },
-    "skin": { "label": "something bright, with plenty of vitamin C", "themes": ["skin", "vitamins", "citrus", "fruity", "sunny"] }
+    "refreshing": { "label": "a cold, refreshing jar", "themes": ["refreshing", "chilled", "fruity", "cooling"] },
+    "focus": { "label": "a steady breakfast", "themes": ["focus", "breakfast", "crunchy", "protein", "overnight"] },
+    "skin": { "label": "something with vitamin C", "themes": ["skin", "vitamins", "citrus", "fruity", "sunny"] }
   },
   "objects": {
     "pudding-jars": { "label": "Mix an experiment", "ref": "the pudding jars on the counter", "type": "submit", "tool": "generate", "tool_title": "Mix an experiment",
