@@ -1,74 +1,66 @@
-# Gemma — Stage 1 direction study
+# Gemma — chosen Direction C, Stage 2
 
-**Decision: pending Nicole's choice.** This pack stops at Stage1. No turnaround, expression/pose sheets, production avatars, palette-card image or icons have been made.
+Nicole selected **Direction C: stylised 3D Gemma**, exactly as in 03-direction-c-stylised-3d-v2.png and 08-cohost-c-stylised-3d-v2.png. These two images remain the identity masters. Earlier direction studies and the lineup are historical comparisons.
 
-## The same Gemma
+**Skin rule: soft blue cheeks in every expression and lighting condition. No rosy, peach or pink blush, and no expression-driven red tint.** Use blue-grey skin shading. Keep her lip colour as in the approved face.
 
-An original adult kitchen genie, around38–42: warm, intelligent and practical. She welcomes without crowding. She looks like someone who can make dinner and notice that a small win counts.
+## Identity and proportions
 
-Shared design anchors: muted blue face/hands, charcoal dark high ponytail with a small aged-brass cuff, dusty berry shirt with sleeves rolled to elbows, cream linen bib apron and useful pocket. Small brass stud earrings. One hand opens in welcome; the other rests by the apron pocket. Her lower apron gives way to a gentle steam curl.
+An adult kitchen genie, around 38–42, warm, intelligent and practical. Keep her facial structure, amber-brown eyes, charcoal high wavy ponytail and aged brass cuff/earrings. Her costume remains the dusty berry rolled-sleeve shirt and cream linen bib apron, with a large patch pocket and a front/side waist knot. The back has a plain waistband, without a second bow.
 
-Aim for an apparent adult height around1.65 m beside the range. Keep human adult head/torso/hand proportions; the steam tail is not a reason to enlarge the head or give her a childlike torso. Allow tiny expression lines and a lived-in face.
+Start around **1.65 m apparent height from ponytail crown to steam tip**, then match the approved room image. This is a scene-placement target, not a measured human standing height. Preserve the masters’ adult head, shoulder, torso and hand relationships. Her lower body is the approved tapering blue-white steam curl, without invented legs or feet.
 
-The supplied pixel placeholder informed colour/hair cues only. The face, practical costume and silhouette in this pack are a new design study. The Inn-in-whisk picture informs B's painting style and the world she inhabits.
+## Files
 
-## Directions
+- 10-turnaround.png: front, side, three-quarter and back, left to right; relaxed A-pose, neutral expression, parallel-projection appearance, even light, same scale and baseline. The arms project in depth in the side view; this does not change the bind pose.
+- 11-expressions.png: 4 × 2, left to right then top to bottom: welcoming hello; listening; thinking it over; delighted; gentle concern; laughing; a little oops; sleepy.
+- 12-poses.png: 3 × 2: rising from the whisk; pointing; offering a steaming bowl; stirring a pot; ringing a tiny brass handbell; waving goodbye.
+- 13-avatar-large.png: transparent 1024 × 1024 master for 48px display.
+- 14-avatar-small.png: separately simplified transparent 1024 × 1024 master for 24px display.
+- runtime/13-avatar-48.png and runtime/14-avatar-24.png: actual-size transparent PNG exports.
+- 15-palette.png: six swatches, ordered skin / hair / berry on top, apron / brass / glow below.
+- 16-handbell.png, 17-shimmer.png, 18-whisk.png: separate transparent 1024 × 1024 icons. The tea handbell has a turned wooden handle; the shimmer preserves partial transparency; the whisk has open transparent wire gaps.
 
-| Position / file | Treatment | What to judge |
-| --- | --- | --- |
-| A /01 | Refined90s pixel sprite, about64 source pixels high in intent, displayed larger over the photo | Chat-window continuity, clear silhouette, and whether the deliberate sprite/photo contrast belongs beside the rooms |
-| B /02 | Gentle ink, watercolour and gouache, matching the illustrated Inn | Warmth and continuity with the whisk-world; whether a painted character feels present in a real room |
-| C /03 | Stylised3D adult with painterly materials, lit to match the room | Spatial presence, readable acting and the balance between appealing stylisation and a credible adult |
-| D /04 | Hand-drawn2D cel line/colour with restrained shading | Expressiveness, clarity and whether flat colour can share the room's light convincingly |
-| E /05 | Mostly translucent golden steam, half-formed face and welcome hand | A subtle host presence, recognisability and how much expression survives when most of her is absent |
+Expression and pose names are recorded here rather than printed in the artwork.
 
-06 is the plain warm-cream lineup, ordered **A, B, C, D, E from left to right**, with no lettering in the image. It is a comparison image, not a production model sheet.
+## Palette
 
-07 and08 are the two shortlisted co-host tests: B storybook and C stylised3D. They use one generated photographic daylight home-kitchen setting, no person, so the character's scale and relationship to a working counter are easy to compare. These are visual mockups, rather than photos of Nicole's actual kitchen or footage from the show.
+Use these **sRGB base-colour targets** for material authoring. Lighting and shading change rendered pixels; the raster palette card is a visual reference rather than a calibration chart.
 
-B is shortlisted for its continuity with the painted Inn-in-whisk world; C for its response to room light and potential for spatial acting. Neither is selected on Nicole's behalf.
-
-## Provisional colours
-
-These are art-direction targets, not a final approved palette or measured samples of every rendered pixel:
-
-| Part | Target |
+| Part | Hex |
 | --- | --- |
-| Skin | Soft muted blue #8fb8ca |
-| Hair | Charcoal #25232b |
-| Rolled-sleeve shirt | Dusty berry #8b4d5c |
-| Linen apron | Warm cream #e5d9c3 |
-| Brass details | Aged brass #b07f52 |
-| Steam | Pale blue-grey / cream, transparent edges |
-| Presence glow | Soft local gold, around#e8bd72; never an opaque yellow body |
+| Soft blue skin | #8fb8ca |
+| Charcoal hair | #25232b |
+| Dusty berry shirt | #8b4d5c |
+| Cream linen apron | #e5d9c3 |
+| Aged brass | #b07f52 |
+| Golden presence glow | #e8bd72 |
 
-Room lighting deliberately shifts local colours: cool rainy-window light and warm candlelight in the Cuddlecore tests; daylight in co-host tests. Keep those shifts rather than painting the same flat RGB values onto every lit surface.
+Steam is pale blue-white with transparent edges. Keep gold glow local, rather than washing out the blue face.
 
-## Animation implications — provisional
+## Blender model and rig
 
-| Direction | Likely implementation | Main effort / risk |
-| --- | --- | --- |
-| A | Discrete pixel frames with nearest-neighbour display; separate face/hand/tail frames if useful | Restrained motion can be economical. New gestures and expressions need carefully redrawn pixels; readability at48px must be designed and tested in Stage2. |
-| B | Layered2D cutout rig with painted parts and limited hand/face redraws | Preserve brush texture through bends. Large rotations can expose missing painted surfaces; subtle acting will suit the style. |
-| C |3D character rig with facial shapes, hand controls and secondary hair/apron motion | Greatest modelling/rig setup. Once built, offers reusable poses, camera angles and scene lighting for room and video work. No3D mesh/rig is included in this PNG study. |
-| D |2D cutout or frame animation with separate expressions and hands | Needs consistent line weight, mouth/eye shapes and redraws at extreme angles. Shadow treatment should stay consistent with photographic backgrounds. |
-| E | Layered steam/particle effects with a controlled face/hand mask and stable identity landmarks | Fewer solid body parts do not make it automatically easy. Temporal stability and recognisable acting are the hard parts; tiny avatars may lose her identity. |
+The turnaround is a modelling image reference, not a mesh, scan or mathematically measured blueprint. Build one coherent model and compare orthographic renders across the four views. The approved v2 room/cohost images settle facial identity, clothing and material feel. The pose sheet’s suspended pot is an action reference: give it a counter or stove support in the scene.
 
-No animation-time estimates are asserted here; the selected motion range, pipeline and animator determine the work.
+| Part | Separate movement and attachment |
+| --- | --- |
+| Root and body | Global/root placement; independent hover height and sway; torso/spine, chest, neck and head controls. Gentle breathing without separating the steam from her waist. |
+| Face | Gaze, upper/lower lids and blink, inner/outer brows, jaw, lips, mouth corners and cheek deformation shapes. Support all eight expressions and speech. Cheek deformation must never drive a blush colour. |
+| Arms/hands | Clavicles, upper arms, forearm twist, wrists, palms and finger/thumb joints; IK/FK for pointing, waving and cooking. Keep natural hand size and five fingers. |
+| Ponytail/curls | Ponytail bone chain with damped secondary motion, a few larger curl controls and separate short face-framing strands. Attach the brass cuff firmly to the ponytail base. |
+| Earrings | Parent to head/ears, with restrained secondary rotation if needed. |
+| Shirt/sleeves | Separate garment mesh skinned to torso/arms; retain rolled-sleeve volume around bending elbows. |
+| Apron | Separate bib/skirt mesh, with torso skinning and hem/side controls or restrained cloth simulation. Anchor straps and waistband. Tie ends and pocket can move slightly; the front/side knot stays attached. |
+| Steam tail | Separate controllable curved volume/mesh/effect, stable at the waist; controls along the curl for shape, drift, turbulence and opacity. Animate independently of upper-body acting, retaining the taper and soft apron transition. |
+| Glow/shimmer | Independent intensity, tint and opacity, coordinated with steam but separate from skin colour and expression controls. |
+| Props | Separate whisk, bowl, spoon, pot and handbell objects with switchable hand/world constraints. Two-hand contact for the bowl; spoon grip and pot support for stirring. Bell body follows handle; clapper can swing separately. |
+| Whisk emergence | Separate whisk prop with an emergence point at its wire head, driving steam attachment and character reveal. Do not shrink her head/body to create the reveal. |
 
-If B, C or D is selected, likely independently moving parts are: head/neck; eyelids and gaze; brows; mouth/cheeks; high ponytail and a few hair clumps; upper arms/forearms; palms/fingers; shirt sleeves; apron body/ties/pocket; and steam curls. Parent brass cuff/earrings to their relevant parts rather than letting them drift. The welcoming hand needs a clear silhouette and natural relaxed fingers.
-
-For E, separate the stable face/eye landmarks, welcome hand, dark ponytail suggestion, berry trace, brass glints and several translucent steam layers. Keep glow local so it does not obscure the room or replace her face with a bright blob.
-
-## Stage2 after the choice
-
-The requested next stage is: same-scale turnaround; eight expressions; six poses including whisk, bowl, stirring, handbell and goodbye; avatars designed for48×48 and24×24 reading; palette card; and separate transparent handbell, shimmer and whisk icons.
-
-Those assets remain **unmade pending Nicole's direction choice**. A room style plus a simpler chat avatar is possible, provided face/ponytail/berry/brass remain consistent.
+For web/video use, plan lighter hair and steam exports alongside the full-quality model. This delivery contains PNG references and assets; it does not include a Blender mesh, rig or animation.
 
 ## Delivery
 
-Stage1 composites are PNG visual direction studies. Their backgrounds and lighting are baked in. They are not production transparent character cutouts, spritesheets, layered rig files or3D models.
+Artwork used the **built-in image_gen tool**. Exact prompts, including corrections for the back tie and returning cheek blush, are in stage2-prompts.json. Selected sources, dimensions, alpha checks and hashes are in stage2-manifest.json. Avatar/icon masters were normalized to 1024px, and 48px/24px avatar exports resized with alpha preserved.
 
-The gallery and contact sheet identify the directions outside the artwork. Exact prompts and selected source-image records are included. Images were made with the built-in image-generation tool.
+stage2-gallery.html presents the pack. stage2-size-check.png shows actual-size avatars and enlarged pixel checks on light/dark backgrounds. The Stage 2 ZIP also includes both approved v2 references. The earlier Stage 1 ZIP remains an archive of the direction study.
 

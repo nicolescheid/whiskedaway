@@ -1,0 +1,30 @@
+{
+  "artwork_count": 9,
+  "PNG_files_verified": true,
+  "square_masters_1024": true,
+  "transparent_masters": [
+    "13-avatar-large.png",
+    "14-avatar-small.png",
+    "16-handbell.png",
+    "17-shimmer.png",
+    "18-whisk.png"
+  ],
+  "runtime_avatar_sizes": [
+    48,
+    24
+  ],
+  "gallery_links_verified": true,
+  "gallery_browser_render": "not verified",
+  "visual_review": [
+    "Four turnaround views, relaxed A-pose, common scale/baseline, corrected back tie",
+    "Eight expressions, six required poses",
+    "Returning cheek blush corrected using image_gen",
+    "Three separate icons without lettering",
+    "Actual-size 48px/24px avatars and enlarged checks reviewed on light and dark backgrounds; face, blue skin, ponytail and berry silhouette remain readable"
+  ],
+  "limitations": [
+    "Reference artwork is not measured geometry or a Blender model",
+    "Palette notes give base-material sRGB targets"
+  ],
+  "contact_sheet_visually_reviewed": true
+}
