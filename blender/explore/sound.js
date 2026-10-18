@@ -325,9 +325,26 @@ function recording(url) {
 
 // Things that play. `pick` chooses a written-out tune; `src` (optional) chooses a recorded file, which takes
 // over when it has loaded. With no file (low data, or it failed), the tune plays, or, without a tune, nothing.
+// `level` sets how loud it plays in this weather; `wind` winds it up first; `horn` plays it through a phonograph's horn.
+const SOUND = 'explore/assets/sound/';
 const MUSIC = {
   'music-box': { room: 'sweet-spells', pick: s => s?.night ? 'brahms' : s?.weather === 'rain' || s?.weather === 'stormy' ? 'elise' : 'twinkle' },
+  // The clockwork songbird sings a real tūī's song (DOC), bright in fair weather, quieter in rain, hushed in a storm
+  songbird: { room: 'chiapothecary', wind: 3, src: () => `${SOUND}tui-song.mp3`,
+              level: s => s?.weather === 'stormy' ? 0.25 : s?.weather === 'fair' || s?.weather === 'very-dry' ? 1 : 0.6 },
+  // The phonograph in Flourish: Grieg in the morning, Vivaldi at midday, Dvořák in the evening and at night
+  'fl-phonograph': { room: 'flourish', wind: 6, horn: true,
+                     src: s => `${SOUND}${{ morning: 'grieg-morning', midday: 'vivaldi-spring' }[s?.time] || 'dvorak-humoresque'}.mp3` },
 };
+// A phonograph's horn: no deep bass, no sparkle, a little nasal, and a faint crackle from the record
+function horn(out) {
+  const hp = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter(), peak = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.value = 280;
+  lp.type = 'lowpass'; lp.frequency.value = 4200;
+  peak.type = 'peaking'; peak.frequency.value = 1500; peak.Q.value = 1; peak.gain.value = 4;
+  hp.connect(lp).connect(peak).connect(out);
+  return hp;
+}
 let playing = null;                              // { id, out, tune, start, i, timer }
 function stopMusic(fade = 0.6) {
   if (!playing) return;
@@ -344,13 +361,21 @@ function startMusic(id) {
   out.connect(master);
   const m = MUSIC[id], p = { id, out, start: ctx.currentTime + 0.15, i: 0 };
   playing = p;
+  if (m.level) out.gain.value = m.level(scene);
+  if (m.wind) {                                    // a few turns of the key or the handle: ratchet clicks
+    for (let i = 0; i < m.wind; i++) noise(p.start + i * 0.16, { len: 0.02, freq: 1800 + (i % 2) * 500, q: 3, gain: 0.25, out: master });
+    p.start += m.wind * 0.16 + 0.2;
+  }
   if (m.src) recording(m.src(scene)).then(buf => {
     if (!buf || playing !== p) return;
     clearInterval(p.timer);                        // the recording takes over from the written-out tune
     p.src = ctx.createBufferSource();
     p.src.buffer = buf; p.src.loop = true;
-    p.src.connect(out);
-    p.src.start();
+    p.src.connect(m.horn ? horn(out) : out);
+    p.src.start(Math.max(ctx.currentTime, p.start));
+    if (m.horn) {                                  // the needle in the groove
+      p.timer = setInterval(() => { if (ctx.state === 'running' && playing === p) noise(ctx.currentTime + rnd(0, 0.2), { len: 0.006, freq: rnd(2000, 5000), q: 1, gain: rnd(0.01, 0.04), out }); }, 90);
+    }
   });
   if (!m.pick) return;
   p.tune = parseTune(TUNES[m.pick(scene)]);
@@ -458,8 +483,9 @@ export const sound = {
   },
 
   // The room's ambience: call whenever the room, the weather, the hour or the season changes
-  ambience(room, weather, { night = false, season = null } = {}) {
-    scene = { room, weather, night, season };
+  ambience(room, weather, { night = false, season = null, time = null } = {}) {
+    scene = { room, weather, night, season, time };
+    if (playing && MUSIC[playing.id].level) playing.out.gain.setTargetAtTime(MUSIC[playing.id].level(scene), ctx.currentTime, 0.5);
     try { startBed(); } catch { /* no audio: no matter */ }
   },
 

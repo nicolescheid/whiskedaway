@@ -282,6 +282,8 @@
       <li><b>The room</b>: built and rendered in Blender, free and open source (GPL).</li>
       <li><b>The 360° view</b>: three.js, MIT licence.</li>
       <li><b>The Inn's sounds</b>: Gemma's shimmer, the bell, the doors, the grandfather clock, every room's rain, wind, fire and garden, and the music box are synthesised in your browser with the Web Audio API, made for WhiskedAway and given away as CC0.</li>
+      <li><b>The songbird's song</b>: a tūī recorded by the Department of Conservation, Crown copyright, CC BY 4.0. Source: Department of Conservation (NZ).</li>
+      <li><b>The phonograph's records</b>: Grieg's Morning Mood by the Musopen Symphony Orchestra (courtesy of Musopen), Vivaldi's Spring by The Modena Chamber Orchestra, and Dvořák's Humoresque by the Boudini Brothers (1922). All public domain, from Wikimedia Commons.</li>
       <li><b>The glasshouse plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
       <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
@@ -580,7 +582,7 @@ function crossFade(tex) {
 /** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
 async function showWeather(w, { fade = true } = {}) {
   const night = isNight(), R = room(), at = state.room, season = seasonNow();
-  sound.ambience(at, w, { night, season });                     // the room's quiet bed follows the weather
+  sound.ambience(at, w, { night, season, time: timeNow() });                     // the room's quiet bed follows the weather
   const stale = () => w !== state.weather || night !== isNight() || at !== state.room || season !== seasonNow();
   let shown = w;                                     // a room without this weather's render falls back to rain
   let preview = night && !R.dayOnly ? await loadTex(R.pano(w, true, false)) : null;
