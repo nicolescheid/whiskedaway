@@ -1,0 +1,156 @@
+{
+  "method": "Normalised gradient-magnitude correlation of seven fixed feature patches; coarse half-resolution search followed by full-resolution refinement at1pixel steps. Dimensions normalized and night given a2pixel global registration recorded separately; no content stitched, pasted from rainy master, locally warped or artistically retouched by scripts.",
+  "registration": {
+    "16-lane-change.png": {
+      "normalization": "Generated2170x725 normalized to2172x724, Lanczos.",
+      "translation_px": [
+        0,
+        0
+      ]
+    },
+    "21-lane-night-change.png": {
+      "normalization": "Generated2171x724 normalized to2172x724, Lanczos.",
+      "translation_px": [
+        2,
+        2
+      ],
+      "border_fill": "Two new top/left border pixels extended from nearest edge; no wrap, pasted rain content or local warping."
+    },
+    "authority": "Technical size normalization and alignment carried forward from supplied ART-DIRECTION.md; creative/weather edits used built-in image generation."
+  },
+  "limits": "Light and fog change edges; low correlation means uncertain match. This samples visible features, not every pixel; generated weather edits cannot establish exact geometric registration.",
+  "results": [
+    {
+      "file": "16-lane-change.png",
+      "master": "C:/dev/www/WhiskedAway/whiskedaway-sweet-spells/art-inbox/sweet-spells/14-lane-rain.png",
+      "generated_size": [
+        2170,
+        725
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "sha256": "58ef2ae9b488ca38e0585481568a85b184ada372356dcfca4a48e13a48a824ad",
+      "patches": {
+        "left_porch": {
+          "edge_correlation": 0.6187,
+          "offset_px": [
+            0,
+            -1
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.5636,
+          "offset_px": [
+            0,
+            -1
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.6106,
+          "offset_px": [
+            0,
+            -1
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.5878,
+          "offset_px": [
+            1,
+            -1
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.6099,
+          "offset_px": [
+            1,
+            -1
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.5932,
+          "offset_px": [
+            1,
+            -1
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.5351,
+          "offset_px": [
+            1,
+            0
+          ]
+        }
+      },
+      "reliable_patches": 7,
+      "max_reliable_offset_px": 1
+    },
+    {
+      "file": "21-lane-night-change.png",
+      "master": "C:/dev/www/WhiskedAway/whiskedaway-sweet-spells/art-inbox/sweet-spells/19-lane-night-rain.png",
+      "generated_size": [
+        2171,
+        724
+      ],
+      "delivered_size": [
+        2172,
+        724
+      ],
+      "sha256": "fe5fb4fd0bbfef074e74b4a2c3595e5bd34262ba5008b29f3ed00287565ce1f3",
+      "patches": {
+        "left_porch": {
+          "edge_correlation": 0.7024,
+          "offset_px": [
+            1,
+            0
+          ]
+        },
+        "bakery_window": {
+          "edge_correlation": 0.6804,
+          "offset_px": [
+            1,
+            -1
+          ]
+        },
+        "middle_door": {
+          "edge_correlation": 0.6883,
+          "offset_px": [
+            1,
+            0
+          ]
+        },
+        "lamp_post": {
+          "edge_correlation": 0.5451,
+          "offset_px": [
+            1,
+            -1
+          ]
+        },
+        "bicycle": {
+          "edge_correlation": 0.6836,
+          "offset_px": [
+            1,
+            -1
+          ]
+        },
+        "right_door": {
+          "edge_correlation": 0.7146,
+          "offset_px": [
+            1,
+            0
+          ]
+        },
+        "central_chimney": {
+          "edge_correlation": 0.6371,
+          "offset_px": [
+            1,
+            1
+          ]
+        }
+      },
+      "reliable_patches": 7,
+      "max_reliable_offset_px": 1
+    }
+  ]
+}
