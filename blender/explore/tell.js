@@ -48,15 +48,15 @@ export function parsePantry(text) {
 }
 
 export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage }) {
-  const P = lines.pantry || {}, M = lines.map || {}, D = lines.dietary || {}, N = lines.menu || {}, B = lines.buttons || {};
+  const P = lines.pantry || {}, M = lines.map || {}, D = lines.dietary || {}, N = lines.menu || {}, B = lines.buttons || {};   // gemma-lines.json `tell`
   const L = {
     pantry: { title: P.title || 'What have you got to use?', helper: P.helper || '', placeholder: P.placeholder || 'eggs, spinach, leftover rice',
-              useUp: P.use_up || 'Use these up first', privacy: P.privacy || "Only used for Gemma's ideas and the recipes she writes out for you." },
-    map: { title: M.title || 'Where shall we take it?', helper: M.helper || '', shop: M.country_label || 'Shopping words for', choose: M.country_choose || 'Choose…' },
-    dietary: { title: D.title || 'Anything I should avoid?', other: D.other_label || 'Something else?', otherPlaceholder: D.other_placeholder || '',
-               otherNote: D.other_note || "I'll pass that on when I write a recipe out. I can't check my cards for it." },
-    menu: { title: (N.chip || '+ Tell me about you').replace(/^\+\s*/, ''), energy: N.energy || 'Energy', pantry: N.pantry || 'Pantry', map: N.map || 'The map',
-            dietary: N.dietary || 'Dietary needs', none: N.not_yet || 'not yet' },
+              useUp: P.useUp || 'Use these up first', privacy: P.privacy || "Only used for Gemma's ideas and the recipes she writes out for you." },
+    map: { title: M.title || 'Where shall we take it?', helper: M.helper || '', shop: (M.shop || 'Shopping words for').replace(/:\s*$/, ''), choose: M.choose || 'Choose…' },
+    dietary: { title: D.title || 'Anything I should avoid?', other: D.other || 'Something else?', otherPlaceholder: D.otherPlaceholder || '',
+               otherNote: D.otherNote || "I'll pass that on when I write a recipe out. I can't check my cards for it." },
+    menu: { title: N.title || 'Tell me about you', energy: N.energy || 'Energy', pantry: N.pantry || 'Pantry', map: N.map || 'The map',
+            dietary: N.dietary || 'Dietary needs', none: N.none || 'not yet' },
     forget: B.forget || 'Forget this', done: B.done || 'Done', close: B.close || 'Close',
   };
   const root = document.createElement('div');
