@@ -63,58 +63,58 @@
           "distance": 1.79,
           "visible": true
         },
-        "drawer-cacao-nibs": {
-          "label": "Cacao nibs",
-          "type": "ambient",
-          "overlay": null,
-          "yaw": 11.62,
-          "pitch": -12.7,
-          "distance": 2.48,
-          "visible": true
-        },
         "drawer-goji-berries": {
           "label": "Goji berries",
           "type": "ambient",
           "overlay": null,
-          "yaw": -19.0,
-          "pitch": -5.84,
-          "distance": 2.51,
+          "yaw": -19.38,
+          "pitch": -12.33,
+          "distance": 2.5,
+          "visible": true
+        },
+        "drawer-cacao-nibs": {
+          "label": "Cacao nibs",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 11.97,
+          "pitch": -12.85,
+          "distance": 2.41,
           "visible": true
         },
         "drawer-matcha": {
           "label": "Matcha",
           "type": "ambient",
           "overlay": null,
-          "yaw": 3.9,
-          "pitch": -6.11,
-          "distance": 2.4,
+          "yaw": 25.95,
+          "pitch": -11.61,
+          "distance": 2.65,
           "visible": true
         },
         "drawer-black-chia": {
           "label": "Black chia",
           "type": "ambient",
           "overlay": null,
-          "yaw": -25.95,
-          "pitch": 0.77,
-          "distance": 2.6,
-          "visible": true
-        },
-        "drawer-coconut-flakes": {
-          "label": "Coconut flakes",
-          "type": "ambient",
-          "overlay": null,
-          "yaw": 18.78,
-          "pitch": 0.8,
-          "distance": 2.52,
+          "yaw": -26.44,
+          "pitch": -5.45,
+          "distance": 2.57,
           "visible": true
         },
         "drawer-white-chia": {
           "label": "White chia",
           "type": "ambient",
           "overlay": null,
-          "yaw": -3.85,
-          "pitch": 7.67,
-          "distance": 2.44,
+          "yaw": -3.98,
+          "pitch": -5.97,
+          "distance": 2.35,
+          "visible": true
+        },
+        "drawer-coconut-flakes": {
+          "label": "Coconut flakes",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 19.31,
+          "pitch": -5.67,
+          "distance": 2.47,
           "visible": true
         },
         "drawers": {
@@ -122,8 +122,8 @@
           "type": "interactive",
           "overlay": "add-ins",
           "yaw": 0.0,
-          "pitch": -4.51,
-          "distance": 2.29,
+          "pitch": -4.56,
+          "distance": 2.27,
           "visible": true
         },
         "counter": {
