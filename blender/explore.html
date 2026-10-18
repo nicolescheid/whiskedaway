@@ -170,6 +170,11 @@
   .chip.bell { padding: 3px 8px; line-height: 0; }
   .chip.bell img { width: 26px; height: 26px; transform-origin: 50% 12%; }
   .chip.bell.ring img { animation: ring .9s ease-in-out; }
+  /* The speaker beside the bell: crossed out while the Inn is quiet, which it is until the visitor says */
+  .chip.speaker { padding: 4px 8px; line-height: 0; }
+  .chip.speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  .chip.speaker .waves, .chip.speaker[aria-pressed="true"] .hush { display: none; }
+  .chip.speaker[aria-pressed="true"] .waves { display: inline; }
   @keyframes ring { 15% { transform: rotate(18deg); } 35% { transform: rotate(-15deg); } 55% { transform: rotate(10deg); } 75% { transform: rotate(-6deg); } }
   .tool .box.welcome { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
   .welcome .who { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
@@ -213,6 +218,7 @@
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
   <button class="chip" id="btn-notes" aria-expanded="false">Gemma's notebook</button>
   <button class="chip bell" id="btn-bell" aria-label="Ring for Gemma: welcome and help" aria-haspopup="dialog"><img src="explore/assets/front-door/bell.webp" alt=""></button>
+  <button class="chip speaker" id="btn-sound" aria-pressed="false" aria-label="Sound off. Turn the Inn's sounds on" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg></button>
 </div>
 
 <aside class="panel" id="map" aria-label="Map">
@@ -326,6 +332,7 @@ import { localNavigate, aiNavigate } from './explore/navigator.js';
 import { genieFetch, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
+import { sound } from './explore/sound.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -424,7 +431,7 @@ state.room = window.__door?.active ? 'hall-entrance'                  // through
 const room = () => ROOMS[state.room];
 let spots = room().spots;
 state.chat = state.chat || [];             // Gemma's chat log for this visit
-if (state.sound === undefined) state.sound = true;          // a time of day the visitor chose on the clock, or null for their own
+delete state.sound;                        // sound on or off lives in explore/sound.js now, off by default
 
 // ---------- time of day: the device's own, unless the visitor pushed the clock
 const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
@@ -878,7 +885,7 @@ function chatLine(who, text) {
   state.chat.push({ who, text, at: clockLabel() });
   state.chat = state.chat.slice(-60);
   renderChat();
-  if (who === 'gemma') uhOh();
+  if (who === 'gemma') sound.shimmer();
   store.save(state);
 }
 function setChips(chips) {
@@ -906,29 +913,16 @@ function say(text, fork = [], brief = false) {
   sayTimer = setTimeout(post, brief ? 350 : 650);
 }
 
-// "uh-oh!": Nicole's recorded one when it exists, otherwise a two-note synth homage
-let lastUhOh = 0, uhOhAudio = null, actx = null;
-fetch('explore/assets/uh-oh.mp3', { method: 'HEAD' }).then(r => { if (r.ok) uhOhAudio = new Audio('explore/assets/uh-oh.mp3'); }).catch(() => {});
-function uhOh() {
-  if (!state.sound || performance.now() - lastUhOh < 2500) return;
-  lastUhOh = performance.now();
-  try {
-    if (uhOhAudio) { uhOhAudio.volume = 0.5; uhOhAudio.currentTime = 0; uhOhAudio.play().catch(() => {}); return; }
-    actx = actx || new AudioContext();
-    if (actx.state === 'suspended') actx.resume();
-    [[659, 0], [523, 0.16]].forEach(([f, t]) => {
-      const o = actx.createOscillator(), g = actx.createGain();
-      o.type = 'triangle'; o.frequency.value = f;
-      g.gain.setValueAtTime(0, actx.currentTime + t);
-      g.gain.linearRampToValueAtTime(0.08, actx.currentTime + t + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + t + 0.22);
-      o.connect(g).connect(actx.destination);
-      o.start(actx.currentTime + t); o.stop(actx.currentTime + t + 0.25);
-    });
-  } catch { /* no audio available: the chat still works */ }
-}
-const soundLabel = () => { $('cw-sound').textContent = state.sound ? 'uh-oh: on' : 'uh-oh: off'; };
-$('cw-sound').onclick = () => { state.sound = !state.sound; soundLabel(); store.save(state); if (state.sound) { lastUhOh = 0; uhOh(); } };
+// Sound (explore/sound.js): off until the visitor turns it on, with the speaker by the bell or here in the chat
+const soundLabel = () => {
+  $('cw-sound').textContent = sound.on ? 'Sound: on' : 'Sound: off';
+  $('btn-sound').setAttribute('aria-pressed', String(sound.on));
+  $('btn-sound').setAttribute('aria-label', sound.on ? "Sound on. Turn the Inn's sounds off" : "Sound off. Turn the Inn's sounds on");
+};
+$('cw-sound').onclick = $('btn-sound').onclick = () => sound.toggle();
+addEventListener('wa-sound', soundLabel);
+// Every dial in the Inn clicks round a notch when you turn it
+document.addEventListener('click', e => { if (e.target.closest('.dial button')) sound.tick(); });
 $('cw-min').onclick = () => { const min = $('chatwin').classList.toggle('min'); $('cw-min').setAttribute('aria-expanded', String(!min)); $('cw-min').textContent = min ? '□' : '_'; };
 $('cw-credits').onclick = () => $('credits').classList.add('open');
 $('credits-ok').onclick = () => $('credits').classList.remove('open');

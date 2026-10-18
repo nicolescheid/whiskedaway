@@ -8,6 +8,8 @@
 // frontDoor(). The Inn's own script calls innShown(promise) once its first view is loading, waits on
 // `entered` before Gemma's arrival question, and offers settle(fov) for the hand-over from the film.
 
+import { sound } from './sound.js';
+
 const ASSETS = 'explore/assets/front-door/';
 // The film's last frame is a 28 mm lens on a 36 mm sensor: its vertical view in degrees, before cropping to the screen
 const FILM = { landscape: { w: 1920, h: 1080, vfov: 39.7 }, portrait: { w: 1080, h: 1920, vfov: 65.5 } };
@@ -55,6 +57,7 @@ export function frontDoor({ active, track }) {
             <li>The map lists everything in the room you're in.</li>
             <li>My notebook shows what I've noticed. "Forget this visit" clears it.</li>
             <li>"Front door" takes you back outside.</li>
+            <li>The speaker beside the bell turns the Inn's sounds on. They start off.</li>
           </ul>
         </div>
         <button class="ok" id="welcome-ok">Come in</button>
@@ -117,22 +120,7 @@ export function frontDoor({ active, track }) {
     bell.classList.remove('ring');
     void bell.offsetWidth;
     bell.classList.add('ring');
-    if (!window.__explore?.state.sound) return;
-    try {
-      const ac = new AudioContext();
-      for (const at of [0, 0.2]) {
-        for (const [f, g] of [[1318.5, 0.12], [2637, 0.05], [3956, 0.02]]) {
-          const o = ac.createOscillator(), gain = ac.createGain();
-          o.frequency.value = f;
-          gain.gain.setValueAtTime(g, ac.currentTime + at);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + at + 1.2);
-          o.connect(gain).connect(ac.destination);
-          o.start(ac.currentTime + at);
-          o.stop(ac.currentTime + at + 1.3);
-        }
-      }
-      setTimeout(() => ac.close(), 2000);
-    } catch { /* no sound, no matter */ }
+    sound.bell();
   }
 
   const api = { active, entered, innShown: p => Promise.resolve(p).then(shownDone, shownDone) };
