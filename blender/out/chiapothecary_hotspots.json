@@ -54,7 +54,7 @@
         1.6
       ],
       "hotspots": {
-        "lane-window": {
+        "chia-lane-window": {
           "label": "The lane",
           "type": "ambient",
           "overlay": null,

@@ -26,11 +26,11 @@
     "front-door": { "label": "The front door", "ref": "the front door", "type": "door", "go": "/", "themes": [],
                     "leaving": "Off out? Mind the step, love." },
     "stairs": { "label": "Up the stairs", "ref": "the stairs", "type": "ambient", "themes": [],
-                "moment": "Upstairs is the library and the turret. Not open yet, and the guest rooms are full tonight." },
+                "moment": "Upstairs is the library and the turret. They're not open yet, and the guest rooms are all taken." },
     "cellar-door": { "label": "The cellar door", "ref": "the cellar door", "type": "ambient", "themes": [],
                      "moment": "It's stiff. It's been stiff for years." },
     "notice-board": { "label": "The notice board", "ref": "the notice board", "type": "ambient", "themes": [],
-                      "moment": "What's in season, tonight's soup, and anything I pin up for you. Nothing pinned yet." },
+                      "moment": "What's in season, the soup of the day, and anything I pin up for you. Nothing pinned yet." },
     "sea-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": [],
                     "moment": "The same bay you can see from the kitchen." }
   },

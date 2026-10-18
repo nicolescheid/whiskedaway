@@ -88,8 +88,8 @@
   },
   "objects": {
     "window": {
-      "label": "The rain",
-      "ref": "the rain at the window",
+      "label": "The window",
+      "ref": "the window",
       "type": "ambient",
       "themes": [
         "rain",
@@ -98,7 +98,7 @@
         "broth",
         "cosy"
       ],
-      "moment": "It's properly coming down. The glass is all streaks."
+      "moment": "My favourite window. Whatever the weather is doing, you can watch it from here."
     },
     "armchair": {
       "label": "The armchair",
@@ -111,7 +111,7 @@
         "cosy",
         "calm"
       ],
-      "moment": "Sagging in exactly the right places. The blanket's still warm."
+      "moment": "It sags in exactly the right places. The blanket is still warm."
     },
     "plant": {
       "label": "The plant",
@@ -122,7 +122,7 @@
         "green",
         "herbs"
       ],
-      "moment": "Somebody's been talking to it. It's doing well."
+      "moment": "I talk to it. It seems to help."
     },
     "oil-lamp": {
       "label": "The lamp",
@@ -134,7 +134,7 @@
         "tea",
         "slow"
       ],
-      "moment": "A small, steady light. The kind you read by."
+      "moment": "I keep it lit in the evenings. It's the light I read by."
     },
     "cutting-board": {
       "label": "Chopping board",
@@ -146,7 +146,7 @@
         "fresh",
         "knife"
       ],
-      "moment": "Knife marks from a thousand onions."
+      "moment": "Knife marks from more onions than I can count."
     },
     "bowl": {
       "label": "The bowl",
@@ -158,7 +158,7 @@
         "simple",
         "warming"
       ],
-      "moment": "A wide, heavy bowl. Holds warmth well."
+      "moment": "My soup bowl. It's heavy, so it holds the warmth."
     },
     "basket": {
       "label": "The basket",
@@ -169,7 +169,7 @@
         "pantry",
         "simple"
       ],
-      "moment": "Half a loaf, wrapped in a tea towel."
+      "moment": "Half a loaf, wrapped in a tea towel. Help yourself."
     },
     "symptom-jars": {
       "label": "How you're feeling",
@@ -291,6 +291,7 @@
   "atoms": [
     {
       "id": "honey-ginger-lemon",
+      "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
       "title": "Honey, ginger and lemon in a mug",
@@ -307,6 +308,7 @@
     },
     {
       "id": "five-minute-miso",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Five-minute miso broth",
@@ -320,6 +322,7 @@
     },
     {
       "id": "toast-soldiers",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 0,
       "title": "Buttered toast, cut into soldiers",
@@ -333,22 +336,8 @@
       "body": "Toast counts. You're eating, and that's the win. Cutting it into strips somehow makes it feel like someone's looking after you."
     },
     {
-      "id": "overnight-oats",
-      "kind": "recipe idea",
-      "spoons": 0,
-      "title": "Overnight oats for tomorrow-you",
-      "themes": [
-        "oats",
-        "no-cook",
-        "simple",
-        "sweet",
-        "honey",
-        "breakfast"
-      ],
-      "body": "Half a cup of oats, the same of milk, a spoon of honey, into a jar and into the fridge. Future-you wakes up to breakfast already made."
-    },
-    {
       "id": "congee",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 2,
       "title": "Slow rice congee",
@@ -359,10 +348,11 @@
         "rain",
         "cosy"
       ],
-      "body": "A little rice, a lot of stock, a low heat and an hour of the house smelling wonderful. Ginger and spring onion on top. Perfect for a rainy afternoon when you can potter."
+      "body": "A little rice, a lot of stock, a low heat and an hour of the house smelling wonderful. Ginger and spring onion on top. Good for a day when you can potter."
     },
     {
       "id": "story-ginger",
+      "room": "cuddlecore",
       "kind": "ingredient story",
       "spoons": 0,
       "title": "Why ginger feels warming",
@@ -376,6 +366,7 @@
     },
     {
       "id": "why-warm-food",
+      "room": "cuddlecore",
       "kind": "why it works",
       "spoons": 0,
       "title": "Why warm food feels like comfort",
@@ -390,6 +381,7 @@
     },
     {
       "id": "rain-soup-ritual",
+      "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 2,
       "title": "The rainy-day soup pot",
@@ -402,10 +394,11 @@
         "cooking",
         "evening"
       ],
-      "body": "Onion, carrot and celery, slowly softened in butter, then whatever vegetables need using and enough stock to cover. Let it tick over while the rain does its thing."
+      "body": "Onion, carrot and celery, slowly softened in butter, then whatever vegetables need using and enough stock to cover. Let it tick over while you get on with something else."
     },
     {
       "id": "spoons",
+      "room": "cuddlecore",
       "kind": "why it works",
       "spoons": 0,
       "title": "What \"spoons\" means",
@@ -419,6 +412,7 @@
     },
     {
       "id": "pantry-pasta",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 1,
       "title": "No-chop pantry pasta",
@@ -432,6 +426,7 @@
     },
     {
       "id": "herb-salt",
+      "room": "cuddlecore",
       "kind": "technique",
       "spoons": 1,
       "title": "Green herb salt",
@@ -446,6 +441,7 @@
     },
     {
       "id": "cucumber-mint",
+      "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
       "title": "Cucumber and mint water",
@@ -460,6 +456,7 @@
     },
     {
       "id": "gentle-knife",
+      "room": "cuddlecore",
       "kind": "technique",
       "spoons": 1,
       "title": "Gentle knife skills: the claw",
@@ -473,6 +470,7 @@
     },
     {
       "id": "evening-milk",
+      "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
       "title": "Warm milk with cinnamon",
@@ -488,21 +486,8 @@
       "body": "Milk (any kind) warmed in a pan with a pinch of cinnamon and a little honey. Drink it by lamplight. It's not magic, it's a signal to yourself that the day is done."
     },
     {
-      "id": "baked-apple",
-      "kind": "recipe idea",
-      "spoons": 1,
-      "title": "One baked apple",
-      "themes": [
-        "sweet",
-        "warming",
-        "slow",
-        "honey",
-        "evening"
-      ],
-      "body": "Core an apple, fill it with oats, butter and honey, and bake until it slumps. The kitchen smells like autumn for an hour."
-    },
-    {
       "id": "bread-and-butter",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 0,
       "title": "Good bread, good butter, a little salt",
@@ -517,6 +502,7 @@
     },
     {
       "id": "scrap-stock",
+      "room": "cuddlecore",
       "kind": "technique",
       "spoons": 2,
       "title": "Stock from scraps",
@@ -531,6 +517,7 @@
     },
     {
       "id": "story-lemon",
+      "room": "cuddlecore",
       "kind": "ingredient story",
       "spoons": 0,
       "title": "What a squeeze of lemon does",
@@ -544,6 +531,7 @@
     },
     {
       "id": "armchair-plate",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 0,
       "title": "An armchair plate",
@@ -558,6 +546,7 @@
     },
     {
       "id": "story-honey",
+      "room": "cuddlecore",
       "kind": "ingredient story",
       "spoons": 0,
       "title": "A note on honey",
@@ -571,6 +560,7 @@
     },
     {
       "id": "watermelon-mint",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 0,
       "title": "Watermelon with mint and lime",
@@ -586,6 +576,7 @@
     },
     {
       "id": "frozen-grapes",
+      "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
       "title": "A bowl of frozen grapes",
@@ -597,10 +588,11 @@
         "chilled",
         "night"
       ],
-      "body": "Pop a bunch of grapes in the freezer in the morning. By afternoon they're little sorbet bites. A cold, sweet thing that asks nothing of you."
+      "body": "Pop a bunch of grapes in the freezer. A few hours later they're little sorbet bites. A cold, sweet thing that asks nothing of you."
     },
     {
       "id": "cucumber-yoghurt",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Cool cucumber and yoghurt dip",
@@ -614,25 +606,11 @@
       "body": "Grate half a cucumber, squeeze out the water, stir into thick yoghurt with garlic, mint and salt. Eat with crackers or warm flatbread, straight from the fridge."
     },
     {
-      "id": "iced-lemon-tea",
-      "kind": "ritual",
-      "spoons": 0,
-      "title": "Iced lemon and ginger tea",
-      "themes": [
-        "cooling",
-        "hydrating",
-        "citrus",
-        "ginger",
-        "tea",
-        "chilled"
-      ],
-      "body": "Brew ginger and lemon in hot water, let it cool, then pour over plenty of ice with a little honey. Keep a jug in the fridge for the rest of the day."
-    },
-    {
       "id": "tomato-toast",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 1,
-      "title": "Sunny tomato toast",
+      "title": "Tomato toast with basil",
       "themes": [
         "sunny",
         "fresh",
@@ -641,10 +619,11 @@
         "simple",
         "green"
       ],
-      "body": "Ripe tomatoes, sliced thick on good toast with olive oil, salt and torn basil. Summer on a plate, ready in five minutes."
+      "body": "Ripe tomatoes, sliced thick on good toast with olive oil, salt and torn basil. Ready in five minutes."
     },
     {
       "id": "cheese-toastie",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 1,
       "title": "A proper cheese toastie",
@@ -655,26 +634,11 @@
         "warming",
         "simple"
       ],
-      "body": "Butter the outside, plenty of cheese inside, a low pan and patience until it's golden and oozing. Storm food, eaten while it rattles the windows."
-    },
-    {
-      "id": "lentil-soup",
-      "kind": "recipe idea",
-      "spoons": 2,
-      "title": "Red lentil and tomato soup",
-      "themes": [
-        "hearty",
-        "broth",
-        "warming",
-        "slow",
-        "pantry",
-        "what-you-have",
-        "cooking"
-      ],
-      "body": "Onion softened in oil, a cup of red lentils, a tin of tomatoes and stock. Simmer until the lentils collapse, then a squeeze of lemon. Thick, warm and cheap."
+      "body": "Butter the outside, plenty of cheese inside, a low pan and patience until it's golden and oozing. Eat it straight from the pan."
     },
     {
       "id": "slow-porridge",
+      "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 1,
       "title": "A slow bowl of porridge",
@@ -686,7 +650,7 @@
         "simple",
         "breakfast"
       ],
-      "body": "Oats, milk and a pinch of salt, stirred slowly over a low heat while the fog drifts past. A spoon of honey or a grated apple on top."
+      "body": "Oats, milk and a pinch of salt, stirred slowly over a low heat. A spoon of honey or a grated apple on top."
     }
   ],
   "weathers": {
@@ -699,7 +663,7 @@
         "slow",
         "cosy"
       ],
-      "moment": "Back to the rain. The kettle's always on in weather like this."
+      "moment": "Rain, then. I'll keep the kettle on."
     },
     "fair": {
       "label": "Fair",
@@ -710,7 +674,7 @@
         "citrus",
         "green"
       ],
-      "moment": "Oh, look at that. Sunshine."
+      "moment": "Fair weather. Clear skies, not a cloud about."
     },
     "change": {
       "label": "Change",
@@ -721,7 +685,7 @@
         "tea",
         "slow"
       ],
-      "moment": "Sea fog rolling in. A quiet, gentle sort of morning."
+      "moment": "Sea fog rolling in. Everything's gone quiet and soft."
     },
     "stormy": {
       "label": "Stormy",
@@ -743,7 +707,7 @@
         "fresh",
         "citrus"
       ],
-      "moment": "It's sweltering out there."
+      "moment": "Hot and dry out there. Let's keep things cool."
     }
   },
   "default_weather": "rain",
@@ -807,7 +771,7 @@
         "calm"
       ],
       "spoon_bias": -3,
-      "moment": "Running on a stub today, love? Let's keep it simple."
+      "moment": "Running on a stub today? Let's keep it simple."
     },
     "low": {
       "label": "Low",

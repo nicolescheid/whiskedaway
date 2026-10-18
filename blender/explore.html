@@ -741,9 +741,9 @@ function touch(id) {
   } else if (obj.type === 'dial') {
     openDial();
   } else if (obj.type === 'submit') {
-    openTool(obj.tool_title || 'Find Comfort', obj.tool_text || 'In the full site, the pot cooks up a full recipe with Gemma, using everything you\'ve told her.');
+    openTool(obj.tool_title || 'Find Comfort', obj.tool_text || "The pot can't cook you a full recipe yet. Soon. For now, keep looking around and I'll leave ideas out for you.");
   } else {
-    openTool(obj.label, `This is one of the room's fixed tools. In the full site it opens the "${obj.label}" panel, exactly as it always does. Touching it still counts as part of your wander.`);
+    openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
   }
 }
 
@@ -801,7 +801,7 @@ function turnDial(o) {
     : Object.keys(chiaWorld.clusters).includes(lean) ? 'chiapothecary' : 'cuddlecore';
   const go = o.star ? starGo : o.go;
   if (!go) return say(`${o.label} isn't open yet. Soon.`, [], true);
-  if (go === state.room) return say("You're already here, love.", [], true);
+  if (go === state.room) return say("You're already here.", [], true);
   const starSays = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',
                      chiapothecary: 'Your wander says the Chiapothecary. In you go.' };
   say(o.star ? (starSays[go] || 'Your wander says the kitchen. In you go.') : 'In you go.', [], true);

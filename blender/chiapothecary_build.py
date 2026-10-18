@@ -425,7 +425,7 @@ def build():
     bpy.ops.object.transform_apply(scale=True)
     bd.visible_shadow = False
     bd.data.materials.append(emission_mat("lane_view", os.path.join(LANE, WX["view"]), WX["backdrop"]))
-    hotspot("lane-window", "The lane", [pane], kind="ambient")
+    hotspot("chia-lane-window", "The lane", [pane], kind="ambient")
 
     # ---- The wall of drawers: forty in a herb-green case, eight across, five high, red-brown lacquer, blank
     # brass plates. Cupboards below, a shelf of big jars on top.
