@@ -44,6 +44,17 @@ SKY = {"rain": (1.1, 0.42, 70), "fair": (2.0, 0.66, 110), "change": (1.5, 0.5, 1
        "stormy": (0.5, 0.27, 32), "very-dry": (2.3, 0.72, 100)}   # world strength, backdrop, window bounce W
 WET = {"rain": 0.5, "stormy": 0.75}   # raindrops on the sea window (whisked.window_glass)
 
+# Late night, as the kitchen does it: the kitchen's night view of the same coast in the sea window, a near-black
+# sky and fanlight, the lamps carrying the light. Rain still beads on the sea window in rain and storm.
+NIGHT = "--night" in ARGS
+NIGHT_VIEWS = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change": "21-night-change.png",
+               "stormy": "22-night-stormy.png", "very-dry": "23-night-very-dry.png"}
+if NIGHT:
+    VIEWS = NIGHT_VIEWS
+    SKY = {k: (0.04, 0.8, 5) for k in SKY}
+LAMP = 1.2 if NIGHT else 1.0   # wall lamps and the oil lamp, a touch brighter at night
+FILL = 0.25 if NIGHT else 1.0  # the broad warm fills: low at night, so the light falls in pools round the lamps
+
 os.makedirs(OUT, exist_ok=True)
 PACK = os.path.join(ART, "inn-hallway")
 KITCHEN = os.path.join(ART, "cuddlecore")
@@ -143,7 +154,8 @@ def build():
     brass_worn = mat("brass_worn", srgb("#bd9655"), rough=0.28, metal=1.0)
     ink = mat("engraving", srgb("#3a2a18"), rough=0.5, metal=0.6)
     coir = pbr("coir", "rough_linen", 0.25, tint=srgb("#5e4a33"), tint_mix=1.0, bump=1.2)
-    frosted = mat("frosted", (0.92, 0.94, 0.94, 1), rough=0.35, transmission=1.0, ior=1.5)
+    # at night the fanlight is dark night glass, not frosted white
+    frosted = mat("frosted", (0.2, 0.23, 0.3, 1) if NIGHT else (0.92, 0.94, 0.94, 1), rough=0.35, transmission=1.0, ior=1.5)
     door_dark = pbr("door_dark", "medieval_wood", 2.0, tint=srgb("#6e4a2b"), tint_mix=0.6)
     umbrella_cloth = [mat("umbrella_green", srgb("#3c4a3a"), rough=0.8), mat("umbrella_black", srgb("#24221f"), rough=0.75)]
     bulb = mat("bulb", (1, 0.85, 0.6, 1), emission=(1.0, 0.72, 0.42, 1), strength=18)
@@ -401,7 +413,7 @@ def build():
         g = group(name, frame_matrix(at, normal, right), parts)
         # local: z out of the wall, y up. The light sits in the bulb.
         light_at = Vector(at) + n * 0.22 + Vector((0, 0, 0.1))
-        point_light(f"{name}_light", light_at, watts, (1.0, 0.68, 0.4), radius=0.04)
+        point_light(f"{name}_light", light_at, watts * LAMP, (1.0, 0.68, 0.4), radius=0.04)
         return g
 
     for name, at, normal in (("lamp_cl0", (-CW, 0.8, 1.9), (1, 0, 0)), ("lamp_cr1", (CW, 4.0, 1.9), (-1, 0, 0)),
@@ -466,7 +478,7 @@ def build():
     lane_sky.scale = (4, 2, 1)
     for attr in ("visible_shadow", "visible_diffuse", "visible_glossy", "visible_transmission", "visible_volume_scatter"):
         setattr(lane_sky, attr, False)
-    sky_m = mat("fanlight_sky", (0, 0, 0, 1), emission=srgb("#c9d1d6"), strength=0.55)
+    sky_m = mat("fanlight_sky", (0, 0, 0, 1), emission=srgb("#1d2533" if NIGHT else "#c9d1d6"), strength=0.06 if NIGHT else 0.55)
     lane_sky.data.materials.append(sky_m)
     fd_parts = [box_span("front_leaf", -fd_w / 2 + 0.01, fd_w / 2 - 0.01, FRONT - 0.2, FRONT - 0.15, 0.01, fd_h - 0.005, front_paint, bevel=0.004)]
     for px in (-0.22, 0.22):
@@ -578,7 +590,7 @@ def build():
         if o.name.endswith("flame"):
             o.data.materials.clear()
             o.data.materials.append(flame)
-    point_light("hall_oil_lamp", (HALL_X - 0.33, -0.85, 1.18 + 0.36), 18, (1.0, 0.64, 0.33), radius=0.03)
+    point_light("hall_oil_lamp", (HALL_X - 0.33, -0.85, 1.18 + 0.36), 18 * LAMP, (1.0, 0.64, 0.33), radius=0.03)
     model("potted_plant_04", (HALL_X - 0.33, -1.4, 1.18), rot_z=20, scale=1.6)
 
     # ---- Light: overcast sky through the sea window and fanlight, warm lamps, light under doors
@@ -596,8 +608,8 @@ def build():
     area_light("fan_portal", (0, FRONT - 0.17, arch_z + arch_r / 2), (math.radians(-90), 0, 0), (2 * arch_r, arch_r), 0, (1, 1, 1), portal=True)
     fan_bounce = area_light("fan_bounce", (0, FRONT + 0.05, arch_z + 0.2), (math.radians(-90), 0, 0), (0.9, 0.45), bounce_w * 0.15, (0.78, 0.86, 1.0))
     fan_bounce.visible_camera = fan_bounce.visible_glossy = False
-    point_light("hall_fill", (0.5, -1.0, 2.4), 14, (1.0, 0.68, 0.4), radius=0.8)
-    point_light("corridor_fill", (0, 4.0, 2.4), 10, (1.0, 0.68, 0.4), radius=0.8)
+    point_light("hall_fill", (0.5, -1.0, 2.4), 14 * FILL, (1.0, 0.68, 0.4), radius=0.8)
+    point_light("corridor_fill", (0, 4.0, 2.4), 10 * FILL, (1.0, 0.68, 0.4), radius=0.8)
 
     # ---- Render settings
     scene.render.engine = "CYCLES"
@@ -610,7 +622,7 @@ def build():
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = 0.75
+    scene.view_settings.exposure = 0.7 if NIGHT else 0.75
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
 
@@ -714,7 +726,7 @@ def main():
         if cam:
             bpy.data.objects.remove(cam)
         cam = pano_camera(scene, loc, 0)
-        scene.render.filepath = os.path.join(OUT, f"hallway_pano_{stop}_{WEATHER}{suffix}.jpg")
+        scene.render.filepath = os.path.join(OUT, f"hallway_pano_{stop}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
         bpy.ops.render.render(write_still=True)
         print(f"[whisked] rendered {stop}")
     print("[whisked] done")

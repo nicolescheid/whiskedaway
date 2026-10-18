@@ -473,8 +473,7 @@ for (const [id, st] of Object.entries(hallWorld.stops)) {
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => hallWorld.objects[k] && (h.visible || hallWorld.objects[k].always_visible)));
   Object.assign(stopSpots, hallWorld.walks[id] || {});
-  // noNight: the hallway's night renders aren't made yet, so at night it shows the day render dimmed without asking for them
-  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock, noNight: true,
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock,
                 pano: (w, night, full) => `out/hallway_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
 // The glasshouse: one view per season, by day only (at night the day render is dimmed), whatever the weather
