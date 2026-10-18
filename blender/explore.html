@@ -299,7 +299,7 @@
                           color: #5c3a2e; transition: opacity .4s; }
   #front-door .fd-words h1 { margin: 0; font: 600 clamp(26px, 4vw, 44px) 'Crimson Pro', Georgia, serif; letter-spacing: .02em; line-height: 1.05; }
   #front-door .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  #front-door .fd-words h1 .what { display: block; font: 500 clamp(13px, 1.4vw, 15px) 'Quicksand', system-ui, sans-serif; letter-spacing: .04em; opacity: .85; }
+  #front-door .fd-words h1 .what { display: block; font: 500 clamp(14px, calc(1vw + 8px), 18px) 'Quicksand', system-ui, sans-serif; letter-spacing: .04em; opacity: .85; }
   #front-door .fd-words .promise { margin: 6px auto 0; max-width: 34em; font: 500 clamp(17px, 1.8vw, 20px) 'Crimson Pro', Georgia, serif; color: #2c2416; }
   #front-door .fd-words .how { pointer-events: auto; display: inline-block; margin-top: 2px; padding: 12px 14px; min-height: 44px;
                                font: 600 14px 'Quicksand', system-ui, sans-serif; color: #8b4d5c; text-decoration: none; }
@@ -311,10 +311,11 @@
   #front-door .fd-enter:focus-visible { outline: 3px solid #8b4d5c; outline-offset: -6px; }
   #front-door.waiting .fd-words .cue::after { content: ' …'; }
   /* The story: parchment under the picture, one calm column */
-  #story { position: relative; background: #f4efe4; color: #2c2416; box-shadow: 0 -10px 24px rgba(60, 40, 20, .14);
-           padding: 40px 16px 24px; font: 400 17px/1.6 'Crimson Pro', Georgia, serif; }
+  #story { position: relative; background: #efe5d1; color: #2c2416; box-shadow: 0 -6px 18px rgba(60, 40, 20, .22);
+           padding: 10px 16px 24px;    /* small top padding: the first heading shows in the peek under the picture */ font: 400 17px/1.6 'Crimson Pro', Georgia, serif; }
   #story > * { max-width: 680px; margin-left: auto; margin-right: auto; }
   #story h2 { font: 600 22px/1.25 'Crimson Pro', Georgia, serif; color: #5c3a2e; margin: 34px auto 8px; }
+  #story h2:focus { outline: none; }
   #story h2:first-child { margin-top: 0; }
   #story h3 { font: 600 17px/1.3 'Quicksand', system-ui, sans-serif; margin: 18px auto 4px; }
   #story p, #story ol, #story ul, #story dl { margin-top: 0; margin-bottom: 12px; }
@@ -330,7 +331,7 @@
   #story .fd-foot .step { background: #8b4d5c; color: #f4efe4; text-decoration: none; border-radius: 999px; padding: 10px 18px; }
   #story .nojs { font-size: 15px; color: #5c5040; }
   @media (min-width: 720px) {
-    #story { padding: 56px 24px 32px; font-size: 19px; }
+    #story { padding: 12px 24px 32px; font-size: 19px; }
     #story h2 { font-size: 26px; }
     #story dl.rooms { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
     #story dl.rooms > div { break-inside: avoid; }
@@ -404,7 +405,7 @@
   <div class="fd-after">
   <!-- The story (copy: homepage-story-copy.md v1.3). Plain HTML on purpose: it's what search engines and AI assistants read -->
   <section id="story" aria-labelledby="story-what">
-    <h2 id="story-what">What is WhiskedAway?</h2>
+    <h2 id="story-what" tabindex="-1">What is WhiskedAway?</h2>
     <p>WhiskedAway is a recipe site you explore. Instead of a menu, you wander a magic inn by the sea, held inside a
       balloon whisk. Gemma, the Inn's kitchen genie, notices what you're drawn to and leaves you ideas for what to cook.
       It's free, there's no account, and it works on phones and computers. Made by Praxilogue in Aotearoa New Zealand.</p>
@@ -788,7 +789,9 @@ const showRoomInUrl = () => {
 };
 // A room link walks straight in, so the front door counts as done for this tab
 if (params.has('room') && !window.__door?.active) try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* storage blocked */ }
-showRoomInUrl();
+// At the front door the address stays "/" (a reload or a copied link gets the door and its story); front-door.js
+// calls showRoomInUrl() once the visitor is inside
+if (!window.__door?.active) showRoomInUrl();
 state.chat = state.chat || [];             // Gemma's chat log for this visit
 delete state.sound;                        // sound on or off lives in explore/sound.js now, off by default
 
@@ -1773,7 +1776,7 @@ function settle(fromFov) {
   dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
-window.__explore = { state, visit, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, visit, settle, showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();
