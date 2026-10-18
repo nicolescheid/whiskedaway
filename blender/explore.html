@@ -96,15 +96,12 @@
   .small { font-size: 12px; color: var(--ink-soft); }
   .link { background: none; border: 0; color: var(--berry); text-decoration: underline; padding: 0; font-size: 13px; }
   /* Touch screens: tap targets at least 44 px. Small links get an invisible hit area around them (they look the same);
-     the chat's chips, the minimise button and the map's rows grow a little. Hotspots stay as they are: where two sit
+     the chat's chips and the map's rows grow a little. Hotspots stay as they are: where two sit
      close together in a room, a bigger hit area on one swallows the other. */
   @media (pointer: coarse) {
-    .link, #cw-min { position: relative; }
-    .link::after, #cw-min::after { content: ''; position: absolute; }
+    .link { position: relative; }
+    .link::after { content: ''; position: absolute; }
     .link::after { inset: -14px -6px; }
-    .card .actions { gap: 16px; }
-    #cw-min { min-width: 32px; min-height: 30px; }
-    #cw-min::after { inset: -8px -6px; }
     .cw-chips { gap: 8px; }
     .cw-chips button { position: relative; min-height: 40px; padding: 4px 14px; font-size: 13px; }
     .cw-chips button::after { content: ''; position: absolute; inset: -4px 0; }
@@ -149,20 +146,7 @@
   .forks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-style: normal; }
   .forks button { font: 500 13px 'Quicksand'; background: #fff; border: 1px solid var(--berry); color: var(--berry); border-radius: 999px; padding: 5px 12px; }
 
-  /* Served */
-  .counter { position: fixed; right: 16px; bottom: 16px; top: 64px; width: min(340px, calc(100vw - 32px)); display: flex; flex-direction: column;
-             gap: 10px; justify-content: flex-end; z-index: 14; pointer-events: none; }
-  .card { pointer-events: auto; background: var(--parchment-90); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
-          box-shadow: 0 8px 24px rgba(0,0,0,.28); animation: arrive .5s ease-out; }
   @keyframes arrive { from { opacity: 0; transform: translateY(12px); } }
-  .card .kind { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--berry); }
-  .card h4 { margin: 2px 0 4px; font: 600 19px/1.2 'Crimson Pro', Georgia, serif; }
-  .card .why { font: italic 14px 'Crimson Pro', Georgia, serif; color: var(--ink-soft); margin: 0 0 6px; }
-  .card .body { font: 16px/1.45 'Crimson Pro', Georgia, serif; margin: 6px 0; display: none; }
-  .card.opened .body { display: block; }
-  .card .actions { display: flex; gap: 12px; }
-  .card.faded { opacity: .55; }
-  .card.opened { opacity: 1; background: var(--parchment); }   /* an opened card is being read: never faded, nothing shows through */
 
   /* Fixed tool stub */
   .tool { position: fixed; inset: 0; display: none; place-items: center; z-index: 30; background: rgba(20, 14, 10, .35); }
@@ -183,15 +167,6 @@
   .spot .blurb { white-space: normal; max-width: 190px; }
   @media (max-width: 720px) { .spot .blurb { display: none; } }
 
-  @media (max-width: 720px) {
-    /* The counter fits between the top bar and Gemma's chat (heights measured by the page), and scrolls if it must */
-    .counter { top: calc(var(--bar-h, 64px) + 8px); bottom: calc(var(--chat-h, 120px) + 8px); left: 16px; width: auto;
-               justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; }
-    .counter > :first-child { margin-top: auto; }   /* still stacked from the bottom, without clipping the top when it scrolls */
-    body:has(.counter .card) .cw-log { max-height: 20vh; }
-    .chatwin { width: calc(100vw - 32px); }
-    .cw-log { max-height: 26vh; }
-  }
 </style>
 <style>
   /* The front door (docs/front-door-spec.md): the storybook picture, the film, the welcome and the bell */
@@ -236,21 +211,15 @@
   @media (max-width: 400px) { .chip .long { display: none; } .chip .short { display: inline; } }   /* five chips in one row at 375 */
   /* Touch screens: every chip in the bar gets a 44 px tall tap area, whatever it looks like */
   @media (pointer: coarse) { .bar .chip { position: relative; } .bar .chip::after { content: ''; position: absolute; inset: -8px -3px; } }
-  /* Phones on their side: chat on the left, the counter on the right between the bar and the bottom, both shorter */
-  @media (max-height: 500px) and (orientation: landscape) {
-    .chatwin { width: min(360px, calc(50vw - 24px)); }
-    .cw-log, body:has(.counter .card) .cw-log { max-height: 30vh; }
-    .counter { left: auto; right: 16px; width: min(340px, calc(50vw - 24px)); top: calc(var(--bar-h, 64px) + 8px); bottom: 16px;
-               justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; }
-    .counter > :first-child { margin-top: auto; }
-  }
   @media (prefers-reduced-motion: reduce) {
-    .card, .cw-msg, .cw-typing span { animation: none; }
+    .cw-msg, .cw-typing span { animation: none; }
     .spot.revealed .dot { animation: none; box-shadow: 0 0 0 3px rgba(232, 184, 122, .5), 0 0 16px 4px rgba(232, 184, 122, .6); }
     .spot .dot, .spot .name, #stage canvas, #tint { transition: none; }
   }
   @media (prefers-reduced-motion: reduce) { .chip.speaker.nudge { animation: none; box-shadow: 0 0 0 3px rgba(139, 77, 92, .45); } .chip.bell.ring img { animation: none; } #front-door { transition-duration: .2s; } }
 </style>
+<!-- Ideas, Gemma's chat sizes, the visitor's tags and the recipe book (recipe-book-ux.md v4) -->
+<link rel="stylesheet" href="explore/ideas.css">
 </head>
 <body>
 <!-- The front door: shown at / on a new visit (or with ?door=1), never with ?room= -->
@@ -300,7 +269,7 @@
   <span class="mode" id="mode"></span>
   <a class="chip" id="btn-inn" href="/?door=1">Front door</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
-  <button class="chip" id="btn-notes" aria-expanded="false"><span class="long">Gemma's notebook</span><span class="short">Notebook</span></button>
+  <button class="chip" id="btn-book" aria-haspopup="dialog" aria-expanded="false"><span class="long">Gemma's recipe book</span><span class="short">Book</span><span class="badge" hidden></span></button>
   <button class="chip bell" id="btn-bell" aria-label="Ring for Gemma: welcome and help" aria-haspopup="dialog"><img src="explore/assets/front-door/bell.webp" alt=""></button>
   <button class="chip speaker" id="btn-sound" aria-pressed="false" aria-label="Sound off. Turn the Inn's sounds on" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg></button>
 </div>
@@ -312,7 +281,7 @@
   <h3>In the room</h3><ul id="map-room"></ul>
 </aside>
 
-<aside class="panel" id="notes" aria-label="Gemma's notebook">
+<aside class="panel" id="notes" aria-label="Gemma's notebook" hidden><!-- moved into the book's "This visit" page by book-view.js -->
   <h2>Gemma's notebook</h2>
   <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave, except a note that you've been welcomed, so I don't say it twice. The inn does count, anonymously, which rooms and recipes get visited, but never who.</p>
   <h3>My best guess</h3>
@@ -328,7 +297,7 @@
 </aside>
 
 <section class="chatwin" id="chatwin" aria-label="Chat with Gemma">
-  <div class="cw-bar"><span id="cw-title">Gemma · Cuddlecore</span><span><button id="cw-min" aria-label="Minimise the chat" aria-expanded="true">_</button></span></div>
+  <div class="cw-bar"><span id="cw-title">Gemma · Cuddlecore</span></div>
   <div class="cw-body">
     <div class="cw-status">
       <img id="cw-av" src="explore/assets/gemma/avatar-40.png" srcset="explore/assets/gemma/avatar-80.png 2x, explore/assets/gemma/avatar-120.png 3x" width="40" height="40" alt="Gemma, the Inn's genie">
@@ -364,8 +333,6 @@
     <button class="ok" id="credits-ok">Back to the Inn</button>
   </div>
 </div>
-
-<div class="counter" id="counter" aria-label="On the counter"></div>
 
 <div class="tool" id="clockdlg" role="dialog" aria-modal="true" aria-labelledby="clock-title">
   <div class="box">
@@ -426,13 +393,18 @@ import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
 import { sound } from './explore/sound.js';
 import { saveData } from './explore/data-budget.js';
+import { createIdeas } from './explore/ideas.js';
+import { createChat } from './explore/chat.js';
+import { createTags } from './explore/tags.js';
+import { book, snapshot } from './explore/book.js';
+import { createBookView } from './explore/book-view.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
   fetch('explore/hallway-world.json').then(r => r.json()),
@@ -445,6 +417,7 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('out/sweet_spells_hotspots.json').then(r => r.json()),
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
+  fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
 ]);
 // Each reading (cluster) remembers its room, like the atoms do in their JSON: the navigator sends the AI the room's own
 // readings first, and the star on the dial follows them
@@ -887,6 +860,7 @@ const SYS = {
   room: e => `You went into ${ROOMS[e.id]?.title.replace(/^The /, 'the ')}`,
   dial: e => `You turned the dial to ${e.id}`,
   dismiss: e => `You set aside "${atomsById[e.atom]?.title}"`,
+  keep: e => `You kept "${atomsById[e.atom]?.title}"`,
 };
 // ---------- counting (docs/analytics-plan.md): what happens to the site, never the wander itself
 const stepNow = () => stepBucket(state.trail.length);
@@ -986,6 +960,7 @@ function goRoom(id, yaw) {
       : `It's ${seasonGuess} where you are, I think. The wheel by the door turns it to any season.`, [], true));
   }
   introduce(id);
+  chatUI.flashTags();                          // what you've told Gemma shows for a moment on arrival (Inn rule 11)
 }
 // First time in a room this visit: Gemma says what it's for, in the words of its blurb (ux-journey J3).
 // From goRoom, on arrival once the weather question is answered (or straight away if she didn't ask one), and on the
@@ -1015,7 +990,7 @@ function turnDial(o) {
   // The star opens the room whose reading the wander leans to (the room identities, content stage 3): juices, smoothies,
   // quick breakfasts and comfort are Cuddlecore's; whole-food meals and busy hands Flourish's; anything sweet, frozen or
   // baked Sweet Spells'; the pudding superpowers the Chiapothecary's. A wander that hasn't said much yet opens Cuddlecore.
-  const lean = localNavigate(navTrail(), world, { served: state.served, dismissed: state.dismissed }).cluster;
+  const lean = localNavigate(navTrail(), world, { served: [...state.served, ...book.ids()], dismissed: state.dismissed }).cluster;
   const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
   const starGo = STAR_OVERRIDES[lean] || world.clusters[lean]?.room || 'cuddlecore';
   const go = o.star ? starGo : o.go;
@@ -1037,13 +1012,13 @@ function scheduleNavigate() {
 }
 async function navigate() {
   const seq = ++navSeq;
-  const opts = { served: state.served, dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
+  const opts = { served: [...state.served, ...book.ids()], dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
-  // One new piece per step (two to start), so the counter fills at the pace of the wander
-  const putOut = res => res.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(s => serve(s, res.mode));
+  // One new idea per step (two to start), so they come at the pace of the wander
+  const putOut = res => res.serve.filter(s => !state.served.includes(s.atom) && !book.has(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(s => serve(s, res.mode));
   if (AI) {
-    // Hybrid: the room responds at once with the local reading (glow and pieces on the counter), and Gemma
+    // Hybrid: the room responds at once with the local reading (glow and new ideas), and Gemma
     // "types" while the AI reads the wander (the visitor pass and the model call can take many seconds).
     // Her line comes from the AI, which may also add one piece of its own; if it fails, she says the local line.
     state.result = local;
@@ -1057,7 +1032,7 @@ async function navigate() {
     thinking(false);
     if (r.fallback) track('nav_fallback', { reason: /timeout|abort/i.test(r.fallback) ? 'timeout' : /429/.test(r.fallback) ? 'rate_limited'
                                                     : /403/.test(r.fallback) ? 'bot_check' : 'error' });
-    r = { ...r, serve: r.mode === 'ai' ? r.serve.filter(s => !state.served.includes(s.atom)).slice(0, 1) : [] };
+    r = { ...r, serve: r.mode === 'ai' ? r.serve.filter(s => !state.served.includes(s.atom) && !book.has(s.atom)).slice(0, 1) : [] };
   }
   state.result = r;
   $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
@@ -1079,7 +1054,8 @@ function applyReveal(reveal) {
   for (const h of hotspots) h.el.classList.toggle('revealed', ids.has(h.id));
 }
 
-// ---------- Gemma's chat
+// ---------- Gemma's chat, in three sizes (explore/chat.js): Line, Short and Full; her newest line shows in every size
+const chatUI = createChat({ win: $('chatwin'), track });
 function clockLabel() {
   // Timestamps follow the kitchen clock: the visitor's own time, or the time they pushed it to
   let d = new Date();
@@ -1096,8 +1072,8 @@ function renderChat() {
   log.innerHTML = state.chat.map(m => m.who === 'sys'
     ? `<div class="cw-sys">${esc(m.text)}</div>`
     : `<div class="cw-who">Gemma · ${esc(m.at)}</div><div class="cw-msg">${esc(m.text)}</div>`).join('');
-  log.scrollTop = log.scrollHeight;
-  fitCounter();                                // the chat may have grown: a phone that throttles ResizeObserver still gets it
+  chatUI.update(state.chat);                   // her newest line, and the log follows the bottom unless the visitor scrolled up
+  fitDock();                                // the chat may have grown: a phone that throttles ResizeObserver still gets it
 }
 function chatLine(who, text) {
   if (!text) return;
@@ -1125,14 +1101,15 @@ function setChips(chips) {
   for (const c of state.chips) {
     const b = document.createElement('button');
     b.textContent = c.label;
-    b.onclick = () => { box.innerHTML = ''; state.chips = []; store.save(state); fitCounter(); CHIP_ACTS[c.do[0]](...c.do.slice(1)); };
+    b.onclick = () => { box.innerHTML = ''; state.chips = []; store.save(state); chatUI.setAsking(false); fitDock(); CHIP_ACTS[c.do[0]](...c.do.slice(1)); };
     box.appendChild(b);
   }
-  fitCounter();                                // chips change the chat's height (ResizeObserver covers it too, when frames run)
+  chatUI.setAsking(state.chips.length > 0);    // a question raises Line to Short until it's answered
+  fitDock();                                // chips change the chat's height (ResizeObserver covers it too, when frames run)
 }
 // "Gemma is typing…" shows while she types a line, or while the AI navigator is reading the wander
 let typingLine = false, aiThinking = false;
-const showTyping = () => { $('cw-typing').hidden = !(typingLine || aiThinking); if (!$('cw-typing').hidden) $('cw-log').scrollTop = $('cw-log').scrollHeight; fitCounter(); };
+const showTyping = () => { $('cw-typing').hidden = !(typingLine || aiThinking); fitDock(); };
 function typing(on) { typingLine = on; showTyping(); }
 function thinking(on) { aiThinking = on; showTyping(); }
 let sayTimer;
@@ -1167,81 +1144,132 @@ document.addEventListener('click', e => { if (e.target.closest('.dial button')) 
 sound.place(state.room);
 let lastHour = new Date().getHours();
 setInterval(() => { const h = new Date().getHours(); if (h !== lastHour && !state.time) sound.strike(h); lastHour = h; }, 20000);
-$('cw-min').onclick = () => { const min = $('chatwin').classList.toggle('min'); $('cw-min').setAttribute('aria-expanded', String(!min)); $('cw-min').textContent = min ? '□' : '_'; };
 $('cw-credits').onclick = () => $('credits').classList.add('open');
 $('credits-ok').onclick = () => $('credits').classList.remove('open');
 
+// ---------- Gemma's Ideas (explore/ideas.js) and the recipe book (explore/book.js, explore/book-view.js)
+// Lines for ideas and the book come from gemma-lines.json (content editor); these stand in for any it doesn't have yet
+const L = {
+  ideaFirst: LINES.ideas?.first || "I've had an idea for you. Tap it.",
+  keepFirstEver: LINES.keep?.first_ever || "That's in your book now. It's up at the top, and it stays on this device.",
+  keepFirstVisit: LINES.keep?.first_this_visit || ['In the book it goes.'],
+  keepThird: LINES.keep?.third || ["Three in the book. I'm starting to see what you like."],
+  keepLater: LINES.keep?.later || ['Kept.'],
+  dismissFirst: LINES.dismiss?.first || 'Fair enough. Fewer like that, then.',
+  undo: LINES.dismiss?.undo || 'Back it comes.',
+  full: LINES.book?.full || "Your book's full, so I've taken out the oldest one to make room.",
+  noStorage: LINES.book?.no_storage || "I can't keep a book on this device, so these are just for today.",
+  cleared: LINES.book?.cleared || 'All cleared. A fresh book.',
+};
+// A line from a list, rotating without repeating in a visit; {placeholders} filled, and lines whose placeholder can't be filled skipped
+function pickLine(key, list, fill = {}) {
+  const ok = [].concat(list).filter(t => [...t.matchAll(/\{(\w+)\}/g)].every(m => fill[m[1]]));
+  if (!ok.length) return null;
+  const used = (state.linesUsed ||= {})[key] ||= [];
+  const fresh = ok.filter(t => !used.includes(t));
+  const t = (fresh.length ? fresh : ok)[0];
+  if (!fresh.length) used.length = 0;
+  used.push(t);
+  return t.replace(/\{(\w+)\}/g, (_, k) => fill[k]);
+}
+const sizeBucket = n => (n <= 0 ? '0' : n <= 2 ? '1-2' : n <= 5 ? '3-5' : n <= 10 ? '6-10' : '11+');
+const navMode = atom => servedBy[atom] || state.result?.mode || (AI ? 'ai' : 'local');
+
 function serve({ atom, why }, mode) {
   const a = atomsById[atom];
-  if (!a || state.served.includes(atom)) return;
+  if (!a || state.served.includes(atom) || book.has(atom)) return;
   state.served.push(atom);
   servedBy[atom] = mode;
   countAtom('atom_served', atom);
-  state.cards.unshift({ atom, why });
-  // Four on the counter: make room by dropping the oldest one that isn't open (a recipe being read stays)
-  while (state.cards.length > 4) {
-    let i = state.cards.length - 1;
-    while (i > 0 && state.cards[i].opened) i--;
-    state.cards.splice(i > 0 ? i : state.cards.length - 1, 1);
-  }
-  renderCards();
+  ideas.add({ atom, why }, ideaSource());
 }
-let newestShown = null, reading = null;    // reading: the card the visitor last opened, while it's open
-function renderCards() {
-  const c = $('counter'), keep = c.scrollTop;
-  c.innerHTML = '';
-  state.cards.slice().reverse().forEach(({ atom, why, opened }, i, arr) => {
-    const a = atomsById[atom];
-    if (!a) return;
-    const card = document.createElement('article');
-    card.className = `card${opened ? ' opened' : ''}${i < arr.length - 2 ? ' faded' : ''}`;
-    const spoons = a.spoons ? '🥄'.repeat(a.spoons) : 'no spoons needed';
-    card.innerHTML = `<div class="kind">${esc(a.kind)} · ${spoons}</div><h4>${esc(a.title)}</h4>
-      <p class="why">${esc(why)}</p><p class="body">${esc(a.body)}</p>
-      <div class="actions"><button class="link" data-act="open">${opened ? 'Close' : 'Open'}</button><button class="link" data-act="no">Not this</button></div>`;
-    card.querySelector('[data-act=open]').onclick = () => {
-      const entry = state.cards.find(x => x.atom === atom);
-      entry.opened = !entry.opened;
-      if (entry.opened) { record({ kind: 'open', atom }); countAtom('atom_open', atom); }
-      reading = entry.opened ? atom : null;
-      renderCards();
+// Where a new idea rises from: the object the visitor last touched or lingered by, if it's on screen and not under
+// Gemma's chat; otherwise her avatar (ideas.js)
+function ideaSource() {
+  const e = [...state.trail].reverse().find(x => ['touch', 'linger', 'map'].includes(x.kind));
+  const h = e && hotspots.find(x => x.id === e.id);
+  if (!h || h.el.style.display === 'none') return null;
+  const r = h.el.querySelector('.dot').getBoundingClientRect(), c = $('chatwin').getBoundingClientRect();
+  const p = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  if (p.x < 0 || p.y < 0 || p.x > innerWidth || p.y > innerHeight) return null;
+  if (p.x >= c.left && p.x <= c.right && p.y >= c.top && p.y <= c.bottom) return null;
+  return p;
+}
+// Keep: from the highlight, or from the idea's page in the book. Gemma speaks on the 1st keep of the visit, the 3rd,
+// then every 4th (recipe-book-ux.md §7); the live region says it every time
+function keepIdea(atom, why, method) {
+  const a = atomsById[atom];
+  const snap = a ? snapshot(a, why) : book.get(atom);
+  if (!snap || book.has(atom)) return;
+  const { first, tuckedAway } = book.keep(snap);
+  ideas.remove(atom);
+  if (!state.served.includes(atom)) state.served.push(atom);
+  state.keeps = (state.keeps || 0) + 1;
+  record({ kind: 'keep', atom });
+  track('card_capture', { atom, room: a?.room || snap.room, method, nav_mode: navMode(atom), book_size: sizeBucket(book.count) });
+  ideas.say(`Kept. ${book.count} in your book.`);
+  const n = state.keeps;
+  let line = null;
+  if (tuckedAway) line = L.full;
+  else if (n === 1 && !book.lasting && !state.noStorageSaid) { state.noStorageSaid = true; line = L.noStorage; }
+  else if (n === 1) line = first ? L.keepFirstEver : pickLine('keep1', L.keepFirstVisit);
+  else if (n === 3) line = pickLine('keep3', L.keepThird, { cluster_label: world.clusters[state.result?.cluster]?.label });
+  else if (n > 3 && (n - 3) % 4 === 0) line = pickLine('keepN', L.keepLater);
+  if (line) say(line, [], true);
+  store.save(state);
+}
+const ideas = createIdeas({
+  state, atoms: atomsById, save: () => store.save(state),
+  avatar: () => $('cw-av'), bookChip: () => $('btn-book'),
+  layout: (what, on) => { if (what === 'highlight') chatUI.hold(on); },
+  onFirst: () => say(L.ideaFirst, [], true),
+  onHighlight: c => track('idea_highlight', { atom: c.atom, room: atomsById[c.atom]?.room, atom_kind: atomsById[c.atom]?.kind, nav_mode: navMode(c.atom) }),
+  onRead: c => {
+    const a = atomsById[c.atom];
+    record({ kind: 'open', atom: c.atom });
+    track('card_read', { atom: c.atom, room: a.room });
+    bookView.open(c.atom, { from: 'card', loosePage: book.has(c.atom) ? null : snapshot(a, c.why) });
+  },
+  onKeep: (c, method) => keepIdea(c.atom, c.why, method),
+  onDismiss: c => {
+    state.dismissed.push(c.atom);
+    state.dismissals = (state.dismissals || 0) + 1;
+    record({ kind: 'dismiss', atom: c.atom });
+    if (state.dismissals === 1) say(L.dismissFirst, [], true);
+  },
+  // When the 5 s undo closes (or Undo is pressed): count it once, knowing whether it was undone
+  onUndo: (c, { undone, method, bumped }) => {
+    if (undone) {
+      state.dismissed = state.dismissed.filter(x => x !== c.atom);
+      if (bumped) state.served = state.served.filter(x => x !== bumped);     // stepped aside for the undo: it can come again
+      const i = state.trail.map(e => e.kind === 'dismiss' && e.atom === c.atom).lastIndexOf(true);
+      if (i >= 0) state.trail.splice(i, 1);
+      say(L.undo, [], true);
       store.save(state);
-    };
-    card.querySelector('[data-act=no]').onclick = () => {
-      state.cards = state.cards.filter(x => x.atom !== atom);
-      state.dismissed.push(atom);
-      record({ kind: 'dismiss', atom });
-      countAtom('atom_dismiss', atom);
-      renderCards();
-    };
-    card.dataset.atom = atom;
-    c.appendChild(card);
-  });
-  // On a phone the counter may scroll: a new piece scrolls into view at the bottom; otherwise stay put,
-  // and an opened card shows its top
-  // An open card wins: it stays in view even when a new piece arrives
-  const open = reading && state.cards.find(x => x.atom === reading && x.opened) ? reading : null;
-  c.scrollTop = !open && state.cards[0] && state.cards[0].atom !== newestShown ? c.scrollHeight : keep;
-  newestShown = state.cards[0]?.atom ?? null;
-  const el = open && c.querySelector(`[data-atom="${CSS.escape(open)}"]`);
-  if (el) {                                   // not all in view (it can be taller than the counter): show its top
-    const box = c.getBoundingClientRect(), r = el.getBoundingClientRect();
-    if (r.top < box.top || r.bottom > box.bottom) c.scrollTop += r.top - box.top;
-  }
-}
-// The top bar's and the chat's heights, for the phone layout (the counter sits between them)
-function fitCounter() {
-  const s = document.documentElement.style, c = $('counter');
-  const atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 4;
+      renderNotes();
+    }
+    track('card_dismiss', { atom: c.atom, room: atomsById[c.atom]?.room, method, undone: undone ? 'yes' : 'no', nav_mode: navMode(c.atom) });
+  },
+});
+const bookView = createBookView({
+  book, atoms: atomsById, chip: $('btn-book'), notes: $('notes'), track, bucket: sizeBucket,
+  onKeep: rec => keepIdea(rec.id, rec.why, 'book'),
+  onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); say(L.cleared, [], true); },
+});
+// What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
+createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) } });
+
+// The top bar's and the chat's heights: the highlight, the undo and Turnstile's box sit between them on phones
+function fitDock() {
+  const s = document.documentElement.style;
   s.setProperty('--bar-h', `${Math.round(document.querySelector('.bar').getBoundingClientRect().bottom)}px`);
   s.setProperty('--chat-h', `${Math.round(innerHeight - $('chatwin').getBoundingClientRect().top)}px`);
-  if (atBottom) c.scrollTop = c.scrollHeight;            // only follow the bottom if the visitor was already there
+  ideas.place();
 }
-const fitter = new ResizeObserver(fitCounter);
+const fitter = new ResizeObserver(fitDock);
 fitter.observe(document.querySelector('.bar'));
 fitter.observe($('chatwin'));
-addEventListener('resize', fitCounter);
-fitCounter();
+addEventListener('resize', fitDock);
 
 // ---------- map + notebook (the fixed navigation)
 function fillMap() {
@@ -1289,7 +1317,7 @@ function renderNotes() {
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', keep: 'Kept', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
   $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e =>
     `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (world.objects[e.id]?.ref || label(e.id)) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
@@ -1298,10 +1326,9 @@ function togglePanel(id, btn) {
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('open'));
   document.querySelectorAll('.bar .chip').forEach(x => { x.classList.remove('on'); x.setAttribute('aria-expanded', 'false'); });
   if (open) { p.classList.add('open'); btn.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); }
-  if (open) track(id === 'map' ? 'map_open' : 'notebook_open', { room: state.room });
+  if (open) track('map_open', { room: state.room });
 }
 $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
-$('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
 // The bar's "Front door" does what the hall's front door does (J6): Gemma says goodbye, then the door picture
 $('btn-inn').onclick = e => {
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;          // a new tab or window: let the link be a link
@@ -1314,12 +1341,12 @@ $('forget').onclick = () => {
   track('visit_forget');
   store.clear();
   visit.clear();                               // what they told the Inn goes too
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, season: null, seasonTold: false, introduced: [], asked: false, chat: [] });
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], waiting: null, ideaSeen: false, keeps: 0, dismissals: 0, linesUsed: {}, result: null, weather: world.default_weather || 'rain', time: null, season: null, seasonTold: false, introduced: [], asked: false, chat: [] });
   showCandle();
   renderChat(); setChips([]);
   setHands(handsHour());
   showWeather(state.weather);
-  renderCards(); renderNotes(); applyReveal([]);
+  ideas.clearAll(); renderNotes(); applyReveal([]);
   chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
 };
 
@@ -1347,7 +1374,7 @@ addEventListener('keydown', e => {
   } else if (e.key === 'Escape') {
     if (d) { if (d.id !== 'welcome') d.classList.remove('open'); return; }
     const p = document.querySelector('.panel.open');
-    if (p) { const btn = $(p.id === 'map' ? 'btn-map' : 'btn-notes'); togglePanel(p.id, btn); btn.focus(); }
+    if (p) { const btn = $('btn-map'); togglePanel(p.id, btn); btn.focus(); }
   }
 }, true);   // capture: see which dialog was open before the per-dialog Escape handlers close it
 
@@ -1543,7 +1570,7 @@ function settle(fromFov) {
   dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
-window.__explore = { state, visit, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, visit, book, ideas, chatUI, bookView, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();
@@ -1551,7 +1578,7 @@ showClock();
 if (state.room !== 'cuddlecore') askHemisphere();
 look.yaw = room().yaw ?? 0;
 fillMap();
-renderCards();
+ideas.render();
 renderNotes();
 renderChat();
 if (state.chips?.length) setChips(state.chips);   // the last question's answers, if it's still open (J9)
