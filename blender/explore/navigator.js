@@ -28,6 +28,7 @@ const WEATHER_WEIGHT = 3;     // the chosen weather is a standing mood: it holds
 const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more than the device's clock
 const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signal like the weather
 const SEASON_WEIGHT = 2.5;    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
+const ROOM_LEAN = 3;          // an atom from the room the visitor is standing in, if it fits at all, gets about a touch's worth more
 // Each energy level also has a spoon_bias: added per spoon to an atom's score, so a burnt-out candle
 // (-3) all but rules out two-spoon pieces and a full one (+1) leans toward the hands-on ones.
 
@@ -132,7 +133,7 @@ function reasonsFor(themes, trail, world, spoons = null) {
 
 const listJoin = parts => parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
 
-export function localNavigate(trail, world, { served = [], dismissed = [] } = {}) {
+export function localNavigate(trail, world, { served = [], dismissed = [], room = null } = {}) {
   const meaningful = trail.filter(e => e.kind !== 'map' || trail.length < 3);
   if (meaningful.length === 0) {
     return { mode: 'local', hypothesis: null, confidence: 0, gemma: null, fork: [], reveal: [], serve: [] };
@@ -159,6 +160,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [] } = {}
   const serve = world.atoms
     .filter(a => !skip.has(a.id))
     .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons }))
+    .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: set by the page when it merges the rooms
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)
@@ -206,10 +208,10 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
       .concat(Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: `Energy: ${e.label} (the ${e.candle})`, type: 'energy', themes: e.themes, spoon_bias: e.spoon_bias })))
       .concat(Object.entries(world.seasons || {}).map(([id, s]) => ({ id, label: `Season: ${s.label}`, type: 'season', themes: s.themes })));
     const payload = {
-        room: world.name,
+        room: state.roomName || world.name,
         trail: trail.slice(-30),
         objects: [...things.filter(o => rank(o) === 0), ...signals, ...things.filter(o => rank(o) > 0).sort((a, b) => rank(a) - rank(b))].slice(0, 40),
-        atoms: world.atoms.map(({ id, title, kind, themes, spoons }) => ({ id, title, kind, themes, spoons })),
+        atoms: world.atoms.map(({ id, title, kind, themes, spoons, room }) => ({ id, title, kind, themes, spoons, room })),
         clusters: Object.entries(world.clusters).map(([id, c]) => ({ id, label: c.label })),
         already_served: state.served || [],
         dismissed: state.dismissed || [],

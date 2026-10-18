@@ -8,8 +8,11 @@
   // A route (not a custom domain): DNS still points at DreamHost, but Cloudflare answers
   // every whiskedaway.com request from this Worker. Remove the route to fall back instantly.
   "routes": [{ "pattern": "whiskedaway.com/*", "zone_name": "whiskedaway.com" }],
+  // Runs only when no file matches and it isn't a page load: missing Inn files get a 404 (worker/site.js)
+  "main": "./worker/site.js",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application"
   }
 }

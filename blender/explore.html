@@ -161,7 +161,11 @@
   .dial button.on { background: var(--berry); border-color: var(--berry); color: var(--parchment); }
 
   @media (max-width: 720px) {
-    .counter { top: auto; height: 46vh; left: 16px; width: auto; bottom: 120px; }
+    /* The counter fits between the top bar and Gemma's chat (heights measured by the page), and scrolls if it must */
+    .counter { top: calc(var(--bar-h, 64px) + 8px); bottom: calc(var(--chat-h, 120px) + 8px); left: 16px; width: auto;
+               justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; }
+    .counter > :first-child { margin-top: auto; }   /* still stacked from the bottom, without clipping the top when it scrolls */
+    body:has(.counter .card) .cw-log { max-height: 20vh; }
     .chatwin { width: calc(100vw - 32px); }
     .cw-log { max-height: 26vh; }
   }
@@ -199,7 +203,8 @@
   .welcome .help { margin: 4px 0 14px; padding-left: 18px; font-size: 14px; color: var(--ink-soft); }
   .welcome .help li { margin: 4px 0; }
   /* Phones: the room's name on its own line, so the chips and the bell fit beneath it */
-  @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; justify-content: flex-end; } .bar h1 { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; } }
+  @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; column-gap: 6px; justify-content: flex-end; } .bar h1 { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; }
+    .panel { top: calc(var(--bar-h, 70px) + 8px); } }   /* the bar is two rows here: open the map and notebook below it */
   @media (prefers-reduced-motion: reduce) { .chip.speaker.nudge { animation: none; box-shadow: 0 0 0 3px rgba(139, 77, 92, .45); } .chip.bell.ring img { animation: none; } #front-door { transition-duration: .2s; } }
 </style>
 </head>
@@ -375,6 +380,8 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
 ]);
+// Each piece remembers its room, so the navigator can lean toward the room the visitor is standing in
+for (const w of [world, flWorld, sweetWorld, chiaWorld]) w.atoms.forEach(a => { a.room = w.room; });
 // One world for the navigator: every room's objects together, and Flourish's pieces beside the kitchen's
 Object.assign(world.objects, hallWorld.objects, glassWorld.objects, flWorld.objects);
 Object.assign(world.clusters, flWorld.clusters);
@@ -726,7 +733,7 @@ stage.addEventListener('pointermove', e => {
   render();
 });
 stage.addEventListener('pointerup', () => { drag = null; stage.classList.remove('dragging'); });
-addEventListener('wheel', e => { camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 40, 95); camera.updateProjectionMatrix(); render(); }, { passive: true });
+stage.addEventListener('wheel', e => { camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 40, 95); camera.updateProjectionMatrix(); render(); }, { passive: true });
 
 function lookTo(yaw, pitch) {
   const from = { ...look };
@@ -896,7 +903,7 @@ function scheduleNavigate() {
 }
 async function navigate() {
   const seq = ++navSeq;
-  const opts = { served: state.served, dismissed: state.dismissed, here: Object.keys(spots) };
+  const opts = { served: state.served, dismissed: state.dismissed, here: Object.keys(spots), room: state.room, roomName: room().title };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
   if (AI) {
@@ -1048,7 +1055,20 @@ function renderCards() {
     };
     c.appendChild(card);
   });
+  c.scrollTop = c.scrollHeight;              // on a phone the counter may scroll: keep the newest piece in view
 }
+// The top bar's and the chat's heights, for the phone layout (the counter sits between them)
+const fitCounter = () => {
+  const s = document.documentElement.style;
+  s.setProperty('--bar-h', `${Math.round(document.querySelector('.bar').getBoundingClientRect().bottom)}px`);
+  s.setProperty('--chat-h', `${Math.round(innerHeight - $('chatwin').getBoundingClientRect().top)}px`);
+  $('counter').scrollTop = $('counter').scrollHeight;
+};
+const fitter = new ResizeObserver(fitCounter);
+fitter.observe(document.querySelector('.bar'));
+fitter.observe($('chatwin'));
+addEventListener('resize', fitCounter);
+fitCounter();
 
 // ---------- map + notebook (the fixed navigation)
 function fillMap() {
@@ -1105,6 +1125,29 @@ $('forget').onclick = () => {
 function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; $('tool').classList.add('open'); $('tool-ok').focus(); }
 $('tool-ok').onclick = () => $('tool').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('tool').classList.remove('open'); });
+
+// ---------- dialogs: focus goes in, Tab stays inside, Escape closes, and focus goes back to what opened it
+// (the welcome card does its own focus and Escape, in front-door.js)
+let opener = null;
+document.addEventListener('focusin', e => { if (!e.target.closest('.tool')) opener = e.target; });
+const openDialog = () => [...document.querySelectorAll('.tool.open')].at(-1);
+const focusables = el => [...el.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled && x.offsetParent);
+document.querySelectorAll('.tool').forEach(d => new MutationObserver(() => {
+  const at = document.activeElement;
+  if (d.classList.contains('open')) { if (!d.contains(at)) (d.querySelector('.dial .on') || focusables(d)[0])?.focus(); }
+  else if (opener?.isConnected && (!at || at === document.body || d.contains(at))) opener.focus();
+}).observe(d, { attributes: true, attributeFilter: ['class'] }));
+addEventListener('keydown', e => {
+  const d = openDialog();
+  if (e.key === 'Tab' && d) {
+    const f = focusables(d), i = f.indexOf(document.activeElement);
+    if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
+  } else if (e.key === 'Escape') {
+    if (d) { if (d.id !== 'welcome') d.classList.remove('open'); return; }
+    const p = document.querySelector('.panel.open');
+    if (p) { const btn = $(p.id === 'map' ? 'btn-map' : 'btn-notes'); togglePanel(p.id, btn); btn.focus(); }
+  }
+}, true);   // capture: see which dialog was open before the per-dialog Escape handlers close it
 
 // Test hooks for scripted checks
 // ---------- barometer
