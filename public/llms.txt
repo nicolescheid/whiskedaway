@@ -28,6 +28,7 @@ The Inn opens in the visitor's own weather (looked up for the rough area of thei
 Open-Meteo, and nothing about the visitor is kept), at their device's time of day, in their hemisphere's season
 (north or south only).
 Visitors can change all three, and Gemma's ideas change with them.
+The visitor's country (from the same rough location) is the Map's default, and they can change it.
 
 ## Privacy
 
