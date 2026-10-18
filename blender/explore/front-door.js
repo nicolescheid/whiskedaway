@@ -215,9 +215,20 @@ export function frontDoor({ active, track }) {
   // the credits from its footer, and two counts: the story seen, and the link used
   const how = $('fd-how'), pill = $('fd-pill'), first = door.querySelector('.fd-first');
   // Scrolled here rather than followed: the page's <base href="/explore/"> would turn "#story" into another page
-  const toStory = smooth => $('story')?.scrollIntoView({ behavior: smooth && !reduced ? 'smooth' : 'auto', block: 'start' });
-  how?.addEventListener('click', e => { e.preventDefault(); toStory(true); track('story_link'); });
-  if (location.hash === '#story') requestAnimationFrame(() => toStory(false));   // the bell card's "About the Inn" link
+  // ('auto' would mean the layer's CSS smooth scrolling, so a jump asks for 'instant')
+  const toStory = smooth => $('story')?.scrollIntoView({ behavior: smooth && !reduced ? 'smooth' : 'instant', block: 'start' });
+  how?.addEventListener('click', e => {
+    e.preventDefault();
+    toStory(true);
+    $('story-what')?.focus({ preventScroll: true });
+    track('story_link');
+  });
+  // The bell card's "About the Inn" link (/?door=1#story) opens on the story, not the picture
+  if (location.hash === '#story') {
+    const land = () => toStory(false);
+    land();
+    if (document.readyState !== 'complete') addEventListener('load', land, { once: true });   // again once the picture has its size
+  }
   if ('IntersectionObserver' in window) {
     const seen = new IntersectionObserver(entries => {
       if (entries.some(e => e.isIntersecting)) { track('story_view'); seen.disconnect(); }
@@ -257,7 +268,8 @@ export function frontDoor({ active, track }) {
     else await playFilm();
     await Promise.race([shown, wait(15000)]);           // the hall's first view (it has had the whole film to load)
     window.__explore?.settle(filmFov());
-    window.__explore?.showRoomInUrl?.();                 // inside now: the address names the room
+    history.replaceState(history.state, '', location.pathname + location.search);   // inside now: no #story,
+    window.__explore?.showRoomInUrl?.();                                              // and the address names the room
     behind.forEach(el => { el.inert = false; });
     door.classList.add('leaving');
     await wait(reduced ? 250 : 650);
