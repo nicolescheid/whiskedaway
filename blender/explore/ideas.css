@@ -151,7 +151,12 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
   .chatwin .cw-bar > span:not(.cw-sizes):not(.cw-grip) { display: none; }
   /* Line: no window, just the handle, her speech bubble, and her avatar beside the answer chips */
   .chatwin.size-line { background: none; border: 0; box-shadow: none; }
-  .chatwin.size-line .cw-bar { background: var(--parchment-90); color: var(--berry); border: 1px solid var(--line); border-radius: 999px; margin-bottom: 2px; width: 140px; }
+  /* At Line the ▴ ▾ sit in the avatar row, beside Gemma's line, not on a row of their own above it: the room keeps ~46 px */
+  .chatwin.size-line .cw-bar { position: absolute; right: 0; bottom: 0; margin: 0; padding: 0; width: auto; background: none; border: 0; z-index: 1; }
+  .chatwin.size-line .cw-grip { display: none; }
+  .chatwin.size-line .cw-bar .cw-sizes button { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+  .chatwin.size-line .cw-bar::before { display: none; }
+  .chatwin.size-line .cw-chips { margin-right: 96px; }
   .chatwin.size-line .cw-body { grid-template-columns: 44px 1fr; grid-template-areas: "tags tags" "line line" "typing typing" "av chips"; column-gap: 6px; row-gap: 6px; }
   .chatwin.size-line .cw-tags { grid-area: tags; padding: 0; }
   .chatwin.size-line .cw-line { grid-area: line; padding: 8px 12px; background: var(--parchment); border: 1px solid var(--line);
@@ -204,7 +209,12 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
   .cw-grip { display: block; width: 36px; height: 4px; border-radius: 2px; background: currentColor; opacity: .7; margin-right: auto; }
   .chatwin .cw-bar > span:not(.cw-sizes):not(.cw-grip) { display: none; }
   .chatwin.size-line { background: none; border: 0; box-shadow: none; }
-  .chatwin.size-line .cw-bar { background: var(--parchment-90); color: var(--berry); border: 1px solid var(--line); border-radius: 999px; margin-bottom: 4px; width: 120px; }
+  /* At Line the ▴ ▾ stand beside Gemma's line, to its right, not on a row above it */
+  .chatwin.size-line .cw-bar { position: absolute; left: calc(100% + 6px); bottom: 0; margin: 0; padding: 0; width: auto; background: none; border: 0; }
+  .chatwin.size-line .cw-bar .cw-sizes { flex-direction: column-reverse; gap: 4px; }
+  .chatwin.size-line .cw-grip { display: none; }
+  .chatwin.size-line .cw-bar .cw-sizes button { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+  .chatwin.size-line .cw-bar::before { display: none; }
   .chatwin.size-line .cw-body { grid-template-columns: 40px 1fr; grid-template-areas: "tags tags" "av line" "typing typing" "chips chips"; column-gap: 6px; row-gap: 4px; align-items: end; }
   .chatwin.size-line .cw-tags { grid-area: tags; padding: 0; }
   .chatwin.size-line .cw-status { grid-area: av; padding: 0; }

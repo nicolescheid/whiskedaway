@@ -717,7 +717,7 @@ for (const [id, st] of Object.entries(flWorld.stops)) {
   const stop = flSpots.stops[st.stop];
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => flWorld.objects[k] && (h.visible || flWorld.objects[k].always_visible)));
-  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: flSpots.clock,
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, pitch: st.pitch, clock: flSpots.clock,
                 pano: (w, night, full) => `out/flourish_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
 // Sweet Spells: the lane in every weather, by day and late at night, like the kitchen
@@ -1215,7 +1215,7 @@ function goRoom(id, yaw) {
   sound.place(id);
   spots = room().spots;
   look.yaw = yaw ?? room().yaw ?? 0;
-  look.pitch = -6;
+  look.pitch = room().pitch ?? -6;                    // a stop may look a little lower on arrival (Flourish: its low table clears the chat)
   setRoomText();
   buildHotspots();
   fillMap();
@@ -2068,6 +2068,7 @@ buildHotspots();
 showClock();
 if (state.room !== 'cuddlecore') askHemisphere();
 look.yaw = room().yaw ?? 0;
+look.pitch = room().pitch ?? -6;
 fillMap();
 ideas.render();
 renderTheme();
