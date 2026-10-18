@@ -31,6 +31,7 @@ Camera guide: 01 looks across +x from the Inn side, garden door central, wheel t
 
 ## Doors and wheels
 
+- *Superseded 18 Oct 2026: the Chiapothecary door is now glazed (small panes of old glass, herb-green frame, brass furniture), to match brief #8. The oak description below is kept as ChatGPT wrote it.*
 - ★ **Chiapothecary door:** old oak, four recessed panels, ≈0.85 × 2.0 m, at x=0 and y≈1.9 m. Reuse the hallway door mesh/material family, with old brass handle. Keep a shallow clear landing on both sides.
 - ★ **Room dial:** ≈200 mm diameter, aged brass, centre z≈1.35 m, beside the oak door on its lane side. Reuse the established hallway dial: **nine equally spaced stations at 40°**, star at the top and eight blank room plaques. Add crisp room text in Blender. It is separate from the four-season wheel.
 - ★ **Seasons wheel:** ≈300 mm diameter, brass rim, dark old timber centre, mounted on a reinforced post beside the garden door on its lane side (image right in 01). Centre z≈1.3–1.4 m. Four blank cardinal plates, four engraved leaves between them, central spindle and small turning handle.

@@ -22,8 +22,13 @@ Read this before prompting, so you can check ChatGPT's images against it.
 - A **long, narrow lean-to glasshouse** built against the sunny side of the Inn: about 1.8 m wide
   and 6.3 m long, with a sloping glass roof that rises to the house wall.
 - **The house wall** (cream limewashed plaster, like the hallway) runs along one long side. In it
-  is the **door from the Chiapothecary**, an old oak four-panel door like the hallway doors,
-  with the same **brass dial** beside it.
+  is the **door from the Chiapothecary**, a glazed door (small panes of old glass in a herb-green
+  painted frame, brass furniture), with the same **brass dial** beside it.
+
+  *Changed 18 Oct 2026, after the concept pack:* this door was first briefed as an old oak
+  four-panel door like the hallway's, and the prompts below and the concept images still show
+  that. Nicole chose a glazed door instead, to match the Chiapothecary brief (#8), whose garden
+  wall has "a glazed door into the glasshouse". The Blender build has the glazed door.
 - **Glass on the other three sides:** the long garden side, the **sea end** and the **lane end**.
   Through it: the herb and flower garden, the sea, the sky.
 - A **garden door** in the middle of the long glass side opens onto the herb and flower garden.
@@ -207,7 +212,7 @@ and the season set ("nothing may move between seasons except the plants and the 
 
 ## Checklist
 
-- [ ] It looks like the same Inn as the kitchen and hallway: same plaster, same oak door, same dial
+- [ ] It looks like the same Inn as the kitchen and hallway: same plaster, same dial (the Chiapothecary door is glazed; see the layout)
 - [ ] Glass on three sides, the cream house wall on the fourth, the garden door in the long glass side
 - [ ] Every plant is from the list, and recognisable
 - [ ] The four season images line up exactly when you flick between them

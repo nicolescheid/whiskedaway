@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, crop_image, cyl, image_mat, look,  # noqa: E402
-                     mat, meshes_of, model, pano_camera, pbr, sphere, srgb, text, use_gpu, window_glass)
+                     mat, meshes_of, model, pano_camera, pbr, point_light, sphere, srgb, text, use_gpu, window_glass)
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
@@ -162,8 +162,8 @@ def plant_mats():
     return out
 
 
-def sage_paint(name):
-    """Sage paint over old timber, chipped here and there to the wood."""
+def sage_paint(name, colour="#8d9b80"):
+    """Sage paint (or another colour) over old timber, chipped here and there to the wood."""
     folder = os.path.join(ASSETS, "textures", "wood_table_worn")
     m = bpy.data.materials.new(name)
     m.use_nodes = True
@@ -189,7 +189,7 @@ def sage_paint(name):
     paint.data_type = "RGBA"
     paint.inputs["Factor"].default_value = 0.82
     nt.links.new(wood.outputs["Color"], paint.inputs[6])
-    paint.inputs[7].default_value = lin("#8d9b80")
+    paint.inputs[7].default_value = lin(colour)
     noise = nt.nodes.new("ShaderNodeTexNoise")
     noise.inputs["Scale"].default_value = 14
     noise.inputs["Detail"].default_value = 8
@@ -314,6 +314,31 @@ def frosty_glass(name, wet, frost):
     nt.links.new(surface, mix.inputs[1])
     nt.links.new(ice.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def old_glass(name):
+    """Old hand-made glass: clear but wavy, so whatever is behind it swims and blurs."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    p = nt.nodes["Principled BSDF"]
+    p.inputs["Base Color"].default_value = (0.93, 0.96, 0.9, 1)
+    p.inputs["Transmission Weight"].default_value = 1.0
+    p.inputs["IOR"].default_value = 1.52
+    p.inputs["Roughness"].default_value = 0.06
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (9, 9, 4)                  # ripples run a little longer vertically
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    n = nt.nodes.new("ShaderNodeTexNoise")
+    n.inputs["Detail"].default_value = 3
+    nt.links.new(mp.outputs["Vector"], n.inputs["Vector"])
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.6
+    bump.inputs["Distance"].default_value = 0.004
+    nt.links.new(n.outputs["Fac"], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], p.inputs["Normal"])
     return m
 
 
@@ -1079,7 +1104,6 @@ def build():
     staging = pbr("staging", "worn_planks", 1.6, tint=srgb("#a67c4e"), tint_mix=0.35, rough_add=0.1, rot_z=90)
     beam_wood = pbr("beam", "wood_table_worn", 1.5, tint=srgb("#8a6236"), tint_mix=0.4, rot_z=90)
     door_oak = pbr("door_oak", "medieval_wood", 2.0, tint=srgb("#9b693e"), tint_mix=0.55)
-    door_dark = pbr("door_dark", "medieval_wood", 2.0, tint=srgb("#6e4a2b"), tint_mix=0.6)
     soil = pbr("soil", "forest_ground_06", 0.8, tint=srgb("#3d3024"), tint_mix=0.5, bump=0.9)
     gravel = pbr("gravel", "gravel_floor_02", 1.5, bump=0.8)
     sage = sage_paint("sage_paint")
@@ -1104,7 +1128,7 @@ def build():
     box_span("inn_wall_lane", wx0, wx1, -2.4, cd0, 0, 5.6, plaster)
     box_span("inn_wall_sea", wx0, wx1, cd1, L + 1.6, 0, 5.6, plaster)
     box_span("inn_wall_over_door", wx0, wx1, cd0, cd1, CD_H, 5.6, plaster)
-    box_span("behind_door", wx0 - 0.4, wx0, cd0, cd1, 0, CD_H, mat("still_room_dark", srgb("#2a2018"), 0.9))
+    still_room(wx0, cd0, cd1, plaster)
     # first-floor landing window, seen up through the roof glass
     wy, wz0, wz1 = 3.4, 3.3, 4.5
     box_span("landing_window_glass", -0.12, -0.1, wy - 0.42, wy + 0.42, wz0, wz1, mat("dark_glass", srgb("#39434a"), 0.08))
@@ -1113,18 +1137,40 @@ def build():
         box_span(f"landing_window_{name}", -0.1, 0.01, a0, a1, b0, b1, paint, bevel=0.004)
     box_span("landing_window_sill", -0.08, 0.06, wy - 0.52, wy + 0.52, wz0 - 0.06, wz0, plaster, bevel=0.01)
 
-    # ---- Chiapothecary door: old oak, four panels, the same family as the hallway doors (closed: not open yet)
+    # ---- Chiapothecary door: glazed, so the shop shows through it (brief #8 has the same door from the shop side).
+    # Herb-green paint, the Chiapothecary's accent; small panes of wavy old glass; brass furniture. Closed for now.
+    door_paint = sage_paint("chia_green", "#5c7c5c")
+    glass_old = old_glass("chia_door_glass")
     lw, lh, lt = CD_W - 0.02, CD_H - 0.03, 0.045
-    parts = [box_span("cd_leaf", 0, lw, -lt / 2, lt / 2, 0.012, 0.012 + lh, door_oak, bevel=0.004)]
-    for px in (0.22, lw - 0.22):
-        for pz0, pz1 in ((0.2, 0.92), (1.08, 1.86)):
-            parts.append(box_span(f"cd_panel_{px}_{pz0}", px - 0.135, px + 0.135, -lt / 2 - 0.006, -lt / 2, pz0 + 0.02, pz1 - 0.02, door_oak, bevel=0.008))
-            for nm, a0, a1, b0, b1 in (("l", px - 0.165, px - 0.14, pz0, pz1), ("r", px + 0.14, px + 0.165, pz0, pz1),
-                                       ("b", px - 0.165, px + 0.165, pz0, pz0 + 0.025), ("t", px - 0.165, px + 0.165, pz1 - 0.025, pz1)):
-                parts.append(box_span(f"cd_mould_{px}_{pz0}_{nm}", a0, a1, -lt / 2 - 0.014, -lt / 2, b0, b1, door_dark, bevel=0.005))
-    parts.append(cyl("cd_knob", (lw - 0.07, -lt / 2 - 0.035, 1.0), 0.028, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
+    st, gz0, gz1 = 0.1, 0.68, lh - 0.1                               # stile width, glazing bottom and top
+    parts = []
+    for nm, a0, a1, b0, b1 in (("stile_l", 0, st, 0.012, 0.012 + lh), ("stile_r", lw - st, lw, 0.012, 0.012 + lh),
+                               ("rail_b", st, lw - st, 0.012, 0.19), ("rail_m", st, lw - st, 0.55, gz0),
+                               ("rail_t", st, lw - st, gz1, 0.012 + lh)):
+        parts.append(box_span(f"cd_{nm}", a0, a1, -lt / 2, lt / 2, b0, b1, door_paint, bevel=0.004))
+    parts.append(box_span("cd_panel", st, lw - st, -0.012, 0.012, 0.19, 0.55, door_paint, bevel=0.003))
+    for face in (-1, 1):                                            # a mould round the low panel, both faces
+        for nm, a0, a1, b0, b1 in (("l", st, st + 0.02, 0.19, 0.55), ("r", lw - st - 0.02, lw - st, 0.19, 0.55),
+                                   ("b", st, lw - st, 0.19, 0.21), ("t", st, lw - st, 0.53, 0.55)):
+            ya, yb = sorted((face * 0.012, face * 0.022))
+            parts.append(box_span(f"cd_mould_{face}_{nm}", a0, a1, ya, yb, b0, b1, door_paint, bevel=0.003))
+    cols, rows = 3, 5
+    for k in range(1, cols):
+        x = st + (lw - 2 * st) * k / cols
+        parts.append(box_span(f"cd_bar_v{k}", x - 0.011, x + 0.011, -0.016, 0.016, gz0, gz1, door_paint, bevel=0.003))
+    for k in range(1, rows):
+        z = gz0 + (gz1 - gz0) * k / rows
+        parts.append(box_span(f"cd_bar_h{k}", st, lw - st, -0.016, 0.016, z - 0.011, z + 0.011, door_paint, bevel=0.003))
+    pane = box_span("cd_glass", st, lw - st, -0.003, 0.003, gz0, gz1, glass_old, bevel=0)
+    pane.visible_shadow = False                                     # the sun gets into the shop
+    parts.append(pane)
+    side = -lt / 2                                                   # the glasshouse face
+    parts.append(cyl("cd_knob", (lw - 0.065, side - 0.035, 1.0), 0.026, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
+    parts.append(box_span("cd_rose", lw - 0.09, lw - 0.04, side - 0.006, side, 0.9, 1.1, brass, bevel=0.003))
+    parts.append(box_span("cd_keyhole", lw - 0.07, lw - 0.06, side - 0.007, side - 0.005, 0.93, 0.955, iron, bevel=0))
+    parts.append(box_span("cd_finger_plate", lw - 0.075, lw - 0.03, side - 0.004, side, 1.2, 1.48, brass, bevel=0.002))
     for hz in (0.25, 1.75):
-        parts.append(cyl(f"cd_hinge_{hz}", (0.005, 0, hz), 0.009, 0.1, iron))
+        parts.append(cyl(f"cd_hinge_{hz}", (0.005, 0, hz), 0.01, 0.1, brass_worn))
     # local x along the door (toward the sea), local -y out of the wall into the glasshouse (+X)
     m = Matrix(((0, -1, 0), (1, 0, 0), (0, 0, 1))).to_4x4()
     m.translation = Vector((-0.06, cd0 + 0.01, 0))
@@ -1478,6 +1524,44 @@ def build():
     scene.view_settings.exposure = S["exposure"]
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
+
+
+def still_room(wx0, cd0, cd1, plaster):
+    """A glimpse of the Chiapothecary through the glazed door: warm light, shelves of jars, a counter, greenery.
+    Only ever seen through wavy glass, so it is simple. The real room comes with brief #8."""
+    x0, x1 = wx0 - 2.2, wx0
+    y0, y1 = cd0 - 1.0, cd1 + 1.0
+    boards = pbr("shop_floor", "old_wooden_floor_01", 2.0, tint=srgb("#6c4b31"), tint_mix=0.3)
+    honey = pbr("shop_oak", "wood_table_worn", 1.2, tint=srgb("#a57543"), tint_mix=0.35)
+    green = mat("shop_cabinet_green", srgb("#5c7c5c"), rough=0.6)
+    box_span("shop_floor", x0, x1, y0, y1, -0.05, 0.0, boards)
+    box_span("shop_ceiling", x0, x1, y0, y1, 2.7, 2.8, plaster)
+    box_span("shop_back", x0 - 0.1, x0, y0, y1, 0, 2.7, plaster)
+    box_span("shop_side_a", x0, x1, y0 - 0.1, y0, 0, 2.7, plaster)
+    box_span("shop_side_b", x0, x1, y1, y1 + 0.1, 0, 2.7, plaster)
+    for nm, y in (("a", y0 + 0.5), ("b", y1 - 0.5)):
+        box_span(f"shop_beam_{nm}", x0, x1, y - 0.09, y + 0.09, 2.52, 2.7, honey)
+    # the wall of drawers and shelves opposite the door, with jars
+    box_span("shop_cabinet", x0, x0 + 0.42, y0 + 0.15, y1 - 0.15, 0, 0.95, green, bevel=0.01)
+    box_span("shop_cabinet_top", x0, x0 + 0.46, y0 + 0.12, y1 - 0.12, 0.95, 0.99, honey, bevel=0.006)
+    rnd = random.Random(17)
+    jar_cols = [("#a8641e", 0.55), ("#7a8f4a", 0.5), ("#c99a52", 0.45), ("#e8dcc0", 0.6), ("#5f3a22", 0.5)]
+    jar_mats = [mat(f"jar_{i}", srgb(c), rough=0.15, transmission=t, ior=1.5) for i, (c, t) in enumerate(jar_cols)]
+    for k, z in enumerate((1.25, 1.62, 1.99)):
+        box_span(f"shop_shelf_{k}", x0, x0 + 0.24, y0 + 0.15, y1 - 0.15, z - 0.025, z, honey, bevel=0.004)
+        y = y0 + 0.22
+        while y < y1 - 0.25:
+            r, h = rnd.uniform(0.035, 0.06), rnd.uniform(0.1, 0.2)
+            cyl(f"shop_jar_{k}_{y:.2f}", (x0 + 0.12, y, z + h / 2), r, h, rnd.choice(jar_mats), verts=16, bevel=0.006)
+            cyl(f"shop_lid_{k}_{y:.2f}", (x0 + 0.12, y, z + h + 0.008), r * 0.85, 0.016, rnd.choice([honey, green]), verts=16, bevel=0.003)
+            y += 2 * r + rnd.uniform(0.02, 0.05)
+    # the counter, side on to the door, with a plant, and a warm lamp over it
+    box_span("shop_counter", x0 + 0.95, x0 + 1.5, y0 + 0.3, y1 - 0.9, 0, 0.92, honey, bevel=0.01)
+    model("potted_plant_02", (x0 + 1.2, y1 - 1.15, 0.92), rot_z=30, scale=0.7)
+    model("potted_plant_04", (x0 + 0.2, y0 + 0.5, 0.99), rot_z=10, scale=1.4)
+    model("potted_plant_02", (x0 + 0.4, y1 - 0.35, 0.0), rot_z=70, scale=1.1)
+    point_light("shop_lamp", (x0 + 1.1, (y0 + y1) / 2, 2.2), 45, (1.0, 0.68, 0.4), radius=0.3)
+    point_light("shop_fill", (x0 + 0.5, (y0 + y1) / 2, 1.6), 12, (1.0, 0.72, 0.45), radius=0.5)
 
 
 def sun_turn(img):
