@@ -70,7 +70,7 @@ PY
 grep -E "\[probe\]|cuda|optix|CUDA|OptiX" /tmp/probe.log | head -12 >>"$LOG"
 grep -qE "\[probe\] OPTIX \['" /tmp/probe.log || log "warning: no OptiX device; Cycles will use CUDA"
 grep -qE "\[probe\] (OPTIX|CUDA) \['" /tmp/probe.log || nogpu "Blender can't see the GPU"
-[ "$WA_JOBS" = "probe" ] && { log "probe only: DONE"; exit 0; }
+[ "$WA_JOBS" = "probe" ] && { log "probe only: DONE"; sleep 45; exit 0; }   # pause so render.sh sees it
 
 log "cloning ${WA_BRANCH}"
 for i in 1 2 3; do

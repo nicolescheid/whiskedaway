@@ -16,6 +16,7 @@
 #   --cloud C      COMMUNITY or SECURE (default: COMMUNITY)
 #   --max-min N    give up and delete the pod after N minutes (default: 120)
 #   --image I      container image (default: the whiskedaway-render image built from cloud/Dockerfile)
+#   --caps C       NVIDIA_DRIVER_CAPABILITIES for the pod (default: compute,utility,graphics)
 #
 # If a machine's GPU won't initialise (some Community hosts), its pod is deleted and another one is tried.
 #
@@ -26,7 +27,7 @@ RPC="${RUNPODCTL:-$HOME/tools/runpodctl/runpodctl.exe}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BRANCH="$(git -C "$ROOT" branch --show-current)"
 IMAGE="ghcr.io/nicolescheid/whiskedaway-render:5.1.0"   # Blender + assets baked in (cloud/Dockerfile)
-BUILD="" JOBS="" OUT="$ROOT/blender/out" GPU="NVIDIA GeForce RTX 4090" CLOUD="COMMUNITY" MAX_MIN=120
+CAPS="compute,utility,graphics" BUILD="" JOBS="" OUT="$ROOT/blender/out" GPU="NVIDIA GeForce RTX 4090" CLOUD="COMMUNITY" MAX_MIN=120
 while [ $# -gt 0 ]; do
   case "$1" in
     --branch) BRANCH="$2"; shift 2 ;;
@@ -37,10 +38,11 @@ while [ $# -gt 0 ]; do
     --cloud) CLOUD="$2"; shift 2 ;;
     --max-min) MAX_MIN="$2"; shift 2 ;;
     --image) IMAGE="$2"; shift 2 ;;
+    --caps) CAPS="$2"; shift 2 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
 done
-[ -n "$BUILD" ] && [ -n "$JOBS" ] || { sed -n '2,21p' "$0"; exit 2; }
+[ -n "$BUILD" ] && [ -n "$JOBS" ] || { sed -n '2,22p' "$0"; exit 2; }
 [ -f "$ROOT/blender/$BUILD" ] || { echo "no such build script: blender/$BUILD" >&2; exit 2; }
 
 # The pod renders what's on GitHub, so refuse if this branch has unpushed commits
@@ -54,8 +56,8 @@ RAW="https://raw.githubusercontent.com/nicolescheid/whiskedaway/${BRANCH}/cloud/
 # The newest pod_render.sh from the branch, or the copy baked into the image if GitHub doesn't answer
 START="bash -c 'curl -fsSL --connect-timeout 10 --max-time 60 --retry 3 -o /pod_render.sh ${RAW} || cp /opt/pod_render.sh /pod_render.sh; bash /pod_render.sh'"
 ENV=$(python -c 'import json,sys; print(json.dumps(dict(WA_BRANCH=sys.argv[1], WA_BUILD=sys.argv[2], WA_JOBS=sys.argv[3], WA_CODE=sys.argv[4],
-  NVIDIA_DRIVER_CAPABILITIES="all")))' \
-  "$BRANCH" "$BUILD" "$JOBS" "$CODE")
+  NVIDIA_DRIVER_CAPABILITIES=sys.argv[5])))' \
+  "$BRANCH" "$BUILD" "$JOBS" "$CODE" "$CAPS")
 json() { python -c "
 import json,sys
 try: d=json.load(sys.stdin)
@@ -99,6 +101,7 @@ watch_pod() {
     if [ $(( $(date +%s) - T0 )) -gt $(( MAX_MIN * 60 )) ]; then echo "gave up after $MAX_MIN min" >&2; exit 1; fi
     log=$(curl -fsS --max-time 15 "$log_url" 2>/dev/null || true)
     if [ -z "$log" ]; then
+      if "$RPC" pod get "$POD" 2>&1 | grep -q '"not_found"'; then echo "pod $POD has gone (it deletes itself when it stops)" >&2; exit 1; fi
       status=$("$RPC" pod get "$POD" 2>/dev/null | json desiredStatus || true)
       if [ "$status" = "EXITED" ] || [ "$status" = "TERMINATED" ]; then echo "pod stopped before it reported anything" >&2; exit 1; fi
       continue
