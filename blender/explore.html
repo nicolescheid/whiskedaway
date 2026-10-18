@@ -36,6 +36,8 @@
   #tint.evening { background-color: rgba(255, 150, 70, 0.4); }
   #tint.night { mix-blend-mode: multiply; background-color: rgba(30, 36, 70, 0.62); }
   #stage.dragging { cursor: grabbing; }
+  #stage:focus { outline: none; }
+  #stage:focus-visible { outline: 3px solid var(--amber-glow); outline-offset: -3px; }   /* keyboard look-around */
   /* A room without a render for the chosen weather (the glasshouse has seasons only) still follows the barometer */
   #stage canvas { transition: filter 1.4s ease; }
   #stage.wx-rain canvas { filter: saturate(.75) brightness(.9); }
@@ -52,7 +54,10 @@
                box-shadow: 0 0 0 3px rgba(244, 239, 228, 0.18); transition: all .4s; flex: none; }
   .spot .name { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 999px;
                 padding: 5px 12px; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.25);
-                opacity: 0; transform: translateX(-4px); transition: all .25s; pointer-events: none; }
+                opacity: 0; transform: translateX(-4px); transition: all .25s; pointer-events: none;
+                position: absolute; left: 20px; }   /* out of the button's box, so a hidden name never covers the next dot */
+  .spot::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }   /* a little more to tap than the dot */
+  .spot.is-tool .name, .spot.revealed .name { pointer-events: auto; }                     /* a name you can see, you can tap */
   .spot:hover .name, .spot:focus-visible .name, .spot.is-tool .name, .spot.revealed .name { opacity: 1; transform: none; }
   .spot.is-tool .dot { background: var(--berry); }
   .spot.submit .name { background: var(--berry); color: var(--parchment); }
@@ -152,6 +157,7 @@
   .card.opened .body { display: block; }
   .card .actions { display: flex; gap: 12px; }
   .card.faded { opacity: .55; }
+  .card.opened { opacity: 1; background: var(--parchment); }   /* an opened card is being read: never faded, nothing shows through */
 
   /* Fixed tool stub */
   .tool { position: fixed; inset: 0; display: none; place-items: center; z-index: 30; background: rgba(20, 14, 10, .35); }
@@ -232,6 +238,11 @@
                justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; }
     .counter > :first-child { margin-top: auto; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    .card, .cw-msg, .cw-typing span { animation: none; }
+    .spot.revealed .dot { animation: none; box-shadow: 0 0 0 3px rgba(232, 184, 122, .5), 0 0 16px 4px rgba(232, 184, 122, .6); }
+    .spot .dot, .spot .name, #stage canvas, #tint { transition: none; }
+  }
   @media (prefers-reduced-motion: reduce) { .chip.speaker.nudge { animation: none; box-shadow: 0 0 0 3px rgba(139, 77, 92, .45); } .chip.bell.ring img { animation: none; } #front-door { transition-duration: .2s; } }
 </style>
 </head>
@@ -255,6 +266,13 @@
     const on = !q.has('room') && (q.get('door') === '1' || (location.pathname === '/' && !done));
     document.getElementById('front-door').hidden = !on;
     window.__doorActive = on;
+    // Back at the door mid-visit (J6): the visit is still there, so the door invites you back in
+    let back = false;
+    try { back = (JSON.parse(sessionStorage.getItem('wa-explore') || 'null')?.trail || []).length > 0; } catch { /* storage blocked */ }
+    if (on && back) {
+      document.querySelector('#front-door .fd-words p').textContent = "Gemma's Inn. Come back in.";
+      document.getElementById('fd-enter').setAttribute('aria-label', 'Come back into the Inn');
+    }
     // Which film fits this screen: portrait on upright screens, landscape otherwise. Close to the film's own
     // shape it fills the screen (a little cropped); further off (4:3, square, ultra-wide) it's shown whole
     window.__doorLayout = () => {
@@ -446,7 +464,8 @@ for (const [id, st] of Object.entries(hallWorld.stops)) {
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => hallWorld.objects[k] && (h.visible || hallWorld.objects[k].always_visible)));
   Object.assign(stopSpots, hallWorld.walks[id] || {});
-  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock,
+  // noNight: the hallway's night renders aren't made yet, so at night it shows the day render dimmed without asking for them
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock, noNight: true,
                 pano: (w, night, full) => `out/hallway_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
 // The glasshouse: one view per season, by day only (at night the day render is dimmed), whatever the weather
@@ -517,6 +536,18 @@ state.room = window.__door?.active ? 'hall-entrance'                  // through
   : ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
 const room = () => ROOMS[state.room];
 let spots = room().spots;
+// The address follows the room (NEW-1, UX J11): ?room= always names the room you're in, so a reload or a shared link
+// lands where you are. Room moves replace it rather than adding history: Back is kept for the book and dialogs
+// (recipe-book-ux.md §5), not for walking back through every door.
+const showRoomInUrl = () => {
+  const u = new URL(location.href);
+  u.searchParams.set('room', state.room);
+  u.searchParams.delete('door');                         // the door has been decided for this load
+  history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+};
+// A room link walks straight in, so the front door counts as done for this tab
+if (params.has('room') && !window.__door?.active) try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* storage blocked */ }
+showRoomInUrl();
 state.chat = state.chat || [];             // Gemma's chat log for this visit
 delete state.sound;                        // sound on or off lives in explore/sound.js now, off by default
 
@@ -638,7 +669,7 @@ async function showWeather(w, { fade = true } = {}) {
   sound.ambience(at, w, { night, season, time: timeNow() });                     // the room's quiet bed follows the weather
   const stale = () => w !== state.weather || night !== isNight() || at !== state.room || season !== seasonNow();
   let shown = w;                                     // a room without this weather's render falls back to rain
-  let preview = night && !R.dayOnly ? await loadTex(R.pano(w, true, false)) : null;
+  let preview = night && !R.dayOnly && !R.noNight ? await loadTex(R.pano(w, true, false)) : null;
   const haveNight = !!preview;                       // until the night renders exist, darken the day render
   if (!preview) preview = await loadTex(R.pano(w, false, false));
   if (!preview && w !== 'rain') { shown = 'rain'; preview = await loadTex(R.pano('rain', false, false)); }
@@ -717,7 +748,7 @@ function makeClock(clockFx, eye) {
     const target = ((hours % 12) + 12) % 12;
     const from = shown ?? target;
     const delta = ((target - from) % 12 + 12) % 12;                  // the hands only ever go forward
-    const t0 = performance.now(), dur = animate && delta ? 900 : 0;
+    const t0 = performance.now(), dur = animate && delta && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 900 : 0;
     const step = now => {
       const k = dur ? Math.min(1, (now - t0) / dur) : 1;
       const h = from + delta * (1 - (1 - k) ** 3);
@@ -734,7 +765,7 @@ function makeClock(clockFx, eye) {
 const handsHour = () => state.time ? world.times[state.time].hour : new Date().getHours() + new Date().getMinutes() / 60;
 
 // ---------- hotspots
-let hotspots = [];
+let hotspots = [], spotOrder = '';
 function buildHotspots() {
   hotspots.forEach(h => h.el.remove());
   hotspots = Object.entries(spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
@@ -760,7 +791,14 @@ function render() {
     h.el.style.display = vis ? '' : 'none';
     h.el.style.left = `${(p.x + 1) / 2 * innerWidth}px`;
     h.el.style.top = `${(1 - p.y) / 2 * innerHeight}px`;
+    h.x = p.x;
   }
+  // Names trail to the right, so keep the spots in left-to-right order: a spot is always above any name coming
+  // from its left, and a shown name never covers the next dot (NEW-4). Only when the order changes, and never
+  // while a spot has focus (moving it would drop the focus).
+  const order = hotspots.filter(h => h.el.style.display !== 'none').sort((a, b) => a.x - b.x);
+  const key = order.map(h => h.id).join();
+  if (key !== spotOrder && !document.activeElement?.classList.contains('spot')) { spotOrder = key; order.forEach(h => document.body.appendChild(h.el)); }
 }
 function resize() {
   renderer.setSize(innerWidth, innerHeight);
@@ -782,22 +820,41 @@ stage.addEventListener('pointermove', e => {
   hasLooked = true;
   render();
 });
-stage.addEventListener('pointerup', () => { drag = null; stage.classList.remove('dragging'); });
+// A drag ends however the pointer goes: lifted, cancelled by the browser (a scroll or gesture took over), or capture lost (R16)
+const endDrag = () => { drag = null; stage.classList.remove('dragging'); };
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => stage.addEventListener(t, endDrag));
+// Keyboard look-around (R14): with the room focused (Tab to it), arrows turn the view and + / - zoom
+stage.tabIndex = 0;
+stage.setAttribute('role', 'application');
+stage.setAttribute('aria-roledescription', '360 degree room');
+stage.setAttribute('aria-label', 'The room. Arrow keys look around, plus and minus zoom.');
+stage.addEventListener('keydown', e => {
+  const turn = { ArrowLeft: [-10, 0], ArrowRight: [10, 0], ArrowUp: [0, 6], ArrowDown: [0, -6] }[e.key];
+  const zoom = { '+': -6, '=': -6, '-': 6, '_': 6 }[e.key];
+  if (!turn && !zoom) return;
+  e.preventDefault();
+  if (turn) { look.yaw += turn[0]; look.pitch = THREE.MathUtils.clamp(look.pitch + turn[1], -75, 75); }
+  if (zoom) { camera.fov = THREE.MathUtils.clamp(camera.fov + zoom, 40, 95); camera.updateProjectionMatrix(); }
+  lastMove = performance.now();
+  hasLooked = true;
+  render();
+});
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 stage.addEventListener('wheel', e => { camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 40, 95); camera.updateProjectionMatrix(); render(); }, { passive: true });
 
 function lookTo(yaw, pitch) {
   const from = { ...look };
   let dy = ((yaw - from.yaw + 540) % 360) - 180;          // shortest way round
-  const t0 = performance.now(), dur = 700;
+  const t0 = performance.now(), dur = reduceMotion() ? 0 : 700;   // reduced motion: jump straight there (R15)
   const step = now => {
-    const k = Math.min(1, (now - t0) / dur), e = 1 - (1 - k) ** 3;
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - (1 - k) ** 3;
     look.yaw = from.yaw + dy * e;
     look.pitch = from.pitch + (Math.max(-30, pitch) - from.pitch) * e;
     lastMove = now;
     render();
     if (k < 1) requestAnimationFrame(step);
   };
-  requestAnimationFrame(step);
+  dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
 // ---------- trail + lingering
@@ -869,7 +926,7 @@ function touch(id) {
     if (obj.go.startsWith('/')) {
       track('leave_to_inn', { room: state.room, step: stepNow() });
       say(obj.leaving || 'Mind the step, love.', [], true);
-      return setTimeout(() => { location.href = obj.go; }, 1200);
+      return setTimeout(() => { location.href = obj.go === '/' ? '/?door=1' : obj.go; }, 1200);   // "/" alone would skip the door (J6)
     }
     goRoom(obj.go, obj.arrive_yaw);
   } else if (obj.type === 'dial') {
@@ -886,6 +943,7 @@ function goRoom(id, yaw) {
   if (!ROOMS[id] || id === state.room) return;
   const from = state.room;
   state.room = id;
+  showRoomInUrl();
   sound.place(id);
   spots = room().spots;
   look.yaw = yaw ?? room().yaw ?? 0;
@@ -1002,7 +1060,9 @@ function clockLabel() {
   let d = new Date();
   if (state.time) {
     const h = world.times[state.time].hour;
-    d = new Date(); d.setHours(Math.floor(h), Math.round((h % 1) * 60) + (state.chatMinute = (state.chatMinute || 0) + 1), 0);
+    // the pushed time, moving on as real minutes pass since the push (it used to add a minute per message and drift)
+    const since = (Date.now() - (state.timeSetAt || Date.now())) / 60000;
+    d = new Date(); d.setHours(Math.floor(h), Math.round((h % 1) * 60 + since), 0);
   }
   return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
 }
@@ -1024,19 +1084,30 @@ function chatLine(who, text) {
   if (who === 'gemma') sound.shimmer();
   store.save(state);
 }
+// Chips are data ({ label, do: [action, ...args] }), so the last question's answers are kept with the visit and come
+// back after a reload (J9)
+const CHIP_ACTS = {
+  choose: cluster => record({ kind: 'choose', cluster }),
+  weather: id => chooseWeather(id),
+  barometer: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); },
+  confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); },
+};
 function setChips(chips) {
   const box = $('cw-chips');
   box.innerHTML = '';
-  for (const c of chips) {
+  state.chips = chips.filter(c => CHIP_ACTS[c.do?.[0]]);
+  store.save(state);
+  for (const c of state.chips) {
     const b = document.createElement('button');
     b.textContent = c.label;
-    b.onclick = () => { box.innerHTML = ''; c.act(); };
+    b.onclick = () => { box.innerHTML = ''; state.chips = []; store.save(state); fitCounter(); CHIP_ACTS[c.do[0]](...c.do.slice(1)); };
     box.appendChild(b);
   }
+  fitCounter();                                // chips change the chat's height (ResizeObserver covers it too, when frames run)
 }
 // "Gemma is typing…" shows while she types a line, or while the AI navigator is reading the wander
 let typingLine = false, aiThinking = false;
-const showTyping = () => { $('cw-typing').hidden = !(typingLine || aiThinking); if (!$('cw-typing').hidden) $('cw-log').scrollTop = $('cw-log').scrollHeight; };
+const showTyping = () => { $('cw-typing').hidden = !(typingLine || aiThinking); if (!$('cw-typing').hidden) $('cw-log').scrollTop = $('cw-log').scrollHeight; fitCounter(); };
 function typing(on) { typingLine = on; showTyping(); }
 function thinking(on) { aiThinking = on; showTyping(); }
 let sayTimer;
@@ -1049,7 +1120,7 @@ function say(text, fork = [], brief = false) {
     sayPending = null;
     typing(false);
     chatLine('gemma', text);
-    setChips(fork.map(c => ({ label: world.clusters[c].label.replace(/^./, x => x.toUpperCase()), act: () => record({ kind: 'choose', cluster: c }) })));
+    setChips(fork.filter(c => world.clusters[c]).map(c => ({ label: world.clusters[c].label.replace(/^./, x => x.toUpperCase()), do: ['choose', c] })));
   };
   if (AI && !brief) return post();
   typing(true);
@@ -1196,7 +1267,14 @@ function togglePanel(id, btn) {
 }
 $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
 $('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
-$('btn-inn').onclick = () => track('leave_to_inn', { room: state.room, step: stepNow() });
+// The bar's "Front door" does what the hall's front door does (J6): Gemma says goodbye, then the door picture
+$('btn-inn').onclick = e => {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;          // a new tab or window: let the link be a link
+  e.preventDefault();
+  track('leave_to_inn', { room: state.room, step: stepNow() });
+  say(hallWorld.objects['front-door']?.leaving || 'Mind the step, love.', [], true);
+  setTimeout(() => { location.href = $('btn-inn').href; }, 1200);
+};
 $('forget').onclick = () => {
   track('visit_forget');
   store.clear();
@@ -1272,6 +1350,7 @@ function openClock() {
 function chooseTime(id) {
   if (id === state.time) return;
   state.time = id;
+  state.timeSetAt = id ? Date.now() : null;
   if (id) track('time_change', { room: state.room, time_of_day: id });
   setHands(handsHour());
   showWeather(state.weather);                                        // re-light: tint, or the night render
@@ -1379,8 +1458,7 @@ const GUESSED = {
 };
 function confirmGuess(also) {
   chatLine('gemma', GUESSED[state.weather]);
-  setChips([{ label: "That's right", act: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); } },
-            ...also]);
+  setChips([{ label: "That's right", do: ['confirm'] }, ...also]);
 }
 function arrive() {
   if (state.asked || state.trail.length) return;
@@ -1388,31 +1466,31 @@ function arrive() {
   if (state.room === 'cuddlecore' && guessed) {
     state.asked = true;
     store.save(state);
-    confirmGuess([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
+    confirmGuess([{ label: 'Turn the barometer', do: ['barometer'] }]);
   } else if (guessed) {
     state.asked = true;
     store.save(state);
-    confirmGuess(Object.entries(world.weathers).filter(([id]) => id !== state.weather).map(([id, w]) => ({ label: w.chip || w.label, act: () => chooseWeather(id) })));
+    confirmGuess(Object.entries(world.weathers).filter(([id]) => id !== state.weather).map(([id, w]) => ({ label: w.chip || w.label, do: ['weather', id] })));
   } else if (state.room === 'cuddlecore') {
     state.asked = true;
     store.save(state);
     chatLine('gemma', "Hello, love. What's the weather like for you today?");
-    setChips([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
+    setChips([{ label: 'Turn the barometer', do: ['barometer'] }]);
     applyReveal([{ object: 'barometer' }]);
   } else if (state.room === 'hall-entrance') {
     // In through the front door: the barometer is in the kitchen, so the weathers are right there in the chat
     state.asked = true;
     store.save(state);
     chatLine('gemma', "Hello, love. What's the weather like for you today?");
-    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, act: () => chooseWeather(id) })));
+    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, do: ['weather', id] })));
   }
 }
 // The film ends looking level down the hall through a narrower lens: start there, then ease out to the usual view
 function settle(fromFov) {
-  const to = innerWidth < 720 ? 82 : 72, t0 = performance.now();
+  const to = innerWidth < 720 ? 82 : 72, t0 = performance.now(), dur = reduceMotion() ? 0 : 1600;
   look.yaw = room().yaw ?? 0;
   const step = now => {
-    const k = Math.min(1, (now - t0) / 1600), e = k * k * (3 - 2 * k);
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = k * k * (3 - 2 * k);
     camera.fov = fromFov + (to - fromFov) * e;
     look.pitch = -6 * e;
     camera.updateProjectionMatrix();
@@ -1423,7 +1501,7 @@ function settle(fromFov) {
   camera.fov = fromFov;
   camera.updateProjectionMatrix();
   render();
-  requestAnimationFrame(step);
+  dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
 window.__explore = { state, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
@@ -1437,6 +1515,7 @@ fillMap();
 renderCards();
 renderNotes();
 renderChat();
+if (state.chips?.length) setChips(state.chips);   // the last question's answers, if it's still open (J9)
 soundLabel();
 if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);

@@ -56,4 +56,30 @@ writeFileSync(join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
   <url><loc>https://whiskedaway.com/</loc></url>
 </urlset>
 `);
-console.log('site: / is the Inn, /archive/ the old app, redirects and sitemap written');
+// Any address that isn't a page gets a real 404 (wrangler.jsonc: not_found_handling "404-page"), not the Inn:
+// a small page of its own, with no analytics, so mistyped links aren't counted as visits
+writeFileSync(join(dist, '404.html'), `<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Not here: WhiskedAway</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f4efe4; color: #2c2416;
+         font: 16px/1.5 Georgia, 'Times New Roman', serif; padding: 24px; box-sizing: border-box; }
+  main { max-width: 26rem; text-align: center; }
+  h1 { font-weight: 600; font-size: 1.9rem; margin: 0 0 .4rem; color: #8b4d5c; }
+  p { margin: 0 0 1.4rem; color: #5c5040; }
+  a { display: inline-block; background: #8b4d5c; color: #f4efe4; text-decoration: none; border-radius: 999px;
+      padding: .6rem 1.4rem; font-family: system-ui, sans-serif; font-size: .95rem; }
+  a:focus-visible { outline: 3px solid #e8b87a; outline-offset: 3px; }
+</style>
+<main>
+  <h1>This door doesn't open</h1>
+  <p>There's no room at this address. The Inn is just through here.</p>
+  <a href="/">Back to the Inn</a>
+</main>
+</html>
+`);
+console.log('site: / is the Inn, /archive/ the old app, redirects, sitemap and 404 page written');
