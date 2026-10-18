@@ -65,7 +65,7 @@ All events go through one function per surface, `track(name, params)`, which dro
 
 | Event | When | Parameters |
 |---|---|---|
-| `explore_start` | The first room has rendered | `room`, `nav_mode` (`ai` or `local`), `load_ms` (bucketed: `under-2s`, `2-5s`, `5-10s`, `over-10s`), `full_res` (`yes`/`no`) |
+| `explore_start` | The first room has rendered | `room`, `nav_mode` (`ai` or `local`), `load_ms` (bucketed: `under-2s`, `2-5s`, `5-10s`, `over-10s`), `full_res` (`yes` for 8K, `phone` for the 4096 phone tier, `no` for preview only) |
 | `room_enter` | Walking into a room | `room`, `from_room`, `step` (bucketed) |
 | `hotspot_touch` | Touching any hotspot | `room`, `object` (hotspot ID, e.g. `kettle`), `object_type` (`ambient`, `interactive`, `door`, `walk`, `weather`, `time`, `season`, `dial`, `submit`, `energy`) |
 | `door_closed` | Touching a door that isn't open yet | `room`, `object` |

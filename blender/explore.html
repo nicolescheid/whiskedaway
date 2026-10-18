@@ -490,10 +490,39 @@ fader.scale.setScalar(0.98);
 fader.visible = false;
 scene.add(fader);
 const loader = new THREE.TextureLoader();
-const useFull = renderer.capabilities.maxTextureSize >= 8192;
-const texCache = {};
-const prep = t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t; };
-const loadTex = url => texCache[url] || (texCache[url] = new Promise(ok => loader.load(url, t => ok(prep(t)), undefined, () => ok(null))));
+// Which full render to fetch after the preview: the 8K, or the 4096 phone tier (~0.5 MB, 43 MB of GPU memory instead of ~170).
+// Phones get the phone tier even when their GPU could take 8K: the screen can't show the difference, the data plan and memory can.
+// ?pano=8k or ?pano=phone overrides, for testing.
+const maxTex = renderer.capabilities.maxTextureSize;
+const isPhone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+const panoTier = new URLSearchParams(location.search).get('pano')
+  || (maxTex >= 8192 && !isPhone ? '8k' : maxTex >= 4096 ? 'phone' : 'none');
+const useFull = panoTier !== 'none';
+const fullUrl = url => panoTier === 'phone' ? url.replace(/\.jpg$/, '_4k.jpg') : url;
+// Textures stay in a small most-recently-used cache; older ones are freed from the GPU (an 8K one is ~170 MB, and phones
+// reload the tab when they run out). A freed texture still on screen is freed when it's replaced instead.
+const texCache = new Map();
+const KEEP_TEXTURES = 6;
+const inUse = t => t === sphere.material.map || t === fader.material.map;
+const prep = t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.userData.cached = true; return t; };
+function loadTex(url) {
+  let p = texCache.get(url);
+  if (p) texCache.delete(url);                      // re-inserted below as the most recent
+  else p = new Promise(ok => loader.load(url, t => ok(prep(t)), undefined, () => ok(null)));
+  texCache.set(url, p);
+  for (const [old, q] of texCache) {
+    if (texCache.size <= KEEP_TEXTURES) break;
+    texCache.delete(old);
+    q.then(t => { if (!t) return; t.userData.cached = false; if (!inUse(t)) t.dispose(); });
+  }
+  return p;
+}
+function showTex(tex) {
+  const old = sphere.material;
+  sphere.material = new THREE.MeshBasicMaterial({ map: tex });
+  if (old.map && !old.map.userData.cached && !inUse(old.map)) old.map.dispose();
+  old.dispose();
+}
 
 let fadeSeq = 0;
 function crossFade(tex) {
@@ -509,8 +538,8 @@ function crossFade(tex) {
     fader.material.opacity = k * k * (3 - 2 * k);
     render();
     if (k < 1) return requestAnimationFrame(step);
-    sphere.material = new THREE.MeshBasicMaterial({ map: tex });
     fader.visible = false;
+    showTex(tex);
     render();
   };
   requestAnimationFrame(step);
@@ -527,17 +556,17 @@ async function showWeather(w, { fade = true } = {}) {
   if (!preview && w !== 'rain') { shown = 'rain'; preview = await loadTex(R.pano('rain', false, false)); }
   if (stale()) return;
   $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
-  if (preview) fade && sphere.material.map ? crossFade(preview) : (sphere.material = new THREE.MeshBasicMaterial({ map: preview }), render());
+  if (preview) fade && sphere.material.map ? crossFade(preview) : (showTex(preview), render());
   if (useFull) {
-    const full = await loadTex(R.pano(shown, haveNight, true));
-    if (full && !stale()) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
+    const full = await loadTex(fullUrl(R.pano(shown, haveNight, true)));
+    if (full && !stale()) { showTex(full); if (!fader.visible) render(); }
   }
 }
 const firstView = showWeather(state.weather, { fade: false });
 window.__door?.innShown(firstView);
 firstView.then(() => {
   const s = performance.now() / 1000;
-  track('explore_start', { room: state.room, nav_mode: AI ? 'ai' : 'local', full_res: useFull ? 'yes' : 'no',
+  track('explore_start', { room: state.room, nav_mode: AI ? 'ai' : 'local', full_res: panoTier === '8k' ? 'yes' : panoTier === 'phone' ? 'phone' : 'no',
                            load_ms: s < 2 ? 'under-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : 'over-10s' });
 });
 
