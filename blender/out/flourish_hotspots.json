@@ -30,9 +30,9 @@
           "label": "The weather",
           "type": "weather",
           "overlay": "weather",
-          "yaw": 28.79,
-          "pitch": -1.83,
-          "distance": 3.47,
+          "yaw": 29.03,
+          "pitch": -2.11,
+          "distance": 3.48,
           "visible": true
         },
         "fl-clock": {
