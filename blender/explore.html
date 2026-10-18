@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fcf6e5">
 <title>WhiskedAway: wander Gemma's Inn and find something to cook</title>
 <meta name="description" content="A recipe site you explore. Wander a magic inn by the sea, touch what catches your eye, and Gemma finds you something to cook. Free, with no account.">
 <link rel="canonical" href="https://whiskedaway.com/">
@@ -155,7 +156,7 @@
   .spot.energy.chosen .dot { background: var(--amber-glow); box-shadow: 0 0 0 3px rgba(232, 184, 122, .35); }
 
   /* Top bar */
-  .bar { position: fixed; top: 12px; left: 16px; right: 16px; display: flex; gap: 8px; align-items: center; z-index: 20; pointer-events: none; }
+  .bar { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: calc(16px + env(safe-area-inset-left, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); display: flex; gap: 8px; align-items: center; z-index: 20; pointer-events: none; }
   .bar > * { pointer-events: auto; }
   .bar .room-title { margin: 0 auto 0 0; font: 600 15px 'Quicksand'; color: var(--parchment); text-shadow: 0 1px 6px rgba(0,0,0,.6); }
   .chip { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 13px; }
@@ -164,7 +165,7 @@
   .mode { font-size: 12px; color: var(--parchment); opacity: .85; }
 
   /* Panels */
-  .panel { position: fixed; top: 56px; left: 16px; width: min(320px, calc(100vw - 32px)); max-height: calc(100vh - 220px); overflow: auto;
+  .panel { position: fixed; top: 56px; left: calc(16px + env(safe-area-inset-left, 0px)); width: min(320px, calc(100vw - 32px)); max-height: calc(100vh - 220px); overflow: auto;
            background: var(--parchment-90); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; z-index: 19;
            box-shadow: 0 10px 30px rgba(0,0,0,.3); display: none; }
   .panel.open { display: block; }
@@ -317,7 +318,7 @@
     #story dl.rooms > div { break-inside: avoid; }
   }
   /* "Step inside" stays to hand while reading: bottom of the screen on phones, top-right on computers */
-  #front-door .fd-pill { position: fixed; z-index: 2; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); min-height: 44px;
+  #front-door .fd-pill { position: fixed; z-index: 2; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom)); min-height: 44px;
                          padding: 10px 20px; border: 0; border-radius: 999px; background: #8b4d5c; color: #f4efe4;
                          font: 600 15px 'Quicksand', system-ui, sans-serif; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); cursor: pointer;
                          opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .25s, transform .25s; }
@@ -328,7 +329,8 @@
   /* Landscape phones: the whisk fills the frame, so the words move to a column over the sky at the top left,
      and the promise line gives way (the h1's own line still says what it is) */
   @media (max-height: 500px) and (orientation: landscape) {
-    #front-door .fd-words { top: 0; bottom: auto; right: auto; width: 42%; padding: 12px 20px 16px 16px; text-align: left;
+    #story { padding-left: calc(24px + env(safe-area-inset-left, 0px)); padding-right: calc(24px + env(safe-area-inset-right, 0px)); }
+    #front-door .fd-words { top: 0; bottom: auto; right: auto; width: 42%; padding: 12px 20px 16px calc(16px + env(safe-area-inset-left, 0px)); text-align: left;
                             background: linear-gradient(to right, rgba(252, 246, 229, .92) 0%, rgba(252, 246, 229, .8) 70%, rgba(252, 246, 229, 0) 100%); }
     #front-door .fd-words .promise { display: none; }
     #front-door .fd-words .how { padding-left: 0; }
@@ -915,6 +917,7 @@ async function showWeather(w, { fade = true } = {}) {
   if (!preview && w !== 'rain') { shown = 'rain'; preview = await loadTex(R.pano('rain', false, false)); }
   if (stale()) return;
   $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
+  setThemeColor();
   stage.className = stage.className.replace(/\s*wx-\S+/g, '') + (R.dayOnly || shown !== w ? ` wx-${w}` : '');
   if (preview) fade && sphere.material.map ? crossFade(preview) : (showTex(preview), render());
   if (useFull) {
@@ -924,6 +927,13 @@ async function showWeather(w, { fade = true } = {}) {
 }
 const firstView = showWeather(state.weather, { fade: false });
 window.__door?.innShown(firstView);
+// The browser's toolbar colour: the door's paper while it's up, then parchment by day and the night blue after dark
+function setThemeColor() {
+  const c = !$('front-door').hidden ? '#fcf6e5' : isNight() ? '#1e2238' : '#f4efe4';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c);
+}
+new MutationObserver(setThemeColor).observe($('front-door'), { attributes: true, attributeFilter: ['hidden'] });
+setThemeColor();
 firstView.then(() => {
   const s = performance.now() / 1000;
   track('explore_start', { room: state.room, nav_mode: AI ? 'ai' : 'local', full_res: panoTier === '8k' ? 'yes' : panoTier === 'phone' ? 'phone' : 'no',
