@@ -98,15 +98,16 @@ for job in "${JOBS[@]}"; do
   log "rendering: ${job}"
   start=$(date +%s)
   # shellcheck disable=SC2086
-  "$BLENDER" -b --factory-startup --python "blender/${WA_BUILD}" -- $job >blender.log 2>&1 &
+  PYTHONUNBUFFERED=1 stdbuf -oL -eL "$BLENDER" -b --factory-startup --python "blender/${WA_BUILD}" -- $job >blender.log 2>&1 &
   pid=$!
-  gpu_checked=0 last=""
+  gpu_checked=0 last="" peak=0
   while kill -0 "$pid" 2>/dev/null; do
     sleep 15
+    util=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
+    [ "${util:-0}" -gt "$peak" ] && peak=$util
     tail -c 6000 blender.log | tr '\r' '\n' | tail -40 >/srv/status/blender_tail.txt   # served beside log.txt
     # Once sampling starts the GPU should be busy; an idle GPU means Cycles fell back to the CPU
     if [ "$gpu_checked" -lt 2 ] && grep -q "Sample [0-9]" blender.log; then
-      util=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
       if [ "${util:-0}" -ge 30 ]; then
         log "GPU busy (${util}%): rendering on the GPU"; gpu_checked=2
       elif [ "$gpu_checked" = 1 ]; then
@@ -119,6 +120,9 @@ for job in "${JOBS[@]}"; do
     [ -n "$now" ] && [ "$now" != "$last" ] && [ $(( $(date +%s) % 60 )) -lt 15 ] && { log "  $now"; last=$now; }
   done
   wait "$pid" || { tail -30 blender.log >>"$LOG"; fail "Blender exited with an error on: ${job}"; }
+  grep -m1 "\[whisked\] rendering on" blender.log >>"$LOG" || log "warning: the build never said it was using the GPU"
+  log "peak GPU use: ${peak}%"
+  [ "$peak" -ge 30 ] || fail "the GPU stayed idle, so this rendered on the CPU: ${job}"
   log "finished in $(( ($(date +%s) - start) / 60 )) min: ${job}"
 done
 
@@ -128,7 +132,13 @@ find . -type f -newer /srv/render_start ! -name '*.blend*' ! -name '*.png' -prin
 [ -s /srv/results.list ] || fail "the render wrote nothing to blender/out"
 log "results: $(tr '\n' ' ' </srv/results.list)"
 tar -cf /srv/results.tar -T /srv/results.list || fail "tar"
-log "sending results (code ${WA_CODE})"
+# runpodctl 2.x adds a relay number to the code (wa-…-3), so pass on the code it actually prints
+timeout 3600 runpodctl send /srv/results.tar --code "$WA_CODE" >/srv/send.log 2>&1 &
+send_pid=$!
+for _ in $(seq 60); do grep -q "code is:" /srv/send.log && break; kill -0 "$send_pid" 2>/dev/null || break; sleep 2; done
+code=$(grep -oE "code is: \S+" /srv/send.log | head -1 | cut -d' ' -f3)
+[ -n "$code" ] || { tail -5 /srv/send.log >>"$LOG"; fail "send didn't give a code"; }
+log "sending results, receive code: $code"
 # send waits until the local machine has received; give up after an hour
-timeout 3600 runpodctl send /srv/results.tar --code "$WA_CODE" >>"$LOG" 2>&1 || fail "send"
+wait "$send_pid" || { tail -5 /srv/send.log >>"$LOG"; fail "send"; }
 log "DONE"

@@ -52,7 +52,8 @@ if [ "$(git -C "$ROOT" rev-parse HEAD)" != "$(git -C "$ROOT" rev-parse "origin/$
 fi
 
 CODE="wa-$(date +%s)-$RANDOM-$RANDOM"
-RAW="https://raw.githubusercontent.com/nicolescheid/whiskedaway/${BRANCH}/cloud/pod_render.sh"
+# by commit, not branch name: raw.githubusercontent.com caches branch URLs for about 5 minutes
+RAW="https://raw.githubusercontent.com/nicolescheid/whiskedaway/$(git -C "$ROOT" rev-parse HEAD)/cloud/pod_render.sh"
 # The newest pod_render.sh from the branch, or the copy baked into the image if GitHub doesn't answer
 START="bash -c 'curl -fsSL --connect-timeout 10 --max-time 60 --retry 3 -o /pod_render.sh ${RAW} || cp /opt/pod_render.sh /pod_render.sh; bash /pod_render.sh'"
 ENV=$(python -c 'import json,sys; print(json.dumps(dict(WA_BRANCH=sys.argv[1], WA_BUILD=sys.argv[2], WA_JOBS=sys.argv[3], WA_CODE=sys.argv[4],
@@ -64,7 +65,7 @@ try: d=json.load(sys.stdin)
 except ValueError: d={}
 print(d.get('$1', '') if isinstance(d, dict) else '')"; }
 
-POD="" COST="" T0=$(date +%s) RESULT=""
+POD="" COST="" T0=$(date +%s) RESULT="" RECV_CODE=""
 cleanup() {
   [ -n "$POD" ] || return 0
   echo "deleting pod $POD"
@@ -112,7 +113,7 @@ watch_pod() {
 ' "$log" | tail -n +$((shown + 1)) && shown=$total
     if printf '%s' "$log" | grep -q "NOGPU"; then RESULT=nogpu; return; fi
     if printf '%s' "$log" | grep -q "FAILED"; then echo "the render failed (see above)" >&2; exit 1; fi
-    if printf '%s' "$log" | grep -q "sending results"; then RESULT=send; return; fi
+    if printf '%s' "$log" | grep -q "receive code:"; then RESULT=send; RECV_CODE=$(printf '%s' "$log" | grep -oE "receive code: \S+" | tail -1 | cut -d' ' -f3); return; fi
     if printf '%s' "$log" | grep -q "probe only: DONE"; then RESULT=probe; return; fi
   done
 }
@@ -131,7 +132,7 @@ done
 TMP=$(mktemp -d)
 echo "receiving results"
 for _ in 1 2 3 4 5 6; do
-  (cd "$TMP" && "$RPC" receive "$CODE") && break
+  (cd "$TMP" && "$RPC" receive "$RECV_CODE") && break
   sleep 10
 done
 [ -f "$TMP/results.tar" ] || { echo "didn't receive the results" >&2; exit 1; }
