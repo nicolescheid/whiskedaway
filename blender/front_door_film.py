@@ -133,7 +133,7 @@ def make(shape, tmp):
     def write(arr):
         nonlocal n
         n += 1
-        Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).save(os.path.join(tmp, f"f_{n:04d}.png"))
+        Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).save(os.path.join(tmp, f"f_{n:04d}.jpg"), quality=95)
 
     total = SWIRL + (0 if PREVIEW else DISSOLVE)
     for i in range(total):
@@ -156,7 +156,7 @@ def make(shape, tmp):
 
 
 def encode(tmp, out, crf):
-    # Mixed .png (swirl) and .jpg (door) frames: list them in order for the concat demuxer
+    # Swirl and door frames, all JPEG, listed in order for the concat demuxer
     files = sorted(os.listdir(tmp))
     lst = os.path.join(tmp, "list.txt")
     with open(lst, "w") as fh:
