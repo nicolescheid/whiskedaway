@@ -1,61 +1,60 @@
 #!/usr/bin/env bash
-# Runs ON the Runpod GPU machine (started by cloud/render.sh). Sets up Blender, fetches the repo and
-# the CC0 Poly Haven assets, renders each job, then hands the results back with `runpodctl send`.
+# Runs ON the Runpod GPU machine (started by cloud/render.sh), inside the image from cloud/Dockerfile,
+# which already holds Blender, the CC0 Poly Haven assets and runpodctl. Checks the GPU, clones the repo,
+# renders each job, then hands the results back with `runpodctl send`.
 #
 # Environment (set by render.sh):
 #   WA_BRANCH  git branch of github.com/nicolescheid/whiskedaway to render from
 #   WA_BUILD   build script in blender/, e.g. hallway_build.py
-#   WA_JOBS    jobs separated by ';', each the arguments after `--`, e.g. "--weather=rain --stop=entrance"
+#   WA_JOBS    jobs separated by ';', each the arguments after `--`, e.g. "--weather=rain --stop=entrance";
+#              "probe" only checks the GPU
 #   WA_CODE    transfer code the local machine is waiting on with `runpodctl receive`
 # Progress goes to /srv/status/log.txt, served on port 8000 so render.sh can show it.
 set -uo pipefail
 
-BLENDER_VERSION=5.1.0
-RUNPODCTL_VERSION=2.14.0
+BLENDER="${BLENDER:-/opt/blender/blender}"
+WA_ASSETS="${WA_ASSETS:-/opt/wa-assets}"
 mkdir -p /srv/status
 LOG=/srv/status/log.txt
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
+(cd /srv/status && python3 -m http.server 8000 >/dev/null 2>&1 &)
 
 # Delete this pod however the script ends, so it never sits there billing
 cleanup() {
   log "cleaning up: deleting pod ${RUNPOD_POD_ID:-?}"
-  runpodctl remove pod "${RUNPOD_POD_ID}" >/dev/null 2>&1 || runpodctl pod delete "${RUNPOD_POD_ID}" >/dev/null 2>&1
+  runpodctl pod delete "${RUNPOD_POD_ID}" >/dev/null 2>&1 || runpodctl remove pod "${RUNPOD_POD_ID}" >/dev/null 2>&1
 }
 trap cleanup EXIT
 
 fail() { log "FAILED: $*"; sleep 120; exit 1; }   # the pause lets render.sh read the log first
+# NOGPU tells render.sh this machine is the problem, so it can try another one
+nogpu() { log "NOGPU: $*"; sleep 60; exit 1; }
 
-log "setting up"
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -qq >/dev/null && apt-get install -y -qq git wget xz-utils python3 ca-certificates \
-  libxi6 libxxf86vm1 libxfixes3 libxrender1 libxkbcommon0 libsm6 libgl1 libegl1 >/dev/null || fail "apt-get"
-command -v python3 >/dev/null || fail "python3 missing"
-(cd /srv/status && python3 -m http.server 8000 >/dev/null 2>&1 &)
-
-if ! command -v runpodctl >/dev/null; then
-  wget -q -O /usr/local/bin/runpodctl \
-    "https://github.com/runpod/runpodctl/releases/download/v${RUNPODCTL_VERSION}/runpodctl-linux-amd64" || fail "runpodctl download"
-  chmod +x /usr/local/bin/runpodctl
-fi
-
-log "downloading Blender ${BLENDER_VERSION}"
-cd /opt
-TARBALL="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
-SERIES="Blender${BLENDER_VERSION%.*}"
-wget -q "https://download.blender.org/release/${SERIES}/${TARBALL}" || fail "Blender download"
-wget -q -O blender.sha256 "https://download.blender.org/release/${SERIES}/blender-${BLENDER_VERSION}.sha256" \
-  && { grep "$TARBALL" blender.sha256 | sha256sum -c - >/dev/null || fail "Blender checksum mismatch"; } \
-  || log "no checksum file published; skipping the check"
-tar -xf "$TARBALL" || fail "Blender unpack"
-BLENDER="/opt/blender-${BLENDER_VERSION}-linux-x64/blender"
-
+[ -x "$BLENDER" ] || fail "no Blender at $BLENDER (is the pod using the whiskedaway-render image?)"
 log "GPU: $(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>&1)"
-log "NVIDIA libraries: $(ls /usr/lib/x86_64-linux-gnu/ 2>/dev/null | grep -oE '^lib(cuda|nvoptix|nvidia-rtcore)\.so[.0-9]*' | sort -u | tr '\n' ' ')"
-log "driver capabilities: ${NVIDIA_DRIVER_CAPABILITIES:-unset}"
+log "host: ${RUNPOD_DC_ID:-?} $(uname -r)"
 log "device files: $(ls /dev/ | grep -E '^nvidia' | tr '\n' ' ')"
-command -v python >/dev/null && log "torch sees CUDA: $(python -c 'import torch; print(torch.cuda.is_available(), torch.version.cuda)' 2>&1 | tail -1)"
+log "NVIDIA libraries: $(ldconfig -p | grep -oE 'lib(cuda|nvoptix|nvidia-rtcore)\.so[.0-9]*' | sort -u | tr '\n' ' ')"
 
-# Ask Blender which GPUs it can use before spending time on a build
+# Ask the driver directly first: if cuInit fails here, no setting inside the container will fix it
+cuinit=$(python3 - <<'PY' 2>&1
+import ctypes
+try:
+    cu = ctypes.CDLL("libcuda.so.1")
+except OSError as e:
+    print("no libcuda:", e); raise SystemExit
+r = cu.cuInit(0)
+n = ctypes.c_int(0)
+if r == 0:
+    cu.cuDeviceGetCount(ctypes.byref(n))
+v = ctypes.c_int(0); cu.cuDriverGetVersion(ctypes.byref(v))
+print(f"cuInit={r} devices={n.value} driver_cuda={v.value}")
+PY
+)
+log "CUDA driver check: $cuinit"
+case "$cuinit" in cuInit=0\ *) ;; *) nogpu "CUDA won't initialise on this machine ($cuinit)";; esac
+
+# Then ask Blender which GPUs it can use
 cat >/tmp/probe.py <<'PY'
 import bpy
 prefs = bpy.context.preferences.addons["cycles"].preferences
@@ -67,17 +66,31 @@ for backend in ("OPTIX", "CUDA"):
     except Exception as e:
         print("[probe]", backend, "error:", e, flush=True)
 PY
-"$BLENDER" -b --factory-startup --python /tmp/probe.py >probe.log 2>&1
-grep -E "\[probe\]|cuda|optix|CUDA|OptiX" probe.log | head -12 >>"$LOG"
-grep -qE "\[probe\] (OPTIX|CUDA) \['" probe.log || fail "Blender can't see the GPU"
+"$BLENDER" -b --factory-startup --python /tmp/probe.py >/tmp/probe.log 2>&1
+grep -E "\[probe\]|cuda|optix|CUDA|OptiX" /tmp/probe.log | head -12 >>"$LOG"
+grep -qE "\[probe\] OPTIX \['" /tmp/probe.log || log "warning: no OptiX device; Cycles will use CUDA"
+grep -qE "\[probe\] (OPTIX|CUDA) \['" /tmp/probe.log || nogpu "Blender can't see the GPU"
 [ "$WA_JOBS" = "probe" ] && { log "probe only: DONE"; exit 0; }
 
 log "cloning ${WA_BRANCH}"
-git clone -q --depth 1 --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work || fail "git clone"
+for i in 1 2 3; do
+  timeout 300 git clone -q --depth 1 --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work && break
+  rm -rf /work; [ "$i" = 3 ] && fail "git clone"; sleep 10
+done
 cd /work
-log "fetching Poly Haven assets"
-python3 -I blender/fetch_assets.py >assets.log 2>&1 || { tail -20 assets.log >>"$LOG"; fail "fetch_assets"; }
-log "assets ready ($(grep -c '^  got' assets.log) files)"
+rm -rf blender/assets && ln -s "$WA_ASSETS" blender/assets
+if [ "$(sha256sum blender/fetch_assets.py | cut -d' ' -f1)" = "$(cat "$WA_ASSETS/.fetch_assets.sha256" 2>/dev/null)" ]; then
+  log "assets: using the $(du -sh "$WA_ASSETS" | cut -f1) baked into the image"
+else
+  log "the asset list changed since the image was built; fetching what's missing"
+  for i in 1 2 3; do
+    timeout 900 python3 -I -c "import socket, runpy; socket.setdefaulttimeout(60); \
+runpy.run_path('blender/fetch_assets.py', run_name='__main__')" >assets.log 2>&1 && break
+    [ "$i" = 3 ] && { tail -20 assets.log >>"$LOG"; fail "fetch_assets"; }
+    sleep 10
+  done
+  log "assets ready ($(grep -c '^  got' assets.log) new files)"
+fi
 
 IFS=';' read -ra JOBS <<<"$WA_JOBS"
 for job in "${JOBS[@]}"; do
