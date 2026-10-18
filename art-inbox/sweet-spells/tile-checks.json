@@ -1,0 +1,16 @@
+{
+  "source_size": [
+    1254,
+    1254
+  ],
+  "vertical_join_mean_absolute_rgb_difference": 7.1600213050842285,
+  "horizontal_join_mean_absolute_rgb_difference": 5.619085788726807,
+  "interior_vertical_median": 5.963582992553711,
+  "interior_horizontal_median": 7.749601364135742,
+  "interior_vertical_p95": 13.269962310791016,
+  "interior_horizontal_p95": 12.265923500061035,
+  "note": "No source pixels altered. Numerical seam diagnostics accompany a 2x2 repeat visual check.",
+  "visual_review": "2x2 repeat inspected. Selected complete-medallion pattern avoids cut-motif mismatch. No conspicuous motif join at preview scale; microtexture/brightness is not mathematically periodic.",
+  "repeat_preview": "11-plum-damask-repeat.jpg",
+  "status": "Visually reviewed repeat; final material shader/UV scale still requires checking in Blender."
+}

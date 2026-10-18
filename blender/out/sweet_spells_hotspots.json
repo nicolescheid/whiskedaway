@@ -1,0 +1,149 @@
+{
+  "room": "sweet-spells",
+  "stops": {
+    "middle": {
+      "position": [
+        2.25,
+        2.75,
+        1.6
+      ],
+      "hotspots": {
+        "window-seat": {
+          "label": "The window seat",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 0.0,
+          "pitch": -21.27,
+          "distance": 3.2,
+          "visible": true
+        },
+        "lane-window": {
+          "label": "The lane",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 0.0,
+          "pitch": -4.59,
+          "distance": 3.5,
+          "visible": true
+        },
+        "spell-table": {
+          "label": "Cast a spell",
+          "type": "submit",
+          "overlay": null,
+          "yaw": 10.15,
+          "pitch": -24.85,
+          "distance": 1.06,
+          "visible": true
+        },
+        "music-box": {
+          "label": "The music box",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -22.87,
+          "pitch": -9.02,
+          "distance": 2.36,
+          "visible": true
+        },
+        "jar-tart": {
+          "label": "The fruit tart",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -42.69,
+          "pitch": -12.16,
+          "distance": 3.05,
+          "visible": true
+        },
+        "jar-truffles": {
+          "label": "The truffles",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -47.21,
+          "pitch": -13.5,
+          "distance": 2.83,
+          "visible": true
+        },
+        "jar-pavlova": {
+          "label": "The pavlova",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -52.5,
+          "pitch": -14.15,
+          "distance": 2.63,
+          "visible": true
+        },
+        "jar-parfait": {
+          "label": "The parfait",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -58.25,
+          "pitch": -14.36,
+          "distance": 2.45,
+          "visible": true
+        },
+        "star-chart": {
+          "label": "The star chart",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -52.28,
+          "pitch": 0.41,
+          "distance": 2.81,
+          "visible": true
+        },
+        "ss-exit-door": {
+          "label": "Into the hallway",
+          "type": "door",
+          "overlay": null,
+          "yaw": -105.96,
+          "pitch": -13.13,
+          "distance": 2.44,
+          "visible": true
+        },
+        "ss-dial": {
+          "label": "The dial",
+          "type": "dial",
+          "overlay": "dial",
+          "yaw": -86.68,
+          "pitch": -7.62,
+          "distance": 2.26,
+          "visible": true
+        },
+        "spell-books": {
+          "label": "The spell books",
+          "type": "interactive",
+          "overlay": "flavour",
+          "yaw": -180.0,
+          "pitch": 3.34,
+          "distance": 1.61,
+          "visible": true
+        },
+        "lectern": {
+          "label": "The open book",
+          "type": "interactive",
+          "overlay": "occasion",
+          "yaw": -180.0,
+          "pitch": -21.2,
+          "distance": 1.39,
+          "visible": true
+        },
+        "sugar-pan": {
+          "label": "The sugar pan",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 98.64,
+          "pitch": -35.33,
+          "distance": 2.04,
+          "visible": true
+        },
+        "potion-cabinet": {
+          "label": "The potion cabinet",
+          "type": "interactive",
+          "overlay": "level-up",
+          "yaw": 56.39,
+          "pitch": -4.33,
+          "distance": 2.46,
+          "visible": false
+        }
+      }
+    }
+  }
+}
