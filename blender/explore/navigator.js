@@ -17,6 +17,12 @@
  *   { kind: 'clock',   id }          the device's own time of day, observed rather than chosen
  *   { kind: 'energy',  id }          picked one of the energy candles (id = a key of world.energies)
  *   { kind: 'season',  id }          turned the glasshouse's seasons wheel (id = a key of world.seasons)
+ *   { kind: 'keep',    atom }        kept an idea in the recipe book (weighed through `book` below, not the trail)
+ *
+ * The recipe book and what the visitor told Gemma also steer serving (recipe-book-ux.md §6b), through localNavigate's options:
+ *   book:  { now: [snapshot], before: [snapshot] }   this visit's keeps (×3 on their themes) and older ones (×1)
+ *   about: { pantry: [...], cuisines: [...] }        a bonus per key ingredient they have (+2 each, max +4), and per cuisine (+2)
+ * Dietary needs are a hard filter: the page leaves clashing atoms out (they arrive as served).
  */
 
 const WEIGHTS = { touch: 3, linger: 1.5, map: 1, open: 2.5, dismiss: -2, choose: 4 };
@@ -29,11 +35,13 @@ const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more th
 const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signal like the weather
 const SEASON_WEIGHT = 2.5;    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
 const ROOM_LEAN = 4;          // an atom from the room the visitor is in (if it fits at all): mostly that room's own, the odd one from elsewhere
-const AI_HOME = 30, AI_AWAY = 10;   // the AI's shortlist: the room's own atoms, then the best of the rest by local score
+const AI_HOME = 30, AI_AWAY = 10;
+const KEEP_NOW = 3, KEEP_BEFORE = 1, KEEP_BEFORE_MAX = 10;   // keeps weigh more than touches and don't fade; older ones only nudge
+const PANTRY_EACH = 2, PANTRY_MAX = 4, CUISINE = 2;   // the AI's shortlist: the room's own atoms, then the best of the rest by local score
 // Each energy level also has a spoon_bias: added per spoon to an atom's score, so a burnt-out candle
 // (-3) all but rules out two-spoon pieces and a full one (+1) leans toward the hands-on ones.
 
-export function themeWeights(trail, world) {
+export function themeWeights(trail, world, book = null) {
   const w = {};
   // Each event spreads the same total weight over its themes, so theme-rich objects don't dominate
   const add = (themes, amount) => themes.forEach(t => { w[t] = (w[t] || 0) + amount / Math.sqrt(themes.length); });
@@ -52,8 +60,24 @@ export function themeWeights(trail, world) {
   if (energy) add(world.energies[energy].themes, ENERGY_WEIGHT);
   const season = currentSeason(trail, world);
   if (season) add(world.seasons[season].themes, SEASON_WEIGHT);
+  for (const k of book?.now || []) add(k.themes || [], KEEP_NOW);
+  for (const k of (book?.before || []).slice(0, KEEP_BEFORE_MAX)) add(k.themes || [], KEEP_BEFORE);
   return w;
 }
+
+/** The kept recipe that most explains this atom (shared themes, this visit's first), for "Because you kept the …" */
+function keptReason(atom, book) {
+  let best = null;
+  for (const [list, bonus] of [[book?.now || [], 0.5], [(book?.before || []).slice(0, KEEP_BEFORE_MAX), 0]]) {
+    for (const k of list) {
+      const shared = (k.themes || []).filter(t => atom.themes.includes(t)).length + bonus;
+      if (shared >= 2 && (!best || shared > best.shared)) best = { k, shared };
+    }
+  }
+  return best ? `kept the ${(best.k.short || best.k.title).toLowerCase()}` : null;
+}
+/** What the visitor has in the cupboard that this atom uses */
+const pantryHits = (atom, pantry = []) => pantry.filter(p => (atom.key_ingredients || []).some(i => i.toLowerCase().includes(String(p).toLowerCase())));
 
 /** The season the visitor last turned the seasons wheel to, if any. */
 export function currentSeason(trail, world) {
@@ -97,9 +121,9 @@ function clusterScores(weights, world) {
 const score = (themes, weights) => themes.reduce((s, t) => s + (weights[t] || 0), 0);
 
 /** The objects in the trail whose themes overlap these themes, as readable reasons. */
-function reasonsFor(themes, trail, world, spoons = null) {
+function reasonsFor(themes, trail, world, spoons = null, first = []) {
   const seen = new Set();
-  const why = [];
+  const why = [...first];                  // about-you facts and keeps come before the trail (§6b)
   let context = null;                 // something observed rather than done, e.g. the device's time
   const energy = currentEnergy(trail, world);
   if (energy) {
@@ -122,7 +146,7 @@ function reasonsFor(themes, trail, world, spoons = null) {
     if (time.kind === 'time') why.push(`turned the clock to ${label}`);
     else context = `it's ${label === 'late night' ? 'late at night' : label} where you are`;
   }
-  for (let i = trail.length - 1; i >= 0 && why.length < 3; i--) {
+  for (let i = trail.length - 1; i >= 0 && why.length < 2; i--) {
     const e = trail[i];
     const obj = e.id && world.objects[e.id];
     if (!obj || seen.has(e.id) || !obj.themes.some(t => themes.includes(t))) continue;
@@ -134,12 +158,12 @@ function reasonsFor(themes, trail, world, spoons = null) {
 
 const listJoin = parts => parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
 
-export function localNavigate(trail, world, { served = [], dismissed = [], room = null } = {}) {
+export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {} } = {}) {
   const meaningful = trail.filter(e => e.kind !== 'map' || trail.length < 3);
   if (meaningful.length === 0) {
     return { mode: 'local', hypothesis: null, confidence: 0, gemma: null, fork: [], reveal: [], serve: [] };
   }
-  const weights = themeWeights(trail, world);
+  const weights = themeWeights(trail, world, book);
   const clusters = clusterScores(weights, world);
   const top = clusters[0];
   // Confidence is how clearly the leading reading beats the runner-up
@@ -160,16 +184,23 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
   const skip = new Set([...served, ...dismissed, ...trail.filter(e => e.kind === 'dismiss').map(e => e.atom)]);
   const serve = world.atoms
     .filter(a => !skip.has(a.id))
-    .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons }))
+    .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons
+                       + Math.min(PANTRY_MAX, pantryHits(a, about.pantry).length * PANTRY_EACH)
+                       + ((about.cuisines || []).some(c => a.themes.includes(c)) ? CUISINE : 0) }))
     .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: from the room's *-world.json
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)
     .map(({ a }) => {
-      const { why, context } = reasonsFor(a.themes, trail, world, a.spoons);
-      const text = why.length ? `Because you ${listJoin(why)}${context ? `, and ${context}` : ''}.`
-        : context ? `Because ${context}.` : `Because it fits ${top.label}.`;
-      return { atom: a.id, why: text };
+      // The strongest reason first: what they told Gemma, then a keep, then the trail; never more than two (§6b)
+      const hits = pantryHits(a, about.pantry);
+      const kept = keptReason(a, book);
+      const first = [...(hits.length ? [`'ve got ${listJoin(hits.slice(0, 2))}`] : []), ...(kept ? [kept] : [])];
+      const { why, context } = reasonsFor(a.themes, trail, world, a.spoons, first.slice(0, 2));
+      const parts = why.slice(0, 2);
+      const text = (parts.length ? `Because you ${listJoin(parts)}${context && parts.length < 2 ? `, and ${context}` : ''}.`
+        : context ? `Because ${context}.` : `Because it fits ${top.label}.`).replace("you 've", "you've");
+      return { atom: a.id, why: text, fromKeep: !!kept && parts.includes(kept) };
     });
 
   const recent = [...new Set(trail.filter(e => e.id && world.objects[e.id]).map(e => e.id))]
@@ -208,7 +239,7 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
       .concat(Object.entries(world.seasons || {}).map(([id, s]) => ({ id, label: `Season: ${s.label}`, type: 'season', themes: s.themes })));
     // The shortlist: the room's own atoms first, then the best of the rest (the hallway and glasshouse have none of
     // their own, so they get the best of everything). Nothing already served or set aside.
-    const weights = themeWeights(trail, world), skip = new Set([...(state.served || []), ...(state.dismissed || [])]);
+    const weights = themeWeights(trail, world, state.book), skip = new Set([...(state.served || []), ...(state.dismissed || [])]);
     const ranked = world.atoms.filter(a => !skip.has(a.id)).sort((a, b) => score(b.themes, weights) - score(a.themes, weights));
     const home = ranked.filter(a => state.room && a.room === state.room).slice(0, AI_HOME);
     const shortlist = home.concat(ranked.filter(a => !home.includes(a)).slice(0, home.length ? AI_AWAY : AI_HOME + AI_AWAY));

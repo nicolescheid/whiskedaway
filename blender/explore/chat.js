@@ -33,6 +33,11 @@ export function createChat({ win, track, onSize }) {
   const tags = document.createElement('div');
   tags.className = 'cw-tags';
   body.insertBefore(tags, log);
+  // The visit's theme, once something's kept ("Today: sweet, evening"): with the tags, in Short and Full on phones
+  const theme = document.createElement('p');
+  theme.className = 'cw-theme';
+  theme.hidden = true;
+  body.insertBefore(theme, log);
   // "Newest ▾": her new line, when the visitor has scrolled up the log
   const newest = document.createElement('button');
   newest.className = 'cw-newest';
@@ -189,6 +194,7 @@ export function createChat({ win, track, onSize }) {
 
   return {
     update, setAsking, hold, choose,
+    setTheme(words) { theme.textContent = words.length ? `Today: ${words.join(', ')}` : ''; theme.hidden = !words.length; },
     get size() { return size; },
     tags,
     /** Show the tags above the Line strip for a moment (arriving in a room) */

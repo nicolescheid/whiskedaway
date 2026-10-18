@@ -12,7 +12,7 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString([], { day: 'numeric', month: 'short' });
 
-export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket }) {
+export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote }) {
   const root = document.createElement('div');
   root.id = 'book';
   root.className = 'book';
@@ -84,6 +84,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     return `<div class="bk-ribbon" style="--ring:${RIBBONS[a.room]?.colour || 'var(--berry)'}">${esc(RIBBONS[a.room]?.name || '')}</div>
       <div class="meta">${metaLine(a, false)}</div>
       <h3 class="bk-title">${esc(a.title)}</h3>
+      ${clashNote?.(a) ? `<p class="bk-clash">${esc(clashNote(a))}</p>` : ''}
       <p class="bk-hook">${esc(a.hook || a.body)}</p>
       ${r.why ? `<p class="why">${esc(r.why)}</p>` : ''}
       ${a.seed?.why ? `<p class="bk-seedwhy">${esc(a.seed.why)}</p>` : ''}`;
@@ -105,8 +106,8 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
       <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">Every recipe you've kept, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.</span></p>`;
   }
   function theme() {
-    const mine = book.keptThisVisit();
-    visitPage.querySelector('.bk-theme').textContent = mine.length
+    const mine = book.keptThisVisit(), line = themeLine?.();
+    visitPage.querySelector('.bk-theme').textContent = line ? line : mine.length
       ? `You've kept ${NUM[mine.length] || mine.length} this visit${book.count > mine.length ? `, and there are ${book.count} in your book` : ''}.`
       : book.count ? `There ${book.count === 1 ? 'is one recipe' : `are ${book.count} recipes`} in your book from before.` : '';
   }
