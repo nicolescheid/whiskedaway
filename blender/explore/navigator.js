@@ -219,7 +219,9 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
         trail: trail.slice(-30),
         objects: [...things.filter(o => rank(o) === 0), ...signals, ...things.filter(o => rank(o) > 0).sort((a, b) => rank(a) - rank(b))].slice(0, 40),
         atoms: (shortlist.length ? shortlist : world.atoms).map(({ id, title, kind, themes, spoons, room }) => ({ id, title, kind, themes, spoons, room })),
-        clusters: Object.entries(world.clusters).map(([id, c]) => ({ id, label: c.label })),
+        // the room's own readings first, so a cap at the Worker never drops them
+        clusters: Object.entries(world.clusters).sort(([, a], [, b]) => (b.room === state.room) - (a.room === state.room))
+          .map(([id, c]) => ({ id, label: c.label, room: c.room })),
         already_served: state.served || [],
         dismissed: state.dismissed || [],
     };

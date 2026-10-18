@@ -837,7 +837,7 @@ async function handleNavigate(request, env) {
     const p = await request.json();
     const objects = (p.objects || []).slice(0, 40);
     const atoms = (p.atoms || []).slice(0, 60);
-    const clusters = (p.clusters || []).slice(0, 12);
+    const clusters = (p.clusters || []).slice(0, 24);   // 19 across the four rooms (Oct 2026); the page sends the current room's first
     const trail = (p.trail || []).slice(-30).map(({ kind, id, atom, cluster }) => ({ kind, id, atom, cluster }));
     if (!objects.length || !atoms.length || !clusters.length || !trail.length) {
       return json({ error: 'objects, atoms, clusters and trail are required' }, 400);
