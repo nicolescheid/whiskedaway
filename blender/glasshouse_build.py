@@ -65,15 +65,15 @@ SUNNY = S["hdri"] != OVERCAST
 WX = dict(plate=S["plate"], strength=1.0, sat=1.12, mul=None, haze=0.0, hdri=S["hdri"], sky=S["sky"], tint=None,
           clamp=None, sun=0.0, wet=0.0, roof_wet=S["wet"], frost=S["frost"], exposure=S["exposure"], lamps=False)
 if WEATHER == "change":
-    WX.update(sat=1.0, strength=0.92, clamp=6.0, sun=1.8 if SUNNY else 0.0, sky=S["sky"] * 1.1, exposure=S["exposure"] + 0.15)
+    WX.update(sat=0.95, strength=0.88, clamp=2.5, sun=1.0 if SUNNY else 0.0, sky=S["sky"] * 1.1, exposure=S["exposure"] + 0.25)
 elif WEATHER == "very-dry":
     WX.update(sat=0.88, mul=(1.07, 1.0, 0.84), haze=0.12, strength=1.05, sky=S["sky"] * 1.05, roof_wet=0.0,
               exposure=S["exposure"] - 0.05)
 elif WEATHER == "rain":
     WX.update(plate=WET_VIEWS[SEASON], strength=0.95, sat=1.0, hdri=OVERCAST, sky=1.1, wet=0.45, roof_wet=0.6, exposure=0.6)
 elif WEATHER == "stormy":
-    WX.update(plate=WET_VIEWS[SEASON], strength=0.6, sat=0.85, mul=(0.9, 0.95, 1.05), hdri=OVERCAST, sky=0.5,
-              wet=0.75, roof_wet=0.85, exposure=0.85, lamps=True)
+    WX.update(plate=WET_VIEWS[SEASON], strength=0.5, sat=0.85, mul=(0.9, 0.95, 1.05), hdri=OVERCAST, sky=0.5,
+              wet=0.75, roof_wet=0.85, exposure=0.35, lamps=True)
 if NIGHT:
     WX.update(plate=NIGHT_VIEWS[SEASON], strength=0.8, sat=1.0, mul=None, haze=0.0, hdri=OVERCAST, sky=0.03,
               tint=(0.55, 0.62, 1.0), clamp=None, sun=0.0, exposure=0.8, lamps=True)
@@ -1558,7 +1558,7 @@ def sun_turn(img):
 
 def oil_lamps(scene, lit):
     """Two old oil lamps on the staging, there in every view; lit at night and in a storm."""
-    flame = mat("flame", (1, 0.6, 0.25, 1), emission=(1.0, 0.55, 0.2, 1), strength=30)
+    flame = mat("flame", (1, 0.6, 0.25, 1), emission=(1.0, 0.55, 0.2, 1), strength=8)
     for name, at, rot in (("oil_lamp_lane", (1.47, 2.55, STAGE_Z), 20), ("oil_lamp_sea", (1.7, 4.7, STAGE_Z), -30)):
         lamp = model("vintage_oil_lamp", at, rot_z=rot, scale=0.6)
         for o in meshes_of(lamp):
