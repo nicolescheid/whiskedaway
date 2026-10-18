@@ -1,0 +1,299 @@
+{
+  "date": "2026-10-18",
+  "tool": "built-in image_gen.imagegen",
+  "image_count": 23,
+  "assets": [
+    {
+      "file": "01-table-bay-window.png",
+      "title": "The spell table & bay window",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2439905,
+      "sha256": "b8f6fc8812a105420e8ce99e27176607c738cdd1e56b420243eb51675de2ce72",
+      "preview": "preview/01-table-bay-window.jpg"
+    },
+    {
+      "file": "02-music-box-bell-jars.png",
+      "title": "Music box & dessert cloches",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2390687,
+      "sha256": "9e61bd6b2bb1dd3fd4e24ccad7b75b73f09aa667d8e76d2a4a2d4149aac0c772",
+      "preview": "preview/02-music-box-bell-jars.jpg"
+    },
+    {
+      "file": "03-books-lectern.png",
+      "title": "The spell books & lectern",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2336015,
+      "sha256": "3e376528c6ed5ec9ac11bd1c965137c68aa224748523bf36a812aa3810abfd16",
+      "preview": "preview/03-books-lectern.jpg"
+    },
+    {
+      "file": "04-hearth-potion-cabinet.png",
+      "title": "The hearth & potion cabinet",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2428487,
+      "sha256": "2012d225e0f603ebac4b72b21c1e7e645124e954a505ae1caa84e7e849be5a2a",
+      "preview": "preview/04-hearth-potion-cabinet.jpg"
+    },
+    {
+      "file": "05-hallway-door.png",
+      "title": "The hallway door",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2132289,
+      "sha256": "0f9bfd3edbb684bb78764fe0ade12be1514c363606e39cfba852e1cc847093e9",
+      "preview": "preview/05-hallway-door.jpg"
+    },
+    {
+      "file": "06-spell-closeup.png",
+      "title": "A spell in progress",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2246538,
+      "sha256": "0fbc3ecd6fe1ffc61b47e94c1472e7532782af05012f95698190f806fc88ad81",
+      "preview": "preview/06-spell-closeup.jpg"
+    },
+    {
+      "file": "07-music-box-closeup.png",
+      "title": "The music box & dancer",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2008895,
+      "sha256": "c136a31f3a16193776ec236fafc26f128423f0a8c9276dc5b5e9cf7f9a448871",
+      "preview": "preview/07-music-box-closeup.jpg"
+    },
+    {
+      "file": "08-bell-jars-closeup.png",
+      "title": "Four finished desserts",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2476180,
+      "sha256": "afaef6ffee9c39aa74619de0657a817b44cb1f4060a5bd3010eaf3f97ae31c4c",
+      "preview": "preview/08-bell-jars-closeup.jpg"
+    },
+    {
+      "file": "09-materials-moodboard.png",
+      "title": "Materials & palette",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 3147112,
+      "sha256": "6107a6cb3b85b3458fa18cec3727e209bbec98caa2e6030547d6c8fa42ef42e8",
+      "preview": "preview/09-materials-moodboard.jpg"
+    },
+    {
+      "file": "10-pavlova-page-flat.png",
+      "title": "Pavlova book-page artwork",
+      "size_px": [
+        1086,
+        1448
+      ],
+      "bytes": 3000691,
+      "sha256": "aafb28a77b7afc681cd00bb3befbb069cbde60eba25d4b90400d36eb4893e462",
+      "preview": "preview/10-pavlova-page-flat.jpg"
+    },
+    {
+      "file": "11-plum-damask-tile.png",
+      "title": "Plum velvet damask",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "bytes": 3312508,
+      "sha256": "8392944a7eaa388c09b15ee2925a16ff6059d74f611cca706234a599d68eda7d",
+      "preview": "preview/11-plum-damask-tile.jpg"
+    },
+    {
+      "file": "12-kitchen-constellations-flat.png",
+      "title": "Culinary constellations",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "bytes": 3477717,
+      "sha256": "c3baf1680f25ab9df10f66968a1e724ad0bf06a732f3637815e9173c08cf4b46",
+      "preview": "preview/12-kitchen-constellations-flat.jpg"
+    },
+    {
+      "file": "13-music-box-closed-open.png",
+      "title": "Music box \u00b7 closed & open",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2136687,
+      "sha256": "b6ac7da5e62799f91601d6acc288fd91e6b7fcbec248232c9233333f9c3ac952",
+      "preview": "preview/13-music-box-closed-open.jpg"
+    },
+    {
+      "file": "14-lane-rain.png",
+      "title": "Lane \u00b7 rain",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 3266274,
+      "sha256": "1b4474fb2ecb312b9bc0e56137e32349730c1e195c981fbc23ae30332ac09171",
+      "preview": "preview/14-lane-rain.jpg"
+    },
+    {
+      "file": "15-lane-fair.png",
+      "title": "Lane \u00b7 fair",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 3350663,
+      "sha256": "ee406ca193c65351cc1b83ec5e57105260f1d0db4f7c07263a927a9ce2369b51",
+      "preview": "preview/15-lane-fair.jpg"
+    },
+    {
+      "file": "16-lane-change.png",
+      "title": "Lane \u00b7 change",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 3283272,
+      "sha256": "3e3bd30e1660f4a89b7bc46c65af2f153ec40b425c4f375bb54c6d9a2eee2ab6",
+      "preview": "preview/16-lane-change.jpg"
+    },
+    {
+      "file": "17-lane-stormy.png",
+      "title": "Lane \u00b7 stormy",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 3601738,
+      "sha256": "9fa868ca182d39331933d23faa1373099090bb985a01ec24dc0e93fdda7ce7af",
+      "preview": "preview/17-lane-stormy.jpg"
+    },
+    {
+      "file": "18-lane-very-dry.png",
+      "title": "Lane \u00b7 very dry",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 3664870,
+      "sha256": "bab198de811d4717f361f9c4745e5220a63860a26043c9917fcba2e15e5454b5",
+      "preview": "preview/18-lane-very-dry.jpg"
+    },
+    {
+      "file": "19-lane-night-rain.png",
+      "title": "Night \u00b7 rain",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 2871414,
+      "sha256": "910af4ca53e637838ae6fb840f3c2bba37a8fc34f0a7439022290c8de704b3e9",
+      "preview": "preview/19-lane-night-rain.jpg"
+    },
+    {
+      "file": "20-lane-night-fair.png",
+      "title": "Night \u00b7 fair",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 2739253,
+      "sha256": "ca1a3107e27735a90351afd443cdb39fb11bc008a11b6888e42a4f2508f30814",
+      "preview": "preview/20-lane-night-fair.jpg"
+    },
+    {
+      "file": "21-lane-night-change.png",
+      "title": "Night \u00b7 change",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 2828737,
+      "sha256": "b22b4a5c322d1449f41faffed5ea32f531fdd152babf33bc914c29cf240999a8",
+      "preview": "preview/21-lane-night-change.jpg"
+    },
+    {
+      "file": "22-lane-night-stormy.png",
+      "title": "Night \u00b7 stormy",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 2898356,
+      "sha256": "0bf3bc5a7594977776487bc769dcf76a953622f9da09c4d0859cb1655063ada1",
+      "preview": "preview/22-lane-night-stormy.jpg"
+    },
+    {
+      "file": "23-lane-night-very-dry.png",
+      "title": "Night \u00b7 very dry",
+      "size_px": [
+        2172,
+        724
+      ],
+      "bytes": 2726421,
+      "sha256": "99b49cd6b9004c1ede014e2e5ad914102e1caf6ca966caed4742f480bd301354",
+      "preview": "preview/23-lane-night-very-dry.jpg"
+    }
+  ],
+  "lane": {
+    "composition_master": "14-lane-rain.png",
+    "size_px": [
+      2172,
+      724
+    ],
+    "weather_map": [
+      {
+        "state": "rain",
+        "day": "14-lane-rain.png",
+        "night": "19-lane-night-rain.png"
+      },
+      {
+        "state": "fair",
+        "day": "15-lane-fair.png",
+        "night": "20-lane-night-fair.png"
+      },
+      {
+        "state": "change",
+        "day": "16-lane-change.png",
+        "night": "21-lane-night-change.png"
+      },
+      {
+        "state": "stormy",
+        "day": "17-lane-stormy.png",
+        "night": "22-lane-night-stormy.png"
+      },
+      {
+        "state": "very-dry",
+        "day": "18-lane-very-dry.png",
+        "night": "23-lane-night-very-dry.png"
+      }
+    ]
+  },
+  "limits": [
+    "Room wall views are concepts, not panorama faces.",
+    "Only seven visible lane regions were measured for registration.",
+    "Texture repeat has visual and numerical QA, not calibrated PBR maps."
+  ]
+}
