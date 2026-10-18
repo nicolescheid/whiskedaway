@@ -265,6 +265,13 @@
     const on = !q.has('room') && (q.get('door') === '1' || (location.pathname === '/' && !done));
     document.getElementById('front-door').hidden = !on;
     window.__doorActive = on;
+    // Back at the door mid-visit (J6): the visit is still there, so the door invites you back in
+    let back = false;
+    try { back = (JSON.parse(sessionStorage.getItem('wa-explore') || 'null')?.trail || []).length > 0; } catch { /* storage blocked */ }
+    if (on && back) {
+      document.querySelector('#front-door .fd-words p').textContent = "Gemma's Inn. Come back in.";
+      document.getElementById('fd-enter').setAttribute('aria-label', 'Come back into the Inn');
+    }
     // Which film fits this screen: portrait on upright screens, landscape otherwise. Close to the film's own
     // shape it fills the screen (a little cropped); further off (4:3, square, ultra-wide) it's shown whole
     window.__doorLayout = () => {
@@ -525,15 +532,18 @@ state.room = window.__door?.active ? 'hall-entrance'                  // through
   : ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
 const room = () => ROOMS[state.room];
 let spots = room().spots;
-// The address stays "/" (NEW-1): ?room= has done its job once the room is chosen, so a reload follows the wander.
-// Each room move is a step in the browser's history, so Back goes to the last room (R10).
-{
+// The address follows the room (NEW-1, UX J11): ?room= always names the room you're in, so a reload or a shared link
+// lands where you are. Room moves replace it rather than adding history: Back is kept for the book and dialogs
+// (recipe-book-ux.md §5), not for walking back through every door.
+const showRoomInUrl = () => {
   const u = new URL(location.href);
-  // A room link walks straight in, so the front door counts as done for this tab (or a reload of "/" would show it)
-  if (u.searchParams.has('room') && !window.__door?.active) try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* storage blocked */ }
-  u.searchParams.delete('room');
-  history.replaceState({ room: state.room }, '', u.pathname + u.search + u.hash);
-}
+  u.searchParams.set('room', state.room);
+  u.searchParams.delete('door');                         // the door has been decided for this load
+  history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+};
+// A room link walks straight in, so the front door counts as done for this tab
+if (params.has('room') && !window.__door?.active) try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* storage blocked */ }
+showRoomInUrl();
 state.chat = state.chat || [];             // Gemma's chat log for this visit
 delete state.sound;                        // sound on or off lives in explore/sound.js now, off by default
 
@@ -912,7 +922,7 @@ function touch(id) {
     if (obj.go.startsWith('/')) {
       track('leave_to_inn', { room: state.room, step: stepNow() });
       say(obj.leaving || 'Mind the step, love.', [], true);
-      return setTimeout(() => { location.href = obj.go; }, 1200);
+      return setTimeout(() => { location.href = obj.go === '/' ? '/?door=1' : obj.go; }, 1200);   // "/" alone would skip the door (J6)
     }
     goRoom(obj.go, obj.arrive_yaw);
   } else if (obj.type === 'dial') {
@@ -925,11 +935,11 @@ function touch(id) {
 }
 
 // ---------- moving between rooms
-function goRoom(id, yaw, { fromHistory = false } = {}) {
+function goRoom(id, yaw) {
   if (!ROOMS[id] || id === state.room) return;
   const from = state.room;
   state.room = id;
-  if (!fromHistory) history.pushState({ room: id }, '', location.pathname + location.search + location.hash);
+  showRoomInUrl();
   sound.place(id);
   spots = room().spots;
   look.yaw = yaw ?? room().yaw ?? 0;
@@ -1069,13 +1079,23 @@ function chatLine(who, text) {
   if (who === 'gemma') sound.shimmer();
   store.save(state);
 }
+// Chips are data ({ label, do: [action, ...args] }), so the last question's answers are kept with the visit and come
+// back after a reload (J9)
+const CHIP_ACTS = {
+  choose: cluster => record({ kind: 'choose', cluster }),
+  weather: id => chooseWeather(id),
+  barometer: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); },
+  confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); },
+};
 function setChips(chips) {
   const box = $('cw-chips');
   box.innerHTML = '';
-  for (const c of chips) {
+  state.chips = chips.filter(c => CHIP_ACTS[c.do?.[0]]);
+  store.save(state);
+  for (const c of state.chips) {
     const b = document.createElement('button');
     b.textContent = c.label;
-    b.onclick = () => { box.innerHTML = ''; fitCounter(); c.act(); };
+    b.onclick = () => { box.innerHTML = ''; state.chips = []; store.save(state); fitCounter(); CHIP_ACTS[c.do[0]](...c.do.slice(1)); };
     box.appendChild(b);
   }
   fitCounter();                                // chips change the chat's height (ResizeObserver covers it too, when frames run)
@@ -1095,7 +1115,7 @@ function say(text, fork = [], brief = false) {
     sayPending = null;
     typing(false);
     chatLine('gemma', text);
-    setChips(fork.map(c => ({ label: world.clusters[c].label.replace(/^./, x => x.toUpperCase()), act: () => record({ kind: 'choose', cluster: c }) })));
+    setChips(fork.filter(c => world.clusters[c]).map(c => ({ label: world.clusters[c].label.replace(/^./, x => x.toUpperCase()), do: ['choose', c] })));
   };
   if (AI && !brief) return post();
   typing(true);
@@ -1242,7 +1262,14 @@ function togglePanel(id, btn) {
 }
 $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
 $('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
-$('btn-inn').onclick = () => track('leave_to_inn', { room: state.room, step: stepNow() });
+// The bar's "Front door" does what the hall's front door does (J6): Gemma says goodbye, then the door picture
+$('btn-inn').onclick = e => {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;          // a new tab or window: let the link be a link
+  e.preventDefault();
+  track('leave_to_inn', { room: state.room, step: stepNow() });
+  say(hallWorld.objects['front-door']?.leaving || 'Mind the step, love.', [], true);
+  setTimeout(() => { location.href = $('btn-inn').href; }, 1200);
+};
 $('forget').onclick = () => {
   track('visit_forget');
   store.clear();
@@ -1426,8 +1453,7 @@ const GUESSED = {
 };
 function confirmGuess(also) {
   chatLine('gemma', GUESSED[state.weather]);
-  setChips([{ label: "That's right", act: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); } },
-            ...also]);
+  setChips([{ label: "That's right", do: ['confirm'] }, ...also]);
 }
 function arrive() {
   if (state.asked || state.trail.length) return;
@@ -1435,23 +1461,23 @@ function arrive() {
   if (state.room === 'cuddlecore' && guessed) {
     state.asked = true;
     store.save(state);
-    confirmGuess([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
+    confirmGuess([{ label: 'Turn the barometer', do: ['barometer'] }]);
   } else if (guessed) {
     state.asked = true;
     store.save(state);
-    confirmGuess(Object.entries(world.weathers).filter(([id]) => id !== state.weather).map(([id, w]) => ({ label: w.chip || w.label, act: () => chooseWeather(id) })));
+    confirmGuess(Object.entries(world.weathers).filter(([id]) => id !== state.weather).map(([id, w]) => ({ label: w.chip || w.label, do: ['weather', id] })));
   } else if (state.room === 'cuddlecore') {
     state.asked = true;
     store.save(state);
     chatLine('gemma', "Hello, love. What's the weather like for you today?");
-    setChips([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
+    setChips([{ label: 'Turn the barometer', do: ['barometer'] }]);
     applyReveal([{ object: 'barometer' }]);
   } else if (state.room === 'hall-entrance') {
     // In through the front door: the barometer is in the kitchen, so the weathers are right there in the chat
     state.asked = true;
     store.save(state);
     chatLine('gemma', "Hello, love. What's the weather like for you today?");
-    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, act: () => chooseWeather(id) })));
+    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, do: ['weather', id] })));
   }
 }
 // The film ends looking level down the hall through a narrower lens: start there, then ease out to the usual view
@@ -1473,8 +1499,6 @@ function settle(fromFov) {
   dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
-addEventListener('popstate', e => { if (e.state?.room && ROOMS[e.state.room]) goRoom(e.state.room, undefined, { fromHistory: true }); });
-
 window.__explore = { state, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
@@ -1486,6 +1510,7 @@ fillMap();
 renderCards();
 renderNotes();
 renderChat();
+if (state.chips?.length) setChips(state.chips);   // the last question's answers, if it's still open (J9)
 soundLabel();
 if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);
