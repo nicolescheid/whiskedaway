@@ -28,15 +28,16 @@ export function cleanRecipe(r) {
 export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange }) {
   const L = {
     button: lines.button || 'Write it out in full',
-    remaining: lines.remaining || 'I can write out {n} more today.',
-    remainingOne: lines.remaining_one || 'I can write out one more today.',
+    remaining: lines.remaining || 'I can write out {n} more this visit.',
+    remainingOne: lines.remaining_one || 'I can write out one more this visit.',
     writing: lines.writing || 'Gemma is writing…',
-    atCap: lines.at_cap || "That's three I've written out today. The short version's above.",
+    atCap: lines.at_cap || "That's three I've written out this visit. The short version's above.",
     failed: lines.failed || "My pen's run dry. The short version's above. Try again in a bit.",
     diet: lines.diet_question || 'Anything I should avoid?',
   };
   let busy = null;                                    // the atom being written, while it's being written
   let failed = null;                                  // the atom whose last try failed (her line shows until the next try)
+  let openDiet = false;                               // the visitor opened "Anything to avoid? ›" on this page
   const left = () => Math.max(0, WRITE_CAP - mem.n);
   /** A recipe she's already written for this atom, from the book or this tab */
   const written = id => book.get(id)?.full || mem.recipes[id] || null;
@@ -62,7 +63,8 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     const oops = failed === rec.id ? `<p class="bk-failed" role="status">${esc(L.failed)}</p>` : '';
     const diet = [].concat(visit.get('dietary') || []);
     const ask = !diet.length && !mem.dietAsked;
-    el.innerHTML = `${oops}${ask ? `<div class="bk-diet" role="group" aria-label="${esc(L.diet)}"><p class="small">${esc(L.diet)}</p>
+    const offer = !diet.length && mem.dietAsked && !openDiet;     // asked before and not answered: a one-line way back in (UX T6)
+    el.innerHTML = `${oops}${offer ? `<p><button class="link bk-dietmore">Anything to avoid? ›</button></p>` : ''}${ask || openDiet ? `<div class="bk-diet" role="group" aria-label="${esc(L.diet)}"><p class="small">${esc(L.diet)}</p>
         ${DIETS.map(([id, label]) => `<button data-diet="${id}" aria-pressed="false">${esc(label)}</button>`).join('')}</div>` : ''}
       <button class="bk-writeout">${esc(L.button)}</button>
       <p class="small">${esc(left() === 1 ? L.remainingOne : L.remaining.replace('{n}', left()))}</p>`;
@@ -75,6 +77,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
       b.setAttribute('aria-pressed', String(next.includes(id)));
       onDiet?.(next);
     });
+    el.querySelector('.bk-dietmore')?.addEventListener('click', () => { openDiet = true; render(el, rec, seedEl); el.querySelector('[data-diet]')?.focus(); });
     el.querySelector('.bk-writeout').onclick = () => write(rec, el, seedEl);
   }
 

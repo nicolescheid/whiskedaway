@@ -26,10 +26,10 @@
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",
   "write_out": {
     "button": "Write it out in full",
-    "remaining": "I can write out {n} more today.",
-    "remaining_one": "I can write out one more today.",
+    "remaining": "I can write out {n} more this visit.",
+    "remaining_one": "I can write out one more this visit.",
     "writing": "Gemma is writing…",
-    "at_cap": "That's three I've written out today. The short version's above.",
+    "at_cap": "That's three I've written out this visit. The short version's above.",
     "failed": "My pen's run dry. The short version's above. Try again in a bit.",
     "diet_question": "Anything I should avoid?"
   }

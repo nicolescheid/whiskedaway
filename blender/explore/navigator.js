@@ -74,7 +74,9 @@ function keptReason(atom, book) {
       if (shared >= 2 && (!best || shared > best.shared)) best = { k, shared };
     }
   }
-  return best ? `kept the ${(best.k.short || best.k.title).toLowerCase()}` : null;
+  if (!best) return null;
+  const t = best.k.title.replace(/,.*$/, '');                    // "One square of dark chocolate, slowly" → "one square of dark chocolate"
+  return `kept ${best.k.ref || `the ${t.charAt(0).toLowerCase()}${t.slice(1)}`}`;
 }
 /** What the visitor has in the cupboard that this atom uses */
 const pantryHits = (atom, pantry = []) => pantry.filter(p => (atom.key_ingredients || []).some(i => i.toLowerCase().includes(String(p).toLowerCase())));
@@ -158,6 +160,11 @@ function reasonsFor(themes, trail, world, spoons = null, first = []) {
 }
 
 const listJoin = parts => parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
+/** Reasons with the same verb share it: ["went to the window seat", "went to the music box"] → ["went to the window seat", "the music box"] */
+const shareVerbs = parts => parts.map((p, i) => {
+  const verb = ['went to ', 'lingered by ', 'turned the '].find(v => p.startsWith(v));
+  return i && verb && parts[i - 1].startsWith(verb) ? p.slice(verb.length).replace(/^/, verb === 'turned the ' ? 'the ' : '') : p;
+});
 
 export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {} } = {}) {
   const meaningful = trail.filter(e => e.kind !== 'map' || trail.length < 3);
@@ -198,10 +205,10 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
       const kept = keptReason(a, book);
       const first = [...(hits.length ? [`'ve got ${listJoin(hits.slice(0, 2))}`] : []), ...(kept ? [kept] : [])];
       const { why, context } = reasonsFor(a.themes, trail, world, a.spoons, first.slice(0, 2));
-      const parts = why.slice(0, 2);
+      const parts = shareVerbs(why.slice(0, 2));
       const text = (parts.length ? `Because you ${listJoin(parts)}${context && parts.length < 2 ? `, and ${context}` : ''}.`
         : context ? `Because ${context}.` : `Because it fits ${top.label}.`).replace("you 've", "you've");
-      return { atom: a.id, why: text, fromKeep: !!kept && parts.includes(kept) };
+      return { atom: a.id, why: text, fromKeep: !!kept && why.slice(0, 2).includes(kept) };
     });
 
   const recent = [...new Set(trail.filter(e => e.id && world.objects[e.id]).map(e => e.id))]

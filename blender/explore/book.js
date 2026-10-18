@@ -31,8 +31,8 @@ addEventListener('storage', e => { if (e.key === KEY && lasting) { data = parse(
 
 /** The snapshot kept for an atom: the snippet and the seed recipe, plus why it was served. */
 export function snapshot(atom, why) {
-  const pick = ({ id, title, hook, room, kind, time, spoons, themes, diet, key_ingredients, method_short, body, seed, icon, short }) =>
-    ({ id, title, hook, room, kind, time, spoons, themes, diet, key_ingredients, method_short, body, seed, icon, short });
+  const pick = ({ id, title, hook, room, kind, time, spoons, themes, diet, key_ingredients, method_short, body, seed, icon, short, ref }) =>
+    ({ id, title, hook, room, kind, time, spoons, themes, diet, key_ingredients, method_short, body, seed, icon, short, ref });
   return { ...JSON.parse(JSON.stringify(pick(atom))), why: why || '' };
 }
 

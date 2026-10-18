@@ -1253,7 +1253,8 @@ $('dial-ok').onclick = () => $('dialdlg').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('dialdlg').classList.remove('open'); });
 
 // ---------- navigator
-let navTimer, navSeq = 0;
+let navTimer, navSeq = 0, lineHeldUntil = 0;
+const holdLine = () => { lineHeldUntil = Date.now() + 3000; };
 function scheduleNavigate() {
   clearTimeout(navTimer);
   navTimer = setTimeout(navigate, AI ? 700 : 350);
@@ -1291,13 +1292,19 @@ async function navigate() {
   const reacted = last?.kind === 'weather' || last?.kind === 'time' || last?.kind === 'energy'
     || (last?.kind === 'touch' && world.objects[last.id]?.type === 'ambient');
   const gemma = reacted && r.gemma ? r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase()) : r.gemma;
-  if (state.askDifferent) {
-    // Three set aside in a row: instead of her reading, Gemma asks what they'd like (§9); a pick counts like a choice
-    state.askDifferent = false;
-    say(LINES.dismiss?.different || 'Something different?', [], true);
-    setTimeout(() => setChips([['Quick', 'pantry'], ['Proper meal', 'build-up'], ['Sweet', 'treat'], ['Chia', 'energising']]
-      .filter(([, c]) => world.clusters[c]).map(([label, c]) => ({ label, do: ['choose', c] }))), 400);
-  } else if (gemma) say(gemma, r.fork);                // with the AI on this posts at once: she "typed" while it read
+  // A keep, set-aside or undo line stays up for 3 s before her next one (UX T1), unless a newer step comes along
+  const speak = () => {
+    if (seq !== navSeq) return;
+    if (state.askDifferent) {
+      // Three set aside in a row: instead of her reading, Gemma asks what they'd like (§9); a pick counts like a choice
+      state.askDifferent = false;
+      say(LINES.dismiss?.different || 'Something different?', [], true);
+      setTimeout(() => setChips([['Quick', 'pantry'], ['Proper meal', 'build-up'], ['Sweet', 'treat'], ['Chia', 'energising']]
+        .filter(([, c]) => world.clusters[c]).map(([label, c]) => ({ label, do: ['choose', c] }))), 400);
+    } else if (gemma) say(gemma, r.fork);              // with the AI on this posts at once: she "typed" while it read
+  };
+  const wait = lineHeldUntil - Date.now();
+  wait > 0 ? setTimeout(speak, wait) : speak();
   if (AI) r.serve.forEach(s => serve(s, r.mode)); else putOut(r);
   store.save(state);
   renderNotes();
@@ -1486,7 +1493,7 @@ function keepIdea(atom, why, method) {
   else if (n === 1) line = first ? L.keepFirstEver : pickLine('keep1', L.keepFirstVisit);
   else if (n === 3) line = pickLine('keep3', L.keepThird, { cluster_label: world.clusters[state.result?.cluster]?.label });
   else if (n > 3 && (n - 3) % 4 === 0) line = pickLine('keepN', L.keepLater);
-  if (line) say(line, [], true);
+  if (line) { say(line, [], true); holdLine(); }
   state.keepSpoke = !!line;
   state.dismissRun = 0;
   renderTheme();
@@ -1512,7 +1519,7 @@ const ideas = createIdeas({
     state.dismissed.push(c.atom);
     state.dismissals = (state.dismissals || 0) + 1;
     record({ kind: 'dismiss', atom: c.atom });
-    if (state.dismissals === 1) say(L.dismissFirst, [], true);
+    if (state.dismissals === 1) { say(L.dismissFirst, [], true); holdLine(); }
     // Three set aside in a row: Gemma asks what they'd like instead (§9); a pick counts like a choice
     state.dismissRun = (state.dismissRun || 0) + 1;
     if (state.dismissRun === 3) { state.dismissRun = 0; state.askDifferent = true; }   // she asks in her next line (navigate)
@@ -1526,6 +1533,7 @@ const ideas = createIdeas({
       const i = state.trail.map(e => e.kind === 'dismiss' && e.atom === c.atom).lastIndexOf(true);
       if (i >= 0) state.trail.splice(i, 1);
       say(L.undo, [], true);
+      holdLine();
       store.save(state);
       renderNotes();
     }
