@@ -1,0 +1,18 @@
+{
+  "16-lane-change.png": {
+    "normalization": "Generated2170x725 normalized to2172x724, Lanczos.",
+    "translation_px": [
+      0,
+      0
+    ]
+  },
+  "21-lane-night-change.png": {
+    "normalization": "Generated2171x724 normalized to2172x724, Lanczos.",
+    "translation_px": [
+      2,
+      2
+    ],
+    "border_fill": "Two new top/left border pixels extended from nearest edge; no wrap, pasted rain content or local warping."
+  },
+  "authority": "Technical size normalization and alignment carried forward from supplied ART-DIRECTION.md; creative/weather edits used built-in image generation."
+}
