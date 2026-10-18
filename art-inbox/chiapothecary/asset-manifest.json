@@ -1,0 +1,269 @@
+{
+  "date": "2026-10-18",
+  "tool": "built-in image_gen.imagegen",
+  "selected_new_images": 13,
+  "assets": [
+    {
+      "file": "01-counter-drawers.png",
+      "title": "The counter & drawer wall",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2556216,
+      "sha256": "834cdd64b0c4eaedfd259bcdb0a830817f592b44ad46e94ce53f79e02478b27a",
+      "preview": "preview/01-counter-drawers.jpg"
+    },
+    {
+      "file": "02-display-fridge.png",
+      "title": "The display fridge",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2168963,
+      "sha256": "f67964126b8b96691a12685f75a70fee9938e151cc43044f26fcd11f11a4f335",
+      "preview": "preview/02-display-fridge.jpg"
+    },
+    {
+      "file": "03-glasshouse-door-songbird.png",
+      "title": "The glasshouse connection",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2645138,
+      "sha256": "acbabe7892b404ac7ed415c3898da8e72463126561b3c6501f80e08eef210f6c",
+      "preview": "preview/03-glasshouse-door-songbird.jpg"
+    },
+    {
+      "file": "04-shop-window.png",
+      "title": "The shop window",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2539746,
+      "sha256": "d860fd9b09c0657a13a5af70cfbb621d5e5f52117738921d7e0792d5f0004903",
+      "preview": "preview/04-shop-window.jpg"
+    },
+    {
+      "file": "05-hallway-door.png",
+      "title": "The hallway door",
+      "size_px": [
+        1670,
+        941
+      ],
+      "bytes": 2070013,
+      "sha256": "2bc588d9ead81f37b6f7e06dbf7619794444d79b6ee4cd56bd4ff3c2ad231feb",
+      "preview": "preview/05-hallway-door.jpg"
+    },
+    {
+      "file": "06-open-drawers-closeup.png",
+      "title": "Inside the drawers",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2512496,
+      "sha256": "1135a2b072dc3982721442fb897913ceb30738b4c452bfdbbb48d4ed745acd08",
+      "preview": "preview/06-open-drawers-closeup.jpg"
+    },
+    {
+      "file": "07-counter-closeup.png",
+      "title": "The counter setting",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2183203,
+      "sha256": "f326b3f261af931a335c92c5c9409eaa4a4454e8836e0a6685129fef968076dc",
+      "preview": "preview/07-counter-closeup.jpg"
+    },
+    {
+      "file": "08-songbird-closeup.png",
+      "title": "The clockwork songbird",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2080013,
+      "sha256": "4145b2a1de885b464291da1177b55f24e1002b01e7b223c2a6a83ec724e932dc",
+      "preview": "preview/08-songbird-closeup.jpg"
+    },
+    {
+      "file": "09-materials-moodboard.png",
+      "title": "Materials & palette",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 3536242,
+      "sha256": "35212c7e431c902d81f52e5832157dcb158dcaf7016399b17b5684fb325b38c9",
+      "preview": "preview/09-materials-moodboard.jpg"
+    },
+    {
+      "file": "10-songbird-side-three-quarter.png",
+      "title": "Songbird \u00b7 side & three-quarter",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 1976403,
+      "sha256": "36b4a60c1727ca120501d92a1ffeef838b0ed6ee35218380b842074fb6fb947a",
+      "preview": "preview/10-songbird-side-three-quarter.jpg"
+    },
+    {
+      "file": "11-brass-label-plates-flat.png",
+      "title": "Twelve blank brass plates",
+      "size_px": [
+        1672,
+        941
+      ],
+      "bytes": 2627444,
+      "sha256": "a1b4996b1732d7032ffdb746e8a4e17c9e04b0be668583b0290c4c4ba68bcdc1",
+      "preview": "preview/11-brass-label-plates-flat.jpg"
+    },
+    {
+      "file": "12-chia-botanical-kraft-tile.png",
+      "title": "Chia botanical wrapping paper",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "bytes": 3600705,
+      "sha256": "b551fce6d54b04237ec84947a385ca7dcc2ce0cb64f9e4ca1b1eeb484e958e20",
+      "preview": "preview/12-chia-botanical-kraft-tile.jpg"
+    },
+    {
+      "file": "13-encaustic-floor-tile.png",
+      "title": "Optional encaustic floor",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "bytes": 2848635,
+      "sha256": "d0b5eecaaabde692a32576346ddab80c74ce889eefaddb52d1cbc8d75133483d",
+      "preview": "preview/13-encaustic-floor-tile.jpg"
+    }
+  ],
+  "shared_lane_reused_images": [
+    {
+      "file": "14-lane-rain.png",
+      "source": "sweet-spells/14-lane-rain.png",
+      "sha256": "1b4474fb2ecb312b9bc0e56137e32349730c1e195c981fbc23ae30332ac09171",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "15-lane-fair.png",
+      "source": "sweet-spells/15-lane-fair.png",
+      "sha256": "ee406ca193c65351cc1b83ec5e57105260f1d0db4f7c07263a927a9ce2369b51",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "16-lane-change.png",
+      "source": "sweet-spells/16-lane-change.png",
+      "sha256": "3e3bd30e1660f4a89b7bc46c65af2f153ec40b425c4f375bb54c6d9a2eee2ab6",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "17-lane-stormy.png",
+      "source": "sweet-spells/17-lane-stormy.png",
+      "sha256": "9fa868ca182d39331933d23faa1373099090bb985a01ec24dc0e93fdda7ce7af",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "18-lane-very-dry.png",
+      "source": "sweet-spells/18-lane-very-dry.png",
+      "sha256": "bab198de811d4717f361f9c4745e5220a63860a26043c9917fcba2e15e5454b5",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "19-lane-night-rain.png",
+      "source": "sweet-spells/19-lane-night-rain.png",
+      "sha256": "910af4ca53e637838ae6fb840f3c2bba37a8fc34f0a7439022290c8de704b3e9",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "20-lane-night-fair.png",
+      "source": "sweet-spells/20-lane-night-fair.png",
+      "sha256": "ca1a3107e27735a90351afd443cdb39fb11bc008a11b6888e42a4f2508f30814",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "21-lane-night-change.png",
+      "source": "sweet-spells/21-lane-night-change.png",
+      "sha256": "b22b4a5c322d1449f41faffed5ea32f531fdd152babf33bc914c29cf240999a8",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "22-lane-night-stormy.png",
+      "source": "sweet-spells/22-lane-night-stormy.png",
+      "sha256": "0bf3bc5a7594977776487bc769dcf76a953622f9da09c4d0859cb1655063ada1",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    },
+    {
+      "file": "23-lane-night-very-dry.png",
+      "source": "sweet-spells/23-lane-night-very-dry.png",
+      "sha256": "99b49cd6b9004c1ede014e2e5ad914102e1caf6ca966caed4742f480bd301354",
+      "identical_to_source": true,
+      "size_px": [
+        2172,
+        724
+      ]
+    }
+  ],
+  "decisions": {
+    "drawer_count": 40,
+    "drawer_grid": [
+      8,
+      5
+    ],
+    "glasshouse_connection": "glazed oak, latest brief overrides older solid-door concept",
+    "hallway_door": "four-panel oak, slightly ajar",
+    "counter_scale": "two-pan reference07",
+    "floor": "floorboards in room, optional13tile"
+  },
+  "limits": [
+    "Wall views are concept frames, not registered panorama faces.",
+    "Tiny generated navigation dial is schematic; use authoritative shared flat plate/pointer.",
+    "Studio bird views show form and mechanism, not manufacturing drawings.",
+    "Repeats are visually reviewed colour patterns, not calibrated full PBR maps."
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "units": "metres",
+  "authority": "Supplied Inn floorplan and latest Chiapothecary brief. Sizes are proposed except approximate 4.5m footprint.",
+  "room": {
+    "width": 4.5,
+    "depth": 4.5,
+    "height_proposed": 2.7
+  },
+  "axes": {
+    "x": "hallway wall0 → garden wall4.5",
+    "y": "lane/front0 → Flourish/rear4.5",
+    "z": "floor0, positive up"
+  },
+  "walls": {
+    "rear": {
+      "y": 4.5,
+      "adjoins": "Flourish",
+      "objects": [
+        "drawer cabinet (40 drawers)",
+        "top-shelf ingredient jars"
+      ]
+    },
+    "front": {
+      "y": 0,
+      "view": "shared village lane",
+      "objects": [
+        "small-paned shop window"
+      ]
+    },
+    "hallway": {
+      "x": 0,
+      "objects": [
+        "four-panel oak door nearer front, a little ajar",
+        "nine-station dial on door lane side",
+        "display fridge farther rear"
+      ]
+    },
+    "garden": {
+      "x": 4.5,
+      "objects": [
+        "glazed oak connection to real glasshouse",
+        "one hanging clockwork bird/cage"
+      ]
+    }
+  },
+  "furniture": {
+    "drawerCabinet": {
+      "columns": 8,
+      "rows": 5,
+      "total": 40,
+      "size_proposed": [
+        2.7,
+        0.43,
+        2.2
+      ]
+    },
+    "counter": {
+      "placement": "in front of rear drawer wall",
+      "size_proposed": [
+        2.4,
+        0.7,
+        0.93
+      ]
+    },
+    "fridge": {
+      "placement": "hallway side, rearward of door",
+      "size_proposed": [
+        0.67,
+        0.65,
+        1.85
+      ]
+    }
+  },
+  "cameraRelationships": {
+    "towardRear": "hallway/fridge left; garden/glasshouse right",
+    "towardFront": "garden/glasshouse left; hallway right"
+  },
+  "continuity": {
+    "connection": "Latest glazed oak door supersedes older glasshouse solid four-panel connection. Separate hall door stays four-panel.",
+    "fridgeContents": "Use02 for five pale milk bottles and finished puddings.",
+    "scale": "Use07 for mechanically plausible two-pan balance.",
+    "dial": "Use original hallway flat plate and pointer in references, not tiny generated05 approximation.",
+    "floor": "Worn boards in room views; optional tile13 left for Claude to choose.",
+    "lane": "Reuse byte-identical Sweet Spells14–23, no newly generated lane set."
+  },
+  "clearances": "Validate openings, fridge door sweep, bird cage and roughly0.85–0.95m circulation against the actual existing Blender Inn blockout."
+}

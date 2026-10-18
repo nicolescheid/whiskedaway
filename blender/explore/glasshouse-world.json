@@ -7,8 +7,8 @@
   "objects": {
     "seasons-wheel": { "label": "The seasons wheel", "ref": "the seasons wheel", "type": "season", "themes": [] },
     "gh-dial": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial in the glasshouse", "type": "dial", "themes": [] },
-    "gh-chiapothecary-door": { "label": "Chiapothecary", "ref": "the still-room door", "type": "door", "themes": [], "always_visible": true,
-                               "closed": "The still-room's through there. It isn't ready yet." },
+    "gh-chiapothecary-door": { "label": "Chiapothecary", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": -45,
+                               "themes": [], "always_visible": true },
     "garden-door": { "label": "The garden door", "ref": "the garden door", "type": "door", "themes": [],
                      "closed": "The garden's for another day. You can see most of it from here." },
     "plant-lavender": { "label": "Lavender", "ref": "the lavender", "type": "ambient", "themes": ["calm", "evening", "tea", "rest"],

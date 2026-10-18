@@ -74,10 +74,11 @@ grep -qE "\[probe\] (OPTIX|CUDA) \['" /tmp/probe.log || nogpu "Blender can't see
 
 log "cloning ${WA_BRANCH}"
 # Sparse: the committed renders (blender/out/*.jpg) and the concept art of rooms not yet in Blender are
-# most of the repo, and no build reads them. A full clone had grown to about 6 minutes.
+# most of the repo, and no build reads them. A full clone had grown to about 6 minutes. The glimpses (one room
+# seen through another's door, blender/out/*_glimpse*.jpg) are read by the builds, so they come along.
 for i in 1 2 3; do
   rm -rf /work
-  timeout 300 git clone -q --depth 1 --filter=blob:none --no-checkout --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work     && git -C /work sparse-checkout set --no-cone '/*' '!/blender/out/*.jpg' '!/art-inbox/'          '/art-inbox/cuddlecore/' '/art-inbox/inn-hallway/' '/art-inbox/glasshouse/' '/art-inbox/flourish/' '/art-inbox/sweet-spells/'     && timeout 300 git -C /work checkout -q "$WA_BRANCH" && break
+  timeout 300 git clone -q --depth 1 --filter=blob:none --no-checkout --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work     && git -C /work sparse-checkout set --no-cone '/*' '!/blender/out/*.jpg' '/blender/out/*_glimpse*.jpg' '!/art-inbox/'          '/art-inbox/cuddlecore/' '/art-inbox/inn-hallway/' '/art-inbox/glasshouse/' '/art-inbox/flourish/' '/art-inbox/sweet-spells/' '/art-inbox/chiapothecary/'     && timeout 300 git -C /work checkout -q "$WA_BRANCH" && break
   [ "$i" = 3 ] && fail "git clone"; sleep 10
 done
 cd /work

@@ -536,3 +536,220 @@ def pano_camera(scene, loc, yaw_deg=0.0):
     scene.collection.objects.link(cam)
     scene.camera = cam
     return cam
+
+
+# ---------------------------------------------------------------- the glazed door between the glasshouse and the Chiapothecary
+
+def sage_paint(name, colour="#8d9b80"):
+    """Sage paint (or another colour) over old timber, chipped here and there to the wood."""
+    folder = os.path.join(ASSETS, "textures", "wood_table_worn")
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    p = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1.2,) * 3
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+
+    def tex(kind, non_color):
+        t = nt.nodes.new("ShaderNodeTexImage")
+        t.image = bpy.data.images.load(os.path.join(folder, f"{kind}.jpg"), check_existing=True)
+        if non_color:
+            t.image.colorspace_settings.name = "Non-Color"
+        t.projection = "BOX"
+        t.projection_blend = 0.25
+        nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
+        return t
+
+    wood = tex("diff", False)
+    paint = nt.nodes.new("ShaderNodeMix")                 # paint keeps a little of the grain showing through
+    paint.data_type = "RGBA"
+    paint.inputs["Factor"].default_value = 0.82
+    nt.links.new(wood.outputs["Color"], paint.inputs[6])
+    paint.inputs[7].default_value = srgb(colour)
+    noise = nt.nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 14
+    noise.inputs["Detail"].default_value = 8
+    nt.links.new(tc.outputs["Object"], noise.inputs["Vector"])
+    chip = nt.nodes.new("ShaderNodeMapRange")
+    chip.inputs["From Min"].default_value = 0.66
+    chip.inputs["From Max"].default_value = 0.70
+    nt.links.new(noise.outputs["Fac"], chip.inputs["Value"])
+    bare = nt.nodes.new("ShaderNodeMix")
+    bare.data_type = "RGBA"
+    nt.links.new(chip.outputs["Result"], bare.inputs["Factor"])
+    nt.links.new(paint.outputs[2], bare.inputs[6])
+    nt.links.new(wood.outputs["Color"], bare.inputs[7])
+    nt.links.new(bare.outputs[2], p.inputs["Base Color"])
+    rough = nt.nodes.new("ShaderNodeMapRange")
+    nt.links.new(chip.outputs["Result"], rough.inputs["Value"])
+    rough.inputs["To Min"].default_value = 0.62
+    rough.inputs["To Max"].default_value = 0.85
+    nt.links.new(rough.outputs["Result"], p.inputs["Roughness"])
+    nm = nt.nodes.new("ShaderNodeNormalMap")
+    nm.inputs["Strength"].default_value = 0.5
+    nt.links.new(tex("nor", True).outputs["Color"], nm.inputs["Color"])
+    nt.links.new(nm.outputs["Normal"], p.inputs["Normal"])
+    return m
+
+
+def old_glass(name):
+    """Old hand-made glass: clear but wavy, so whatever is behind it swims and blurs."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    p = nt.nodes["Principled BSDF"]
+    p.inputs["Base Color"].default_value = (0.93, 0.96, 0.9, 1)
+    p.inputs["Transmission Weight"].default_value = 1.0
+    p.inputs["IOR"].default_value = 1.52
+    p.inputs["Roughness"].default_value = 0.06
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (9, 9, 4)                  # ripples run a little longer vertically
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    n = nt.nodes.new("ShaderNodeTexNoise")
+    n.inputs["Detail"].default_value = 3
+    nt.links.new(mp.outputs["Vector"], n.inputs["Vector"])
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.6
+    bump.inputs["Distance"].default_value = 0.004
+    nt.links.new(n.outputs["Fac"], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], p.inputs["Normal"])
+    return m
+
+
+# One door, built by both rooms from this function: herb-green paint, 3 x 5 small panes of wavy old glass, a low
+# panel, brass furniture on both faces. Local frame: x along the door from the hinge edge, z up, y through the wall
+# (-y is the glasshouse face). It hangs on the lane side and opens into the glasshouse.
+GLAZED_DOOR_W, GLAZED_DOOR_H = 0.85, 2.0
+
+
+def glazed_door(matrix, brass, brass_worn, iron):
+    door_paint = sage_paint("chia_green", "#5c7c5c")
+    glass_old = old_glass("chia_door_glass")
+    lw, lh, lt = GLAZED_DOOR_W - 0.02, GLAZED_DOOR_H - 0.03, 0.045
+    st, gz0, gz1 = 0.1, 0.68, lh - 0.1                               # stile width, glazing bottom and top
+    parts = []
+    for nm, a0, a1, b0, b1 in (("stile_l", 0, st, 0.012, 0.012 + lh), ("stile_r", lw - st, lw, 0.012, 0.012 + lh),
+                               ("rail_b", st, lw - st, 0.012, 0.19), ("rail_m", st, lw - st, 0.55, gz0),
+                               ("rail_t", st, lw - st, gz1, 0.012 + lh)):
+        parts.append(box_span(f"cd_{nm}", a0, a1, -lt / 2, lt / 2, b0, b1, door_paint, bevel=0.004))
+    parts.append(box_span("cd_panel", st, lw - st, -0.012, 0.012, 0.19, 0.55, door_paint, bevel=0.003))
+    for face in (-1, 1):                                            # a mould round the low panel, both faces
+        for nm, a0, a1, b0, b1 in (("l", st, st + 0.02, 0.19, 0.55), ("r", lw - st - 0.02, lw - st, 0.19, 0.55),
+                                   ("b", st, lw - st, 0.19, 0.21), ("t", st, lw - st, 0.53, 0.55)):
+            ya, yb = sorted((face * 0.012, face * 0.022))
+            parts.append(box_span(f"cd_mould_{face}_{nm}", a0, a1, ya, yb, b0, b1, door_paint, bevel=0.003))
+    cols, rows = 3, 5
+    for k in range(1, cols):
+        x = st + (lw - 2 * st) * k / cols
+        parts.append(box_span(f"cd_bar_v{k}", x - 0.011, x + 0.011, -0.016, 0.016, gz0, gz1, door_paint, bevel=0.003))
+    for k in range(1, rows):
+        z = gz0 + (gz1 - gz0) * k / rows
+        parts.append(box_span(f"cd_bar_h{k}", st, lw - st, -0.016, 0.016, z - 0.011, z + 0.011, door_paint, bevel=0.003))
+    pane = box_span("cd_glass", st, lw - st, -0.003, 0.003, gz0, gz1, glass_old, bevel=0)
+    pane.visible_shadow = False                                     # sunlight gets through to the other room
+    parts.append(pane)
+    for f, tag in ((-1, ""), (1, "_b")):                             # the glasshouse face, then the shop face
+        side = f * lt / 2
+
+        def plate(nm, x0, x1, t0, t1, z0, z1, m, bevel):
+            parts.append(box_span(f"{nm}{tag}", x0, x1, *sorted((side + f * t0, side + f * t1)), z0, z1, m, bevel=bevel))
+
+        parts.append(cyl(f"cd_knob{tag}", (lw - 0.065, side + f * 0.035, 1.0), 0.026, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
+        plate("cd_rose", lw - 0.09, lw - 0.04, 0, 0.006, 0.9, 1.1, brass, 0.003)
+        plate("cd_keyhole", lw - 0.07, lw - 0.06, 0.005, 0.007, 0.93, 0.955, iron, 0)
+        plate("cd_finger_plate", lw - 0.075, lw - 0.03, 0, 0.004, 1.2, 1.48, brass, 0.002)
+    for hz in (0.25, 1.75):
+        parts.append(cyl(f"cd_hinge_{hz}", (0.005, 0, hz), 0.01, 0.1, brass_worn))
+    root = bpy.data.objects.new("chiapothecary_door", None)
+    bpy.context.scene.collection.objects.link(root)
+    for p in parts:
+        p.parent = root
+    root.matrix_world = matrix
+    bpy.context.view_layer.update()
+    return root
+
+
+# ---------------------------------------------------------------- glimpses: one room seen through another's doorway
+
+def _aim(eye, target):
+    """Rotation for a camera at eye looking at target, up = +Z."""
+    return (Vector(target) - Vector(eye)).normalized().to_track_quat("-Z", "Y")
+
+
+def glimpse_camera(scene, eye, target, fov_deg, res=1600):
+    """A square perspective camera, for rendering a room as another room's panorama camera sees it through a
+    doorway. glimpse_plate() puts the picture back in that doorway."""
+    cam_data = bpy.data.cameras.new("glimpse")
+    cam_data.sensor_fit = "HORIZONTAL"
+    cam_data.angle = math.radians(fov_deg)
+    cam = bpy.data.objects.new("glimpse", cam_data)
+    cam.location = eye
+    cam.rotation_mode = "QUATERNION"
+    cam.rotation_quaternion = _aim(eye, target)
+    scene.collection.objects.link(cam)
+    scene.camera = cam
+    scene.render.resolution_x = scene.render.resolution_y = res
+    return cam
+
+
+def glimpse_plate(name, path, eye, target, fov_deg, corner, along, up, strength=1.0, tint=(1, 1, 1), cuts=24):
+    """A glowing picture filling a doorway: a grid over the rectangle corner + s*along + t*up, each vertex given the
+    UV where glimpse_camera(eye, target, fov_deg) saw that point. From eye, the picture lines up with the room beyond."""
+    q = _aim(eye, target)
+    r, u, f = q @ Vector((1, 0, 0)), q @ Vector((0, 1, 0)), q @ Vector((0, 0, -1))
+    k = 1 / (2 * math.tan(math.radians(fov_deg) / 2))
+    c0, a, b = Vector(corner), Vector(along), Vector(up)
+    verts, uvs, faces = [], [], []
+    for j in range(cuts + 1):
+        for i in range(cuts + 1):
+            p = c0 + a * (i / cuts) + b * (j / cuts)
+            d = p - Vector(eye)
+            z = d.dot(f)
+            verts.append(tuple(p))
+            uvs.append((0.5 + k * d.dot(r) / z, 0.5 + k * d.dot(u) / z))
+    for j in range(cuts):
+        for i in range(cuts):
+            n = j * (cuts + 1) + i
+            faces.append((n, n + 1, n + cuts + 2, n + cuts + 1))
+    me = bpy.data.meshes.new(name)
+    me.from_pydata(verts, [], faces)
+    uv = me.uv_layers.new(name="UVMap")
+    for poly in me.polygons:
+        for li in poly.loop_indices:
+            uv.data[li].uv = uvs[me.loops[li].vertex_index]
+    o = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(o)
+    m = emission_mat(name, path, strength)
+    nt = m.node_tree
+    next(n for n in nt.nodes if n.type == "TEX_IMAGE").extension = "EXTEND"
+    if tuple(tint) != (1, 1, 1):
+        e = next(n for n in nt.nodes if n.type == "EMISSION")
+        mix = nt.nodes.new("ShaderNodeMix")
+        mix.data_type, mix.blend_type = "RGBA", "MULTIPLY"
+        mix.inputs["Factor"].default_value = 1.0
+        nt.links.new(e.inputs["Color"].links[0].from_socket, mix.inputs[6])
+        mix.inputs[7].default_value = (*tint, 1)
+        nt.links.new(mix.outputs[2], e.inputs["Color"])
+    o.data.materials.append(m)
+    o.visible_shadow = False
+    return o
+
+
+# Where the glasshouse and the Chiapothecary meet. Both rooms measure y from the Inn's front; the Chiapothecary's
+# x = the glasshouse's x + CHIA_FROM_GH (its garden wall is the Inn wall, 0.3 m thick). The glazed door is centred
+# at y = 1.9 in both. Each room sees the other through the door as a picture on a plate in the doorway, rendered
+# from its own camera position by the other room's build (--glimpse).
+CHIA_FROM_GH = 4.8
+CHIA_EYE = (2.25, 1.7, 1.6)                        # the Chiapothecary's camera (its coordinates)
+GH_EYE = (0.8, 3.15, 1.6)                          # the glasshouse's camera (its coordinates)
+# seen from the glasshouse: a plate on the shop face of the Inn wall (glasshouse coordinates)
+SHOP_PLATE = dict(corner=(-0.31, 0.875, -0.05), along=(0, 1.65, 0), up=(0, 0, 2.35), fov=100)
+# seen from the shop: a plate on the glasshouse face of the Inn wall (Chiapothecary coordinates)
+GH_PLATE = dict(corner=(4.81, 1.175, -0.05), along=(0, 1.45, 0), up=(0, 0, 2.35), fov=60)
+
+
+def plate_target(plate):
+    return tuple(c + a / 2 + u / 2 for c, a, u in zip(plate["corner"], plate["along"], plate["up"]))
