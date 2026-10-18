@@ -123,7 +123,7 @@
       "method_short": "Halved pears with grated ginger and maple syrup, baked for twenty-five minutes. A spoon of coconut yoghurt on top.",
       "diet": ["vegan", "vegetarian", "gluten-free", "dairy-free"],
       "themes": ["warming", "cosy", "fruity", "evening", "treat", "sweet"],
-      "seed": { "name": "Baked pears with ginger and maple", "why": "A warm pudding for the evening." },
+      "seed": { "name": "Baked pears with ginger and maple", "why": "A warm, simple pudding." },
       "body": "Halved pears with grated ginger and maple syrup, baked for twenty-five minutes. A spoon of coconut yoghurt on top." },
     { "id": "oat-crumble", "room": "sweet-spells", "kind": "recipe idea", "spoons": 2, "title": "Fruit crumble with an oat top",
       "short": "Crumble", "icon": "🥧", "ref": "the crumble",
