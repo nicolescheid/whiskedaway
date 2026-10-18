@@ -20,7 +20,16 @@
   "book": {
     "full": "Your book's full, so I've taken out the oldest one to make room.",
     "no_storage": "I can't keep a book on this device, so these are just for today.",
-    "cleared": "All cleared. A fresh book."
+    "cleared": "All cleared. A fresh book.",
+    "theme": {
+      "_when": "The book's This visit page, once something is kept this visit. Say `words` (if there are any) then one `kept_*` line. {words} = the theme words joined with `join`; {n} = the number kept, in words; {room} = the room's name as the dial shows it.",
+      "words": "This visit, by the look of it: {words}.",
+      "join": ", ",
+      "kept_one": "You've kept one, from {room}.",
+      "kept_all": "You've kept {n}, all from {room}.",
+      "kept_mostly": "You've kept {n}, mostly from {room}.",
+      "kept_mixed": "You've kept {n}, from around the Inn."
+    }
   },
   "room_empty": "That's everything I've got in here. Try next door.",
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",
