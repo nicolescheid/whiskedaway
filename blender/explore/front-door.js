@@ -171,7 +171,8 @@ export function frontDoor({ active, track }) {
     const v = makeVideo();
     door.classList.add('playing');
     if (v.readyState < 3) door.classList.add('waiting');
-    v.addEventListener('playing', () => { door.classList.remove('waiting'); pic.style.visibility = 'hidden'; }, { once: true });
+    let hush = () => {};
+    v.addEventListener('playing', () => { door.classList.remove('waiting'); pic.style.visibility = 'hidden'; hush = sound.film(v.currentTime); }, { once: true });
     let skip;
     const skipped = new Promise(r => { skip = r; });
     const onKey = e => { if (e.key === 'Escape') skip(); };
@@ -186,7 +187,7 @@ export function frontDoor({ active, track }) {
     ]) : 'failed';
     removeEventListener('keydown', onKey);
     button.removeEventListener('click', skip);
-    if (how !== 'ended') { v.pause(); await showHall(); }
+    if (how !== 'ended') { hush(); v.pause(); await showHall(); }
   }
 
   // The film's last frame, cropped to this screen the way object-fit: cover crops it: the same view the panorama starts on
@@ -202,7 +203,7 @@ export function frontDoor({ active, track }) {
     try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* fine */ }
     const url = new URL(location.href);
     if (url.searchParams.has('door')) { url.searchParams.delete('door'); history.replaceState(null, '', url); }
-    if (short) await showHall();
+    if (short) { sound.door(); await showHall(); }
     else await playFilm();
     await Promise.race([shown, wait(15000)]);           // the hall's first view (it has had the whole film to load)
     window.__explore?.settle(filmFov());

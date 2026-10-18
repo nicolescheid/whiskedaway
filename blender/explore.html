@@ -264,6 +264,7 @@
       <li><b>The kitchen's furniture and materials</b>: Poly Haven, CC0. Given to everyone, no strings.</li>
       <li><b>The room</b>: built and rendered in Blender, free and open source (GPL).</li>
       <li><b>The 360° view</b>: three.js, MIT licence.</li>
+      <li><b>The Inn's sounds</b>: Gemma's shimmer, the bell, the doors and the grandfather clock are synthesised in your browser with the Web Audio API, made for WhiskedAway and given away as CC0.</li>
       <li><b>The glasshouse plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
       <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
@@ -739,6 +740,7 @@ function touch(id) {
       track('door_closed', { room: state.room, object: id });
       return say(obj.closed || "That one's not open yet.", [], true);
     }
+    if (obj.type === 'door') sound.door();
     if (obj.go.startsWith('/')) {
       track('leave_to_inn', { room: state.room, step: stepNow() });
       say(obj.leaving || 'Mind the step, love.', [], true);
@@ -759,6 +761,7 @@ function goRoom(id, yaw) {
   if (!ROOMS[id] || id === state.room) return;
   const from = state.room;
   state.room = id;
+  sound.place(id);
   spots = room().spots;
   look.yaw = yaw ?? room().yaw ?? 0;
   look.pitch = -6;
@@ -923,6 +926,10 @@ $('cw-sound').onclick = $('btn-sound').onclick = () => sound.toggle();
 addEventListener('wa-sound', soundLabel);
 // Every dial in the Inn clicks round a notch when you turn it
 document.addEventListener('click', e => { if (e.target.closest('.dial button')) sound.tick(); });
+// The grandfather clock ticks in the hallway, and on your own time strikes when the hour turns
+sound.place(state.room);
+let lastHour = new Date().getHours();
+setInterval(() => { const h = new Date().getHours(); if (h !== lastHour && !state.time) sound.strike(h); lastHour = h; }, 20000);
 $('cw-min').onclick = () => { const min = $('chatwin').classList.toggle('min'); $('cw-min').setAttribute('aria-expanded', String(!min)); $('cw-min').textContent = min ? '□' : '_'; };
 $('cw-credits').onclick = () => $('credits').classList.add('open');
 $('credits-ok').onclick = () => $('credits').classList.remove('open');
@@ -1070,6 +1077,7 @@ function chooseTime(id) {
   showWeather(state.weather);                                        // re-light: tint, or the night render
   $('clockdial').querySelectorAll('button').forEach(b => b.classList.toggle('on', !!id && b.dataset.t === id));
   if (id) {
+    sound.strike(world.times[id].hour);                              // the grandfather clock, if you're in the hall
     say(world.times[id].moment, [], true);
     record({ kind: 'time', id });
   } else {
