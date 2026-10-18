@@ -10,7 +10,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').matches;
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
-const day = t => new Date(t).toLocaleDateString([], { day: 'numeric', month: 'short' });
+const day = t => new Date(t).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });   // "19 Oct"
 
 export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut }) {
   const root = document.createElement('div');
@@ -224,8 +224,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     draw();
     if (!was) {
       if (!pushed) { history.pushState({ ...(history.state || {}), book: true }, ''); pushed = true; }
-      if (!reduce()) $('.bk-box').animate(isDesk() ? [{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }]
-        : [{ transform: 'translateY(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'ease-out' });
+      if (!reduce()) $('.bk-box').animate(isDesk() ? [{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }] : [{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
       track?.('book_open', { from, book_size: bucket(book.count) });
     }
     (loose || at !== 'visit' ? left : $('.bk-close')).focus({ preventScroll: true });
@@ -239,7 +238,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     for (const el of document.body.children) if (el.dataset.bookInert) { el.inert = false; delete el.dataset.bookInert; }
     loose = null;
     if (pushed) { pushed = false; if (!viaBack && history.state?.book) history.back(); }
-    (opener?.isConnected && !opener.closest('#book') ? opener : chip).focus({ preventScroll: true });
+    chip.focus({ preventScroll: true });                           // where the book lives (QA P3-6)
   }
   addEventListener('popstate', () => { if (pushed && !history.state?.book) { pushed = false; close(true); } });
   root.addEventListener('keydown', e => {
