@@ -822,7 +822,7 @@ Decide:
 - hypothesis: a short, plain-language reading of the wander (e.g. "something warm you don't have to stand up for").
 - cluster: the closest cluster id.
 - confidence: 0 to 1, how clear the reading is.
-- gemma_line: one or two sentences in Gemma's voice that name the pattern softly and leave an easy way out. Warm, practical, never saccharine. No medical claims, no diagnosing, never imply food cures anything.
+- gemma_line: one or two short sentences in Gemma's voice, under 100 characters in all (it shows on a phone in three lines), that name the pattern softly and leave an easy way out. Warm, practical, never saccharine. No medical claims, no diagnosing, never imply food cures anything.
 - fork: if the trail genuinely points two incompatible ways, give exactly two cluster ids so Gemma can ask; otherwise an empty array. If two readings combine naturally (warm AND restful), don't fork: say both in the hypothesis.
 - reveal: up to two untouched objects that are the natural next step, each with a short reason.
 - serve: up to two content atoms that fit the wander, each with a "why" that starts "Because you" and refers to what they actually did. Never serve something already served or set aside. Respect effort: if the trail suggests low energy, prefer atoms with fewer spoons.

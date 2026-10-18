@@ -11,7 +11,7 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString([], { day: 'numeric', month: 'short' });
 
-export function createBookView({ book, atoms, chip, notes, onKeep, onTakeOut, onClear, onForget, track, bucket }) {
+export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket }) {
   const root = document.createElement('div');
   root.id = 'book';
   root.className = 'book';
@@ -46,9 +46,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onTakeOut, on
   const visitPage = document.createElement('div');
   visitPage.className = 'bk-visit';
   visitPage.innerHTML = `<h3 class="bk-h">This visit</h3><p class="bk-theme"></p>`;
-  const privacy = notes.querySelector('p.small');
   [...notes.children].filter(el => el.tagName !== 'H2').forEach(el => visitPage.appendChild(el));
-  if (privacy) privacy.textContent = "Your book stays on this device, nowhere else. Clear it any time from Contents. What I've noticed this visit is forgotten when you leave, except a note that you've been welcomed, so I don't say it twice. The inn does count, anonymously, which rooms and recipes get visited, but never who.";
   const forget = visitPage.querySelector('#forget');
   if (forget) {
     forget.textContent = 'Forget this visit';
@@ -149,7 +147,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onTakeOut, on
     $('.bk-next').disabled = atEnd;
     $('.bk-count').textContent = book.count ? `${book.count} kept` : '';
     // Contents' buttons
-    root.querySelectorAll('[data-open]').forEach(b => b.onclick = () => go(b.dataset.open));
+    root.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { onRead?.(b.dataset.open); go(b.dataset.open); });
     root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; draw(); root.querySelector(`[data-f="${filter || ''}"]`)?.focus(); });
     root.querySelectorAll('.bk-clear, .bk-clear2').forEach(b => b.onclick = clearBook);
   }
@@ -216,7 +214,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onTakeOut, on
       if (!pushed) { history.pushState({ ...(history.state || {}), book: true }, ''); pushed = true; }
       if (!reduce()) $('.bk-box').animate(isDesk() ? [{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }]
         : [{ transform: 'translateY(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: 'ease-out' });
-      track?.('book_open', { from, book_size: bucket(book.count) });
+      track?.('book_open', { opened_from: from, book_size: bucket(book.count) });
     }
     (loose || at !== 'visit' ? left : $('.bk-close')).focus({ preventScroll: true });
   }
