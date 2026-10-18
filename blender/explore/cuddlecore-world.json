@@ -202,7 +202,7 @@
       "map_hide": true
     },
     "candle-low": {
-      "label": "Low",
+      "label": "Running low",
       "ref": "the low candle",
       "type": "energy",
       "energy": "low",
@@ -210,7 +210,7 @@
       "map_hide": true
     },
     "candle-half": {
-      "label": "Half",
+      "label": "Halfway",
       "ref": "the half-burnt candle",
       "type": "energy",
       "energy": "half",
@@ -218,7 +218,7 @@
       "map": "The energy candles"
     },
     "candle-three-quarters": {
-      "label": "Three-quarters",
+      "label": "Plenty left",
       "ref": "the three-quarter candle",
       "type": "energy",
       "energy": "three-quarters",
@@ -226,7 +226,7 @@
       "map_hide": true
     },
     "candle-full": {
-      "label": "Full",
+      "label": "Full of energy",
       "ref": "the tall, bright candle",
       "type": "energy",
       "energy": "full",
@@ -869,6 +869,7 @@
   "weathers": {
     "rain": {
       "label": "Rain",
+      "chip": "Rainy",
       "themes": [
         "rain",
         "warming",
@@ -880,6 +881,7 @@
     },
     "fair": {
       "label": "Fair",
+      "chip": "Clear",
       "themes": [
         "sunny",
         "fresh",
@@ -891,6 +893,7 @@
     },
     "change": {
       "label": "Change",
+      "chip": "Misty",
       "themes": [
         "calm",
         "gentle",
@@ -902,6 +905,7 @@
     },
     "stormy": {
       "label": "Stormy",
+      "chip": "Stormy",
       "themes": [
         "hearty",
         "warming",
@@ -913,6 +917,7 @@
     },
     "very-dry": {
       "label": "Very Dry",
+      "chip": "Hot and dry",
       "themes": [
         "cooling",
         "hydrating",
