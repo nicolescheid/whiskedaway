@@ -38,7 +38,7 @@ async function solveChallenge() {
   const box = document.createElement('div');
   box.setAttribute('role', 'status');
   box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483000;'
-    + 'display:none;flex-direction:column;align-items:center;gap:8px;padding:12px 14px 10px;border-radius:14px;'
+    + 'display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 10px 8px;border-radius:14px;box-sizing:border-box;'
     + 'background:#f4efe4;border:1px solid rgba(139,77,92,.25);box-shadow:0 10px 30px rgba(0,0,0,.3);'
     + "font:500 13px Quicksand,system-ui,sans-serif;color:#2c2416;max-width:calc(100vw - 32px);";
   const note = document.createElement('p');
@@ -56,12 +56,8 @@ async function solveChallenge() {
         action: ACTION,
         appearance: 'interaction-only',   // invisible unless the visitor needs to tick a box
         theme: 'light',
-        'before-interactive-callback': () => {
-          // At the front door the words sit at the bottom (or top left on landscape phones), so the card goes top right
-          const door = document.getElementById('front-door');
-          if (door && !door.hidden) Object.assign(box.style, { top: '16px', right: '16px', left: 'auto', bottom: 'auto', transform: 'none' });
-          box.style.display = 'flex';
-        },
+        size: innerWidth < 420 ? 'compact' : 'normal',   // the normal widget is 300 px wide: too wide for a 360 px phone
+        'before-interactive-callback': () => showWhenInside(box),
         'after-interactive-callback': () => { box.style.display = 'none'; },
         callback: token => { clearTimeout(timer); resolve(token); },
         // Turnstile retries by itself; only give up after repeated failures
@@ -77,6 +73,28 @@ async function solveChallenge() {
     try { turnstile.remove(box.dataset.widget); } catch { /* already gone */ }
     box.remove();
   }
+}
+
+// The check never shows at the front door: it waits until the visitor has stepped inside. In the Inn it docks
+// just above Gemma's chat, at the chat's width, clear of the room's hotspots; elsewhere (the archive) it sits
+// bottom-centre. The card isn't moved in the page (that would reload Turnstile's frame), only positioned
+function showWhenInside(box) {
+  const door = document.getElementById('front-door');
+  if (door && !door.hidden) {
+    const watch = new MutationObserver(() => {
+      if (!door.hidden) return;
+      watch.disconnect();
+      showWhenInside(box);
+    });
+    watch.observe(door, { attributes: true, attributeFilter: ['hidden'] });
+    return;
+  }
+  const chat = document.getElementById('chatwin');
+  const r = chat && chat.getClientRects().length ? chat.getBoundingClientRect() : null;   // (the chat is fixed, so no offsetParent)
+  if (r && r.width) {
+    Object.assign(box.style, { left: `${r.left}px`, width: `${r.width}px`, bottom: `${innerHeight - r.top + 8}px`, transform: 'none' });
+  }
+  box.style.display = 'flex';
 }
 
 function cachedPass() {
