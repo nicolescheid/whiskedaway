@@ -373,7 +373,7 @@ window.__door = frontDoor({ active: window.__doorActive, track });
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate, aiNavigate } from './explore/navigator.js';
-import { genieFetch, GENIE_URL } from '../src/lib/genie.js';
+import { genieFetch, getPass, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
 import { sound } from './explore/sound.js';
@@ -633,6 +633,9 @@ firstView.then(() => {
   const s = performance.now() / 1000;
   track('explore_start', { room: state.room, nav_mode: AI ? 'ai' : 'local', full_res: panoTier === '8k' ? 'yes' : panoTier === 'phone' ? 'phone' : 'no',
                            load_ms: s < 2 ? 'under-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : 'over-10s' });
+  // Get the AI navigator's visitor pass (Turnstile, then /session) while the visitor looks around, so their first step
+  // doesn't wait for it. Cached for the tab; genieFetch reuses it.
+  if (typeof AI === 'function') (window.requestIdleCallback || setTimeout)(() => getPass());
 });
 
 // yaw: 0 = front wall, + = right; pitch: + = up (same convention as the Blender export)
@@ -929,18 +932,24 @@ async function navigate() {
   const opts = { served: state.served, dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
+  // One new piece per step (two to start), so the counter fills at the pace of the wander
+  const putOut = res => res.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(s => serve(s, res.mode));
   if (AI) {
-    // Hybrid: the room responds at once with the local reading (glow + Gemma's line), then the
-    // AI refines it a few seconds later. Serving waits for the AI so cards don't arrive twice.
+    // Hybrid: the room responds at once with the local reading (glow and pieces on the counter), and Gemma
+    // "types" while the AI reads the wander (the visitor pass and the model call can take many seconds).
+    // Her line comes from the AI, which may also add one piece of its own; if it fails, she says the local line.
     state.result = local;
     applyReveal(local.reveal);
-    typing(true);
+    putOut(local);
+    thinking(true);
     renderNotes();
+    store.save(state);
     r = await aiNavigate(AI, navTrail(), world, opts);
     if (seq !== navSeq) return;                            // a newer event superseded this one
-    typing(false);
+    thinking(false);
     if (r.fallback) track('nav_fallback', { reason: /timeout|abort/i.test(r.fallback) ? 'timeout' : /429/.test(r.fallback) ? 'rate_limited'
                                                     : /403/.test(r.fallback) ? 'bot_check' : 'error' });
+    r = { ...r, serve: r.mode === 'ai' ? r.serve.filter(s => !state.served.includes(s.atom)).slice(0, 1) : [] };
   }
   state.result = r;
   $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
@@ -951,9 +960,8 @@ async function navigate() {
   const reacted = last?.kind === 'weather' || last?.kind === 'time' || last?.kind === 'energy'
     || (last?.kind === 'touch' && world.objects[last.id]?.type === 'ambient');
   const gemma = reacted && r.gemma ? r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase()) : r.gemma;
-  if (gemma) say(gemma, r.fork);
-  // One new piece per step (two to start), so the counter fills at the pace of the wander
-  r.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(s => serve(s, r.mode));
+  if (gemma) say(gemma, r.fork);                       // with the AI on this posts at once: she "typed" while it read
+  if (AI) r.serve.forEach(s => serve(s, r.mode)); else putOut(r);
   store.save(state);
   renderNotes();
 }
@@ -1001,7 +1009,11 @@ function setChips(chips) {
     box.appendChild(b);
   }
 }
-function typing(on) { $('cw-typing').hidden = !on; }
+// "Gemma is typing…" shows while she types a line, or while the AI navigator is reading the wander
+let typingLine = false, aiThinking = false;
+const showTyping = () => { $('cw-typing').hidden = !(typingLine || aiThinking); if (!$('cw-typing').hidden) $('cw-log').scrollTop = $('cw-log').scrollHeight; };
+function typing(on) { typingLine = on; showTyping(); }
+function thinking(on) { aiThinking = on; showTyping(); }
 let sayTimer;
 let sayPending = null;
 function say(text, fork = [], brief = false) {
