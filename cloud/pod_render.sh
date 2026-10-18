@@ -124,11 +124,9 @@ done
 
 log "packing results"
 cd blender/out
-find . -type f -newer /srv/render_start ! -name '*.blend*' ! -name '*.png' -printf '%P
-' >/srv/results.list
+find . -type f -newer /srv/render_start ! -name '*.blend*' ! -name '*.png' -printf '%P\n' >/srv/results.list
 [ -s /srv/results.list ] || fail "the render wrote nothing to blender/out"
-log "results: $(tr '
-' ' ' </srv/results.list)"
+log "results: $(tr '\n' ' ' </srv/results.list)"
 tar -cf /srv/results.tar -T /srv/results.list || fail "tar"
 log "sending results (code ${WA_CODE})"
 # send waits until the local machine has received; give up after an hour
