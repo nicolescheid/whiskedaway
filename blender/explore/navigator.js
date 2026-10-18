@@ -213,7 +213,8 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
     fork = [top.id, clusters[1].id];
     gemma = `I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;   // no lead: a question stays under 100 characters
   } else {
-    gemma = `${lead}I think you're after ${top.label}.`;   // no "I found you something": the rising idea says that (Ideas, v4)
+    const line = `I think you're after ${top.label}.`;
+    gemma = (lead + line).length <= 100 ? lead + line : line;   // the lead only if it still fits three lines on a phone   // no "I found you something": the rising idea says that (Ideas, v4)
   }
 
   return { mode: 'local', hypothesis: top.label, cluster: top.id, confidence, gemma, fork, reveal, serve };
