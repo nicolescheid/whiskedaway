@@ -20,7 +20,7 @@
    | Clear to partly cloudy (0 to 2) | Fair |
 
 4. The Inn opens in that weather, and Gemma checks her guess instead of asking from scratch:
-   "Looks like rain where you are, love. Is that right?" In the hall the chips are "That's right" and
+   "Hello, love. Looks like rain where you are. Is that right?" (lines follow docs/gemma-voice-guide.md: they work at night too) In the hall the chips are "That's right" and
    the other four weathers. In Cuddlecore they're "That's right" and "Turn the barometer".
 5. If anything fails (no location, Open-Meteo slow or down, the Worker unreachable), the page carries on
    as before: rain, and "What's the weather like for you today?"
