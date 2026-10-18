@@ -23,13 +23,16 @@ import sys
 from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, crop_image, cyl, image_mat, look,  # noqa: E402
-                     mat, meshes_of, model, pano_camera, pbr, point_light, sphere, srgb, text, use_gpu, window_glass)
+from whisked import (ART, ASSETS, GLAZED_DOOR_H, GLAZED_DOOR_W, OUT, area_light, box, box_span, center_of,  # noqa: E402
+                     CHIA_EYE, CHIA_FROM_GH, GH_PLATE, SHOP_PLATE, crop_image, cyl, glazed_door, glimpse_camera,
+                     glimpse_plate, image_mat, look, mat, meshes_of, model, old_glass, pano_camera, pbr, plate_target,
+                     point_light, sage_paint, sphere, srgb, text, use_gpu, window_glass)
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
 SEASON = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--season=")), "spring")
+GLIMPSE = "--glimpse" in ARGS      # render the glasshouse as the Chiapothecary sees it through the glazed door
 
 os.makedirs(OUT, exist_ok=True)
 PACK = os.path.join(ART, "glasshouse")
@@ -54,7 +57,7 @@ CAM_YAW = 90                 # the middle of the panorama looks at the garden do
 SUN_AZ = -35                 # sun direction in plan, degrees from +X toward +Y: from the garden, a little lane-ward
 STAGE_Z = 0.8                # staging top
 GD_Y, GD_W, GD_H = 3.15, 0.82, 1.95    # garden door: centre, opening
-CD_Y, CD_W, CD_H = 1.9, 0.85, 2.0      # Chiapothecary door in the Inn wall
+CD_Y, CD_W, CD_H = 1.9, GLAZED_DOOR_W, GLAZED_DOOR_H   # Chiapothecary door in the Inn wall
 DIAL_AT = (0.0, 1.2, 1.35)             # room dial, lane side of the Chiapothecary door
 WHEEL_AT = (W - 0.03, 2.5, 1.36)       # seasons wheel, lane side of the garden door
 WHEEL_R = 0.15
@@ -162,60 +165,6 @@ def plant_mats():
     return out
 
 
-def sage_paint(name, colour="#8d9b80"):
-    """Sage paint (or another colour) over old timber, chipped here and there to the wood."""
-    folder = os.path.join(ASSETS, "textures", "wood_table_worn")
-    m = bpy.data.materials.new(name)
-    m.use_nodes = True
-    nt = m.node_tree
-    p = nt.nodes["Principled BSDF"]
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = nt.nodes.new("ShaderNodeMapping")
-    mp.inputs["Scale"].default_value = (1.2,) * 3
-    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
-
-    def tex(kind, non_color):
-        t = nt.nodes.new("ShaderNodeTexImage")
-        t.image = bpy.data.images.load(os.path.join(folder, f"{kind}.jpg"), check_existing=True)
-        if non_color:
-            t.image.colorspace_settings.name = "Non-Color"
-        t.projection = "BOX"
-        t.projection_blend = 0.25
-        nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
-        return t
-
-    wood = tex("diff", False)
-    paint = nt.nodes.new("ShaderNodeMix")                 # paint keeps a little of the grain showing through
-    paint.data_type = "RGBA"
-    paint.inputs["Factor"].default_value = 0.82
-    nt.links.new(wood.outputs["Color"], paint.inputs[6])
-    paint.inputs[7].default_value = lin(colour)
-    noise = nt.nodes.new("ShaderNodeTexNoise")
-    noise.inputs["Scale"].default_value = 14
-    noise.inputs["Detail"].default_value = 8
-    nt.links.new(tc.outputs["Object"], noise.inputs["Vector"])
-    chip = nt.nodes.new("ShaderNodeMapRange")
-    chip.inputs["From Min"].default_value = 0.66
-    chip.inputs["From Max"].default_value = 0.70
-    nt.links.new(noise.outputs["Fac"], chip.inputs["Value"])
-    bare = nt.nodes.new("ShaderNodeMix")
-    bare.data_type = "RGBA"
-    nt.links.new(chip.outputs["Result"], bare.inputs["Factor"])
-    nt.links.new(paint.outputs[2], bare.inputs[6])
-    nt.links.new(wood.outputs["Color"], bare.inputs[7])
-    nt.links.new(bare.outputs[2], p.inputs["Base Color"])
-    rough = nt.nodes.new("ShaderNodeMapRange")
-    nt.links.new(chip.outputs["Result"], rough.inputs["Value"])
-    rough.inputs["To Min"].default_value = 0.62
-    rough.inputs["To Max"].default_value = 0.85
-    nt.links.new(rough.outputs["Result"], p.inputs["Roughness"])
-    nm = nt.nodes.new("ShaderNodeNormalMap")
-    nm.inputs["Strength"].default_value = 0.5
-    nt.links.new(tex("nor", True).outputs["Color"], nm.inputs["Color"])
-    nt.links.new(nm.outputs["Normal"], p.inputs["Normal"])
-    return m
-
-
 def terracotta(name):
     """Clay pots: warm terracotta, a different firing per pot, chalky white bloom and a dark damp band low down."""
     m = bpy.data.materials.new(name)
@@ -314,31 +263,6 @@ def frosty_glass(name, wet, frost):
     nt.links.new(surface, mix.inputs[1])
     nt.links.new(ice.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs["Surface"])
-    return m
-
-
-def old_glass(name):
-    """Old hand-made glass: clear but wavy, so whatever is behind it swims and blurs."""
-    m = bpy.data.materials.new(name)
-    m.use_nodes = True
-    nt = m.node_tree
-    p = nt.nodes["Principled BSDF"]
-    p.inputs["Base Color"].default_value = (0.93, 0.96, 0.9, 1)
-    p.inputs["Transmission Weight"].default_value = 1.0
-    p.inputs["IOR"].default_value = 1.52
-    p.inputs["Roughness"].default_value = 0.06
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = nt.nodes.new("ShaderNodeMapping")
-    mp.inputs["Scale"].default_value = (9, 9, 4)                  # ripples run a little longer vertically
-    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
-    n = nt.nodes.new("ShaderNodeTexNoise")
-    n.inputs["Detail"].default_value = 3
-    nt.links.new(mp.outputs["Vector"], n.inputs["Vector"])
-    bump = nt.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.6
-    bump.inputs["Distance"].default_value = 0.004
-    nt.links.new(n.outputs["Fac"], bump.inputs["Height"])
-    nt.links.new(bump.outputs["Normal"], p.inputs["Normal"])
     return m
 
 
@@ -1128,7 +1052,16 @@ def build():
     box_span("inn_wall_lane", wx0, wx1, -2.4, cd0, 0, 5.6, plaster)
     box_span("inn_wall_sea", wx0, wx1, cd1, L + 1.6, 0, 5.6, plaster)
     box_span("inn_wall_over_door", wx0, wx1, cd0, cd1, CD_H, 5.6, plaster)
-    still_room(wx0, cd0, cd1, plaster)
+    # Through the glazed door: the real Chiapothecary, as its build renders it from this camera (--glimpse),
+    # on a plate on the shop face of the wall. Until that picture exists, a simple stand-in room.
+    shop = os.path.join(OUT, "chiapothecary_glimpse.jpg")
+    if GLIMPSE:
+        pass
+    elif os.path.exists(shop):
+        glimpse_plate("shop_glimpse", shop, CAM, plate_target(SHOP_PLATE), SHOP_PLATE["fov"],
+                      SHOP_PLATE["corner"], SHOP_PLATE["along"], SHOP_PLATE["up"])
+    else:
+        still_room(wx0, cd0, cd1, plaster)
     # first-floor landing window, seen up through the roof glass
     wy, wz0, wz1 = 3.4, 3.3, 4.5
     box_span("landing_window_glass", -0.12, -0.1, wy - 0.42, wy + 0.42, wz0, wz1, mat("dark_glass", srgb("#39434a"), 0.08))
@@ -1137,44 +1070,12 @@ def build():
         box_span(f"landing_window_{name}", -0.1, 0.01, a0, a1, b0, b1, paint, bevel=0.004)
     box_span("landing_window_sill", -0.08, 0.06, wy - 0.52, wy + 0.52, wz0 - 0.06, wz0, plaster, bevel=0.01)
 
-    # ---- Chiapothecary door: glazed, so the shop shows through it (brief #8 has the same door from the shop side).
-    # Herb-green paint, the Chiapothecary's accent; small panes of wavy old glass; brass furniture. Closed for now.
-    door_paint = sage_paint("chia_green", "#5c7c5c")
-    glass_old = old_glass("chia_door_glass")
-    lw, lh, lt = CD_W - 0.02, CD_H - 0.03, 0.045
-    st, gz0, gz1 = 0.1, 0.68, lh - 0.1                               # stile width, glazing bottom and top
-    parts = []
-    for nm, a0, a1, b0, b1 in (("stile_l", 0, st, 0.012, 0.012 + lh), ("stile_r", lw - st, lw, 0.012, 0.012 + lh),
-                               ("rail_b", st, lw - st, 0.012, 0.19), ("rail_m", st, lw - st, 0.55, gz0),
-                               ("rail_t", st, lw - st, gz1, 0.012 + lh)):
-        parts.append(box_span(f"cd_{nm}", a0, a1, -lt / 2, lt / 2, b0, b1, door_paint, bevel=0.004))
-    parts.append(box_span("cd_panel", st, lw - st, -0.012, 0.012, 0.19, 0.55, door_paint, bevel=0.003))
-    for face in (-1, 1):                                            # a mould round the low panel, both faces
-        for nm, a0, a1, b0, b1 in (("l", st, st + 0.02, 0.19, 0.55), ("r", lw - st - 0.02, lw - st, 0.19, 0.55),
-                                   ("b", st, lw - st, 0.19, 0.21), ("t", st, lw - st, 0.53, 0.55)):
-            ya, yb = sorted((face * 0.012, face * 0.022))
-            parts.append(box_span(f"cd_mould_{face}_{nm}", a0, a1, ya, yb, b0, b1, door_paint, bevel=0.003))
-    cols, rows = 3, 5
-    for k in range(1, cols):
-        x = st + (lw - 2 * st) * k / cols
-        parts.append(box_span(f"cd_bar_v{k}", x - 0.011, x + 0.011, -0.016, 0.016, gz0, gz1, door_paint, bevel=0.003))
-    for k in range(1, rows):
-        z = gz0 + (gz1 - gz0) * k / rows
-        parts.append(box_span(f"cd_bar_h{k}", st, lw - st, -0.016, 0.016, z - 0.011, z + 0.011, door_paint, bevel=0.003))
-    pane = box_span("cd_glass", st, lw - st, -0.003, 0.003, gz0, gz1, glass_old, bevel=0)
-    pane.visible_shadow = False                                     # the sun gets into the shop
-    parts.append(pane)
-    side = -lt / 2                                                   # the glasshouse face
-    parts.append(cyl("cd_knob", (lw - 0.065, side - 0.035, 1.0), 0.026, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
-    parts.append(box_span("cd_rose", lw - 0.09, lw - 0.04, side - 0.006, side, 0.9, 1.1, brass, bevel=0.003))
-    parts.append(box_span("cd_keyhole", lw - 0.07, lw - 0.06, side - 0.007, side - 0.005, 0.93, 0.955, iron, bevel=0))
-    parts.append(box_span("cd_finger_plate", lw - 0.075, lw - 0.03, side - 0.004, side, 1.2, 1.48, brass, bevel=0.002))
-    for hz in (0.25, 1.75):
-        parts.append(cyl(f"cd_hinge_{hz}", (0.005, 0, hz), 0.01, 0.1, brass_worn))
+    # ---- Chiapothecary door: glazed, so the shop shows through it. The same door is built from the shop side by
+    # chiapothecary_build.py (whisked.glazed_door). Herb-green paint, small panes of wavy old glass. Closed.
     # local x along the door (toward the sea), local -y out of the wall into the glasshouse (+X)
     m = Matrix(((0, -1, 0), (1, 0, 0), (0, 0, 1))).to_4x4()
     m.translation = Vector((-0.06, cd0 + 0.01, 0))
-    cd_root = group("chiapothecary_door", m, parts)
+    cd_root = glazed_door(m, brass, brass_worn, iron)
     for nm, y0, y1 in (("a", cd0 - 0.08, cd0), ("b", cd1, cd1 + 0.08)):
         box_span(f"cd_trim_{nm}", 0.0, 0.025, y0, y1, 0, CD_H + 0.08, paint, bevel=0.005)
     box_span("cd_trim_t", 0.0, 0.025, cd0 - 0.08, cd1 + 0.08, CD_H, CD_H + 0.09, paint, bevel=0.005)
@@ -1612,6 +1513,19 @@ def main():
         json.dump(data, fh, indent=2)
     if NO_RENDER:
         print("[whisked] done (no render)")
+        return
+    if GLIMPSE:
+        # From the Chiapothecary's camera, through the doorway. Everything in the Inn wall and on the shop side of it
+        # is hidden: the shop draws its own wall and door, and this picture goes behind them.
+        for o in scene.objects:
+            if o.type == "MESH" and max((o.matrix_world @ Vector(c)).x for c in o.bound_box) <= 0.05:
+                o.visible_camera = False                             # still there for light and shadow
+        eye = (CHIA_EYE[0] - CHIA_FROM_GH, CHIA_EYE[1], CHIA_EYE[2])
+        to = plate_target(GH_PLATE)
+        glimpse_camera(scene, eye, (to[0] - CHIA_FROM_GH, to[1], to[2]), GH_PLATE["fov"], res=1200 if PREVIEW else 1600)
+        scene.render.filepath = os.path.join(OUT, f"glasshouse_glimpse_{SEASON}.jpg")
+        bpy.ops.render.render(write_still=True)
+        print(f"[whisked] rendered the glimpse for the Chiapothecary, {SEASON}")
         return
     pano_camera(scene, CAM, CAM_YAW)
     scene.render.filepath = os.path.join(OUT, f"glasshouse_pano_{SEASON}{'_preview' if PREVIEW else ''}.jpg")
