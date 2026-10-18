@@ -38,10 +38,10 @@ HALL = os.path.join(ART, "inn-hallway")
 # Per season: sky (Poly Haven HDRI and its strength), the plate outside the glass, condensation on the roof,
 # frost on the walls, exposure. Sun heights follow notes.md: spring ~30-38, summer ~40-48, autumn low, winter cloud.
 SEASONS = {
-    "spring": dict(hdri="kloofendal_38d_partly_cloudy_puresky", sky=1.0, plate="13-outside-spring.png", wet=0.1, frost=0.0, exposure=0.0),
-    "summer": dict(hdri="kloofendal_48d_partly_cloudy_puresky", sky=1.0, plate="14-outside-summer.png", wet=0.06, frost=0.0, exposure=-0.1),
-    "autumn": dict(hdri="kloofendal_28d_misty_puresky", sky=1.1, plate="15-outside-autumn.png", wet=0.14, frost=0.0, exposure=0.2),
-    "winter": dict(hdri="kloofendal_overcast_puresky", sky=1.3, plate="16-outside-winter.png", wet=0.2, frost=0.35, exposure=0.5),
+    "spring": dict(hdri="kloofendal_38d_partly_cloudy_puresky", sky=1.0, plate="13-outside-spring.png", wet=0.0, frost=0.0, exposure=0.0),
+    "summer": dict(hdri="kloofendal_48d_partly_cloudy_puresky", sky=1.0, plate="14-outside-summer.png", wet=0.0, frost=0.0, exposure=-0.1),
+    "autumn": dict(hdri="kloofendal_28d_misty_puresky", sky=1.1, plate="15-outside-autumn.png", wet=0.06, frost=0.0, exposure=0.2),
+    "winter": dict(hdri="kloofendal_overcast_puresky", sky=1.3, plate="16-outside-winter.png", wet=0.1, frost=0.35, exposure=0.5),
 }
 S = SEASONS[SEASON]
 ORDER = ["spring", "summer", "autumn", "winter"]   # the wheel, clockwise from the top plate
@@ -886,7 +886,7 @@ def p_passion_leaf(g, p, rnd, s, normal):
     ang = rnd.uniform(0, 2 * math.pi)
     for lobe in (-0.65, 0, 0.65):
         d = a * math.cos(ang + lobe) + b * math.sin(ang + lobe) + n * 0.25
-        g.leaf(p, d, 0.07 * (1 if lobe == 0 else 0.8), 0.024, col, shape="lance", droop=0.05, fold=0.15, n_hint=n, seg=3)
+        g.leaf(p, d, 0.05 * (1 if lobe == 0 else 0.8), 0.017, col, shape="lance", droop=0.05, fold=0.15, n_hint=n, seg=3)
 
 
 def p_passion_flower(g, c, rnd, normal):
@@ -934,8 +934,8 @@ def passionflower(name, mats, s, rnd):
     count = 0
     for pts in curvy:
         for k in range(len(pts) - 1):
-            for j in range(3):
-                t = (k + j / 3) / (len(pts) - 1)
+            for j in range(5):
+                t = (k + j / 5) / (len(pts) - 1)
                 if rnd.random() > leaf_every:
                     continue
                 p = at(pts, t) + Vector((rnd.uniform(-.03, .03), rnd.uniform(-.03, .03), -0.02))
