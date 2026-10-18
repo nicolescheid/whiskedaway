@@ -2,7 +2,7 @@
   "room": "glasshouse",
   "name": "The glasshouse",
   "stops": {
-    "glasshouse": { "stop": "middle", "title": "The glasshouse", "where": "In the glasshouse", "yaw": 0 }
+    "glasshouse": { "stop": "middle", "title": "The glasshouse", "where": "In the glasshouse", "yaw": 40 }
   },
   "objects": {
     "seasons-wheel": { "label": "The seasons wheel", "ref": "the seasons wheel", "type": "season", "themes": [] },

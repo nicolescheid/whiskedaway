@@ -696,7 +696,7 @@ world.atoms.push(...chiaWorld.atoms);
 
 // ---------- rooms: the kitchen, and the hallway's two camera stops
 const ROOMS = {
-  cuddlecore: { title: 'Cuddlecore', where: 'In Cuddlecore', eye: [0, 0, 1.6], spots: kitchenSpots,
+  cuddlecore: { title: 'Cuddlecore', where: 'In Cuddlecore', eye: [0, 0, 1.6], spots: kitchenSpots, yaw: world.yaw,
                 pano: (w, night, full) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` },
 };
 for (const [id, st] of Object.entries(hallWorld.stops)) {

@@ -3,7 +3,7 @@
   "name": "Sweet Spells",
   "intro": "This room is for the sweet tooth, whatever the time of day.",
   "stops": {
-    "sweet-spells": { "stop": "middle", "title": "Sweet Spells", "where": "In Sweet Spells", "yaw": 0 }
+    "sweet-spells": { "stop": "middle", "title": "Sweet Spells", "where": "In Sweet Spells", "yaw": 5 }
   },
   "clusters": {
     "treat": { "label": "a sweet treat", "themes": ["treat", "sweet", "fruity", "creamy", "chocolate", "evening"] },
