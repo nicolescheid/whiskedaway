@@ -41,8 +41,8 @@ export const EVENTS = {
   recipe_result: ['scene', 'outcome'],
 };
 
-// Short IDs from the world files and the code, never free text
-const VALUE = /^[a-z0-9][a-z0-9 ._-]{0,39}$/i;
+// Short IDs from the world files and the code, never free text (a trailing + for open-ended buckets like 16+)
+const VALUE = /^[a-z0-9][a-z0-9 ._-]{0,38}\+?$/i;
 
 /** The event with only its allowed parameters, or null if the event isn't on the list. */
 export function cleanEvent(name, params = {}) {
