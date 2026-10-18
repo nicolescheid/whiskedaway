@@ -245,6 +245,8 @@
   .dial button { flex: 1 1 30%; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px;
                  font: 600 13px 'Quicksand'; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
   .dial button.on { background: var(--berry); border-color: var(--berry); color: var(--parchment); }
+  .dial .your-time { display: block; margin-top: 2px; font: 500 10px 'Quicksand'; letter-spacing: .02em; text-transform: none; opacity: .8; }
+  .dial button.mine:not(.on) { border-color: var(--berry-soft); }   /* the visitor's own time, marked whether or not it's in effect */
   /* A room's one-line description under its name: dial stations, the Map, and door hotspots (desktop only) */
   .blurb { display: block; font: 500 12px 'Quicksand'; letter-spacing: 0; text-transform: none; opacity: .8; margin-top: 2px; }
   .spot .name:has(.blurb) { border-radius: 12px; }
@@ -1765,10 +1767,17 @@ addEventListener('keydown', e => { if (e.key === 'Escape') $('weather').classLis
 function openClock() {
   const mine = deviceTime();
   $('clock-text').textContent = `Where you are it's ${world.times[mine].label.toLowerCase()}. Push the hands to whatever time you're cooking for.`;
-  const opts = Object.entries(world.times).map(([id, t]) => ({ id, label: t.label })).concat(state.time ? [{ id: '', label: 'Back to my time' }] : []);
-  $('clockdial').innerHTML = opts.map(o => `<button data-t="${esc(o.id)}" class="${o.id && o.id === state.time ? 'on' : ''}">${esc(o.label)}</button>`).join('');
-  $('clockdial').querySelectorAll('button').forEach(b => b.onclick = () => chooseTime(b.dataset.t || null));
+  renderClock();
   $('clockdlg').classList.add('open');
+}
+// The clock's buttons (QA R5): the time in effect is pressed (the pushed one, or the visitor's own when they haven't pushed
+// it), the visitor's own time says so on the button, and "Back to my time" appears as soon as the hands have moved
+function renderClock() {
+  const mine = deviceTime(), now = state.time || mine, focused = document.activeElement?.closest?.('#clockdial button')?.dataset.t;
+  const opts = Object.entries(world.times).map(([id, t]) => ({ id, label: t.label })).concat(state.time ? [{ id: '', label: 'Back to my time' }] : []);
+  $('clockdial').innerHTML = opts.map(o => `<button data-t="${esc(o.id)}" class="${o.id && o.id === state.time ? 'on' : ''}${o.id === mine ? ' mine' : ''}" aria-pressed="${!!o.id && o.id === now}">${esc(o.label)}${o.id === mine ? '<span class="your-time"> (your time)</span>' : ''}</button>`).join('');
+  $('clockdial').querySelectorAll('button').forEach(b => b.onclick = () => chooseTime(b.dataset.t || null));
+  if (focused !== undefined) ($('clockdial').querySelector(`[data-t="${CSS.escape(focused)}"]`) || $('clockdial').querySelector('[aria-pressed="true"]'))?.focus();
 }
 function chooseTime(id) {
   if (id === state.time) return;
@@ -1777,7 +1786,7 @@ function chooseTime(id) {
   if (id) track('time_change', { room: state.room, time_of_day: id });
   setHands(handsHour());
   showWeather(state.weather);                                        // re-light: tint, or the night render
-  $('clockdial').querySelectorAll('button').forEach(b => b.classList.toggle('on', !!id && b.dataset.t === id));
+  if ($('clockdlg').classList.contains('open')) renderClock();
   if (id) {
     sound.strike(world.times[id].hour);                              // the grandfather clock, if you're in the hall
     say(world.times[id].moment, [], true);
