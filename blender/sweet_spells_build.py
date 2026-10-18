@@ -58,7 +58,7 @@ NIGHT_VIEWS = {"rain": "19-lane-night-rain.png", "fair": "20-lane-night-fair.png
                "stormy": "22-lane-night-stormy.png", "very-dry": "23-lane-night-very-dry.png"}
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
-              bounce=(4, (0.55, 0.62, 1.0)), fill=1.5, lamps=1.0, exposure=0.2)
+              bounce=(4, (0.55, 0.62, 1.0)), fill=1.0, lamps=0.8, exposure=-0.1)
 GLOW = 1.4 if NIGHT else 1.0          # candles, fire and lamps are lit whatever the weather; a touch brighter at night
 
 W, D, H = 4.5, 4.5, 2.7               # inside the room
@@ -915,7 +915,7 @@ def build():
         bpy.ops.object.shade_smooth()
         f.data.materials.append(fire)
         f.visible_shadow = False
-    for k, (y, wts) in enumerate(((2.9, 55), (3.1, 55))):
+    for k, (y, wts) in enumerate(((2.9, 18), (3.1, 18))):
         point_light(f"fire_light_{k}", (0.45, y, 0.35), wts * GLOW, (1.0, 0.45, 0.15), radius=0.1)
     # the copper sugar pan on a little iron trivet at the front of the fire, rose steam curling up and out
     box_span("trivet", 0.36, 0.56, 2.9, 3.1, 0.36, 0.375, iron)
