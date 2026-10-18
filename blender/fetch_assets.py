@@ -19,12 +19,18 @@ MODELS = ["pot_enamel_01", "painted_wooden_cabinet", "wooden_bookshelf_worn", "A
           "painted_wooden_cabinet_02", "hanging_picture_frame_01", "jug_01", "food_apple_01",
           "lemon", "yellow_onion", "throw_pillows_01", "wicker_basket_02",
           # Hallway (Oct 2026): clock, boot bench, boots, umbrella stand, entrance plant
-          "painted_wooden_bench", "rubber_boots", "antique_ceramic_vase_01", "potted_plant_04"]
+          "painted_wooden_bench", "rubber_boots", "antique_ceramic_vase_01", "potted_plant_04",
+          # Glasshouse (Oct 2026): planter boxes, seed trays, tools, the nettle and dandelion beds
+          "planter_box_01", "planter_box_02", "planter_box_03", "seeding_tray_01", "trowel_01",
+          "watering_can_metal_01", "garden_gloves_01", "nettle_plant", "dandelion_01"]
 # Models whose glTF download is broken on Poly Haven (the .bin is short), fetched as .blend instead
 BLEND_MODELS = ["vintage_grandfather_clock_01"]
 TEXTURES = ["old_wooden_floor_01", "white_plaster_rough_01", "medieval_wood", "wood_table_worn",
-            "rough_linen", "knitted_fleece"]
-HDRIS = ["kloofendal_overcast_puresky"]
+            "rough_linen", "knitted_fleece",
+            "terracotta_floor_tiles", "worn_planks", "forest_ground_06", "gravel_floor_02"]
+# Glasshouse skies, by season: spring 38 deg sun, summer 48, autumn 28 misty, winter overcast
+HDRIS = ["kloofendal_overcast_puresky", "kloofendal_38d_partly_cloudy_puresky",
+         "kloofendal_48d_partly_cloudy_puresky", "kloofendal_28d_misty_puresky"]
 TEXTURE_MAPS = {"Diffuse": "diff", "nor_gl": "nor", "Rough": "rough", "AO": "ao", "Displacement": "disp"}
 
 
