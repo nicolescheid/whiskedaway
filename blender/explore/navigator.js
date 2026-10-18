@@ -218,17 +218,14 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
       return { atom: a.id, why: text, fromKeep: !!kept && why.slice(0, 2).includes(kept) };
     });
 
-  const recent = [...new Set(trail.filter(e => e.id && world.objects[e.id]).map(e => e.id))]
-    .slice(-1).map(id => world.objects[id].ref);   // the most recent thing only, so her line fits three lines on a phone
-  const lead = recent.length ? `${recent.join(', ').replace(/^./, c => c.toUpperCase())}… ` : '';
-
+  // No lead naming the last thing touched ("The clock… I think…"): it read oddly for tools, and the idea's own "Because you…" line
+  // already says what she noticed. One short line also keeps her clear of the room in phone landscape (QA pass 3)
   let gemma, fork = [];
   if (confidence < FORK_BELOW && clusters[1].score > 0 && meaningful.length >= 2) {
     fork = [top.id, clusters[1].id];
     gemma = `I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;   // no lead: a question stays under 100 characters
   } else {
-    const line = `I think you're after ${top.label}.`;
-    gemma = (lead + line).length <= 100 ? lead + line : line;   // the lead only if it still fits three lines on a phone   // no "I found you something": the rising idea says that (Ideas, v4)
+    gemma = `I think you're after ${top.label}.`;   // no "I found you something": the rising idea says that (Ideas, v4)
   }
 
   return { mode: 'local', hypothesis: top.label, cluster: top.id, confidence, gemma, fork, reveal, serve };
