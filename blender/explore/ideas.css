@@ -62,7 +62,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .idea-hl .why { margin: 0; font: italic 14px/1.35 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
 .idea-hl .readmore { border: 0; background: none; color: var(--berry); font: 600 13px 'Quicksand'; padding: 0 0 0 4px; font-style: normal; white-space: nowrap;
                       position: relative; }
-.idea-hl .readmore::after { content: ''; position: absolute; inset: -14px -8px; }   /* a 44 px tall target */
+.idea-hl .readmore { padding: 14px 8px; margin: -14px -4px; }   /* a 44 px tall box (QA P3-4), the line stays the same height */
 .idea-hl .acts { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
 .idea-hl .acts button { min-height: 44px; border-radius: 999px; font: 600 14px 'Quicksand'; }
 .idea-hl .no { min-width: 100px; background: #fff; border: 1px solid var(--line); color: var(--ink-soft); }
@@ -100,8 +100,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .cw-bar .cw-sizes button[aria-disabled="true"] { opacity: .35; cursor: default; }
 @media (pointer: coarse) {
   .cw-bar .cw-sizes { gap: 4px; }
-  .cw-bar .cw-sizes button { position: relative; width: 36px; height: 26px; }
-  .cw-bar .cw-sizes button::after { content: ''; position: absolute; inset: -9px -4px; }   /* 44 x 44 */
+  .chatwin .cw-bar .cw-sizes button { position: relative; width: 44px; height: 44px; font-size: 15px; }   /* QA P3-4 */
   .chatwin .cw-bar { position: relative; min-height: 28px; }
   .chatwin .cw-bar::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -8px; }   /* a 44 px tall drag area */
 }
@@ -257,7 +256,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-page[hidden] { display: none; }
 .bk-left { border-right: 1px solid var(--line); box-shadow: inset -12px 0 16px -14px rgba(0,0,0,.25); }
 .bk-page h3.bk-h { margin: 0 0 8px; font: 600 13px 'Quicksand'; text-transform: uppercase; letter-spacing: .07em; color: var(--berry); }
-.bk-page h3:not(.bk-h):not(.bk-title) { margin: 14px 0 4px; font: 600 12px 'Quicksand'; color: var(--ink-soft); }
+.bk-page h3:not(.bk-h):not(.bk-title), .bk-page .panel-sub { margin: 14px 0 4px; font: 600 12px 'Quicksand'; color: var(--ink-soft); }
 .bk-page .small { font: 13px/1.4 'Quicksand'; color: var(--ink-soft); }
 .bk-page ul.trail { list-style: none; margin: 0; padding: 0; }
 .bk-page .trail li { font: 13px 'Quicksand'; padding: 3px 0; color: var(--ink-soft); }
@@ -299,10 +298,11 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .book .link { background: none; border: 0; color: var(--berry); text-decoration: underline; padding: 0; font: 13px 'Quicksand'; }
 @media (pointer: coarse) { .book .link { position: relative; } .book .link::after { content: ''; position: absolute; inset: -14px -6px; } }
 /* Phones: one page at a time, a full-height sheet */
-.book:not(.desk) .bk-box { width: 100vw; height: 100dvh; border-radius: 0; max-width: none; }
+.book:not(.desk) .bk-box { position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; max-width: none; }   /* the visible screen, whatever the toolbars do */
 .book:not(.desk) .bk-spread { grid-template-columns: 1fr; }
 .book:not(.desk) .bk-left { border-right: 0; box-shadow: none; }
 @media (pointer: coarse) { .bk-page { touch-action: pan-y; } }   /* sideways drags stay with the page swipe, not the browser */
+.book.desk .bk-clear2, .book.desk .bk-clear2 + .small { display: none; }   /* the spread shows Contents' own (QA P3-6) */
 /* F2: the two clear buttons are real buttons, in outline (they clear things) */
 .bk-outline { min-height: 44px; padding: 4px 16px; margin: 4px 0; border-radius: 999px; border: 1px solid var(--ink-soft); background: #fff;
               color: var(--ink); font: 600 13px 'Quicksand'; }
@@ -316,7 +316,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .book:not(.desk) .bk-turns span span, .book:not(.desk) .bk-nav span { display: none; }
 .book:not(.desk) .bk-title { font-size: 23px; }
 @media (max-height: 500px) and (orientation: landscape) {
-  .book:not(.desk) .bk-box { width: min(560px, 100vw); }
+  .book:not(.desk) .bk-box { left: 50%; right: auto; width: min(560px, 100vw); transform: translateX(-50%); }
   .book:not(.desk) .bk-head { min-height: 44px; }
   .book:not(.desk) .bk-foot { flex-direction: row; align-items: center; justify-content: space-between; }
   .book:not(.desk) .bk-turns { flex: 1; }

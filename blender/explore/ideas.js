@@ -60,7 +60,8 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
     const first = !state.ideaSeen;
     state.ideaSeen = true;
     const card = { atom, why, opened: false };
-    if (state.cards.length < MAX_IDEAS) state.cards.unshift(card);
+    if (state.cards.length < MAX_IDEAS - (undoing ? 1 : 0)) state.cards.unshift(card);
+    else if (undoing) { state.waiting = card; save(); render(); return; }   // the set-aside idea's slot is kept for its Undo (QA P3-2)
     else {
       // Replace the oldest one that hasn't been opened; if every one has been, it waits as "+1"
       const i = state.cards.map(c => c.opened).lastIndexOf(false);
@@ -83,7 +84,10 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
     const w = state.waiting;
     if (!w) return;
     state.waiting = null;
-    if (state.cards.length >= MAX_IDEAS) state.cards.pop();
+    if (state.cards.length >= MAX_IDEAS) {                        // it replaces the oldest opened one, else the oldest
+      const i = state.cards.map(c => c.opened).lastIndexOf(true);
+      state.cards.splice(i >= 0 ? i : state.cards.length - 1, 1);
+    }
     state.cards.unshift(w);
     arriving.set(w.atom, null);
     save();
@@ -302,9 +306,19 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
   }
   function settleUndo() {
     clearTimeout(undoTimer);
-    if (undoing) onUndo?.(undoing.c, { undone: false, method: undoing.method });
+    const was = undoing;
     undoing = null;
     toast.hidden = true;
+    if (was) onUndo?.(was.c, { undone: false, method: was.method });
+    // An idea that waited for the slot comes in now
+    if (was && state.waiting && state.cards.length < MAX_IDEAS) {
+      const w = state.waiting;
+      state.waiting = null;
+      state.cards.unshift(w);
+      arriving.set(w.atom, null);
+      save();
+      render();
+    }
   }
   function undo() {
     if (!undoing) return;
