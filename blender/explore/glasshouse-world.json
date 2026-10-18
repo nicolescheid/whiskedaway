@@ -7,7 +7,7 @@
   "objects": {
     "seasons-wheel": { "label": "The seasons wheel", "ref": "the seasons wheel", "type": "season", "themes": [] },
     "gh-dial": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial in the glasshouse", "type": "dial", "themes": [] },
-    "gh-chiapothecary-door": { "label": "Chiapothecary", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": -45,
+    "gh-chiapothecary-door": { "label": "Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": -45,
                                "themes": [], "always_visible": true },
     "garden-door": { "label": "The garden door", "ref": "the garden door", "type": "door", "themes": [],
                      "closed": "The garden's for another day. You can see most of it from here." },

@@ -166,6 +166,10 @@
   .dial button { flex: 1 1 30%; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px;
                  font: 600 13px 'Quicksand'; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
   .dial button.on { background: var(--berry); border-color: var(--berry); color: var(--parchment); }
+  /* A room's one-line description under its name: dial stations, the Map, and door hotspots (desktop only) */
+  .blurb { display: block; font: 500 12px 'Quicksand'; letter-spacing: 0; text-transform: none; opacity: .8; margin-top: 2px; }
+  .spot .name:has(.blurb) { border-radius: 12px; }
+  @media (max-width: 720px) { .spot .blurb { display: none; } }
 
   @media (max-width: 720px) {
     /* The counter fits between the top bar and Gemma's chat (heights measured by the page), and scrolls if it must */
@@ -302,9 +306,10 @@
     <p>WhiskedAway stands on the shoulders of people who share their work.</p>
     <ul>
       <li><b>Gemma's face</b>: Microsoft's Fluent Emoji "woman genie", MIT licence, pixelated by hand for that 1997 feeling.</li>
-      <li><b>The kitchen's furniture and materials</b>: Poly Haven, CC0. Given to everyone, no strings.</li>
+      <li><b>The Inn's furniture and materials</b>: Poly Haven, CC0. Given to everyone, no strings.</li>
       <li><b>The room</b>: built and rendered in Blender, free and open source (GPL).</li>
       <li><b>The 360° view</b>: three.js, MIT licence.</li>
+      <li><b>The lettering</b>: Crimson Pro and Quicksand, SIL Open Font Licence, served by Google Fonts.</li>
       <li><b>The Inn's sounds</b>: Gemma's shimmer, the bell, the doors, the grandfather clock, every room's rain, wind, fire and garden, and the music box are synthesised in your browser with the Web Audio API, made for WhiskedAway and given away as CC0.</li>
       <li><b>The songbird's song</b>: a tūī recorded by the Department of Conservation, Crown copyright, CC BY 4.0. Source: Department of Conservation (NZ).</li>
       <li><b>The phonograph's records</b>: Grieg's Morning Mood by the Musopen Symphony Orchestra (courtesy of Musopen), Vivaldi's Spring by The Modena Chamber Orchestra, and Dvořák's Humoresque by the Boudini Brothers (1922). All public domain, from Wikimedia Commons.</li>
@@ -719,8 +724,8 @@ function buildHotspots() {
     const el = document.createElement('button');
     // Dials and candles show their name on hover only: a row of them would crowd the view
     el.className = `spot ${obj.type === 'ambient' ? 'ambient' : obj.type === 'dial' || obj.type === 'energy' ? '' : 'is-tool'} ${obj.type}`;
-    el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}</span>`;
-    el.setAttribute('aria-label', obj.label);
+    el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}${obj.blurb ? `<span class="blurb">${esc(obj.blurb)}</span>` : ''}</span>`;
+    el.setAttribute('aria-label', obj.blurb ? `${obj.label}: ${obj.blurb}` : obj.label);
     el.addEventListener('click', e => { e.stopPropagation(); touch(id); });
     document.body.appendChild(el);
     return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
@@ -895,7 +900,7 @@ function setRoomText() {
 // ---------- the magic dial beside every hallway door: any room, or wherever the wander points
 function openDial() {
   const opts = hallWorld.dial.concat([{ label: 'Wherever my wander points', star: true }]);
-  $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}">${o.star ? '✦ ' : ''}${esc(o.label)}</button>`).join('');
+  $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}">${o.star ? '✦ ' : ''}${esc(o.label)}${o.blurb ? `<span class="blurb">${esc(o.blurb)}</span>` : ''}</button>`).join('');
   $('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
   $('dialdlg').classList.add('open');
 }
@@ -1139,6 +1144,7 @@ function fillMap() {
     const li = document.createElement('li');
     const b = document.createElement('button');
     b.textContent = world.objects[id]?.map || label(id);
+    if (world.objects[id]?.blurb) b.insertAdjacentHTML('beforeend', `<span class="blurb">${esc(world.objects[id].blurb)}</span>`);
     b.onclick = () => { const s = spots[id]; hasLooked = true; lookTo(s.yaw, s.pitch); record({ kind: 'map', id }); };
     li.appendChild(b);
     return li;
@@ -1154,13 +1160,13 @@ function renderNotes() {
   try { pass = JSON.parse(sessionStorage.getItem('wa-genie-pass') || 'null'); } catch { /* ignore */ }
   $('visitor').textContent = !AI ? 'Not needed in local mode.'
     : pass && pass.until > Date.now() ? `Passed ✓ (good for ${Math.round((pass.until - Date.now()) / 60000)} more minutes)`
-    : (() => { try { const e = sessionStorage.getItem('wa-genie-error'); return e ? `Didn't pass: ${e}` : null; } catch { return null; } })()
+    : (() => { try { const e = sessionStorage.getItem('wa-genie-error'); return e ? `Didn't pass (${/timeout/.test(e) ? 'the check took too long' : /unavailable/.test(e) ? "the check couldn't load" : 'the check failed'}), so Gemma is reading your wander on her own.` : null; } catch { return null; } })()
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
   $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e =>
-    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
+    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (world.objects[e.id]?.ref || label(e.id)) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
 function togglePanel(id, btn) {
   const p = $(id), open = !p.classList.contains('open');
@@ -1367,7 +1373,7 @@ function arrive() {
   } else if (guessed) {
     state.asked = true;
     store.save(state);
-    confirmGuess(Object.entries(world.weathers).filter(([id]) => id !== state.weather).map(([id, w]) => ({ label: w.label, act: () => chooseWeather(id) })));
+    confirmGuess(Object.entries(world.weathers).filter(([id]) => id !== state.weather).map(([id, w]) => ({ label: w.chip || w.label, act: () => chooseWeather(id) })));
   } else if (state.room === 'cuddlecore') {
     state.asked = true;
     store.save(state);
@@ -1379,7 +1385,7 @@ function arrive() {
     state.asked = true;
     store.save(state);
     chatLine('gemma', "Hello, love. What's the weather like for you today?");
-    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.label, act: () => chooseWeather(id) })));
+    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, act: () => chooseWeather(id) })));
   }
 }
 // The film ends looking level down the hall through a narrower lens: start there, then ease out to the usual view
