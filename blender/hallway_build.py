@@ -347,7 +347,21 @@ def build():
             model("potted_plant_02", (s * 1.8, d["y"] + 1.2, 0), rot_z=10, scale=1.0)
             model("potted_plant_04", (s * 3.3, d["y"] + 0.75, 1.18), rot_z=0, scale=1.4)
         else:
-            room_stub(key, d["side"], d["y"])
+            room_stub(key, d["side"], d["y"], depth=2.6 if FLY and key == "cuddlecore" else 1.2)
+            if FLY and key == "cuddlecore":
+                # The fly-through opens this door: glimpse the real kitchen (its front wall, from the
+                # rendered panorama) glowing at the far end, instead of the plain room behind it
+                s = d["side"]
+                pano = os.path.join(OUT, "cuddlecore_pano_rain_preview.jpg")
+                # A tall crop (window, curtains, range) that fills the whole far end of the room behind the door
+                glimpse_png = crop_image(pano, (866, 240, 1182, 780), os.path.join(OUT, "crop_kitchen_glimpse_tall.png"))
+                bpy.ops.mesh.primitive_plane_add(size=1, location=(s * (CW + WT + 2.58), d["y"], H / 2),
+                                                 rotation=(math.radians(90), 0, math.radians(-90 * s)))
+                glimpse = bpy.context.active_object
+                glimpse.name = "kitchen_glimpse"
+                glimpse.scale = (1.62, H + 0.02, 1)
+                bpy.ops.object.transform_apply(scale=True)
+                glimpse.data.materials.append(emission_mat("kitchen_glimpse", glimpse_png, 1.1))
 
     # ---- Grandfather clock against the hill-side wall, between its two doors (no hands: the viewer draws them)
     # The fly-through has no live browser hands to draw on it, so it keeps the model's own, set to 4:40

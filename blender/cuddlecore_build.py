@@ -944,11 +944,10 @@ def flythrough(scene):
     sys.path.insert(0, HERE)
     from whisked import fly_camera, video_settings
     rough = "--rough" in ARGS
-    pot = (0.24, HY - 0.34, 1.05)
     fly_camera(scene, [
         (1,   (-0.95, -1.9, 1.6), (0, 2.2, 1.0), 28),    # 7: just inside the door
         (168, (0.1, 0.9, 1.5), (0.1, 2.2, 1.0), 28),     #    across the rug, past the armchair
-        (264, (0.2, 1.4, 1.35), pot, 35),                # 8: close on the pot, and hold
+        (264, (0.15, 0.95, 1.62), (0.24, HY - 0.34, 1.2), 35),   # 8: the pot and its steam, and hold
     ])
     out = os.path.join(OUT, "flythrough", "rough" if rough else "final", "kitchen_")
     os.makedirs(os.path.dirname(out), exist_ok=True)
