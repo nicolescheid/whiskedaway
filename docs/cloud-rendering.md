@@ -42,6 +42,21 @@ and expect `[]`. A stopped or errored pod can still bill. Spend shows in
 - runpodctl and its API key live on the laptop (`~/tools/runpodctl`, `~/.runpod/config.toml`). The key is a
   Restricted key with Pods read/write only. Never pass it on the command line or paste it anywhere.
 
+## Two things to know when building a new room
+
+**Branches share one image.** `.github/workflows/render-image.yml` runs on a push to any branch that
+changes cloud/Dockerfile or blender/fetch_assets.py (or the workflow itself). Every run pushes the same
+tag, `whiskedaway-render:5.1.0`, so the last branch to push wins and branches overwrite each other's
+image. Renders still work: a pod whose image has a different fetch_assets.py fetches what's missing
+before it renders. That start is slower, by however long the missing assets take to download.
+A fix would be to run the workflow only on pushes to main (`branches: [main]` under `push:`), and to use
+the `sha-` tag or `workflow_dispatch` when a branch needs its own image. The workflow hasn't been changed.
+
+**Each room's art-inbox folder goes in the sparse checkout.** The pod clones the repo without the
+art-inbox, apart from the folders listed in the `git sparse-checkout set` line in cloud/pod_render.sh
+(today `cuddlecore/`, `inn-hallway/` and `glasshouse/`). A new room whose build reads from its own
+art-inbox folder needs that folder added to the list, or the pod won't have it.
+
 ## Why it didn't work at first, and what fixed it
 
 **1. CUDA wouldn't start on Community Cloud 4090s.** Every Community 4090 we were given was on the same

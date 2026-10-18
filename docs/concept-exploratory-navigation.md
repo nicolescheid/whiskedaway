@@ -130,7 +130,7 @@ room offers both as things to touch, never as a form.
 
 ## The prototype (blender/explore.html)
 
-One room, Cuddlecore, as a 360° panorama:
+Live at whiskedaway.com/explore. It started as one room, Cuddlecore, as a 360° panorama:
 
 - **Objects:** the 7 navigation objects (which still open their fixed tool) plus ambient objects
   (window, armchair, plant, oil lamp, cutting board, bowl, basket), all with themes.
@@ -144,6 +144,42 @@ One room, Cuddlecore, as a 360° panorama:
   - **AI mode** (`?ai=<worker-url>`): the Worker's `/navigate` route asks Claude to read the trail,
     constrained to the given IDs and a JSON schema. It falls back to local mode on any error.
 - **Map:** a fixed panel listing every object and tool, always available.
+
+### More rooms (18 Oct 2026)
+
+It's now three places you can walk between: the Cuddlecore kitchen, the hallway (two camera
+stops, the entrance hall and the middle of the hall) and the glasshouse.
+
+- **Walking:** doors and "down the hall" spots move you to the next panorama. `?room=` opens one
+  directly. Walking is recorded in the trail, but it doesn't trigger the navigator: walking
+  about isn't a mood.
+- **One trail, one world:** the navigator sees the objects of all three rooms together, so the
+  trail runs on from room to room. A reveal only shows if its object is in the room you're in.
+- **The hallway dial:** a magic dial beside the hallway doors lists every room. The rooms that
+  aren't open yet say so. The notch with a star, "Wherever my wander points", is the
+  exploratory navigation built into the furniture. For now only the kitchen is open to it, so
+  the star always leads there.
+
+### Energy candles
+
+Five candles on the kitchen counter, from burnt out to tall and bright. The visitor clicks the one
+that matches their energy. It works like the barometer: a standing signal that weighs on every
+reading (`ENERGY_WEIGHT` in `navigator.js`). Each candle also has a `spoon_bias`, so a burnt-out
+candle pushes low-effort pieces up and a bright one lets bigger cooking through. Gemma reacts to
+the candle first, then says what she's put out.
+
+### The glasshouse season
+
+The glasshouse opens in the visitor's own season, so what's growing is what they could plant now.
+
+- **Hemisphere:** the page guesses from the browser's time zone. The Worker's `/hemisphere` route
+  then answers from the rough latitude Cloudflare attaches to the visit. Only "north" or "south"
+  comes back, and nothing is logged or kept. It's asked once, on the way out of the kitchen.
+- **The seasons wheel** by the door turns the glasshouse to any season. Each season is its own
+  render, by day only; at night the day render is dimmed.
+- **Weight:** a season the visitor turned the wheel to counts in the trail (`SEASON_WEIGHT` = 2.5,
+  a little under the candles). Their own season isn't a choice, so it isn't counted.
+- The first time in, Gemma says which season it opened in and that the wheel changes it.
 
 ### What we're trying to learn
 
@@ -171,8 +207,11 @@ One room, Cuddlecore, as a 360° panorama:
 
 ## Open questions
 
-- How should a trail carry from room to room? Should the hallway doors respond to it?
-- Should a returning visitor's previous wander exist at all? Today's `profileAnalyzer`
-  says yes; this concept leans no, or only as an opt-in "pick up where you left off".
-- What should "serve" look like spatially: a card, an object appearing on the counter, Gemma
-  holding something out?
+- Does the trail carry between rooms? Today it does: one trail, one world. Should a room
+  weigh what you did in another room as much as what you did in it? Should the hallway doors
+  respond to it, beyond the star on the dial?
+- Should a returning visitor's wander be kept? Today's `profileAnalyzer`
+  says yes; this concept leans no, or only as an opt-in "pick up where you left off". The
+  explore trail lives in sessionStorage, so today it's gone when the tab closes.
+- What does "serving" look like in a room: a card, an object appearing on the counter, Gemma
+  holding something out? And in a room with no counter, like the hallway or the glasshouse?

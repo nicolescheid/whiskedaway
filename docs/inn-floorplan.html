@@ -40,6 +40,8 @@
   svg .room.locked { fill: var(--locked); stroke-dasharray: 6 4; }
   svg .hall { fill: color-mix(in srgb, var(--amber) 12%, var(--paper)); stroke: var(--wall); stroke-width: 3; }
   svg .glass { fill: var(--glass); stroke: var(--wall); stroke-width: 2; }
+  svg .hall.built { fill: color-mix(in srgb, var(--berry) 14%, var(--paper)); }
+  svg .glass.built { fill: color-mix(in srgb, var(--berry) 14%, var(--glass)); }
   svg .sea { fill: var(--sea); }
   svg .green { fill: var(--green); }
   svg .lane { fill: var(--locked); }
@@ -66,6 +68,7 @@
   .status { font: 600 11px var(--body); letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
   .status.built { color: var(--berry); }
   .status.next { color: var(--amber); }
+  .status.progress { color: var(--amber); border-style: dashed; }
   .status.later { color: var(--ink-soft); }
   dl { margin: 0; display: grid; grid-template-columns: 82px 1fr; gap: 6px 12px; font-size: 14.5px; }
   dt { font: 600 11px/2 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
@@ -115,16 +118,16 @@
           <a href="#room-chia"><rect class="room" x="260" y="190" width="150" height="130"/>
             <text class="name" x="335" y="250" text-anchor="middle">Chiapothecary</text>
             <text class="note" x="335" y="268" text-anchor="middle">clockwork songbird</text></a>
-          <a href="#room-hall"><rect class="hall" x="200" y="60" width="60" height="260"/>
+          <a href="#room-hall"><rect class="hall built" x="200" y="60" width="60" height="260"/>
             <text class="note" x="230" y="190" text-anchor="middle" transform="rotate(-90 230 190)">hallway · grandfather clock</text>
-            <rect class="hall" x="50" y="320" width="360" height="74"/>
+            <rect class="hall built" x="50" y="320" width="360" height="74"/>
             <text class="name" x="270" y="352" text-anchor="middle">Entrance hall</text>
             <text class="note" x="270" y="370" text-anchor="middle">notice board · front door</text></a>
-          <g class="stairs" aria-hidden="true"><rect class="hall" x="60" y="328" width="120" height="58"/>
+          <g class="stairs" aria-hidden="true"><rect class="hall built" x="60" y="328" width="120" height="58"/>
             <line x1="75" y1="328" x2="75" y2="386"/><line x1="90" y1="328" x2="90" y2="386"/><line x1="105" y1="328" x2="105" y2="386"/>
             <line x1="120" y1="328" x2="120" y2="386"/><line x1="135" y1="328" x2="135" y2="386"/><line x1="150" y1="328" x2="150" y2="386"/><line x1="165" y1="328" x2="165" y2="386"/>
             <text class="note" x="120" y="360" text-anchor="middle" style="paint-order:stroke;stroke:var(--paper);stroke-width:3px">stairs up</text></g>
-          <a href="#room-glass"><path class="glass" d="M410 110 h60 v210 h-60 z"/>
+          <a href="#room-glass"><path class="glass built" d="M410 110 h60 v210 h-60 z"/>
             <path d="M410 110 L470 110 M430 110 L430 320 M450 110 L450 320" stroke="var(--wall)" stroke-width=".6" fill="none" aria-hidden="true"/>
             <text class="name" x="440" y="210" text-anchor="middle" transform="rotate(-90 440 210)">Glasshouse</text></a>
           <!-- doors (gaps in the walls) and a magic dial beside every room door -->
@@ -223,7 +226,7 @@
       </article>
 
       <article class="card" id="room-flourish">
-        <header><h3>Flourish Kitchen</h3><span class="status next">Next</span></header>
+        <header><h3>Flourish Kitchen</h3><span class="status progress">In progress</span></header>
         <span class="tome">Flourish: nourishment for becoming your best self</span>
         <dl>
           <dt>Where</dt><dd>Ground floor, back, sunny side</dd>
@@ -234,7 +237,7 @@
       </article>
 
       <article class="card" id="room-sweet">
-        <header><h3>Sweet Spells</h3><span class="status later">Later</span></header>
+        <header><h3>Sweet Spells</h3><span class="status progress">In progress</span></header>
         <span class="tome">Sweet Spells: treats that happen to be good for you</span>
         <dl>
           <dt>Where</dt><dd>Ground floor, front, hill side</dd>
@@ -245,7 +248,7 @@
       </article>
 
       <article class="card" id="room-chia">
-        <header><h3>Chiapothecary</h3><span class="status later">Later</span></header>
+        <header><h3>Chiapothecary</h3><span class="status progress">In progress</span></header>
         <span class="tome">Chiapothecary: chia pudding experiments with superpower vibes</span>
         <dl>
           <dt>Where</dt><dd>Ground floor, front, sunny side, with a glass door into the glasshouse</dd>
@@ -256,7 +259,7 @@
       </article>
 
       <article class="card" id="room-glass">
-        <header><h3>The Glasshouse</h3><span class="status next">Next</span></header>
+        <header><h3>The Glasshouse</h3><span class="status built">Built</span></header>
         <span class="tome">New: herbs and flowers you can grow, and recipes for them</span>
         <dl>
           <dt>Where</dt><dd>Off the Chiapothecary, opening onto the herb and flower garden</dd>
@@ -289,7 +292,7 @@
       </article>
 
       <article class="card" id="room-hall">
-        <header><h3>Hallway and landing</h3><span class="status next">Next</span></header>
+        <header><h3>Hallway and landing</h3><span class="status built">Built</span></header>
         <span class="tome">The spine of the house</span>
         <dl>
           <dt>Where</dt><dd>Through the middle of both floors, with the entrance hall and stairs at the front</dd>
