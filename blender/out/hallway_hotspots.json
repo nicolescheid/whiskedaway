@@ -3,7 +3,7 @@
   "stops": {
     "entrance": {
       "position": [
-        0.0,
+        0,
         -1.3,
         1.6
       ],
@@ -12,7 +12,7 @@
           "label": "The sea",
           "type": "ambient",
           "overlay": null,
-          "yaw": 0.0,
+          "yaw": 0,
           "pitch": -0.62,
           "distance": 9.31,
           "visible": true
@@ -31,7 +31,7 @@
           "type": "dial",
           "overlay": "dial",
           "yaw": -18.9,
-          "pitch": -6.23,
+          "pitch": -4.8,
           "distance": 2.76,
           "visible": true
         },
@@ -67,7 +67,7 @@
           "type": "dial",
           "overlay": "dial",
           "yaw": 18.9,
-          "pitch": -6.23,
+          "pitch": -4.8,
           "distance": 2.76,
           "visible": true
         },
@@ -100,7 +100,7 @@
           "face": {
             "center": [
               -0.585,
-              4.0,
+              4,
               1.732
             ],
             "normal": [
@@ -115,7 +115,7 @@
           "label": "Exit out the front door",
           "type": "door",
           "overlay": null,
-          "yaw": 180.0,
+          "yaw": 180,
           "pitch": -27.58,
           "distance": 1.18,
           "visible": true
@@ -151,7 +151,7 @@
     },
     "middle": {
       "position": [
-        0.0,
+        0,
         3.3,
         1.6
       ],
@@ -160,7 +160,7 @@
           "label": "The sea",
           "type": "ambient",
           "overlay": null,
-          "yaw": 0.0,
+          "yaw": 0,
           "pitch": -1.22,
           "distance": 4.71,
           "visible": true
@@ -248,7 +248,7 @@
           "face": {
             "center": [
               -0.585,
-              4.0,
+              4,
               1.732
             ],
             "normal": [
@@ -263,7 +263,7 @@
           "label": "Exit out the front door",
           "type": "door",
           "overlay": null,
-          "yaw": 180.0,
+          "yaw": 180,
           "pitch": -5.53,
           "distance": 5.67,
           "visible": true

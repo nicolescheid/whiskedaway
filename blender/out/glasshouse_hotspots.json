@@ -39,7 +39,7 @@
           "label": "The garden door",
           "type": "door",
           "overlay": null,
-          "yaw": 0.0,
+          "yaw": 0,
           "pitch": -31.85,
           "distance": 1.17,
           "visible": true
@@ -67,7 +67,7 @@
           "type": "interactive",
           "overlay": null,
           "yaw": 59.67,
-          "pitch": -20.95,
+          "pitch": -22,
           "distance": 1.82,
           "visible": true
         },
@@ -103,7 +103,7 @@
           "type": "interactive",
           "overlay": null,
           "yaw": 59.04,
-          "pitch": -19.7,
+          "pitch": -18.2,
           "distance": 1.49,
           "visible": true
         },
@@ -121,7 +121,7 @@
           "type": "interactive",
           "overlay": null,
           "yaw": 68.39,
-          "pitch": -17.4,
+          "pitch": -15.6,
           "distance": 1.79,
           "visible": true
         },
@@ -211,7 +211,7 @@
           "type": "interactive",
           "overlay": null,
           "yaw": 69.41,
-          "pitch": -17.11,
+          "pitch": -18.9,
           "distance": 2.2,
           "visible": true
         },
