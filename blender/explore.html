@@ -296,6 +296,8 @@
   <div class="meter"><i id="conf" style="width:0"></i></div>
   <h3>Visitor check</h3>
   <div id="visitor" class="small">Not needed yet.</div>
+  <h3>What you've told me</h3>
+  <ul class="trail told" id="told"></ul>
   <h3>Your wander</h3>
   <ul class="trail" id="trail"></ul>
   <p><button class="link" id="forget">Forget this visit</button></p>
@@ -394,6 +396,7 @@ window.__door = frontDoor({ active: window.__doorActive, track });
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate, aiNavigate } from './explore/navigator.js';
+import { visit } from './explore/visit-state.js';
 import { genieFetch, getPass, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
@@ -512,7 +515,10 @@ if (freshVisit) {
   }
 }
 state.time = state.time || null;
-state.energy = state.energy || null;        // the energy candle the visitor picked, or null
+// What the visitor has told the Inn about themselves (the energy candle, later the pantry and location) lives in the
+// shared visit store (explore/visit-state.js), read in every room. A visit saved before the store keeps its candle.
+if (state.energy && !visit.get('energy')) visit.set('energy', state.energy);
+delete state.energy;
 state.room = window.__door?.active ? 'hall-entrance'                  // through the front door: the entrance hall
   : ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
 const room = () => ROOMS[state.room];
@@ -526,7 +532,13 @@ const deviceTime = () => bucketFor(new Date().getHours());
 const timeNow = () => state.time || deviceTime();
 const isNight = () => timeNow() === 'night';
 /** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */
-const navTrail = () => state.trail.some(e => e.kind === 'time') ? state.trail : [{ kind: 'clock', id: deviceTime() }, ...state.trail];
+// What the visitor told the Inn (the store) stands for the whole visit: it goes last, so it holds however long the trail gets
+// (the trail keeps 40 steps, and a candle picked early used to drop out of it)
+const navTrail = () => {
+  const told = [...(visit.get('energy') ? [{ kind: 'energy', id: visit.get('energy') }] : [])];
+  const trail = state.trail.filter(e => e.kind !== 'energy');
+  return [...(trail.some(e => e.kind === 'time') ? [] : [{ kind: 'clock', id: deviceTime() }]), ...trail, ...told];
+};
 $('mode').textContent = AI ? 'AI navigator' : 'Local navigator';
 
 // ---------- season: a good guess from where the visitor seems to be, never a lock (docs/inn-floorplan.html)
@@ -1173,7 +1185,17 @@ function fillMap() {
     $(o.type === 'ambient' ? 'map-room' : 'map-tools').appendChild(item(id));
   });
 }
+// The notebook's "What you've told me": one line per thing in the visit store, each with its own "forget"
+const TOLD = { energy: v => world.energies?.[v] && `Energy: the ${world.energies[v].candle}` };
+function renderTold() {
+  const rows = Object.entries(visit.all()).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
+  $('told').innerHTML = rows.length ? rows.map(([k, text]) => `<li>${esc(text)} <button class="link" data-forget="${esc(k)}">forget</button></li>`).join('')
+    : `<li>Nothing yet. The candles in the kitchen are one way to tell me how you are.</li>`;
+  $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.set(b.dataset.forget, null));
+}
+visit.subscribe('*', (value, key) => { renderTold(); if (key === 'energy') showCandle(); if (key === 'energy' && !value) scheduleNavigate(); });
 function renderNotes() {
+  renderTold();
   const r = state.result;
   let pass = null;
   try { pass = JSON.parse(sessionStorage.getItem('wa-genie-pass') || 'null'); } catch { /* ignore */ }
@@ -1200,7 +1222,8 @@ $('btn-inn').onclick = () => track('leave_to_inn', { room: state.room, step: ste
 $('forget').onclick = () => {
   track('visit_forget');
   store.clear();
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, energy: null, season: null, seasonTold: false, introduced: [], asked: false, chat: [] });
+  visit.clear();                               // what they told the Inn goes too
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, season: null, seasonTold: false, introduced: [], asked: false, chat: [] });
   showCandle();
   renderChat(); setChips([]);
   setHands(handsHour());
@@ -1350,7 +1373,7 @@ const candleGlow = (() => {
 })();
 const candleSpot = id => Object.keys(world.objects).find(k => world.objects[k].type === 'energy' && world.objects[k].energy === id);
 function showCandle() {
-  const key = state.energy && candleSpot(state.energy);
+  const key = visit.get('energy') && candleSpot(visit.get('energy'));
   const s = key && spots[key];
   candleGlow.visible = !!s;
   if (s) candleGlow.position.copy(dir(s.yaw, s.pitch).multiplyScalar(10));
@@ -1359,8 +1382,8 @@ function showCandle() {
 }
 function chooseEnergy(id) {
   const e = world.energies?.[id];
-  if (!e || id === state.energy) return;
-  state.energy = id;
+  if (!e || id === visit.get('energy')) return;
+  visit.set('energy', id);
   track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
   showCandle();
   say(e.moment, [], true);
@@ -1426,7 +1449,7 @@ function settle(fromFov) {
   requestAnimationFrame(step);
 }
 
-window.__explore = { state, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, visit, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();
