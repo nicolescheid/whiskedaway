@@ -30,7 +30,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": -18.92,
+          "yaw": -18.9,
           "pitch": -6.23,
           "distance": 2.76,
           "visible": true
@@ -48,7 +48,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": -7.69,
+          "yaw": -7.68,
           "pitch": -2.58,
           "distance": 6.67,
           "visible": false
@@ -66,7 +66,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": 18.92,
+          "yaw": 18.9,
           "pitch": -6.23,
           "distance": 2.76,
           "visible": true
@@ -84,7 +84,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": 7.69,
+          "yaw": 7.68,
           "pitch": -2.58,
           "distance": 6.67,
           "visible": true
@@ -178,7 +178,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": -155.99,
+          "yaw": -156.01,
           "pitch": -7.8,
           "distance": 2.21,
           "visible": true
@@ -196,7 +196,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": -24.01,
+          "yaw": -23.99,
           "pitch": -7.8,
           "distance": 2.21,
           "visible": true
@@ -214,7 +214,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": 155.99,
+          "yaw": 156.01,
           "pitch": -7.8,
           "distance": 2.21,
           "visible": true
@@ -232,7 +232,7 @@
           "label": "The dial",
           "type": "dial",
           "overlay": "dial",
-          "yaw": 24.01,
+          "yaw": 23.99,
           "pitch": -7.8,
           "distance": 2.21,
           "visible": true

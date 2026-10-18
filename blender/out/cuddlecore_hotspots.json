@@ -38,8 +38,8 @@
     "label": "The weather",
     "overlay": "weather",
     "type": "weather",
-    "yaw": -34.37,
-    "pitch": 1.4
+    "yaw": -33.67,
+    "pitch": 0.92
   },
   "basket": {
     "label": "The basket",
