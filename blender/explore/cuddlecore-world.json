@@ -257,7 +257,7 @@
       ]
     },
     "locale-map": {
-      "label": "Location",
+      "label": "The map",
       "ref": "the map",
       "type": "interactive",
       "tool": "locale",
@@ -373,7 +373,8 @@
         "comfort",
         "unwell",
         "quick",
-        "rain"
+        "rain",
+        "japanese"
       ],
       "seed": {
         "name": "Miso broth with tofu and greens",
@@ -410,7 +411,8 @@
         "breakfast",
         "comfort",
         "quick",
-        "unwell"
+        "unwell",
+        "kiwi"
       ],
       "seed": {
         "name": "Soft-boiled egg with toast soldiers",
@@ -448,7 +450,8 @@
         "cosy",
         "comfort",
         "unwell",
-        "simple"
+        "simple",
+        "chinese"
       ],
       "seed": {
         "name": "Quick chicken and ginger congee",
@@ -591,7 +594,8 @@
         "quick",
         "stress",
         "evening",
-        "hearty"
+        "hearty",
+        "italian"
       ],
       "seed": {
         "name": "One-pot tomato pasta",
@@ -861,7 +865,8 @@
         "no-cook",
         "light",
         "snack",
-        "midday"
+        "midday",
+        "mediterranean"
       ],
       "seed": {
         "name": "Tzatziki with flatbread",
@@ -939,7 +944,8 @@
         "pantry",
         "what-you-have",
         "cooking",
-        "warming"
+        "warming",
+        "chinese"
       ],
       "seed": {
         "name": "Egg fried rice with peas",
@@ -974,7 +980,8 @@
         "warming",
         "simple",
         "comfort",
-        "quick"
+        "quick",
+        "kiwi"
       ],
       "seed": {
         "name": "Cheese toastie",
