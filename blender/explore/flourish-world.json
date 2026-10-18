@@ -1,6 +1,7 @@
 {
   "room": "flourish",
   "name": "The Flourish kitchen",
+  "intro": "This is where I cook properly. Whole foods, and a bit more prep.",
   "stops": {
     "flourish": { "stop": "middle", "title": "The Flourish kitchen", "where": "In the Flourish kitchen", "yaw": 0 }
   },
