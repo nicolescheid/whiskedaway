@@ -3,7 +3,7 @@
   "name": "Flourish",
   "intro": "This is where I cook properly. Whole foods, and a bit more prep.",
   "stops": {
-    "flourish": { "stop": "middle", "title": "Flourish", "where": "In Flourish", "yaw": 30 }
+    "flourish": { "stop": "middle", "title": "Flourish", "where": "In Flourish", "yaw": 22 }
   },
   "clusters": {
     "build-up": { "label": "a proper meal from scratch", "themes": ["nourishing", "whole-food", "meal", "protein", "pulses", "eggs", "garden"] }

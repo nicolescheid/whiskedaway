@@ -1637,7 +1637,8 @@ function acknowledge(kind, { after, forgot }) {
       : (A.country || 'Shopping words for {country}, then.').replace('{country}', countryLabel(after.country) || 'everywhere');
   } else if (kind === 'dietary') {
     const xs = after.dietary.map(d => DIET_WORD[d] || d);
-    line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs.slice(0, 2))) : (A.dietaryOther || "Noted. I'll pass it on when I write a recipe out.");
+    // every need is named, so none seems dropped (QA pass 4)
+    line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : (A.dietaryOther || "Noted. I'll pass it on when I write a recipe out.");
   }
   say(capFirst(line), [], true);
   holdLine();
@@ -1647,7 +1648,7 @@ function acknowledge(kind, { after, forgot }) {
 function entryFact(id) {
   const F = T.entry || {};
   const d = [].concat(visit.get('dietary') || []), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
-  if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', listOf(d.slice(0, 2).map(x => DIET_WORD[x] || x)));
+  if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', listOf(d.map(x => DIET_WORD[x] || x)));
   if (p.length && ['cuddlecore', 'flourish'].includes(id)) return (F.pantry || "I'll look for things that use your {p}.").replace('{p}', listOf(p.slice(0, 2)));
   if (c.length) return (F.cuisine || "I'll lean {c} where I can.").replace('{c}', cuisineLabel(c[0]));
   return '';
@@ -1679,7 +1680,7 @@ function emptyRoomLine() {
   const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const name = { cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'The Chiapothecary' }[best] || 'Next door';
   if (!diet.length) return LINES.room_empty || "That's everything I've got in here. Try next door.";
-  return TL.roomNone.replace('{diet}', diet.map(x => DIET_WORD[x] || x).join(' and ')).replace('{room}', name);
+  return TL.roomNone.replace('{diet}', listOf(diet.map(x => DIET_WORD[x] || x))).replace('{room}', name);   // "vegan, gluten-free and nut-free"
 }
 const tell = createTell({
   visit, lines: LINES.tell, track, defaultCountry: mapDefault,
@@ -1760,7 +1761,7 @@ const TOLD_ENERGY = { 'burnt-out': "You're running on empty today.", low: "You'r
                       half: "You've got about half your energy today.", 'three-quarters': "You've got plenty in you today.",
                       full: "You're full of beans today." };
 const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]),
-               dietary: v => [].concat(v || []).length && `You're eating ${[].concat(v).join(' and ')}.`,
+               dietary: v => [].concat(v || []).length && `You're eating ${listOf([].concat(v))}.`,
                dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
                cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
