@@ -1,0 +1,257 @@
+{
+  "room": "glasshouse",
+  "stops": {
+    "middle": {
+      "position": [
+        0.8,
+        3.15,
+        1.6
+      ],
+      "hotspots": {
+        "gh-chiapothecary-door": {
+          "label": "Chiapothecary",
+          "type": "door",
+          "overlay": null,
+          "yaw": 123.54,
+          "pitch": -21.87,
+          "distance": 1.62,
+          "visible": true
+        },
+        "gh-dial": {
+          "label": "The dial",
+          "type": "dial",
+          "overlay": "dial",
+          "yaw": 112.05,
+          "pitch": -6.78,
+          "distance": 2.12,
+          "visible": true
+        },
+        "drying-herbs": {
+          "label": "Drying herbs",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 116.6,
+          "pitch": 18.6,
+          "distance": 1.64,
+          "visible": true
+        },
+        "garden-door": {
+          "label": "The garden door",
+          "type": "door",
+          "overlay": null,
+          "yaw": 0.0,
+          "pitch": -31.85,
+          "distance": 1.17,
+          "visible": true
+        },
+        "plant-lavender": {
+          "label": "Lavender",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -66.94,
+          "pitch": -15.43,
+          "distance": 1.75,
+          "visible": true
+        },
+        "plant-rosemary": {
+          "label": "Rosemary",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -84.99,
+          "pitch": -20.63,
+          "distance": 3.06,
+          "visible": true
+        },
+        "plant-thyme": {
+          "label": "Thyme",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 59.67,
+          "pitch": -20.95,
+          "distance": 1.82,
+          "visible": true
+        },
+        "plant-sage": {
+          "label": "Sage",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -55.9,
+          "pitch": -18.96,
+          "distance": 1.62,
+          "visible": true
+        },
+        "plant-mint": {
+          "label": "Peppermint",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 146.07,
+          "pitch": -62.86,
+          "distance": 1.45,
+          "visible": true
+        },
+        "plant-balm": {
+          "label": "Lemon balm",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 75.7,
+          "pitch": -10.97,
+          "distance": 2.64,
+          "visible": true
+        },
+        "plant-basil": {
+          "label": "Holy basil",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 59.04,
+          "pitch": -19.7,
+          "distance": 1.49,
+          "visible": true
+        },
+        "plant-chamomile": {
+          "label": "Chamomile",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 53.89,
+          "pitch": -28.53,
+          "distance": 1.2,
+          "visible": true
+        },
+        "plant-calendula": {
+          "label": "Calendula",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 68.39,
+          "pitch": -17.4,
+          "distance": 1.79,
+          "visible": true
+        },
+        "plant-echinacea": {
+          "label": "Echinacea",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -75.52,
+          "pitch": -8.53,
+          "distance": 2.83,
+          "visible": true
+        },
+        "plant-borage": {
+          "label": "Borage",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -59.12,
+          "pitch": -21.02,
+          "distance": 1.34,
+          "visible": true
+        },
+        "plant-fennel": {
+          "label": "Fennel",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -99.36,
+          "pitch": -18.91,
+          "distance": 2.92,
+          "visible": true
+        },
+        "plant-ginger": {
+          "label": "Ginger",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 81.48,
+          "pitch": -21.66,
+          "distance": 2.9,
+          "visible": true
+        },
+        "plant-turmeric": {
+          "label": "Turmeric",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 79.67,
+          "pitch": -29.28,
+          "distance": 2.37,
+          "visible": true
+        },
+        "plant-aloe": {
+          "label": "Aloe vera",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -43.43,
+          "pitch": -27.65,
+          "distance": 1.17,
+          "visible": true
+        },
+        "plant-roselle": {
+          "label": "Hibiscus",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 99.97,
+          "pitch": -19.91,
+          "distance": 2.95,
+          "visible": true
+        },
+        "passionflower": {
+          "label": "Passionflower",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -22.38,
+          "pitch": 27.08,
+          "distance": 1.03,
+          "visible": true
+        },
+        "nettle-bed": {
+          "label": "The nettle bed",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": -56.89,
+          "pitch": -40.68,
+          "distance": 1.81,
+          "visible": false
+        },
+        "seedlings": {
+          "label": "Seedlings",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 69.41,
+          "pitch": -17.11,
+          "distance": 2.2,
+          "visible": true
+        },
+        "seed-packets": {
+          "label": "Seed packets",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 60.01,
+          "pitch": -26.02,
+          "distance": 1.81,
+          "visible": false
+        },
+        "wind-chime": {
+          "label": "The wind chime",
+          "type": "interactive",
+          "overlay": null,
+          "yaw": 17.86,
+          "pitch": 10.19,
+          "distance": 0.96,
+          "visible": true
+        },
+        "seasons-wheel": {
+          "label": "The seasons wheel",
+          "type": "season",
+          "overlay": "season",
+          "yaw": 34.3,
+          "pitch": -11.75,
+          "distance": 1.18,
+          "visible": true
+        },
+        "garden-view": {
+          "label": "The garden",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -9.09,
+          "pitch": -3.39,
+          "distance": 5.07,
+          "visible": true
+        }
+      }
+    }
+  }
+}
