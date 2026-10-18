@@ -1,4 +1,4 @@
-// The Inn's sound (docs: the sound plan in the team notes, stages A and B).
+// The Inn's sound (docs: the sound plan in the team notes, stages A to C).
 // Off until the visitor turns it on with the speaker chip by the bell (or "Sound" in Gemma's chat).
 // The choice lives in this tab only, like the rest of the visit. Everything here is synthesised in
 // Web Audio: no files to fetch, nothing to license, nothing to fail on a phone.
@@ -118,13 +118,166 @@ function startTicking() {
 function stopTicking() { clearInterval(tickTimer); tickTimer = null; }
 let striking = [];
 function stopStriking() { striking.forEach(clearTimeout); striking = []; }
+
+// ---------- ambience: each room's quiet bed, which follows the barometer (stage C)
+// A bed is a few layers: steady ones (filtered noise, sometimes swaying) and scattered ones
+// (drops, crackles, chirps, chimes, bubbles) fired at random by one scheduler.
+
+// Steady filtered noise, optionally swaying in pitch and level: rain's hiss, wind, the sea, the fire's roar
+function hiss(out, { type = 'bandpass', freq = 1000, q = 0.7, gain = 0.02, sway = 0, swayHz = 0.1, swell = 0, swellHz = 0.12 }) {
+  const t = ctx.currentTime, src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  src.buffer = noiseBuffer(); src.loop = true;
+  f.type = type; f.frequency.value = freq; f.Q.value = q;
+  g.gain.value = gain;
+  src.connect(f).connect(g).connect(out);
+  const lfos = [];
+  const lfo = (hz, depth, target) => {
+    const o = ctx.createOscillator(), d = ctx.createGain();
+    o.frequency.value = hz * (0.8 + Math.random() * 0.4); d.gain.value = depth;
+    o.connect(d).connect(target); o.start(t); lfos.push(o);
+  };
+  if (sway) lfo(swayHz, sway, f.frequency);
+  if (swell) lfo(swellHz, gain * swell, g.gain);
+  src.start(t, Math.random());
+  return [src, ...lfos];
+}
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+// Scattered sounds: each fires at time t and returns how long until it would like to fire again
+const SCATTER = {
+  drop: (out, k) => t => {                        // rain on glass: a tick and a tiny ping
+    noise(t, { len: 0.012, freq: rnd(2500, 6000), q: 2, gain: 0.05 * k, out });
+    if (Math.random() < 0.3) note(rnd(1800, 3200), t, { gain: 0.006 * k, decay: 0.08, partials: [[1, 1]], out });
+    return rnd(0.04, 0.25) / k;
+  },
+  drip: (out, k) => t => {                        // mist: now and then a drop falls from the eaves
+    note(rnd(900, 1500), t, { gain: 0.012 * k, decay: 0.12, partials: [[1, 1]], out });
+    return rnd(1.5, 5);
+  },
+  crackle: (out, k) => t => {                     // the hearth
+    const pops = Math.random() < 0.15 ? 3 : 1;
+    for (let i = 0; i < pops; i++) noise(t + i * rnd(0.01, 0.04), { len: rnd(0.004, 0.02), freq: rnd(1200, 4500), q: 1.5, gain: rnd(0.04, 0.14) * k, out });
+    return rnd(0.08, 0.7);
+  },
+  bubble: (out, k) => t => {                      // a flask, or a pot just simmering
+    const o = ctx.createOscillator(), g = ctx.createGain(), f = rnd(250, 600);
+    o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * rnd(1.8, 2.6), t + 0.05);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.025 * k, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+    o.connect(g).connect(out); o.start(t); o.stop(t + 0.08);
+    return rnd(0.15, 1.2) / k;
+  },
+  bird: (out, k) => t => {                        // a few chirps from the garden
+    const n = Math.floor(rnd(2, 5)), base = rnd(2600, 3800);
+    for (let i = 0; i < n; i++) {
+      const at = t + i * rnd(0.09, 0.16), o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(base, at); o.frequency.exponentialRampToValueAtTime(base * rnd(1.2, 1.5), at + 0.06);
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.012 * k, at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.08);
+      o.connect(g).connect(out); o.start(at); o.stop(at + 0.1);
+    }
+    return rnd(2.5, 8);
+  },
+  chime: (out, k) => t => {                       // the wind chime by the garden door: a pentatonic in D
+    const notes = [1174.7, 1318.5, 1480, 1760, 1975.5, 2349.3];
+    const n = Math.random() < 0.4 ? 2 : 1;
+    for (let i = 0; i < n; i++) note(notes[Math.floor(Math.random() * notes.length)], t + i * rnd(0.1, 0.4),
+      { gain: 0.014, decay: 2.2, partials: [[1, 1], [2.76, 0.2], [5.4, 0.06]], out });
+    return rnd(3, 9) / k;
+  },
+  bee: (out, k) => t => {                         // a bee drifting past, then gone
+    const o = ctx.createOscillator(), bp = ctx.createBiquadFilter(), g = ctx.createGain(), dur = rnd(2, 4);
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(rnd(190, 240), t); o.frequency.linearRampToValueAtTime(rnd(190, 240), t + dur);
+    bp.type = 'bandpass'; bp.frequency.value = 600; bp.Q.value = 2;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.006 * k, t + dur * 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(bp).connect(g).connect(out); o.start(t); o.stop(t + dur + 0.05);
+    return dur + rnd(3, 10);
+  },
+};
+
+// What each room sounds like, in this weather, at this hour, in this season
+function recipe(room, weather, { night = false, season = null } = {}) {
+  const wet = weather === 'rain' || weather === 'stormy', storm = weather === 'stormy', mist = weather === 'change';
+  const L = { steady: [], scatter: [] };
+  const rain = (k = 1) => {
+    k *= storm ? 1.6 : 1;
+    L.steady.push({ type: 'highpass', freq: 900, q: 0.5, gain: 0.012 * k });
+    L.scatter.push(['drop', k]);
+  };
+  const wind = (k = 1) => L.steady.push({ freq: 420, q: 0.8, gain: 0.03 * k, sway: 220, swayHz: 0.08, swell: 0.8, swellHz: 0.07 });
+  if (room === 'cuddlecore' || room === 'flourish') {
+    if (room === 'cuddlecore') { L.steady.push({ type: 'lowpass', freq: 260, q: 0.5, gain: 0.03 }); L.scatter.push(['crackle', 1]); }   // the hearth
+    else { L.steady.push({ type: 'lowpass', freq: 180, q: 0.5, gain: 0.02 }); L.scatter.push(['bubble', 0.5]); }   // the range, simmering
+    if (wet) rain(0.7);
+    if (storm) wind(0.8);
+    if (mist) L.scatter.push(['drip', 0.8]);
+    if (weather === 'fair' && !night) L.scatter.push(['bird', 0.5]);
+  } else if (room === 'glasshouse') {
+    if (wet) rain(1.2);
+    if (storm) wind(0.7);
+    if (mist) L.scatter.push(['drip', 1]);
+    L.scatter.push(['chime', storm ? 1.6 : 1]);
+    if (!wet && !night) {
+      L.scatter.push(['bird', 1]);
+      if (season !== 'winter' && !mist) L.scatter.push(['bee', 1]);
+    }
+  } else if (room === 'sweet-spells') {
+    L.steady.push({ type: 'lowpass', freq: 520, q: 0.6, gain: mist ? 0.015 : 0.025, swell: 0.9, swellHz: 0.13 });   // the sea down the lane
+    if (wet) rain(0.8);
+    if (storm) wind(1);
+    if (mist) L.scatter.push(['drip', 0.6]);
+  } else if (room === 'chiapothecary') {
+    L.scatter.push(['bubble', 1]);                // the flasks
+    if (wet) rain(0.6);
+    if (storm) wind(0.6);
+    if (mist) L.scatter.push(['drip', 0.6]);
+  } else {
+    return null;                                  // the hallway: the clock is enough
+  }
+  return L;
+}
+
+let scene = null, bed = null, bedTimer = null;
+function stopBed(fade = 1.5) {
+  if (!bed) return;
+  const { out, nodes } = bed;
+  out.gain.setTargetAtTime(0, ctx.currentTime, fade / 4);
+  setTimeout(() => { nodes.forEach(n => { try { n.stop(); } catch { /* already stopped */ } }); out.disconnect(); }, fade * 1000 + 200);
+  bed = null;
+}
+function startBed() {
+  const L = on && scene ? recipe(scene.room, scene.weather, scene) : null;
+  const key = L && JSON.stringify(L);
+  if (bed && bed.key === key) return;            // same sound as now: leave it playing
+  stopBed();
+  if (!L || !audio()) return;
+  const out = ctx.createGain(), t = ctx.currentTime;
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime(1, t + 1.5);
+  out.connect(master);
+  const nodes = L.steady.flatMap(opts => hiss(out, opts));
+  const scatter = L.scatter.map(([name, k]) => ({ fire: SCATTER[name](out, k), next: t + rnd(0.2, 2) }));
+  bed = { key, out, nodes, scatter };
+  if (!bedTimer) bedTimer = setInterval(() => {
+    if (!bed || ctx.state !== 'running') return;
+    const now = ctx.currentTime;
+    for (const s of bed.scatter) {
+      if (s.next < now) s.next = now + 0.05;      // the tab slept: carry on from here
+      while (s.next < now + 0.4) s.next += s.fire(s.next);
+    }
+  }, 150);
+}
+
+// A hidden tab goes quiet (and stops using the battery), and picks up again when you come back
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => {
+  if (!ctx || !on) return;
+  document.hidden ? ctx.suspend() : ctx.resume();
+});
 export const sound = {
   get on() { return on; },
 
   set(value) {
     on = !!value;
     try { on ? sessionStorage.setItem(KEY, '1') : sessionStorage.removeItem(KEY); } catch { /* ignore */ }
-    if (on) { audio(); startTicking(); } else { stopTicking(); stopStriking(); }   // inside the click, so the browser allows it
+    if (on) { audio(); startTicking(); startBed(); } else { stopTicking(); stopStriking(); stopBed(0.4); }   // inside the click, so the browser allows it
     dispatchEvent(new CustomEvent('wa-sound', { detail: on }));
   },
   toggle() { this.set(!on); if (on) { lastShimmer = -Infinity; this.shimmer(); } },
@@ -183,6 +336,12 @@ export const sound = {
   place(id) {
     place = id;
     if (hallway()) startTicking(); else { stopTicking(); stopStriking(); }
+  },
+
+  // The room's ambience: call whenever the room, the weather, the hour or the season changes
+  ambience(room, weather, { night = false, season = null } = {}) {
+    scene = { room, weather, night, season };
+    try { startBed(); } catch { /* no audio: no matter */ }
   },
 
   // The grandfather clock strikes the hour (1 to 12 times), if you're in the hallway to hear it
