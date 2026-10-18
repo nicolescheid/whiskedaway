@@ -219,12 +219,14 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
       const hits = pantryHits(a, about.pantry, about.synonyms);
       const kept = keptReason(a, book);
       const cuisine = !hits.length && !kept && (about.cuisines || []).find(c => cuisineHit(a, [c]));
-      const first = [...(hits.length ? [`'ve got ${listJoin(hits.slice(0, 2))}${about.useUp ? ' to use' : ''}`] : []), ...(kept ? [kept] : []),
-                     ...(cuisine ? [`fancied ${cuisine}`] : [])];
+      const W = about.why || {};                                   // gemma-lines.json tell.why: "you've got {a} to use", "you chose {a} on the map"
+      const fillWhy = (t, a) => t.replace(/^you've/, "'ve").replace(/^you\s+/, '').replace('{a}', a);   // "Because you" comes first
+      const first = [...(hits.length ? [fillWhy(W.pantry || "you've got {a} to use", listJoin(hits.slice(0, 2)))] : []), ...(kept ? [kept] : []),
+                     ...(cuisine ? [fillWhy(W.cuisine || 'you chose {a} on the map', about.cuisineLabel?.(cuisine) || cuisine)] : [])];
       const { why, context } = reasonsFor(a.themes, trail, world, a.spoons, first.slice(0, 2));
       const parts = shareVerbs(why.slice(0, 2));
       const text = (parts.length ? `Because you ${listJoin(parts)}${context && parts.length < 2 ? `, and ${context}` : ''}.`
-        : context ? `Because ${context}.` : `Because it fits ${top.label}.`).replace("you 've", "you've");
+        : context ? `Because ${context}.` : `Because it fits ${top.label}.`).replace("Because you 've", "Because you've");
       return { atom: a.id, why: text, fromKeep: !!kept && why.slice(0, 2).includes(kept) };
     });
 

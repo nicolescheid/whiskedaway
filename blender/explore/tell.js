@@ -2,7 +2,8 @@
 // pattern: choose, Done, one line from Gemma. Phones held upright get a bottom sheet with Done in its header (it stays above the
 // keyboard); phones on their side a left-half panel; desktop a 420 px dialog. One sheet at a time. Answers go into the visit store
 // on Done (so Gemma speaks once), last the visit, and are forgotten with it.
-// Lists and words here are placeholders until the content editor's copy lands (gemma-lines.json `tell`, world JSON `cuisines`).
+// Words come from gemma-lines.json `tell`, the cuisines, countries and synonyms from tell-data.json (content editor);
+// the lists here only stand in if those files can't be read.
 
 import { DIETS } from './writeout.js';
 
@@ -11,10 +12,19 @@ const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)').matches ? 'land'
   : matchMedia('(max-width: 719px)').matches ? 'phone' : 'desk');
 
-const CUISINES = ['Italian', 'Thai', 'Japanese', 'Indian', 'Mexican', 'Middle Eastern', 'Chinese', 'Korean', 'Greek', 'French', 'Kiwi classics', 'Pacific'];
-export const COUNTRIES = [['NZ', 'New Zealand'], ['AU', 'Australia'], ['GB', 'United Kingdom'], ['IE', 'Ireland'], ['US', 'United States'], ['CA', 'Canada'], ['other', 'Other']];
-const SHOP_WORDS = { NZ: 'courgette, coriander, kūmara', AU: 'zucchini, coriander, capsicum', GB: 'courgette, coriander, aubergine',
-  IE: 'courgette, coriander, aubergine', US: 'zucchini, cilantro, eggplant', CA: 'zucchini, cilantro, eggplant', other: 'everyday names' };
+let CUISINES = ['italian', 'thai', 'japanese', 'indian', 'mexican', 'middle-eastern', 'chinese', 'korean', 'kiwi', 'pacific'].map(id => ({ id, label: id }));
+export let COUNTRIES = [['NZ', 'New Zealand'], ['AU', 'Australia'], ['GB', 'United Kingdom'], ['IE', 'Ireland'], ['US', 'United States'], ['CA', 'Canada'], ['other', 'Other']];
+let SHOP_WORDS = {};
+/** The content editor's lists (tell-data.json): cuisines {id, label}, countries {id, label, example} */
+export function useTellData(data) {
+  if (Array.isArray(data?.cuisines) && data.cuisines.length) CUISINES = data.cuisines;
+  if (Array.isArray(data?.countries) && data.countries.length) {
+    COUNTRIES = data.countries.map(c => [c.id, c.label]);
+    SHOP_WORDS = Object.fromEntries(data.countries.map(c => [c.id, c.example || '']));
+  }
+}
+export const cuisineLabel = id => CUISINES.find(c => c.id === id)?.label || id;
+export const countryLabel = id => COUNTRIES.find(([c]) => c === id)?.[1] || '';
 const MAX_PANTRY = 12, MAX_CUISINES = 3;
 const FILLER = /^(some|a|an|the|leftover|left over|half(?: a)?|a bit of|bit of|bits of|a few|few|lots of|a lot of|bag of|tin of|can of|jar of|bunch of|fresh|frozen|old)\s+/;
 
@@ -23,7 +33,7 @@ export function countryFromLanguage(langs = navigator.languages || [navigator.la
   for (const l of langs || []) {
     const r = (String(l).split('-')[1] || '').toUpperCase();
     if (r === 'UK') return 'GB';
-    if (COUNTRIES.some(([c]) => c === r)) return r;
+    if (COUNTRIES.some(([c]) => c === r)) return r;          // only the countries on the list
   }
   return null;
 }
@@ -37,15 +47,17 @@ export function parsePantry(text) {
     .filter(w => w && w.length <= 24);
 }
 
-export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openEnergy, energyLabel }) {
+export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage }) {
+  const P = lines.pantry || {}, M = lines.map || {}, D = lines.dietary || {}, N = lines.menu || {}, B = lines.buttons || {};
   const L = {
-    pantry: { title: 'What have you got to use?', placeholder: 'eggs, spinach, leftover rice', useUp: 'Use these up first',
-              privacy: 'Only goes to Gemma\'s picks and the recipes she writes out for you.', ...(lines.pantry || {}) },
-    map: { title: 'Where shall we take it?', shop: 'Shopping words for:', choose: 'Choose…', ...(lines.map || {}) },
-    dietary: { title: 'Anything I should avoid?', other: 'Something else?',
-               otherNote: "I'll tell my pen when I write a recipe out. I can't check my cards for it.", ...(lines.dietary || {}) },
-    menu: { title: 'Tell me about you', energy: 'Energy', pantry: 'Pantry', map: 'The map', dietary: 'Dietary needs', none: 'not yet', ...(lines.menu || {}) },
-    forget: 'Forget this', done: 'Done', close: 'Close',
+    pantry: { title: P.title || 'What have you got to use?', helper: P.helper || '', placeholder: P.placeholder || 'eggs, spinach, leftover rice',
+              useUp: P.use_up || 'Use these up first', privacy: P.privacy || "Only used for Gemma's ideas and the recipes she writes out for you." },
+    map: { title: M.title || 'Where shall we take it?', helper: M.helper || '', shop: M.country_label || 'Shopping words for', choose: M.country_choose || 'Choose…' },
+    dietary: { title: D.title || 'Anything I should avoid?', other: D.other_label || 'Something else?', otherPlaceholder: D.other_placeholder || '',
+               otherNote: D.other_note || "I'll pass that on when I write a recipe out. I can't check my cards for it." },
+    menu: { title: (N.chip || '+ Tell me about you').replace(/^\+\s*/, ''), energy: N.energy || 'Energy', pantry: N.pantry || 'Pantry', map: N.map || 'The map',
+            dietary: N.dietary || 'Dietary needs', none: N.not_yet || 'not yet' },
+    forget: B.forget || 'Forget this', done: B.done || 'Done', close: B.close || 'Close',
   };
   const root = document.createElement('div');
   root.id = 'tell';
@@ -67,14 +79,14 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : (p || { items: [], useUp: false }); };
   const current = k => ({
     pantry: pantryNow(),
-    map: { cuisines: [].concat(visit.get('cuisines') || []), country: visit.get('country') || countryFromLanguage() },
+    map: { cuisines: [].concat(visit.get('cuisines') || []), country: visit.get('country') || defaultCountry() },
     dietary: { dietary: [].concat(visit.get('dietary') || []), other: visit.get('dietaryOther') || '' },
   }[k]);
 
   // ---------- the contents
   function drawPantry() {
     const d = draft;
-    body.innerHTML = `<label class="tl-field"><span class="sr-only">${esc(L.pantry.title)}</span>
+    body.innerHTML = `${L.pantry.helper ? `<p class="small">${esc(L.pantry.helper)}</p>` : ''}<label class="tl-field"><span class="sr-only">${esc(L.pantry.title)}</span>
         <input class="tl-input" type="text" autocomplete="off" enterkeyhint="done" maxlength="200" placeholder="${esc(L.pantry.placeholder)}"></label>
       <div class="tl-chips">${d.items.map((w, i) => `<span class="tl-chip">${esc(w)}<button data-rm="${i}" aria-label="Remove ${esc(w)}">×</button></span>`).join('')}</div>
       <label class="tl-switch"><input type="checkbox" ${d.useUp ? 'checked' : ''}><span>${esc(L.pantry.useUp)}</span></label>
@@ -97,9 +109,9 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   }
   function drawMap() {
     const d = draft;
-    body.innerHTML = `<div class="tl-chips tl-pick" role="group" aria-label="${esc(L.map.title)}">${CUISINES.map(c => `<button data-c="${esc(c)}" aria-pressed="${d.cuisines.includes(c)}">${esc(c)}</button>`).join('')}</div>
+    body.innerHTML = `${L.map.helper ? `<p class="small">${esc(L.map.helper)}</p>` : ''}<div class="tl-chips tl-pick" role="group" aria-label="${esc(L.map.title)}">${CUISINES.map(c => `<button data-c="${esc(c.id)}" aria-pressed="${d.cuisines.includes(c.id)}">${esc(c.label)}</button>`).join('')}</div>
       <hr>
-      <label class="tl-row">${esc(L.map.shop)} <select class="tl-country">${d.country ? '' : `<option value="">${esc(L.map.choose)}</option>`}
+      <label class="tl-row">${esc(L.map.shop)}: <select class="tl-country">${d.country ? '' : `<option value="">${esc(L.map.choose)}</option>`}
         ${COUNTRIES.map(([c, n]) => `<option value="${c}" ${d.country === c ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
       <p class="small tl-example">${d.country ? `"${esc(SHOP_WORDS[d.country] || '')}"` : ''}</p>`;
     body.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
@@ -114,7 +126,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   function drawDietary() {
     const d = draft;
     body.innerHTML = `<div class="tl-chips tl-pick" role="group" aria-label="${esc(L.dietary.title)}">${DIETS.map(([id, n]) => `<button data-d="${id}" aria-pressed="${d.dietary.includes(id)}">${esc(n)}</button>`).join('')}</div>
-      <label class="tl-field">${esc(L.dietary.other)} <input class="tl-input" type="text" autocomplete="off" enterkeyhint="done" maxlength="60" value="${esc(d.other)}"></label>
+      <label class="tl-field">${esc(L.dietary.other)} <input class="tl-input" type="text" autocomplete="off" enterkeyhint="done" maxlength="60" placeholder="${esc(L.dietary.otherPlaceholder)}" value="${esc(d.other)}"></label>
       <p class="small">${esc(L.dietary.otherNote)}</p>`;
     body.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
       const id = b.dataset.d, on = d.dietary.includes(id);
@@ -128,7 +140,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   function drawMenu() {
     const p = pantryNow(), cu = [].concat(visit.get('cuisines') || []), di = [].concat(visit.get('dietary') || []);
     const rows = [['energy', L.menu.energy, energyLabel?.() || ''], ['pantry', L.menu.pantry, p.items.slice(0, 2).join(', ') + (p.items.length > 2 ? ` +${p.items.length - 2}` : '')],
-      ['map', L.menu.map, cu.join(', ')], ['dietary', L.menu.dietary, di.join(', ') + (visit.get('dietaryOther') ? (di.length ? ' +1' : 'something else') : '')]];
+      ['map', L.menu.map, cu.map(cuisineLabel).join(', ')], ['dietary', L.menu.dietary, di.join(', ') + (visit.get('dietaryOther') ? (di.length ? ' +1' : 'something else') : '')]];
     body.innerHTML = `<ul class="tl-menu">${rows.map(([k, n, v]) => `<li><button data-k="${k}"><b>${esc(n)}</b><span>${esc(v || L.menu.none)}</span><i aria-hidden="true">›</i></button></li>`).join('')}</ul>`;
     body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
       if (b.dataset.k === 'energy') { close({ silent: true }); return openEnergy?.(); }
@@ -154,8 +166,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     DRAW[k]();
     fit();
     if (!pushed) { history.pushState({ ...(history.state || {}), tell: true }, ''); pushed = true; }
-    if (!was && !reduce()) $('.tl-box').animate(mode() === 'phone' ? [{ transform: 'translateY(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }]
-      : [{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' });
+    if (!was && !reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     if (k !== 'menu') track?.('tell_open', { kind: k, from: src });
     (body.querySelector('input, button') || $('.tl-x')).focus({ preventScroll: true });
   }

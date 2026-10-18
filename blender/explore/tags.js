@@ -5,10 +5,11 @@
 // Tell Gemma sheet (tell.js); energy keeps its small picker. "+ Tell me about you" always ends the row (the empty state too).
 
 import { DIETS } from './writeout.js';
+import { cuisineLabel } from './tell.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function createTags({ el, visit, world, choose, tell }) {
+export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you' }) {
   // Each kind: its icon, its words for a value, the picker's options and how a pick is made
   const KINDS = {
     energy: {
@@ -30,7 +31,7 @@ export function createTags({ el, visit, world, choose, tell }) {
       icon: '🥫', name: 'Pantry', sheet: 'pantry',
       word: v => { const items = Array.isArray(v) ? v : v?.items || []; return items.length ? items.slice(0, 2).join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '') : ''; },
     },
-    cuisines: { icon: '🗺', name: 'The map', sheet: 'map', word: v => [].concat(v || []).join(', ') },   // the country is in the sheet only
+    cuisines: { icon: '🗺', name: 'The map', sheet: 'map', word: v => [].concat(v || []).map(cuisineLabel).join(', ') },   // the country is in the sheet only
   };
   el.setAttribute('role', 'list');
   el.setAttribute('aria-label', "What you've told Gemma");
@@ -47,7 +48,7 @@ export function createTags({ el, visit, world, choose, tell }) {
     const rows = Object.entries(about).filter(([k, v]) => KINDS[k] && KINDS[k].word(v));
     el.innerHTML = rows.map(([k, v]) => `<span role="listitem"><button class="tag" data-k="${esc(k)}" aria-label="${esc(KINDS[k].name)}: ${esc(KINDS[k].word(v))}. Change or forget">`
       + `<span aria-hidden="true">${KINDS[k].icon}</span> ${esc(KINDS[k].word(v))}</button></span>`).join('')
-      + (tell ? `<span role="listitem"><button class="tag tag-add">+ Tell me about you</button></span>` : '');
+      + (tell ? `<span role="listitem"><button class="tag tag-add">${esc(chipLabel)}</button></span>` : '');
     el.querySelectorAll('.tag[data-k]').forEach(b => b.onclick = e => {
       e.stopPropagation();
       const K = KINDS[b.dataset.k];

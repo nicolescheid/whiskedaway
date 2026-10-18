@@ -645,14 +645,14 @@ import { book, snapshot } from './explore/book.js';
 import { createBookView } from './explore/book-view.js';
 import { visitTheme, themeSentence } from './explore/theme.js';
 import { createWriteOut } from './explore/writeout.js';
-import { createTell, countryFromLanguage, COUNTRIES } from './explore/tell.js';
+import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES, TELL_DATA] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
   fetch('explore/hallway-world.json').then(r => r.json()),
@@ -666,7 +666,9 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
+  fetch('explore/tell-data.json').then(r => r.json()).catch(() => ({})),       // Tell Gemma's cuisines, countries and synonyms
 ]);
+useTellData(TELL_DATA);
 // Each reading (cluster) remembers its room, like the atoms do in their JSON: the navigator sends the AI the room's own
 // readings first, and the star on the dial follows them
 for (const w of [world, flWorld, sweetWorld, chiaWorld]) Object.values(w.clusters).forEach(c => { c.room = w.room; });
@@ -751,8 +753,10 @@ state.weather = state.weather || world.default_weather || 'rain';
 // A new visit opens in the visitor's own weather, if the genie can guess it quickly (docs/local-weather.md).
 // state.weatherFrom: 'local' for the guess, 'visitor' once they've chosen one themselves
 if (freshVisit) {
-  const guess = await fetch(`${GENIE_URL}/local-weather`, { signal: AbortSignal.timeout(1500) })
-    .then(r => (r.ok ? r.json() : {})).then(j => j.weather).catch(() => null);
+  const lw = await fetch(`${GENIE_URL}/local-weather`, { signal: AbortSignal.timeout(1500) })
+    .then(r => (r.ok ? r.json() : {})).catch(() => ({}));
+  const guess = lw.weather || null;
+  state.connCountry = /^[A-Z]{2}$/.test(lw.country || '') ? lw.country : null;   // only ever the Map's default; the visitor can change it
   if (world.weathers[guess]) {
     state.weather = guess;
     state.weatherFrom = 'local';
@@ -1181,7 +1185,9 @@ function touch(id) {
   } else if (obj.type === 'submit') {
     openTool(obj.tool_title || 'Find Comfort', obj.tool_text || "The pot can't cook you a full recipe yet. Soon. For now, keep looking around and I'll leave ideas out for you.");
   } else if (TELL_TOOLS[obj.tool]) {
-    tell.open(TELL_TOOLS[obj.tool], 'object');                    // the pantry, the map and the cookbooks (Tell Gemma V1)
+    // The pantry, the map and the cookbooks (Tell Gemma V1): her line, then the sheet
+    if (T.objects?.[id]) { say(T.objects[id], [], true); holdLine(); }   // her reading waits, so this line is the one you see
+    tell.open(TELL_TOOLS[obj.tool], 'object');
   } else {
     openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
   }
@@ -1459,7 +1465,8 @@ function steer() {
     awayOk: !awayOut() || !!state.awayLift?.[homeOf(state.room)],
     served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
-    about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS },
+    about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS,
+             why: T.why, cuisineLabel },
   };
 }
 // The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
@@ -1576,7 +1583,7 @@ const writer = createWriteOut({
     energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,
     theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
     dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
-    country: COUNTRIES.find(([c]) => c === (visit.get('country') || countryFromLanguage()))?.[1] || '', dish: visit.dish(rec.room),
+    country: countryLabel(visit.get('country') || mapDefault()), dish: visit.dish(rec.room),
   }),
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
@@ -1591,36 +1598,43 @@ const bookView = createBookView({
 });
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
+const T = LINES.tell || {};
 const TL = {
-  offer: "Want to tell me what's in your cupboard, or anything to avoid?", offerYes: 'Tell me', offerNo: 'Not now',
-  forgot: 'Forgotten.', nothingAnywhere: "I can't find anything on my shelves that fits all of that.",
-  roomNone: 'Nothing in here fits {diet}, I\'m afraid. {room} has a few.',
-  ...(LINES.tell || {}),
+  offer: T.offer?.line || "Want to tell me what's in your cupboard, or anything to avoid?", offerYes: T.offer?.yes || 'Tell me', offerNo: T.offer?.no || 'Not now',
+  forgot: T.ack?.forget || 'Forgotten.', nothingAnywhere: T.nothing_fits || "I can't find anything on my shelves that fits all of that.",
+  roomNone: T.room_empty_diet || "Nothing in here fits {diet}, I'm afraid. {room} has a few.",
 };
 const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary' };
-// A few words that mean the same in the kitchen (the content editor's list replaces these)
-const SYNONYMS = LINES.tell?.synonyms || { courgette: ['zucchini'], zucchini: ['courgette'], coriander: ['cilantro'], cilantro: ['coriander'],
-  aubergine: ['eggplant'], eggplant: ['aubergine'], capsicum: ['pepper'], kumara: ['kūmara', 'sweet potato'], 'sweet potato': ['kumara', 'kūmara'],
-  mince: ['ground beef'], yoghurt: ['yogurt'], yogurt: ['yoghurt'], chickpea: ['garbanzo'], prawn: ['shrimp'], shrimp: ['prawn'] };
+// The Map's starting country: the connection's (from /local-weather), else the browser's language region (PM, option b)
+const mapDefault = () => (state.connCountry && countryLabel(state.connCountry) ? state.connCountry : countryFromLanguage());
+// Words that mean the same in the kitchen (tell-data.json groups): each word maps to the rest of its group
+const SYNONYMS = {};
+for (const g of TELL_DATA.synonyms || []) for (const w of g) SYNONYMS[w.toLowerCase()] = g.filter(x => x !== w).map(x => x.toLowerCase());
 const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : { items: p?.items || [], useUp: !!p?.useUp }; };
 const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
-// Her one line on Done, naming two things at most, never the list (§4); the content editor's `tell.ack` lines replace these
+// {a} and {b} are the first two things named, never more (§4)
+const fillAB = (t, xs) => t.replace('{a}', xs[0] ?? '').replace('{b}', xs[1] ?? '').replace(/^./, c => c.toUpperCase());
+const byCount = (base, xs) => (xs.length === 1 ? base + '_1' : xs.length === 2 ? base + '_2' : base + '_more');
+const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free' };
+// Her one line on Done, naming two things at most, never the list (tell-gemma-ux §4)
 function acknowledge(kind, { after, forgot }) {
-  const A = LINES.tell?.ack || {};
+  const A = T.ack || {};
   if (forgot) return say(TL.forgot, [], true);
   let line = '';
   if (kind === 'pantry') {
-    const xs = after.items;
-    const two = titleCase(listOf(xs.slice(0, 2))), many = `${titleCase(xs[0])}, ${xs[1]} and a few more`;
-    line = after.useUp ? (A.pantryUseUp || '{two} first, then.').replace('{two}', two)
-      : xs.length >= 3 ? (A.pantryMany || '{many}. Noted.').replace('{many}', many) : (A.pantry || "{two}. I'll work with those.").replace('{two}', two);
+    const xs = after.items, key = byCount(after.useUp ? 'pantry_use_up' : 'pantry', xs);
+    const fall = { pantry_1: "{a}. I'll work with that.", pantry_2: "{a} and {b}. I'll work with those.", pantry_more: '{a}, {b} and a few more. Noted.',
+                   pantry_use_up_1: '{a} first, then.', pantry_use_up_2: '{a} and {b} first, then.', pantry_use_up_more: '{a}, {b} and the rest first, then.' };
+    line = fillAB(A[key] || fall[key], xs);
   } else if (kind === 'map') {
-    const c = after.cuisines;
-    line = c.length ? (A.map || "{c} it is. I'll lean that way.").replace('{c}', listOf(c.slice(0, 2)))
-      : (A.country || 'Shopping words for {country}, then.').replace('{country}', COUNTRIES.find(([x]) => x === after.country)?.[1] || 'everywhere');
+    const xs = after.cuisines.map(cuisineLabel);
+    const fall = { map_1: "{a} it is. I'll lean that way.", map_2: "{a} and {b}. I'll lean that way.", map_more: "{a}, {b} and one more. I'll lean that way." };
+    line = xs.length ? fillAB(A[byCount('map', xs)] || fall[byCount('map', xs)], xs)
+      : (A.map_country_only || 'Shopping words for {country}, then.').replace('{country}', countryLabel(after.country) || 'everywhere');
   } else if (kind === 'dietary') {
-    const d = after.dietary;
-    line = d.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', titleCase(listOf(d.slice(0, 2)))) : (A.dietaryOther || "Noted. I'll tell my pen.");
+    const xs = after.dietary.map(d => DIET_WORD[d] || d);
+    const fall = { dietary_1: "{a}. I'll keep to that.", dietary_2: "{a} and {b}. I'll keep to that.", dietary_more: "{a}, {b} and the rest. I'll keep to all of it." };
+    line = xs.length ? fillAB(A[byCount('dietary', xs)] || fall[byCount('dietary', xs)], xs) : (A.dietary_other_only || "Noted. I'll pass it on when I write a recipe out.");
   }
   say(line, [], true);
   holdLine();
@@ -1628,11 +1642,11 @@ function acknowledge(kind, { after, forgot }) {
 }
 // One fact on a room's first visit: dietary, then the pantry (in the kitchens that cook), then a cuisine (Inn rule 11)
 function entryFact(id) {
-  const F = LINES.tell?.entry || {};
+  const F = T.entry_fact || {};
   const d = [].concat(visit.get('dietary') || []), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
-  if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', listOf(d.slice(0, 2)));
-  if (p.length && ['cuddlecore', 'flourish'].includes(id)) return (F.pantry || "I'll see what I can do with your {p}.").replace('{p}', listOf(p.slice(0, 2)));
-  if (c.length) return (F.cuisine || "I'll lean {c} where I can.").replace('{c}', c[0]);
+  if (d.length) return (F.dietary || "I'll keep to {diet} in here.").replace('{diet}', d.map(x => DIET_WORD[x] || x).join(' and '));
+  if (p.length && ['cuddlecore', 'flourish'].includes(id)) return fillAB(F.pantry || "I'll look for things that use your {a}.", p);
+  if (c.length) return fillAB(F.cuisine || "I'll lean {a} where I can.", c.map(cuisineLabel));
   return '';
 }
 function maybeOfferTell() {
@@ -1662,16 +1676,16 @@ function emptyRoomLine() {
   const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
   const name = { cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'The Chiapothecary' }[best] || 'Next door';
   if (!diet.length) return LINES.room_empty || "That's everything I've got in here. Try next door.";
-  return TL.roomNone.replace('{diet}', listOf(diet.slice(0, 2))).replace('{room}', name);
+  return TL.roomNone.replace('{diet}', diet.map(x => DIET_WORD[x] || x).join(' and ')).replace('{room}', name);
 }
 const tell = createTell({
-  visit, lines: LINES.tell, track,
+  visit, lines: LINES.tell, track, defaultCountry: mapDefault,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
   onDone: acknowledge,
   openEnergy: () => tagsUI.openEnergy(),
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 });
-const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) }, tell });
+const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) }, tell, chipLabel: T.menu?.chip });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
 // the book's "This visit" page and the hallway notice board, once something's been kept
@@ -1746,8 +1760,8 @@ const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TO
                dietary: v => [].concat(v || []).length && `You're eating ${[].concat(v).join(' and ')}.`,
                dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
-               cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v))}.`,
-               country: v => v && `Shopping words for ${COUNTRIES.find(([c]) => c === v)?.[1] || v}.` };
+               cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
+               country: v => v && `Shopping words for ${countryLabel(v) || v}.` };
 const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map' };
 const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 function renderTold() {
