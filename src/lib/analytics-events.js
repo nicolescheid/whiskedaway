@@ -31,9 +31,11 @@ export const EVENTS = {
 
   // The front door at / (docs/front-door-spec.md)
   door_view: [],
-  door_open: ['film'],                    // film: full, or short (reduced motion or Data Saver)
+  door_open: ['film', 'from'],            // film: full, or short (reduced motion or Data Saver); from: picture, or story
   welcome_close: [],
   bell_ring: ['room'],
+  story_view: [],                         // the story below the picture scrolled into view
+  story_link: [],                         // "How it works" tapped
 
   // The React Inn, now the archive (/archive/)
   scene_view: ['scene'],

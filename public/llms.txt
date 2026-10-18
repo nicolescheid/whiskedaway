@@ -1,0 +1,42 @@
+# WhiskedAway
+
+> A recipe site you explore. Wander Gemma's Inn, and she'll find you something to cook.
+
+WhiskedAway is a recipe site you explore. Instead of a menu, you wander a magic inn by the sea, held inside a
+balloon whisk. Gemma, the Inn's kitchen genie, notices what you're drawn to and leaves you ideas for what to cook.
+It's free, there's no account, and it works on phones and computers.
+
+## How it works
+
+Step through the front door, look around, and touch whatever catches your eye. Gemma reads where you go and what
+you touch, and leaves ideas that fit, each with the reason she chose it. You don't type anything. She picks from
+recipes written for the Inn rather than inventing them.
+
+## The rooms
+
+- Cuddlecore: quick comfort, juices and snacks.
+- Flourish: proper meals from whole foods.
+- Sweet Spells: for the sweet tooth.
+- The Chiapothecary: your chia routine.
+- The glasshouse: what's growing this season.
+- The hallway: magic dials that lead to every room. Upstairs is coming.
+
+## Weather, time and season
+
+The Inn opens in the visitor's own weather (looked up for the rough area of their connection, about 50 km, with
+Open-Meteo, and not kept), at their device's time of day, in their hemisphere's season (north or south only).
+Visitors can change all three, and Gemma's ideas change with them.
+
+## Privacy
+
+No account and no name. A visit is forgotten when the tab closes. Visits are counted anonymously, without cookies.
+
+## About
+
+Made by Praxilogue in Aotearoa New Zealand. Gemma's suggestions are chosen with Claude, an AI model made by
+Anthropic. Built with Blender, three.js and Poly Haven assets.
+
+## Links
+
+- [Step inside](https://whiskedaway.com/)
+- [Praxilogue](https://praxilogue.com/)
