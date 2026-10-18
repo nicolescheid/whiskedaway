@@ -4,6 +4,7 @@
 // Escape, ✕ and back close it; ‹ › and the arrow keys turn pages; focus returns to whatever opened it.
 
 import { RIBBONS, metaLine } from './ideas.js';
+import { pageSwipe } from './swipe.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -168,6 +169,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     const j = Math.max(desk ? 1 : 0, Math.min(s.length - 1, i + d));
     if (j !== i) go(s[j]);
   }
+  pageSwipe(left, d => { if (!isDesk()) turn(d); });   // phones: swipe left or right to turn the page (keep and dismiss never swipe in here)
   root.querySelectorAll('.bk-prev, .bk-prev2').forEach(b => b.onclick = () => turn(-1));
   $('.bk-next').onclick = () => turn(1);
   root.querySelectorAll('.bk-tabs [data-go]').forEach(b => b.onclick = () => go(b.dataset.go));

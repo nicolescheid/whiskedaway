@@ -36,6 +36,11 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
            background: var(--parchment); border: 1px solid var(--line); border-left: 4px solid var(--ring, var(--berry)); border-radius: 14px;
            padding: 12px 14px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.32); cursor: pointer; overscroll-behavior: contain; }
 .idea-hl[hidden] { display: none; }
+@media (pointer: coarse) { .idea-hl { touch-action: none; user-select: none; -webkit-user-select: none; } }   /* it swipes; it doesn't scroll */
+.idea-hl .stamp { position: absolute; top: 10px; z-index: 1; padding: 4px 10px; border: 2px solid; border-radius: 8px; opacity: 0; pointer-events: none;
+                  font: 700 13px 'Quicksand'; letter-spacing: .08em; text-transform: uppercase; background: var(--parchment); }
+.idea-hl .stamp.s-keep { left: 12px; color: var(--berry); transform: rotate(-6deg); }
+.idea-hl .stamp.s-no { right: 48px; color: var(--ink-soft); transform: rotate(6deg); }
 .idea-hl .x { position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; border: 0; background: none; font-size: 15px; color: var(--ink-soft); }
 .idea-hl .meta { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--berry); padding-right: 36px; }
 .idea-hl h4 { margin: 3px 0 4px; padding-right: 30px; font: 600 19px/1.2 'Crimson Pro', Georgia, serif; }
@@ -278,7 +283,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 /* Phones: one page at a time, a full-height sheet */
 .book:not(.desk) .bk-box { width: 100vw; height: 100dvh; border-radius: 0; max-width: none; }
 .book:not(.desk) .bk-spread { grid-template-columns: 1fr; }
-.book:not(.desk) .bk-left { border-right: 0; box-shadow: none; }
+.book:not(.desk) .bk-left { border-right: 0; box-shadow: none; touch-action: pan-y; }   /* sideways swipes turn the page */
 .book:not(.desk) .bk-page { padding: 14px 18px; }
 .book:not(.desk) .bk-ribbon { margin-left: -18px; padding-left: 18px; }
 .book:not(.desk) .bk-head { padding: 0 4px; padding-top: env(safe-area-inset-top); }

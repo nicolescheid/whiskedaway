@@ -1464,6 +1464,9 @@ const ideas = createIdeas({
   avatar: () => $('cw-av'), bookChip: () => $('btn-book'),
   layout: (what, on) => { if (what === 'highlight') chatUI.hold(on); },
   onFirst: () => say(L.ideaFirst, [], true),
+  // Once per device, the first time a touch visitor opens an idea: how to swipe it
+  wantHint: () => !book.hint,
+  onHint: () => { book.hint = true; say(LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
   onHighlight: c => countAtom('atom_highlight', c.atom),
   onRead: c => {
     const a = atomsById[c.atom];
