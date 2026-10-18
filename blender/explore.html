@@ -431,7 +431,7 @@ async function showWeather(w, { fade = true } = {}) {
 showWeather(state.weather, { fade: false }).then(() => {
   const s = performance.now() / 1000;
   track('explore_start', { room: state.room, nav_mode: AI ? 'ai' : 'local', full_res: useFull ? 'yes' : 'no',
-                           load_ms: s < 2 ? '<2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : '>10s' });
+                           load_ms: s < 2 ? 'under-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : 'over-10s' });
 });
 
 // yaw: 0 = front wall, + = right; pitch: + = up (same convention as the Blender export)

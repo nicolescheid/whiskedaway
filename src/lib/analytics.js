@@ -72,11 +72,22 @@ export function track(name, params = {}) {
 const payload = (events, pass) => JSON.stringify({ pass, visit, session, surface, device, debug, events });
 
 // text/plain keeps it a simple request: no CORS preflight, and sendBeacon can send it too
+let sending = false;
 async function flush() {
   clearTimeout(timer);
-  if (!queue.length) return;
+  if (!queue.length || sending) return;
+  // The Worker only counts visitors with a pass. Don't wait on a slow Turnstile check for long:
+  // keep the events and try again later (debug mode sends without one, for local testing)
+  sending = true;
+  const pass = await Promise.race([getPass().catch(() => null), new Promise(r => setTimeout(() => r(null), 8000))]);
+  sending = false;
+  if (pass) lastPass = pass;
+  if (!lastPass && !debug) {
+    queue = queue.slice(-50);
+    timer = setTimeout(flush, 15000);
+    return;
+  }
   const events = queue.splice(0, 25);
-  lastPass = (await getPass().catch(() => null)) || lastPass;
   fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: payload(events, lastPass), keepalive: true })
     .catch(() => { /* counting never gets in the way */ });
   if (queue.length) flush();

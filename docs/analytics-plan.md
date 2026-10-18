@@ -1,6 +1,6 @@
 # WhiskedAway measurement plan
 
-Draft, 18 Oct 2026. Not built yet. The decisions marked **Nicole decides** are open.
+18 Oct 2026. Agreed with Nicole the same day: visit grouping on, DNT/GPC honoured, wording as drafted, setup done (see Status at the end).
 
 ## The constraint
 
@@ -65,7 +65,7 @@ All events go through one function per surface, `track(name, params)`, which dro
 
 | Event | When | Parameters |
 |---|---|---|
-| `explore_start` | The first room has rendered | `room`, `nav_mode` (`ai` or `local`), `load_ms` (bucketed: `<2s`, `2-5s`, `5-10s`, `>10s`), `full_res` (`yes`/`no`) |
+| `explore_start` | The first room has rendered | `room`, `nav_mode` (`ai` or `local`), `load_ms` (bucketed: `under-2s`, `2-5s`, `5-10s`, `over-10s`), `full_res` (`yes`/`no`) |
 | `room_enter` | Walking into a room | `room`, `from_room`, `step` (bucketed) |
 | `hotspot_touch` | Touching any hotspot | `room`, `object` (hotspot ID, e.g. `kettle`), `object_type` (`ambient`, `interactive`, `door`, `walk`, `weather`, `time`, `season`, `dial`, `submit`, `energy`) |
 | `door_closed` | Touching a door that isn't open yet | `room`, `object` |
@@ -193,3 +193,23 @@ With one visitor (Nicole) none of this means anything yet. The first useful chec
 - A reload counts as a new visit.
 - Visitors with DNT/GPC, ad blockers that block `cloudflareinsights.com`, or no visitor pass (Turnstile failed) aren't counted. Ad blockers rarely block our own Worker, so GA4 coverage should be better than a normal tag's.
 - The React Inn keeps a behaviour profile in localStorage across visits (`src/engine/behaviorTracker.js`, `storageManager.js`). It never leaves the device and analytics doesn't touch it, but it's at odds with the notebook's promise in spirit. Worth a separate look.
+
+## Status (18 Oct 2026)
+
+Built on the `analytics` branch:
+
+- `src/lib/analytics-events.js`: the allow-list, imported by the browser and the Worker.
+- `src/lib/analytics.js`: `track()`, the visit ID, DNT/GPC and opt-out checks, batching, the Cloudflare beacon. Shared by both surfaces (the explore build copies it beside `genie.js`).
+- `blender/explore.html`: calls at each event point, the notebook line and the credits line.
+- `src/kitchens/SceneRouter.jsx`, `useKitchenSubmit.js`: the Inn's three events.
+- `worker/whiskedaway-worker.js`: `POST /m`. `worker/wrangler.toml`: `GA_MEASUREMENT_ID` and the `MEASURE_LIMIT` rate limit.
+
+If the visitor pass isn't ready within 8 seconds, events stay queued and the page tries again 15 seconds later. The Worker only counts visitors with a pass.
+
+Setup done:
+
+- GA4 web stream `G-PBDF79MT72` (stream URL says www.whiskedaway.com, which doesn't matter for the Measurement Protocol). Enhanced measurement off. Google Signals off. Granular location and device data off. Ads personalisation off in every region. Event and user data retention 2 months. Account data sharing all off. No Google Ads links.
+- Measurement Protocol secret `whiskedaway-genie` created and stored as the Worker secret `GA_API_SECRET`.
+- Cloudflare Web Analytics site for whiskedaway.com (JS snippet), token in `analytics.js`.
+
+Tested locally (dist preview on 4177 against `wrangler dev` on 8797, `?analytics=debug`): every explore event and `scene_view` reached `/m` with only allow-listed parameters, the energy candle went as `object_type: energy` only, and Google's Measurement Protocol validator accepted the payload. Not tested locally: the real forward to GA4 (the secret only exists on the deployed Worker) and the visitor pass (Turnstile doesn't issue passes to localhost:4177). Both are on the post-deploy checklist.
