@@ -310,6 +310,7 @@
       "title": "Honey, ginger and lemon in a mug",
       "short": "Ginger tea",
       "icon": "🫖",
+      "ref": "the ginger tea",
       "hook": "Ginger, lemon and honey in hot water, held in both hands.",
       "time": 5,
       "key_ingredients": [
@@ -350,6 +351,7 @@
       "title": "Five-minute miso broth",
       "short": "Miso broth",
       "icon": "🍜",
+      "ref": "the miso broth",
       "hook": "Salty, warm and light, and ready before the kettle cools.",
       "time": 5,
       "key_ingredients": [
@@ -387,6 +389,7 @@
       "title": "Buttered toast, cut into soldiers",
       "short": "Toast soldiers",
       "icon": "🍞",
+      "ref": "the toast soldiers",
       "hook": "Toast in strips, with a soft egg to dip them in.",
       "time": 10,
       "key_ingredients": [
@@ -423,6 +426,7 @@
       "title": "Quick congee from leftover rice",
       "short": "Congee",
       "icon": "🍚",
+      "ref": "the congee",
       "hook": "Leftover rice simmered soft in stock, with ginger on top.",
       "time": 20,
       "key_ingredients": [
@@ -460,6 +464,7 @@
       "title": "Why warm food feels like comfort",
       "short": "Warm food",
       "icon": "♨️",
+      "ref": "the note on warm food",
       "hook": "Why soft, warm, salty food is easy when your appetite is low.",
       "time": 20,
       "key_ingredients": [
@@ -496,6 +501,7 @@
       "title": "Why ginger feels warming",
       "short": "Ginger's heat",
       "icon": "🔥",
+      "ref": "the note on ginger",
       "hook": "Ginger's gentle heat is a milder cousin of chilli's kick.",
       "time": 15,
       "key_ingredients": [
@@ -532,6 +538,7 @@
       "title": "What \"spoons\" means",
       "short": "Spoons",
       "icon": "🥄",
+      "ref": "the note on spoons",
       "hook": "The spoons on each card show how much energy it costs.",
       "time": 5,
       "key_ingredients": [
@@ -562,6 +569,7 @@
       "title": "No-chop pantry pasta",
       "short": "Pantry pasta",
       "icon": "🍝",
+      "ref": "the pantry pasta",
       "hook": "Pasta, a tin of tomatoes and dried herbs. Nothing to chop.",
       "time": 15,
       "key_ingredients": [
@@ -599,6 +607,7 @@
       "title": "An armchair plate",
       "short": "Snack plate",
       "icon": "🧀",
+      "ref": "the armchair plate",
       "hook": "Crackers, cheese, apple and a few nuts, under a blanket.",
       "time": 5,
       "key_ingredients": [
@@ -633,6 +642,7 @@
       "title": "Apple, cucumber and mint juice",
       "short": "Green juice",
       "icon": "🥒",
+      "ref": "the green juice",
       "hook": "Apple, cucumber and mint, juiced and poured over ice.",
       "time": 10,
       "key_ingredients": [
@@ -673,6 +683,7 @@
       "title": "Carrot, orange and ginger juice",
       "short": "Carrot juice",
       "icon": "🥕",
+      "ref": "the carrot juice",
       "hook": "Carrot, orange and a thumb of ginger. Bright and sharp.",
       "time": 10,
       "key_ingredients": [
@@ -711,6 +722,7 @@
       "title": "A green smoothie that tastes nice",
       "short": "Green smoothie",
       "icon": "🥬",
+      "ref": "the green smoothie",
       "hook": "Spinach, banana, peanut butter and oats. You won't taste the spinach.",
       "time": 5,
       "key_ingredients": [
@@ -747,6 +759,7 @@
       "title": "Watermelon with mint and lime",
       "short": "Watermelon",
       "icon": "🍉",
+      "ref": "the watermelon",
       "hook": "Cold watermelon with mint, lime and a pinch of salt.",
       "time": 5,
       "key_ingredients": [
@@ -786,6 +799,7 @@
       "title": "A bowl of frozen grapes",
       "short": "Frozen grapes",
       "icon": "🍇",
+      "ref": "the frozen grapes",
       "hook": "Grapes from the freezer turn into little sorbet bites.",
       "time": 5,
       "wait": "3 hours in the freezer",
@@ -825,6 +839,7 @@
       "title": "Cool cucumber and yoghurt dip",
       "short": "Cucumber dip",
       "icon": "🥙",
+      "ref": "the cucumber dip",
       "hook": "Cool cucumber, yoghurt, garlic and mint, with flatbread.",
       "time": 10,
       "key_ingredients": [
@@ -862,6 +877,7 @@
       "title": "Apple slices with peanut butter",
       "short": "Apple slices",
       "icon": "🍎",
+      "ref": "the apple and peanut butter",
       "hook": "Apple slices to dip in peanut butter. Crunchy, sweet and salty.",
       "time": 2,
       "key_ingredients": [
@@ -899,6 +915,7 @@
       "title": "Five-minute egg fried rice",
       "short": "Fried rice",
       "icon": "🍳",
+      "ref": "the fried rice",
       "hook": "Leftover rice, an egg, peas and soy sauce in a hot pan.",
       "time": 10,
       "key_ingredients": [
@@ -938,6 +955,7 @@
       "title": "A proper cheese toastie",
       "short": "Cheese toastie",
       "icon": "🥪",
+      "ref": "the cheese toastie",
       "hook": "Plenty of cheese between buttered bread, golden in a low pan.",
       "time": 10,
       "key_ingredients": [
@@ -972,6 +990,7 @@
       "title": "Warm milk with cinnamon",
       "short": "Warm milk",
       "icon": "🥛",
+      "ref": "the warm milk",
       "hook": "Warm milk with cinnamon and honey, to close the day.",
       "time": 5,
       "key_ingredients": [
@@ -1010,6 +1029,7 @@
       "title": "A quick bowl of porridge",
       "short": "Porridge",
       "icon": "🥣",
+      "ref": "the porridge",
       "hook": "Oats stirred slowly in milk, with apple and honey on top.",
       "time": 10,
       "key_ingredients": [
