@@ -8,5 +8,8 @@ worker/.wrangler/
 *.zip
 blender/out/*.blend*
 blender/out/crop_*
+blender/out/flythrough/rough/
+blender/out/flythrough/final/
+blender/out/flythrough/*-rough.mp4
 blender/assets/
 public/explore/
