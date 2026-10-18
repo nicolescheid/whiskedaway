@@ -28,6 +28,14 @@ export const EVENTS = {
   notebook_open: ['room'],
   visit_forget: [],
   leave_to_inn: ['room', 'step'],         // "Front door": back out to the picture
+  // Ideas and the recipe book (recipe-book-ux.md v4 §10). No recipe text, no diet answers
+  idea_highlight: ['atom', 'room', 'atom_kind', 'nav_mode'],        // a bubble opened into its highlight
+  card_read: ['atom', 'room'],                                     // "Read ›": the book opens at its page (was atom_open)
+  card_capture: ['atom', 'room', 'method', 'nav_mode', 'book_size'],   // method: button, swipe or book
+  card_dismiss: ['atom', 'room', 'method', 'undone', 'nav_mode'],     // sent when the 5 s undo closes; undone: yes or no
+  chat_size: ['size', 'how'],                                      // size: line, short, full; how: drag, tap, button, auto
+  book_open: ['from', 'book_size'],                                // from: chip, card, notice_board
+  book_clear: ['book_size'],
 
   // The front door at / (docs/front-door-spec.md)
   door_view: [],
