@@ -16,6 +16,7 @@ export const EVENTS = {
   hotspot_touch: ['room', 'object', 'object_type'],   // energy candles: object_type only, never which candle
   door_closed: ['room', 'object'],
   weather_change: ['room', 'weather'],
+  weather_guess: ['weather', 'outcome'],   // the local-weather guess: shown, or confirmed by the visitor
   time_change: ['room', 'time_of_day'],
   season_change: ['season'],
   dial_turn: ['dial_choice'],

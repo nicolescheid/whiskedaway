@@ -70,6 +70,7 @@ All events go through one function per surface, `track(name, params)`, which dro
 | `hotspot_touch` | Touching any hotspot | `room`, `object` (hotspot ID, e.g. `kettle`), `object_type` (`ambient`, `interactive`, `door`, `walk`, `weather`, `time`, `season`, `dial`, `submit`, `energy`) |
 | `door_closed` | Touching a door that isn't open yet | `room`, `object` |
 | `weather_change` | The barometer is turned | `room`, `weather` |
+| `weather_guess` | The Inn opens in the visitor's local weather (docs/local-weather.md), or they confirm Gemma's guess | `weather`, `outcome` (`shown`, `confirmed`) |
 | `time_change` | The clock is pushed | `room`, `time_of_day` |
 | `season_change` | The glasshouse seasons wheel | `season` |
 | `dial_turn` | The hallway dial | `dial_choice` (a room ID or `star`) |
