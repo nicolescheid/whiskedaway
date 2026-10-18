@@ -45,14 +45,15 @@ SKY = {"rain": (1.1, 0.42, 70), "fair": (2.0, 0.66, 110), "change": (1.5, 0.5, 1
 WET = {"rain": 0.5, "stormy": 0.75}   # raindrops on the sea window (whisked.window_glass)
 
 # Late night, as the kitchen does it: the kitchen's night view of the same coast in the sea window, a near-black
-# sky and fanlight, the lamps a little brighter. Rain still beads on the sea window in rain and storm.
+# sky and fanlight, the lamps carrying the light. Rain still beads on the sea window in rain and storm.
 NIGHT = "--night" in ARGS
 NIGHT_VIEWS = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change": "21-night-change.png",
                "stormy": "22-night-stormy.png", "very-dry": "23-night-very-dry.png"}
 if NIGHT:
     VIEWS = NIGHT_VIEWS
     SKY = {k: (0.04, 0.8, 5) for k in SKY}
-LAMP = 1.3 if NIGHT else 1.0   # wall lamps and the oil lamp, brighter at night
+LAMP = 1.2 if NIGHT else 1.0   # wall lamps and the oil lamp, a touch brighter at night
+FILL = 0.25 if NIGHT else 1.0  # the broad warm fills: low at night, so the light falls in pools round the lamps
 
 os.makedirs(OUT, exist_ok=True)
 PACK = os.path.join(ART, "inn-hallway")
@@ -606,8 +607,8 @@ def build():
     area_light("fan_portal", (0, FRONT - 0.17, arch_z + arch_r / 2), (math.radians(-90), 0, 0), (2 * arch_r, arch_r), 0, (1, 1, 1), portal=True)
     fan_bounce = area_light("fan_bounce", (0, FRONT + 0.05, arch_z + 0.2), (math.radians(-90), 0, 0), (0.9, 0.45), bounce_w * 0.15, (0.78, 0.86, 1.0))
     fan_bounce.visible_camera = fan_bounce.visible_glossy = False
-    point_light("hall_fill", (0.5, -1.0, 2.4), 14, (1.0, 0.68, 0.4), radius=0.8)
-    point_light("corridor_fill", (0, 4.0, 2.4), 10, (1.0, 0.68, 0.4), radius=0.8)
+    point_light("hall_fill", (0.5, -1.0, 2.4), 14 * FILL, (1.0, 0.68, 0.4), radius=0.8)
+    point_light("corridor_fill", (0, 4.0, 2.4), 10 * FILL, (1.0, 0.68, 0.4), radius=0.8)
 
     # ---- Render settings
     scene.render.engine = "CYCLES"
@@ -620,7 +621,7 @@ def build():
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = 0.95 if NIGHT else 0.75
+    scene.view_settings.exposure = 0.7 if NIGHT else 0.75
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
 
