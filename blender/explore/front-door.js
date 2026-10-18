@@ -47,7 +47,7 @@ export function frontDoor({ active, track }) {
     card.setAttribute('aria-labelledby', 'welcome-title');
     card.innerHTML = `
       <div class="box welcome">
-        <div class="who"><img src="explore/assets/gemma-pixel.png" alt=""><h2 id="welcome-title">Welcome to the Inn, love.</h2></div>
+        <div class="who"><img src="explore/assets/gemma/avatar-56.png" srcset="explore/assets/gemma/avatar-112.png 2x, explore/assets/gemma/avatar-168.png 3x" width="56" height="56" alt=""><h2 id="welcome-title">Welcome to the Inn, love.</h2></div>
         <p>Have a wander. Drag to look around, and touch anything that glows.</p>
         <p>I'll notice what you're drawn to and bring you something to cook. Doors with dials lead to the other rooms.</p>
         <p>What I notice stays in this tab. My notebook, up at the top, shows you all of it.</p>

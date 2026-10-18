@@ -122,7 +122,12 @@
                    font: 700 11px/1 'Quicksand'; padding: 0; margin-left: 3px; }
   .chatwin.min .cw-body { display: none; }
   .cw-status { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-  .cw-status img { width: 40px; height: 40px; image-rendering: pixelated; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+  /* Gemma (Direction C, art-inbox/gemma): round, on a warm glow; she breathes a little, unless motion is reduced */
+  .cw-status img { width: 40px; height: 40px; flex: none; object-fit: cover; border-radius: 50%; border: 1px solid var(--line);
+                   background: radial-gradient(circle at 50% 40%, #fbf3e2, #ecdcbf); animation: breathe 5s ease-in-out infinite;
+                   transform-origin: 50% 90%; }
+  @keyframes breathe { 50% { transform: scale(1.035); } }
+  @media (prefers-reduced-motion: reduce) { .cw-status img { animation: none; } }
   .cw-status b { display: block; font: 600 14px 'Quicksand'; }
   .cw-status small { font-size: 12px; color: var(--ink-soft); }
   .cw-status i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3bb36a; margin-right: 5px; }
@@ -220,7 +225,8 @@
   @keyframes ring { 15% { transform: rotate(18deg); } 35% { transform: rotate(-15deg); } 55% { transform: rotate(10deg); } 75% { transform: rotate(-6deg); } }
   .tool .box.welcome { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
   .welcome .who { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-  .welcome .who img { width: 40px; height: 40px; image-rendering: pixelated; }
+  .welcome .who img { width: 56px; height: 56px; flex: none; object-fit: cover; border-radius: 50%; border: 1px solid var(--line);
+                      background: radial-gradient(circle at 50% 40%, #fbf3e2, #ecdcbf); }
   .welcome .help { margin: 4px 0 14px; padding-left: 18px; font-size: 14px; color: var(--ink-soft); }
   .welcome .help li { margin: 4px 0; }
   /* Phones: the room's name on its own line, so the chips and the bell fit beneath it */
@@ -325,7 +331,7 @@
   <div class="cw-bar"><span id="cw-title">Gemma · Cuddlecore</span><span><button id="cw-min" aria-label="Minimise the chat" aria-expanded="true">_</button></span></div>
   <div class="cw-body">
     <div class="cw-status">
-      <img id="cw-av" src="explore/assets/gemma-pixel.png" alt="Gemma, a pixel-art kitchen genie">
+      <img id="cw-av" src="explore/assets/gemma/avatar-40.png" srcset="explore/assets/gemma/avatar-80.png 2x, explore/assets/gemma/avatar-120.png 3x" width="40" height="40" alt="Gemma, the Inn's genie">
       <div><b>Gemma</b><small><i aria-hidden="true"></i><span id="cw-where">In Cuddlecore</span></small></div>
     </div>
     <div class="cw-log" id="cw-log" role="log" aria-live="polite"></div>
@@ -340,7 +346,7 @@
     <h2 id="credits-title">Made with open things</h2>
     <p>WhiskedAway stands on the shoulders of people who share their work.</p>
     <ul>
-      <li><b>Gemma's face</b>: Microsoft's Fluent Emoji "woman genie", MIT licence, pixelated by hand for that 1997 feeling.</li>
+      <li><b>Gemma</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>The Inn's furniture and materials</b>: Poly Haven, CC0. Given to everyone, no strings.</li>
       <li><b>The room</b>: built and rendered in Blender, free and open source (GPL).</li>
       <li><b>The 360° view</b>: three.js, MIT licence.</li>
@@ -1165,15 +1171,6 @@ setInterval(() => { const h = new Date().getHours(); if (h !== lastHour && !stat
 $('cw-min').onclick = () => { const min = $('chatwin').classList.toggle('min'); $('cw-min').setAttribute('aria-expanded', String(!min)); $('cw-min').textContent = min ? '□' : '_'; };
 $('cw-credits').onclick = () => $('credits').classList.add('open');
 $('credits-ok').onclick = () => $('credits').classList.remove('open');
-
-// Her 90s avatar blinks now and then
-(function blink() {
-  setTimeout(() => {
-    const av = $('cw-av');
-    av.src = 'explore/assets/gemma-pixel-blink.png';
-    setTimeout(() => { av.src = 'explore/assets/gemma-pixel.png'; blink(); }, 170);
-  }, 2500 + Math.random() * 4000);
-})();
 
 function serve({ atom, why }, mode) {
   const a = atomsById[atom];

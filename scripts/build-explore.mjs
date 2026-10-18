@@ -21,7 +21,7 @@ if (html.includes('../src/')) throw new Error('explore.html still references ../
 writeFileSync(join(out, 'index.html'), html);
 for (const f of shared) cpSync(join(root, 'src', 'lib', f), join(out, f));
 
-// Room data, navigator, Gemma's pixel avatar (and the Fluent Emoji MIT licence)
+// Room data, navigator, Gemma's avatars (explore/assets/gemma, from art-inbox/gemma), sounds and the front door
 cpSync(join(src, 'explore'), join(out, 'explore'), { recursive: true });
 
 // Renders: every room and weather by day and night, the glasshouse's four seasons, their previews and the hotspots
