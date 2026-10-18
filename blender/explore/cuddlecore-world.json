@@ -3,14 +3,14 @@
   "name": "Cuddlecore Kitchen",
   "clusters": {
     "warm-slow": {
-      "label": "something warm and slow",
+      "label": "something warm and soothing",
       "themes": [
         "warming",
         "broth",
         "rain",
-        "slow",
         "cosy",
-        "hearty"
+        "comfort",
+        "unwell"
       ]
     },
     "rest": {
@@ -19,18 +19,20 @@
         "rest",
         "no-cook",
         "low-spoons",
-        "calm"
+        "calm",
+        "stress"
       ]
     },
     "fresh": {
-      "label": "something fresh and bright",
+      "label": "a juice, a smoothie or something fresh",
       "themes": [
         "fresh",
         "green",
-        "herbs",
         "citrus",
         "light",
-        "sunny"
+        "sunny",
+        "juice",
+        "smoothie"
       ]
     },
     "hands-on": {
@@ -58,13 +60,14 @@
       ]
     },
     "pantry": {
-      "label": "making do with what's already in the cupboard",
+      "label": "something quick from the cupboard",
       "themes": [
         "pantry",
         "simple",
         "what-you-have",
         "bread",
-        "oats"
+        "quick",
+        "stress"
       ]
     },
     "cool": {
@@ -73,7 +76,8 @@
         "cooling",
         "hydrating",
         "chilled",
-        "no-cook"
+        "no-cook",
+        "snack"
       ]
     },
     "morning": {
@@ -109,7 +113,8 @@
         "no-cook",
         "low-spoons",
         "cosy",
-        "calm"
+        "calm",
+        "comfort"
       ],
       "moment": "It sags in exactly the right places. The blanket is still warm."
     },
@@ -156,7 +161,8 @@
         "broth",
         "oats",
         "simple",
-        "warming"
+        "warming",
+        "comfort"
       ],
       "moment": "My soup bowl. It's heavy, so it holds the warmth."
     },
@@ -167,7 +173,8 @@
       "themes": [
         "bread",
         "pantry",
-        "simple"
+        "simple",
+        "snack"
       ],
       "moment": "Half a loaf, wrapped in a tea towel. Help yourself."
     },
@@ -181,7 +188,9 @@
         "honey",
         "oats",
         "pantry",
-        "warming"
+        "warming",
+        "comfort",
+        "unwell"
       ]
     },
     "candle-burnt-out": {
@@ -262,7 +271,9 @@
       "themes": [
         "cooking",
         "broth",
-        "warming"
+        "warming",
+        "comfort",
+        "quick"
       ]
     },
     "exit-door": {
@@ -302,9 +313,22 @@
         "ginger",
         "citrus",
         "calm",
-        "breakfast"
+        "breakfast",
+        "comfort",
+        "unwell",
+        "quick"
       ],
-      "body": "A few slices of ginger, a squeeze of lemon, a spoon of honey, hot (not boiling) water. Wrap both hands round it. That's the whole recipe."
+      "body": "Ginger slices, a squeeze of lemon and a spoon of honey in hot water. Hold it with both hands.",
+      "seed": {
+        "name": "Honey, ginger and lemon drink",
+        "why": "Warm and gentle, and easy to sip when you're not up to much.",
+        "ingredients": [
+          "fresh ginger",
+          "lemon",
+          "honey"
+        ],
+        "time": "5 min"
+      }
     },
     {
       "id": "five-minute-miso",
@@ -316,9 +340,24 @@
         "broth",
         "warming",
         "simple",
-        "low-spoons"
+        "low-spoons",
+        "comfort",
+        "unwell",
+        "quick",
+        "rain"
       ],
-      "body": "Stir a spoon of miso into a mug of hot water off the boil. Add whatever's soft and easy: tofu cubes, a handful of spinach, leftover rice. Sip it slowly."
+      "body": "A spoon of miso stirred into hot water, with tofu, spinach or leftover rice. Sip it slowly.",
+      "seed": {
+        "name": "Miso broth with tofu and greens",
+        "why": "Salty, warm and light, and done before the kettle's cooled.",
+        "ingredients": [
+          "white miso",
+          "silken tofu",
+          "spinach",
+          "spring onion"
+        ],
+        "time": "5 min"
+      }
     },
     {
       "id": "toast-soldiers",
@@ -331,38 +370,51 @@
         "simple",
         "cosy",
         "low-spoons",
-        "breakfast"
+        "breakfast",
+        "comfort",
+        "quick",
+        "unwell"
       ],
-      "body": "Toast counts. You're eating, and that's the win. Cutting it into strips somehow makes it feel like someone's looking after you."
+      "body": "Toast counts. Cut it into strips and it feels like someone's looking after you.",
+      "seed": {
+        "name": "Soft-boiled egg with toast soldiers",
+        "why": "Plain, soft and easy to eat when your appetite is low.",
+        "ingredients": [
+          "eggs",
+          "bread",
+          "butter"
+        ],
+        "time": "10 min"
+      }
     },
     {
       "id": "congee",
       "room": "cuddlecore",
       "kind": "recipe idea",
-      "spoons": 2,
-      "title": "Slow rice congee",
+      "spoons": 1,
+      "title": "Quick congee from leftover rice",
       "themes": [
         "broth",
         "warming",
-        "slow",
         "rain",
-        "cosy"
+        "cosy",
+        "comfort",
+        "unwell",
+        "simple"
       ],
-      "body": "A little rice, a lot of stock, a low heat and an hour of the house smelling wonderful. Ginger and spring onion on top. Good for a day when you can potter."
-    },
-    {
-      "id": "story-ginger",
-      "room": "cuddlecore",
-      "kind": "ingredient story",
-      "spoons": 0,
-      "title": "Why ginger feels warming",
-      "themes": [
-        "ginger",
-        "warming",
-        "learning",
-        "why"
-      ],
-      "body": "That gentle heat comes from compounds like gingerol, the same family of molecules behind chilli's kick, just softer. It's why a ginger tea feels like it warms you from the middle out."
+      "body": "Simmer leftover rice in plenty of stock until it goes soft and thick. Ginger and spring onion on top.",
+      "seed": {
+        "name": "Quick chicken and ginger congee",
+        "why": "Soft, warm and very easy to eat.",
+        "ingredients": [
+          "cooked rice",
+          "chicken stock",
+          "fresh ginger",
+          "spring onion",
+          "soy sauce"
+        ],
+        "time": "20 min"
+      }
     },
     {
       "id": "why-warm-food",
@@ -375,26 +427,49 @@
         "why",
         "learning",
         "cosy",
-        "broth"
+        "broth",
+        "comfort"
       ],
-      "body": "Warm, soft, salty food is easy to eat when your appetite is low, and the steam and smell do half the work before you've taken a spoonful. Comfort is a real thing, not a weakness."
+      "body": "Warm, soft, salty food is easy to eat when your appetite is low, and the smell does half the work. Comfort is a real thing, not a weakness.",
+      "seed": {
+        "name": "Simple chicken noodle soup",
+        "why": "Warm, salty and soft, all in one bowl.",
+        "ingredients": [
+          "chicken stock",
+          "egg noodles",
+          "cooked chicken",
+          "carrot",
+          "spring onion"
+        ],
+        "time": "20 min"
+      }
     },
     {
-      "id": "rain-soup-ritual",
+      "id": "story-ginger",
       "room": "cuddlecore",
-      "kind": "ritual",
-      "spoons": 2,
-      "title": "The rainy-day soup pot",
+      "kind": "ingredient story",
+      "spoons": 0,
+      "title": "Why ginger feels warming",
       "themes": [
-        "rain",
-        "slow",
-        "broth",
-        "cosy",
-        "hands-on",
-        "cooking",
-        "evening"
+        "ginger",
+        "warming",
+        "learning",
+        "why",
+        "quick"
       ],
-      "body": "Onion, carrot and celery, slowly softened in butter, then whatever vegetables need using and enough stock to cover. Let it tick over while you get on with something else."
+      "body": "Ginger's gentle heat comes from gingerol, a milder cousin of the compound behind chilli's kick. That's why ginger tea warms you from the middle.",
+      "seed": {
+        "name": "Ginger and spring onion noodles",
+        "why": "A quick way to taste what ginger does in hot oil.",
+        "ingredients": [
+          "egg noodles",
+          "fresh ginger",
+          "garlic",
+          "spring onion",
+          "soy sauce"
+        ],
+        "time": "15 min"
+      }
     },
     {
       "id": "spoons",
@@ -408,7 +483,18 @@
         "learning",
         "rest"
       ],
-      "body": "Spoon theory: on some days you only have a few units of energy to spend. Knowing your count is how you choose a meal that doesn't cost more than you've got."
+      "body": "Spoon theory: some days you only have a few units of energy to spend. The spoons on each card show what it costs.",
+      "seed": {
+        "name": "A no-cook snack plate",
+        "why": "A meal that costs no spoons at all.",
+        "ingredients": [
+          "crackers",
+          "cheese",
+          "apple",
+          "nuts"
+        ],
+        "time": "5 min"
+      }
     },
     {
       "id": "pantry-pasta",
@@ -420,53 +506,306 @@
         "pantry",
         "simple",
         "what-you-have",
-        "low-spoons"
+        "low-spoons",
+        "quick",
+        "stress",
+        "evening",
+        "hearty"
       ],
-      "body": "Pasta, a tin of tomatoes, a glug of oil, salt, and a pinch of dried herbs. Nothing to chop, one pot, fifteen minutes."
+      "body": "Pasta, a tin of tomatoes, a glug of oil and dried herbs. Nothing to chop, one pot, fifteen minutes.",
+      "seed": {
+        "name": "One-pot tomato pasta",
+        "why": "Dinner from the cupboard on a day with nothing left in the tank.",
+        "ingredients": [
+          "pasta",
+          "tinned tomatoes",
+          "olive oil",
+          "dried oregano",
+          "parmesan"
+        ],
+        "time": "15 min"
+      }
     },
     {
-      "id": "herb-salt",
+      "id": "armchair-plate",
       "room": "cuddlecore",
-      "kind": "technique",
-      "spoons": 1,
-      "title": "Green herb salt",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "An armchair plate",
       "themes": [
-        "herbs",
+        "no-cook",
+        "rest",
+        "low-spoons",
+        "simple",
+        "night",
+        "snack",
+        "stress",
+        "quick"
+      ],
+      "body": "Crackers, a bit of cheese, apple slices and a few nuts. One plate, eaten under a blanket.",
+      "seed": {
+        "name": "Cheese and apple snack plate",
+        "why": "Nothing to cook and one plate to wash.",
+        "ingredients": [
+          "crackers",
+          "cheddar",
+          "apple",
+          "walnuts"
+        ],
+        "time": "5 min"
+      }
+    },
+    {
+      "id": "apple-cucumber-juice",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Apple, cucumber and mint juice",
+      "themes": [
+        "juice",
         "fresh",
         "green",
-        "knife",
-        "hands-on"
+        "hydrating",
+        "cooling",
+        "quick",
+        "sunny",
+        "herbs"
       ],
-      "body": "Chop a big handful of soft herbs with flaky salt until it's bright green and damp. A pinch of it wakes up eggs, rice, anything plain."
+      "body": "Two apples, half a cucumber and a few mint leaves through the juicer. Pour it over ice.",
+      "seed": {
+        "name": "Apple, cucumber and mint juice",
+        "why": "Cold, green and fresh on a hot day.",
+        "ingredients": [
+          "apples",
+          "cucumber",
+          "mint",
+          "lime"
+        ],
+        "time": "10 min"
+      }
     },
     {
-      "id": "cucumber-mint",
+      "id": "carrot-orange-juice",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Carrot, orange and ginger juice",
+      "themes": [
+        "juice",
+        "citrus",
+        "ginger",
+        "fresh",
+        "sunny",
+        "breakfast",
+        "quick"
+      ],
+      "body": "Carrots, two oranges and a thumb of ginger, juiced. Bright orange and sharp.",
+      "seed": {
+        "name": "Carrot, orange and ginger juice",
+        "why": "A sharp, bright glass for the start of the day.",
+        "ingredients": [
+          "carrots",
+          "oranges",
+          "fresh ginger"
+        ],
+        "time": "10 min"
+      }
+    },
+    {
+      "id": "green-smoothie",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "A green smoothie that tastes nice",
+      "themes": [
+        "smoothie",
+        "green",
+        "breakfast",
+        "no-cook",
+        "chilled",
+        "quick",
+        "fresh"
+      ],
+      "body": "Spinach, a banana, a spoon of peanut butter, a few oats and milk, blended. You won't taste the spinach, honestly.",
+      "seed": {
+        "name": "Spinach, banana and peanut butter smoothie",
+        "why": "Breakfast in a glass when there's no time to sit down.",
+        "ingredients": [
+          "spinach",
+          "banana",
+          "peanut butter",
+          "rolled oats",
+          "milk"
+        ],
+        "time": "5 min"
+      }
+    },
+    {
+      "id": "watermelon-mint",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Watermelon with mint and lime",
+      "themes": [
+        "cooling",
+        "hydrating",
+        "fresh",
+        "no-cook",
+        "sunny",
+        "citrus",
+        "snack"
+      ],
+      "body": "Cold watermelon, torn mint, a squeeze of lime and a pinch of salt. Eat it with your fingers.",
+      "seed": {
+        "name": "Watermelon, mint and lime salad",
+        "why": "Mostly water, very cold, and no cooking.",
+        "ingredients": [
+          "watermelon",
+          "mint",
+          "lime",
+          "flaky salt"
+        ],
+        "time": "5 min"
+      }
+    },
+    {
+      "id": "frozen-grapes",
       "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
-      "title": "Cucumber and mint water",
+      "title": "A bowl of frozen grapes",
       "themes": [
-        "fresh",
-        "green",
-        "herbs",
+        "cooling",
         "no-cook",
-        "citrus"
+        "sweet",
+        "hydrating",
+        "chilled",
+        "night",
+        "snack"
       ],
-      "body": "A jug of cold water, a few cucumber ribbons, a sprig of mint, a slice of lemon. It feels like more effort than it is."
+      "body": "Grapes left in the freezer for a few hours turn into little sorbet bites.",
+      "seed": {
+        "name": "Frozen grapes with lime",
+        "why": "A cold, sweet snack that asks nothing of you.",
+        "ingredients": [
+          "seedless grapes",
+          "lime"
+        ],
+        "time": "5 min, then 3 hours"
+      }
     },
     {
-      "id": "gentle-knife",
+      "id": "cucumber-yoghurt",
       "room": "cuddlecore",
-      "kind": "technique",
+      "kind": "recipe idea",
       "spoons": 1,
-      "title": "Gentle knife skills: the claw",
+      "title": "Cool cucumber and yoghurt dip",
       "themes": [
-        "knife",
-        "hands-on",
-        "cooking",
-        "learning"
+        "cooling",
+        "fresh",
+        "herbs",
+        "no-cook",
+        "light",
+        "snack",
+        "midday"
       ],
-      "body": "Curl your fingertips under, knuckles forward, so the blade rides against your knuckles. Slow is fine. Chopping can be oddly calming once it feels safe."
+      "body": "Grated cucumber, squeezed dry, stirred into thick yoghurt with garlic, mint and salt. Crackers or flatbread on the side.",
+      "seed": {
+        "name": "Tzatziki with flatbread",
+        "why": "A cool, quick snack straight from the fridge.",
+        "ingredients": [
+          "cucumber",
+          "Greek yoghurt",
+          "garlic",
+          "mint",
+          "flatbread"
+        ],
+        "time": "10 min"
+      }
+    },
+    {
+      "id": "apple-peanut-butter",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Apple slices with peanut butter",
+      "themes": [
+        "snack",
+        "quick",
+        "simple",
+        "no-cook",
+        "midday",
+        "light",
+        "sweet"
+      ],
+      "body": "An apple in thin slices and a spoon of peanut butter to dip them in. Crunchy, sweet and salty.",
+      "seed": {
+        "name": "Apple and peanut butter snack",
+        "why": "A snack with some staying power, ready in a minute.",
+        "ingredients": [
+          "apple",
+          "peanut butter",
+          "cinnamon"
+        ],
+        "time": "2 min"
+      }
+    },
+    {
+      "id": "egg-fried-rice",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Five-minute egg fried rice",
+      "themes": [
+        "quick",
+        "stress",
+        "evening",
+        "hearty",
+        "pantry",
+        "what-you-have",
+        "cooking",
+        "warming"
+      ],
+      "body": "Leftover rice in a hot pan with oil, an egg, frozen peas and soy sauce. Dinner in the time it takes to set the table.",
+      "seed": {
+        "name": "Egg fried rice with peas",
+        "why": "A hot dinner from leftovers on a stressful evening.",
+        "ingredients": [
+          "cooked rice",
+          "eggs",
+          "frozen peas",
+          "spring onion",
+          "soy sauce"
+        ],
+        "time": "10 min"
+      }
+    },
+    {
+      "id": "cheese-toastie",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "A proper cheese toastie",
+      "themes": [
+        "hearty",
+        "cosy",
+        "bread",
+        "warming",
+        "simple",
+        "comfort",
+        "quick"
+      ],
+      "body": "Butter on the outside, plenty of cheese inside, a low pan and a bit of patience. Eat it straight from the pan.",
+      "seed": {
+        "name": "Cheese toastie",
+        "why": "Hot, crisp and comforting, from things you probably have.",
+        "ingredients": [
+          "bread",
+          "butter",
+          "cheddar"
+        ],
+        "time": "10 min"
+      }
     },
     {
       "id": "evening-milk",
@@ -481,176 +820,50 @@
         "honey",
         "sweet",
         "tea",
-        "night"
+        "night",
+        "comfort",
+        "rest"
       ],
-      "body": "Milk (any kind) warmed in a pan with a pinch of cinnamon and a little honey. Drink it by lamplight. It's not magic, it's a signal to yourself that the day is done."
-    },
-    {
-      "id": "bread-and-butter",
-      "room": "cuddlecore",
-      "kind": "recipe idea",
-      "spoons": 0,
-      "title": "Good bread, good butter, a little salt",
-      "themes": [
-        "bread",
-        "simple",
-        "no-cook",
-        "cosy",
-        "night"
-      ],
-      "body": "Sometimes the best thing in the basket needs nothing doing to it. Thick slice, real butter, a few flakes of salt."
-    },
-    {
-      "id": "scrap-stock",
-      "room": "cuddlecore",
-      "kind": "technique",
-      "spoons": 2,
-      "title": "Stock from scraps",
-      "themes": [
-        "broth",
-        "slow",
-        "hands-on",
-        "pantry",
-        "what-you-have"
-      ],
-      "body": "Keep onion ends, carrot peels and herb stalks in a bag in the freezer. When it's full, cover with water and simmer for an hour. Free broth, and nothing wasted."
-    },
-    {
-      "id": "story-lemon",
-      "room": "cuddlecore",
-      "kind": "ingredient story",
-      "spoons": 0,
-      "title": "What a squeeze of lemon does",
-      "themes": [
-        "citrus",
-        "fresh",
-        "learning",
-        "why"
-      ],
-      "body": "Acid makes flavours taste brighter and more distinct, which is why a squeeze of lemon can rescue a flat soup. Add it at the end, off the heat."
-    },
-    {
-      "id": "armchair-plate",
-      "room": "cuddlecore",
-      "kind": "recipe idea",
-      "spoons": 0,
-      "title": "An armchair plate",
-      "themes": [
-        "no-cook",
-        "rest",
-        "low-spoons",
-        "simple",
-        "night"
-      ],
-      "body": "Crackers, a bit of cheese, apple slices, a few nuts. Nothing cooked, nothing to wash but one plate, and you can eat it with a blanket over your knees."
-    },
-    {
-      "id": "story-honey",
-      "room": "cuddlecore",
-      "kind": "ingredient story",
-      "spoons": 0,
-      "title": "A note on honey",
-      "themes": [
-        "honey",
-        "sweet",
-        "learning",
-        "why"
-      ],
-      "body": "Honey's flavour changes with whatever the bees were visiting: clover is mild, mānuka is deep and bitter-edged. One firm rule: never give honey to babies under a year old."
-    },
-    {
-      "id": "watermelon-mint",
-      "room": "cuddlecore",
-      "kind": "recipe idea",
-      "spoons": 0,
-      "title": "Watermelon with mint and lime",
-      "themes": [
-        "cooling",
-        "hydrating",
-        "fresh",
-        "no-cook",
-        "sunny",
-        "citrus"
-      ],
-      "body": "Cold watermelon in wedges, torn mint, a squeeze of lime and the tiniest pinch of salt. Mostly water, entirely refreshing, eaten with your fingers."
-    },
-    {
-      "id": "frozen-grapes",
-      "room": "cuddlecore",
-      "kind": "ritual",
-      "spoons": 0,
-      "title": "A bowl of frozen grapes",
-      "themes": [
-        "cooling",
-        "no-cook",
-        "sweet",
-        "hydrating",
-        "chilled",
-        "night"
-      ],
-      "body": "Pop a bunch of grapes in the freezer. A few hours later they're little sorbet bites. A cold, sweet thing that asks nothing of you."
-    },
-    {
-      "id": "cucumber-yoghurt",
-      "room": "cuddlecore",
-      "kind": "recipe idea",
-      "spoons": 1,
-      "title": "Cool cucumber and yoghurt dip",
-      "themes": [
-        "cooling",
-        "fresh",
-        "herbs",
-        "no-cook",
-        "light"
-      ],
-      "body": "Grate half a cucumber, squeeze out the water, stir into thick yoghurt with garlic, mint and salt. Eat with crackers or warm flatbread, straight from the fridge."
-    },
-    {
-      "id": "tomato-toast",
-      "room": "cuddlecore",
-      "kind": "recipe idea",
-      "spoons": 1,
-      "title": "Tomato toast with basil",
-      "themes": [
-        "sunny",
-        "fresh",
-        "light",
-        "bread",
-        "simple",
-        "green"
-      ],
-      "body": "Ripe tomatoes, sliced thick on good toast with olive oil, salt and torn basil. Ready in five minutes."
-    },
-    {
-      "id": "cheese-toastie",
-      "room": "cuddlecore",
-      "kind": "recipe idea",
-      "spoons": 1,
-      "title": "A proper cheese toastie",
-      "themes": [
-        "hearty",
-        "cosy",
-        "bread",
-        "warming",
-        "simple"
-      ],
-      "body": "Butter the outside, plenty of cheese inside, a low pan and patience until it's golden and oozing. Eat it straight from the pan."
+      "body": "Milk warmed with a pinch of cinnamon and a little honey. A way of telling yourself the day is done.",
+      "seed": {
+        "name": "Warm cinnamon and honey milk",
+        "why": "Something warm and quiet for the end of the day.",
+        "ingredients": [
+          "milk",
+          "cinnamon",
+          "honey"
+        ],
+        "time": "5 min"
+      }
     },
     {
       "id": "slow-porridge",
       "room": "cuddlecore",
       "kind": "recipe idea",
       "spoons": 1,
-      "title": "A slow bowl of porridge",
+      "title": "A quick bowl of porridge",
       "themes": [
         "oats",
         "warming",
         "gentle",
         "calm",
         "simple",
-        "breakfast"
+        "breakfast",
+        "comfort",
+        "quick"
       ],
-      "body": "Oats, milk and a pinch of salt, stirred slowly over a low heat. A spoon of honey or a grated apple on top."
+      "body": "Oats, milk and a pinch of salt, stirred over a low heat for five minutes. Honey or grated apple on top.",
+      "seed": {
+        "name": "Creamy porridge with apple and honey",
+        "why": "Warm, filling and easy first thing.",
+        "ingredients": [
+          "rolled oats",
+          "milk",
+          "apple",
+          "honey"
+        ],
+        "time": "10 min"
+      }
     }
   ],
   "weathers": {

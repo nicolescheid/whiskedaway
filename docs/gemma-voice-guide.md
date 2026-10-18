@@ -50,16 +50,41 @@ with it.
 
 ## Atoms (the cards)
 
+Each atom is a **snippet**: a card brief enough to read at a glance, which the visitor can keep in their
+recipe book or open as a full recipe. The full recipe is written later by the genie Worker from the atom's seed.
+
 - **Title:** what it is, plainly. "Tomato toast with basil", not "Sunny tomato toast".
-- **Body:** the recipe in the imperative, two to four sentences. A short Gemma aside at the end is fine
-  ("You won't taste the spinach, honestly.").
+- **Body:** the snippet, one or two short sentences (about 15 to 30 words), in the imperative. A short Gemma
+  aside at the end is fine ("You won't taste the spinach, honestly.").
+- **Seed:** what the full recipe is built from.
+  - `name`: the full recipe's name. It can be a fuller version of the title ("Soft-boiled egg with toast soldiers").
+  - `why`: one sentence on why this dish, in Gemma's voice. Factual, no health claims ("Kiwifruit and oranges
+    are both high in vitamin C, which your body uses to make collagen" is the furthest it goes).
+  - `ingredients`: the 2 to 6 key ingredients, lower case, not a full list.
+  - `time`: rough total, e.g. "15 min", "10 min, then overnight", "1 hr 15 min".
+  - "why it works" and "ingredient story" cards get a seed for a dish that shows the idea.
 - **Kind:** one of `recipe idea`, `technique`, `ritual`, `ingredient story`, `why it works`. Nothing else;
   the kind is printed on every card.
 - **Spoons:** 0 if it needs no cooking or effort, 1 for a few minutes at the stove, 2 for real cooking.
 - **Room:** every atom has `"room"`, the id of the room it belongs to. Each room serves mostly its own atoms.
 - **No duplicates across rooms.** Before adding one, check the other rooms for the same dish. Warm milk,
   overnight oats and lentil soup each used to appear twice.
-- **Count:** the AI navigator reads at most 60 atoms. Leave room for new rooms.
+- **Themes:** keep the matching themes the room's objects, weathers and times use (`warming`, `fresh`,
+  `breakfast`, `evening`...), so the navigator can find the card, plus the room-identity tags below.
+- **Count:** the AI navigator gets a shortlist of at most 40 per step (30 from the room you're in, 10 from
+  elsewhere), so the pool can grow. Keep each room at about 20 or fewer.
+
+## Room identities (Nicole, 19 Oct 2026)
+
+| Room | What it's for | Identity tags |
+|---|---|---|
+| Cuddlecore Kitchen | Quick and easy. Under the weather, or a stressful day. Juices, smoothies, smart snacks. Mostly 0 or 1 spoon. | `comfort`, `unwell`, `stress`, `quick`, `juice`, `smoothie`, `snack` |
+| Flourish | Proper meals with more prep. Nutrition and whole foods. | `whole-food`, `meal` |
+| Sweet Spells | The sweet tooth, by time of day, leaning to the evening. | `sweet`, plus `breakfast`, `midday`, `evening`, `night` |
+| Chiapothecary | A chia routine: overnight breakfast, or a jar in the fridge for any time. Restorative, focus, skin, vitamins, energy. | `routine`, `overnight`, `restorative`, `focus`, `skin`, `vitamins`, `energy` |
+
+Focus, skin and energy cards say what's in the food, never what it does to you. "A steady breakfast for a
+day of thinking", not "boosts brain power".
 
 ## Cluster labels
 
