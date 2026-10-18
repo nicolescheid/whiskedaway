@@ -1,0 +1,20 @@
+{
+  "tool": "built-in image_gen",
+  "refinement": "Direction C: reduced cheek blush",
+  "records": [
+    {
+      "file": "03-direction-c-stylised-3d-v2.png",
+      "prompt": "Use case: precise-object-edit. Edit ONLY Gemma's CHEEK COLOUR in this image. She is the same blue-skinned stylised3D kitchen genie. Reduce the pronounced pink/red/peach cosmetic blush on BOTH cheek apples by about90%. Her cheeks should read naturally SOFT BLUE like the rest of her skin, with restrained blue-grey shading and only subtle warmth from the room's actual light, no rosy circular patches or makeup blush. Keep facial volume and gentle smile, do not flatten all shading or desaturate the entire image. Preserve EXACTLY her face identity, eye size/colour, brows, nose/lips, expression, skin outside cheeks, high ponytail, brass cuff/earrings, berry shirt, apron, hands, pose, scale, steam, kitchen/photo background, lighting/exposure and camera/crop. No other design changes, no new objects, no lettering/logos/watermarks. Same16:9 composite; only the excessive rosy cheek colour is removed.",
+      "references": [
+        "C:\\Users\\nicol\\Documents\\Codex\\2026-10-17\\files-pasted-by-the-user-direction\\outputs\\whiskedaway-react\\art-inbox\\gemma\\03-direction-c-stylised-3d.png"
+      ]
+    },
+    {
+      "file": "08-cohost-c-stylised-3d-v2.png",
+      "prompt": "Use case: precise-object-edit. Edit ONLY Gemma's CHEEK COLOUR in this image. She is the same blue-skinned stylised3D kitchen genie. Reduce the pronounced pink/red/peach cosmetic blush on BOTH cheek apples by about90%. Her cheeks should read naturally SOFT BLUE like the rest of her skin, with restrained blue-grey shading and only subtle warmth from the room's actual light, no rosy circular patches or makeup blush. Keep facial volume and gentle smile, do not flatten all shading or desaturate the entire image. Preserve EXACTLY her face identity, eye size/colour, brows, nose/lips, expression, skin outside cheeks, high ponytail, brass cuff/earrings, berry shirt, apron, hands, pose, scale, steam, kitchen/photo background, lighting/exposure and camera/crop. No other design changes, no new objects, no lettering/logos/watermarks. Same16:9 composite; only the excessive rosy cheek colour is removed.",
+      "references": [
+        "C:\\Users\\nicol\\Documents\\Codex\\2026-10-17\\files-pasted-by-the-user-direction\\outputs\\whiskedaway-react\\art-inbox\\gemma\\08-cohost-c-stylised-3d.png"
+      ]
+    }
+  ]
+}

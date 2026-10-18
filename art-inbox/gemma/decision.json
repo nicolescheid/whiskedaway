@@ -1,0 +1,75 @@
+{
+  "stage": 2,
+  "status": "stage2_delivered",
+  "selected_direction": "C",
+  "selected_style": "stylised 3D",
+  "selected_by": "Nicole",
+  "stage2_started": true,
+  "stage2_complete": true,
+  "identity_masters": [
+    "03-direction-c-stylised-3d-v2.png",
+    "08-cohost-c-stylised-3d-v2.png"
+  ],
+  "identity_lock": [
+    "same face",
+    "same hair",
+    "same clothes",
+    "same proportions",
+    "soft blue cheeks; no rosy blush"
+  ],
+  "turnaround": {
+    "file": "10-turnaround.png",
+    "purpose": "Blender modelling reference",
+    "views_left_to_right": [
+      "front",
+      "side",
+      "three-quarter",
+      "back"
+    ],
+    "pose": "relaxed A-pose",
+    "expression": "neutral",
+    "projection": "orthographic reference",
+    "same_scale_and_baseline": true,
+    "back_tie": "plain waistband; front/side knot only",
+    "three_quarter_angle_degrees": 45
+  },
+  "palette_srgb": {
+    "skin": "#8fb8ca",
+    "hair": "#25232b",
+    "berry": "#8b4d5c",
+    "apron": "#e5d9c3",
+    "brass": "#b07f52",
+    "glow": "#e8bd72"
+  },
+  "physical_scale_target_m": 1.65,
+  "scale_definition": "Apparent ponytail-crown to steam-tip height; confirm against approved room master.",
+  "stage2_assets": [
+    "10-turnaround.png",
+    "11-expressions.png",
+    "12-poses.png",
+    "13-avatar-large.png",
+    "14-avatar-small.png",
+    "15-palette.png",
+    "16-handbell.png",
+    "17-shimmer.png",
+    "18-whisk.png"
+  ],
+  "runtime_avatars": [
+    "runtime/13-avatar-48.png",
+    "runtime/14-avatar-24.png"
+  ],
+  "rig_notes": "notes.md",
+  "scope_note": "PNG modelling/acting references, avatars, palette and icons. No Blender mesh, rig or animation included.",
+  "revision": 2,
+  "small_avatar": {
+    "file": "14-avatar-small.png",
+    "style": "flat minimal icon",
+    "facial_detail": "simple eyes only",
+    "runtime": "runtime/14-avatar-24.png"
+  },
+  "latest_fixes": [
+    "flat 24px icon",
+    "soft blue cheeks on turnaround and poses",
+    "45-degree third turnaround view"
+  ]
+}

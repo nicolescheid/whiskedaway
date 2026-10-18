@@ -1,0 +1,146 @@
+[
+  {
+    "file": "10-turnaround.png",
+    "title": "Blender modelling turnaround",
+    "width": 2169,
+    "height": 725,
+    "mode": "RGB",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-cb386d97-8a76-43fc-b117-9875a8368af1.png",
+    "sha256": "75d5002b1d081fe9718c5356b2244b19c2cc1e9a66602530be2c8ddb94de6c2a",
+    "revision": 2
+  },
+  {
+    "file": "11-expressions.png",
+    "title": "Eight expressions",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-6dc11aef-21b5-4bd4-9ad7-cac07fe577bb.png",
+    "sha256": "7f6e9243ca0eb0fed70a22e335edd559213ed112ee2bdb702fa4a2394c771e88"
+  },
+  {
+    "file": "12-poses.png",
+    "title": "Six poses",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGB",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-2f2612a7-b736-4a24-a395-9a3dc014fd37.png",
+    "sha256": "d1f16a649d35790dd085e88bb3dddaead3129b4ac5d4ba2a0bc4873cada730da",
+    "revision": 2
+  },
+  {
+    "file": "13-avatar-large.png",
+    "title": "Avatar for 48px",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-c977e9c6-8536-4ace-ae8a-ee88630fa0a7.png",
+    "sha256": "be7620230b6c65cb08daecddf1ede6c9f5855ee5541f61934ac4a007aa1b93e3",
+    "alpha": {
+      "zero": 406658,
+      "partial": 641659,
+      "opaque": 259,
+      "bounds": [
+        25,
+        0,
+        1000,
+        1024
+      ],
+      "corners_transparent": true
+    }
+  },
+  {
+    "file": "14-avatar-small.png",
+    "title": "Simplified avatar for 24px",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-c824b44d-a3af-49ac-8675-e252f1d68b3e.png",
+    "sha256": "98b0c38e7aa5d58ab020bd087eed834b5203bc9fed3680bbc07783b59d0e6f11",
+    "alpha": {
+      "zero": 448973,
+      "partial": 597038,
+      "opaque": 2565,
+      "bounds": [
+        0,
+        12,
+        1009,
+        1024
+      ],
+      "corners_transparent": true
+    },
+    "revision": 2
+  },
+  {
+    "file": "15-palette.png",
+    "title": "Palette",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGB",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-7fa424c1-c631-4f98-be19-72a434f88990.png",
+    "sha256": "be374687841eec4980ff21d8929861a0d370c2787369d5f766a00f07a465cbaf"
+  },
+  {
+    "file": "16-handbell.png",
+    "title": "Handbell",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-ccddb7ec-00fa-4fa7-b18a-a86367a4b46b.png",
+    "sha256": "75663be296f024f5df9b559c9a8842eb8b13e45ba9541668323f6032ad603263",
+    "alpha": {
+      "zero": 853961,
+      "partial": 193823,
+      "opaque": 792,
+      "bounds": [
+        40,
+        33,
+        1004,
+        1024
+      ],
+      "corners_transparent": true
+    }
+  },
+  {
+    "file": "17-shimmer.png",
+    "title": "Shimmer",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-7c4caa31-d86b-47d7-9bfe-2fad1a06a62c.png",
+    "sha256": "311921e19efac39784653a84093b0638cc6a5dad4de20b30b988755387dd46d2",
+    "alpha": {
+      "zero": 782700,
+      "partial": 265876,
+      "opaque": 0,
+      "bounds": [
+        22,
+        15,
+        1013,
+        1024
+      ],
+      "corners_transparent": true
+    }
+  },
+  {
+    "file": "18-whisk.png",
+    "title": "Whisk",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "source": "C:\\Users\\nicol\\.codex\\generated_images\\01a147b7-84d8-7c71-a887-38d571411bdb\\exec-17fe9ecf-8e8e-405e-80f8-a13f8b451860.png",
+    "sha256": "bf442badf08c84456171576839afbb6c8124c2399fd089cc3fa016d575046d2f",
+    "alpha": {
+      "zero": 920489,
+      "partial": 125594,
+      "opaque": 2493,
+      "bounds": [
+        19,
+        29,
+        1004,
+        1005
+      ],
+      "corners_transparent": true
+    }
+  }
+]
