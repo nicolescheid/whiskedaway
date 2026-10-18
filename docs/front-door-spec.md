@@ -284,7 +284,10 @@ draw anything until the visitor has clicked in.
 8. **Test.** Desktop and phone, both orientations, slow 3G, Data Saver, reduced motion, keyboard
    only, a screen reader pass, old links, `?count-me=off`, `?analytics=debug`. Then hand to the
    QA session.
-9. **Hand-over.** The project manager merges and deploys both Workers. Post-deploy checklist goes
+9. **Hand-over.** Rebase onto main first. The project manager's queue for `explore.html` and
+   `build-explore.mjs` is Chiapothecary, then the /explore QA fixes, then the front door. Tell the
+   project manager before moving the React app to /archive/ (step 4), so it lands after the
+   Inn-app QA fixes in `src/`. The project manager merges and deploys both Workers. Post-deploy checklist goes
    in the shared notes folder.
 
 Rough time: two to three working sessions after the answers come in, plus waiting on ChatGPT.
