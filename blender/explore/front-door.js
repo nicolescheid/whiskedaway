@@ -234,13 +234,18 @@ export function frontDoor({ active, track }) {
     }, { root: door, threshold: 0.5 });
     const lead = $('story-what');
     if (lead) seen.observe(lead);
-    // The pill shows once the picture has scrolled mostly out of view
-    new IntersectionObserver(([e]) => {
-      const show = !e.isIntersecting;
+    // The pill shows once the picture has scrolled mostly out of view, and steps aside at the footer,
+    // which has its own Step inside
+    let pictureOut = false, footIn = false;
+    const setPill = () => {
+      const show = pictureOut && !footIn;
       pill.classList.toggle('show', show);
       pill.tabIndex = show ? 0 : -1;
       pill.setAttribute('aria-hidden', String(!show));
-    }, { root: door, threshold: 0.15 }).observe(first);
+    };
+    new IntersectionObserver(([e]) => { pictureOut = !e.isIntersecting; setPill(); }, { root: door, threshold: 0.15 }).observe(first);
+    const foot = door.querySelector('.fd-foot');
+    if (foot) new IntersectionObserver(([e]) => { footIn = e.isIntersecting; setPill(); }, { root: door }).observe(foot);
   }
   const fromStory = () => { door.style.scrollBehavior = 'auto'; door.scrollTop = 0; enter('story'); };
   pill.addEventListener('click', fromStory);
