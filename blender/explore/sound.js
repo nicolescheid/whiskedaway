@@ -1,10 +1,15 @@
 // The Inn's sound (docs: the sound plan in the team notes, stages A to D).
 // Off until the visitor turns it on with the speaker chip by the bell (or "Sound" in Gemma's chat).
 // The choice lives in this tab only, like the rest of the visit. Everything here is synthesised in
-// Web Audio: no files to fetch, nothing to license, nothing to fail on a phone.
+// Web Audio: no files to fetch, nothing to license, nothing to fail on a phone. Recordings may join later.
 //
 // One AudioContext for the whole Inn, made on the first gesture that turns sound on, and one master
 // gain under it so every sound sits at a gentle level.
+//
+// Recorded files (none yet) go through recording(), which follows the Inn's low-data rule
+// (explore/data-budget.js): with saveData nothing optional is fetched, and nothing ever waits on audio.
+
+import { saveData } from './data-budget.js';
 
 const KEY = 'wa-sound';
 let on = false;
@@ -305,6 +310,21 @@ function tine(f, t, out) {
   note(f, t + rnd(-0.006, 0.006), { gain: 0.05, decay: Math.min(1.6, 900 / f), partials: [[1, 1], [2, 0.12], [4.2, 0.06]], out });
 }
 
+// A recorded file, decoded and kept for the visit. Resolves to null, never throws, when there's no file to
+// play: Data Saver or a 2G link, a failed fetch, or anything that isn't audio (a missing file comes back
+// as the Inn's own page, with a 200; that's how the old uh-oh failed). Callers never wait on it to show anything.
+const recordings = new Map();
+function recording(url) {
+  if (saveData || !audio()) return Promise.resolve(null);
+  if (!recordings.has(url)) recordings.set(url, fetch(url)
+    .then(r => r.ok && /^audio\//.test(r.headers.get('content-type') || '') ? r.arrayBuffer() : null)
+    .then(b => b && ctx.decodeAudioData(b))
+    .catch(() => null));
+  return recordings.get(url);
+}
+
+// Things that play. `pick` chooses a written-out tune; `src` (optional) chooses a recorded file, which takes
+// over when it has loaded. With no file (low data, or it failed), the tune plays, or, without a tune, nothing.
 const MUSIC = {
   'music-box': { room: 'sweet-spells', pick: s => s?.night ? 'brahms' : s?.weather === 'rain' || s?.weather === 'stormy' ? 'elise' : 'twinkle' },
 };
@@ -312,9 +332,9 @@ let playing = null;                              // { id, out, tune, start, i, t
 function stopMusic(fade = 0.6) {
   if (!playing) return;
   clearInterval(playing.timer);
-  const { out } = playing;
+  const { out, src } = playing;
   out.gain.setTargetAtTime(0, ctx.currentTime, fade / 4);
-  setTimeout(() => out.disconnect(), fade * 1000 + 300);
+  setTimeout(() => { try { src?.stop(); } catch { /* not started */ } out.disconnect(); }, fade * 1000 + 300);
   playing = null;
 }
 function startMusic(id) {
@@ -322,8 +342,18 @@ function startMusic(id) {
   if (!on || !audio()) return;
   const out = ctx.createGain();
   out.connect(master);
-  const p = { id, out, start: ctx.currentTime + 0.15, i: 0 };
-  p.tune = parseTune(TUNES[MUSIC[id].pick(scene)]);
+  const m = MUSIC[id], p = { id, out, start: ctx.currentTime + 0.15, i: 0 };
+  playing = p;
+  if (m.src) recording(m.src(scene)).then(buf => {
+    if (!buf || playing !== p) return;
+    clearInterval(p.timer);                        // the recording takes over from the written-out tune
+    p.src = ctx.createBufferSource();
+    p.src.buffer = buf; p.src.loop = true;
+    p.src.connect(out);
+    p.src.start();
+  });
+  if (!m.pick) return;
+  p.tune = parseTune(TUNES[m.pick(scene)]);
   p.timer = setInterval(() => {
     if (ctx.state !== 'running') return;
     const now = ctx.currentTime;
@@ -332,7 +362,7 @@ function startMusic(id) {
       const ev = p.tune.events[p.i];
       if (!ev) {                                   // the end of the tune: a breath, then again, in whatever suits the weather now
         p.start += p.tune.total + 1.6;
-        p.tune = parseTune(TUNES[MUSIC[id].pick(scene)]);
+        p.tune = parseTune(TUNES[m.pick(scene)]);
         p.i = 0;
         continue;
       }
@@ -341,7 +371,6 @@ function startMusic(id) {
       p.i++;
     }
   }, 100);
-  playing = p;
 }
 
 // A hidden tab goes quiet (and stops using the battery), and picks up again when you come back
