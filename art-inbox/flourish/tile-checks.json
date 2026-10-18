@@ -1,0 +1,53 @@
+{
+  "method": "Generated fabric swatches phase-aligned by cropping whole design repeats, normalized to1254square and matching outer12pixel edge bands. Original swatches preserved. No vector/procedural substitute for image-generation source.",
+  "tiles": [
+    {
+      "file": "11-runner-tile.png",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "detected_period_x_px": 363,
+      "detected_period_y_px": null,
+      "repeat_crop": [
+        149,
+        82,
+        1238,
+        1171
+      ],
+      "repeat_count_x": 3,
+      "repeat_count_y": null,
+      "final_size": [
+        1254,
+        1254
+      ],
+      "boundary_blend_px": 12,
+      "left_right_edge_mean_absolute_difference": 0.0,
+      "top_bottom_edge_mean_absolute_difference": 0.0
+    },
+    {
+      "file": "12-tea-towel-tile.png",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "detected_period_x_px": 142,
+      "detected_period_y_px": 146,
+      "repeat_crop": [
+        0,
+        0,
+        1136,
+        1168
+      ],
+      "repeat_count_x": 8,
+      "repeat_count_y": 8,
+      "final_size": [
+        1254,
+        1254
+      ],
+      "boundary_blend_px": 12,
+      "left_right_edge_mean_absolute_difference": 0.0,
+      "top_bottom_edge_mean_absolute_difference": 0.0
+    }
+  ]
+}

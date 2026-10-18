@@ -14,8 +14,7 @@
     "walk-hall": { "label": "Down the hall", "ref": "the hallway", "type": "walk", "go": "hall-middle", "themes": [] },
     "walk-front": { "label": "To the front door", "ref": "the entrance hall", "type": "walk", "go": "hall-entrance", "arrive_yaw": 180, "themes": [] },
     "door-cuddlecore": { "label": "Cuddlecore Kitchen", "ref": "the kitchen door", "type": "door", "go": "cuddlecore", "themes": [] },
-    "door-flourish": { "label": "Flourish", "ref": "the Flourish door", "type": "door", "themes": [],
-                       "closed": "Flourish isn't open yet. Someone's still unpacking the phonograph." },
+    "door-flourish": { "label": "Flourish", "ref": "the Flourish door", "type": "door", "go": "flourish", "themes": [] },
     "door-sweet-spells": { "label": "Sweet Spells", "ref": "the Sweet Spells door", "type": "door", "themes": [],
                            "closed": "Sweet Spells isn't open yet. You can smell the sugar from here, though." },
     "door-chiapothecary": { "label": "Chiapothecary", "ref": "the Chiapothecary door", "type": "door", "themes": [], "always_visible": true,
@@ -38,7 +37,7 @@
   },
   "dial": [
     { "label": "Cuddlecore", "go": "cuddlecore" },
-    { "label": "Flourish" },
+    { "label": "Flourish", "go": "flourish" },
     { "label": "Sweet Spells" },
     { "label": "Chiapothecary" },
     { "label": "Glasshouse", "go": "glasshouse" },

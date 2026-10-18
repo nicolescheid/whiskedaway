@@ -1,0 +1,106 @@
+{
+  "room": "flourish",
+  "name": "The Flourish kitchen",
+  "stops": {
+    "flourish": { "stop": "middle", "title": "The Flourish kitchen", "where": "In the Flourish kitchen", "yaw": 0 }
+  },
+  "clusters": {
+    "build-up": { "label": "something to build you up", "themes": ["nourishing", "protein", "eggs", "pulses", "seeds", "garden"] }
+  },
+  "objects": {
+    "fl-table": { "label": "Lay the Table", "ref": "the breakfast table", "type": "submit", "tool": "generate", "always_visible": true,
+                  "themes": ["nourishing", "breakfast", "eggs", "bread", "oats"],
+                  "tool_title": "Lay the Table",
+                  "tool_text": "In the full site, Gemma lays the table with a full Flourish recipe, built around everything you've told her." },
+    "fl-eggs": { "label": "The eggs", "ref": "the bowl of eggs", "type": "ambient", "themes": ["eggs", "protein", "breakfast"],
+                 "moment": "From the farm down the lane. The hens are laying well this week." },
+    "fl-greens": { "label": "The greens", "ref": "the bowl of greens", "type": "ambient", "themes": ["green", "garden", "fresh", "nourishing"],
+                   "moment": "Kale and parsley, picked twenty minutes ago." },
+    "fl-range": { "label": "The range", "ref": "the range", "type": "ambient", "themes": ["cooking", "hearty", "hands-on", "warming", "eggs"],
+                  "moment": "It's been lit since six. The big pan's always on it in the morning." },
+    "fl-dresser": { "label": "The dresser", "ref": "the dresser", "type": "ambient", "themes": ["pantry", "pulses", "seeds", "oats", "what-you-have"],
+                    "moment": "Lentils, chickpeas, oats and seeds. Keep these jars full and there's always a good meal in the house." },
+    "fl-trug": { "label": "The trug", "ref": "the trug of vegetables", "type": "ambient", "always_visible": true,
+                 "themes": ["garden", "green", "fresh", "hands-on"],
+                 "moment": "Straight out of the beds. Knock the soil off, but don't wash them until you need them." },
+    "fl-herbs": { "label": "The herbs", "ref": "the herbs on the window ledge", "type": "ambient", "themes": ["herbs", "fresh", "green"],
+                  "moment": "Rosemary, thyme and mint. They like the sun on this ledge." },
+    "fl-phonograph": { "label": "The phonograph", "ref": "the phonograph", "type": "ambient", "themes": [],
+                       "moment": "Give the handle a few turns and it plays. Well, it will once I've found the records. Grieg in the mornings, I think." },
+    "fl-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": ["sunny", "fresh", "light"],
+                   "moment": "The same bay as the other kitchen, but this side gets the morning sun." },
+    "fl-back-door": { "label": "The garden door", "ref": "the garden door", "type": "door", "themes": [],
+                      "closed": "The kitchen garden's for another day. Breathe in, though. That's the rosemary." },
+    "fl-hall-door": { "label": "Into the hallway", "ref": "the door to the hallway", "type": "door", "go": "hall-middle", "arrive_yaw": 0, "themes": [] },
+    "fl-barometer": { "label": "The weather", "map": "The barometer", "ref": "the barometer", "type": "weather", "tool": "weather", "themes": [] },
+    "fl-clock": { "label": "The time", "map": "The clock", "ref": "the clock", "type": "time", "tool": "time", "themes": [] }
+  },
+  "atoms": [
+    {
+      "id": "eggs-on-greens", "kind": "recipe idea", "spoons": 1,
+      "title": "Eggs baked on a pan of greens",
+      "themes": ["eggs", "protein", "green", "nourishing", "breakfast", "cooking"],
+      "body": "Wilt a big handful of kale or spinach in a pan with a little oil and garlic. Make two hollows, crack an egg into each, put the lid on and give it three or four minutes. Toast on the side."
+    },
+    {
+      "id": "seeded-oats", "kind": "recipe idea", "spoons": 0,
+      "title": "Oats with a spoon of seeds",
+      "themes": ["oats", "seeds", "breakfast", "nourishing", "simple"],
+      "body": "Make your porridge or overnight oats the usual way, then stir in a spoonful of pumpkin seeds, sunflower seeds and ground flax. They add protein, fibre and good fats, and the bowl keeps you going for longer."
+    },
+    {
+      "id": "red-lentil-soup", "kind": "recipe idea", "spoons": 2,
+      "title": "Red lentil and carrot soup",
+      "themes": ["pulses", "protein", "warming", "hearty", "garden", "cooking"],
+      "body": "Soften an onion and two grated carrots, add a cup of red lentils, a spoon of cumin and a litre of stock. Simmer for twenty minutes, until the lentils fall apart. A squeeze of lemon at the end."
+    },
+    {
+      "id": "beetroot-lentil-salad", "kind": "recipe idea", "spoons": 2,
+      "title": "Roast beetroot and lentil salad",
+      "themes": ["pulses", "garden", "fresh", "nourishing", "hands-on"],
+      "body": "Roast wedges of beetroot until they're sweet and sticky, then toss them with cooked green lentils, rocket, crumbled feta and a mustardy dressing. It's even better the next day."
+    },
+    {
+      "id": "trug-frittata", "kind": "recipe idea", "spoons": 2,
+      "title": "Whatever's-in-the-trug frittata",
+      "themes": ["eggs", "protein", "garden", "hands-on", "cooking", "what-you-have"],
+      "body": "Soften whatever vegetables you have in an ovenproof pan. Pour over six beaten eggs with a little cheese, cook gently until the edges set, then finish it under the grill. Cold slices make tomorrow's lunch."
+    },
+    {
+      "id": "chickpea-toast", "kind": "recipe idea", "spoons": 0,
+      "title": "Smashed chickpeas on toast",
+      "themes": ["pulses", "protein", "simple", "bread", "light"],
+      "body": "Mash a drained tin of chickpeas with lemon, olive oil, a little garlic and salt. Pile it on toast with sliced tomato. Five minutes, and it'll carry you through to the afternoon."
+    },
+    {
+      "id": "green-smoothie", "kind": "recipe idea", "spoons": 0,
+      "title": "A green smoothie that tastes nice",
+      "themes": ["green", "breakfast", "no-cook", "chilled", "protein", "fresh"],
+      "body": "A handful of spinach, a banana, a spoon of peanut butter, a few oats and a glass of milk. Blend it. You won't taste the spinach, honestly."
+    },
+    {
+      "id": "sunday-cook-up", "kind": "ritual", "spoons": 2,
+      "title": "A Sunday cook-up for the week",
+      "themes": ["nourishing", "hands-on", "cooking", "protein", "pulses", "slow"],
+      "body": "On Sunday, cook a pot of grains, a tray of roast vegetables and a few boiled eggs. Then all week, breakfast and lunch are just a matter of putting things together."
+    },
+    {
+      "id": "why-protein-breakfast", "kind": "why it works", "spoons": 0,
+      "title": "Why a bit of protein at breakfast helps",
+      "themes": ["protein", "why", "learning", "breakfast", "eggs"],
+      "body": "Protein and fibre take longer to digest than sugar and white bread, so a breakfast with eggs, yoghurt, nuts or seeds tends to keep you full for longer and helps you skip the mid-morning slump."
+    },
+    {
+      "id": "why-colours", "kind": "why it works", "spoons": 0,
+      "title": "Why lots of colours on the plate",
+      "themes": ["garden", "why", "learning", "nourishing", "green"],
+      "body": "Different coloured vegetables bring different things: orange carrots have beta-carotene, dark greens have folate and vitamin K, beetroot has nitrates. A plate with a few colours covers more ground, with no counting."
+    },
+    {
+      "id": "story-kale", "kind": "ingredient story", "spoons": 0,
+      "title": "Kale, the cottage-garden green",
+      "themes": ["garden", "green", "learning", "why"],
+      "body": "Cottage gardeners grew kale for centuries because it stands through frost and keeps cropping when little else will. A cold snap even makes the leaves a little sweeter."
+    }
+  ]
+}

@@ -27,7 +27,8 @@ const keep = new RegExp([
   /^cuddlecore_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
   /^hallway_pano_(entrance|middle)_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
   /^glasshouse_pano_(spring|summer|autumn|winter)(_preview)?\.jpg$/.source,
-  /^(cuddlecore|hallway|glasshouse)_hotspots\.json$/.source,
+  /^flourish_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
+  /^(cuddlecore|hallway|glasshouse|flourish)_hotspots\.json$/.source,
 ].join('|'));
 const files = readdirSync(join(src, 'out')).filter(f => keep.test(f));
 for (const f of files) cpSync(join(src, 'out', f), join(out, 'out', f));

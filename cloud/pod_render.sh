@@ -77,7 +77,7 @@ log "cloning ${WA_BRANCH}"
 # most of the repo, and no build reads them. A full clone had grown to about 6 minutes.
 for i in 1 2 3; do
   rm -rf /work
-  timeout 300 git clone -q --depth 1 --filter=blob:none --no-checkout --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work     && git -C /work sparse-checkout set --no-cone '/*' '!/blender/out/*.jpg' '!/art-inbox/'          '/art-inbox/cuddlecore/' '/art-inbox/inn-hallway/' '/art-inbox/glasshouse/'     && timeout 300 git -C /work checkout -q "$WA_BRANCH" && break
+  timeout 300 git clone -q --depth 1 --filter=blob:none --no-checkout --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work     && git -C /work sparse-checkout set --no-cone '/*' '!/blender/out/*.jpg' '!/art-inbox/'          '/art-inbox/cuddlecore/' '/art-inbox/inn-hallway/' '/art-inbox/glasshouse/' '/art-inbox/flourish/'     && timeout 300 git -C /work checkout -q "$WA_BRANCH" && break
   [ "$i" = 3 ] && fail "git clone"; sleep 10
 done
 cd /work
