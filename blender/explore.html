@@ -1054,11 +1054,16 @@ function serve({ atom, why }, mode) {
   servedBy[atom] = mode;
   countAtom('atom_served', atom);
   state.cards.unshift({ atom, why });
-  state.cards = state.cards.slice(0, 4);
+  // Four on the counter: make room by dropping the oldest one that isn't open (a recipe being read stays)
+  while (state.cards.length > 4) {
+    let i = state.cards.length - 1;
+    while (i > 0 && state.cards[i].opened) i--;
+    state.cards.splice(i > 0 ? i : state.cards.length - 1, 1);
+  }
   renderCards();
 }
-let newestShown = null;
-function renderCards(focus = null) {
+let newestShown = null, reading = null;    // reading: the card the visitor last opened, while it's open
+function renderCards() {
   const c = $('counter'), keep = c.scrollTop;
   c.innerHTML = '';
   state.cards.slice().reverse().forEach(({ atom, why, opened }, i, arr) => {
@@ -1074,7 +1079,8 @@ function renderCards(focus = null) {
       const entry = state.cards.find(x => x.atom === atom);
       entry.opened = !entry.opened;
       if (entry.opened) { record({ kind: 'open', atom }); countAtom('atom_open', atom); }
-      renderCards(atom);
+      reading = entry.opened ? atom : null;
+      renderCards();
       store.save(state);
     };
     card.querySelector('[data-act=no]').onclick = () => {
@@ -1089,9 +1095,15 @@ function renderCards(focus = null) {
   });
   // On a phone the counter may scroll: a new piece scrolls into view at the bottom; otherwise stay put,
   // and an opened card shows its top
-  c.scrollTop = state.cards[0] && state.cards[0].atom !== newestShown ? c.scrollHeight : keep;
+  // An open card wins: it stays in view even when a new piece arrives
+  const open = reading && state.cards.find(x => x.atom === reading && x.opened) ? reading : null;
+  c.scrollTop = !open && state.cards[0] && state.cards[0].atom !== newestShown ? c.scrollHeight : keep;
   newestShown = state.cards[0]?.atom ?? null;
-  if (focus) c.querySelector(`[data-atom="${CSS.escape(focus)}"]`)?.scrollIntoView({ block: 'nearest' });
+  const el = open && c.querySelector(`[data-atom="${CSS.escape(open)}"]`);
+  if (el) {                                   // not all in view (it can be taller than the counter): show its top
+    const box = c.getBoundingClientRect(), r = el.getBoundingClientRect();
+    if (r.top < box.top || r.bottom > box.bottom) c.scrollTop += r.top - box.top;
+  }
 }
 // The top bar's and the chat's heights, for the phone layout (the counter sits between them)
 function fitCounter() {
