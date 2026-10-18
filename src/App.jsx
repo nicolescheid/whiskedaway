@@ -13,15 +13,18 @@ import './styles/ambient.css';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/archive">
       <ProfileProvider>
         <SceneProvider>
           <Routes>
-            {/* Original form-based site at /original/* */}
+            {/* Original form-based site at /archive/original/* */}
             <Route path="/original/*" element={<OriginalRouter />} />
             {/* 2.5D inn — catch-all */}
             <Route path="/*" element={<SceneRouter />} />
           </Routes>
+          <p className="archive-note">
+            The old WhiskedAway, kept as it was. <a href="/">The new Inn is at whiskedaway.com</a>
+          </p>
         </SceneProvider>
       </ProfileProvider>
     </BrowserRouter>

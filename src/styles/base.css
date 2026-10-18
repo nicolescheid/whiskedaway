@@ -120,3 +120,12 @@ a:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The archive's one-line note (docs/front-door-spec.md) */
+.archive-note {
+  position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 9999; margin: 0;
+  padding: 4px 12px; border-radius: 999px; font: 500 12px 'Quicksand', system-ui, sans-serif;
+  background: rgba(244, 239, 228, 0.92); color: #2c2416; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  white-space: nowrap; max-width: calc(100vw - 16px); overflow: hidden; text-overflow: ellipsis;
+}
+.archive-note a { color: #8b4d5c; }

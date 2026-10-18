@@ -44,7 +44,8 @@ const ENDPOINT = `${(!live && debug && query.get('analytics-url')) || GENIE_URL}
 
 const visit = crypto.randomUUID();
 const session = Math.floor(Date.now() / 1000);
-const surface = location.pathname.startsWith('/explore') ? 'explore' : 'inn';
+// The 360° Inn is the home page; the old React Inn lives on at /archive/
+const surface = location.pathname.startsWith('/archive') ? 'archive' : 'explore';
 const device = matchMedia('(pointer: coarse)').matches || innerWidth < 768 ? 'mobile' : 'desktop';
 
 let queue = [];

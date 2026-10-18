@@ -22,3 +22,5 @@ Disallow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://whiskedaway.com/sitemap.xml

@@ -14,6 +14,23 @@ answered the questions at the end.
 4. The 360° Inn becomes the main site. The old React Inn moves to whiskedaway.com/archive, so
    nothing is lost.
 
+## Nicole's answers (18 Oct, 11 pm)
+
+1. Portrait picture from ChatGPT: yes. Until it arrives, phones get the landscape picture on a tall
+   sheet of the same paper (the film is made the same way), so swapping it in later is a re-run of
+   `blender/front_door_film.py`.
+2. Berry outside, varnished wood inside: yes. Rendered on Runpod.
+3. Returning visitors see the film every time, "like a TV show's title sequence". No Skip button
+   (a click or Esc during the film still jumps to the hall, quietly). The welcome card shows once.
+4. Music: later. The film is silent for now.
+5. The "welcomed" flag in the browser: yes, and the notebook line says so.
+6. The bell: ChatGPT's `art-inbox/gemma/16-handbell.png`.
+7. Old room links go to the new rooms.
+8. Archive banner, and recipe requests keep working: yes to both. The archive stays orphaned: no
+   link to it from the new site, and it's left out of the sitemap. Nicole may link it from articles.
+9. Wording: as drafted, to refine later.
+10. One film (rainy afternoon) for now.
+
 ## What's already there
 
 - **The art is back.** `art-inbox/inn-exterior/` has the picture (`whisk-inn-master.png`,

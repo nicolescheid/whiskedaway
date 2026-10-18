@@ -83,7 +83,18 @@ All events go through one function per surface, `track(name, params)`, which dro
 
 `step` is how many trail events the visit has had so far, bucketed `1`, `2-3`, `4-7`, `8-15`, `16+`. It answers "after how many steps" without sending a timeline.
 
-### The React Inn (/)
+### The front door (/, from the front-door branch)
+
+Since the front door (docs/front-door-spec.md), the 360° Inn is the home page and the React Inn is the archive at /archive/.
+
+| Event | When | Parameters |
+|---|---|---|
+| `door_view` | The storybook picture is shown | none |
+| `door_open` | The visitor clicks in | `film` (`full`, or `short` with reduced motion or Data Saver) |
+| `welcome_close` | Gemma's welcome card is closed (first visit, or after ringing the bell) | none |
+| `bell_ring` | The brass bell is rung | `room` |
+
+### The React Inn (/archive/ since the front door; / before)
 
 | Event | When | Parameters |
 |---|---|---|
@@ -95,11 +106,11 @@ The Inn's form contents (pantry items, dietary choices, cravings) are never sent
 
 ### Parameters every event gets
 
-Added in the Worker, not trusted from the page: `country` (from Cloudflare, two letters), `surface` (`explore` or `inn`), `device` (`mobile` or `desktop`, from screen width, sent by the page).
+Added in the Worker, not trusted from the page: `country` (from Cloudflare, two letters), `surface` (`explore` for the 360° Inn at / and /explore, `archive` for /archive/, and `inn` for the React Inn at / before the front door), `device` (`mobile` or `desktop`, from screen width, sent by the page).
 
 ### GA4 custom dimensions to register (event-scoped)
 
-`room`, `from_room`, `object`, `object_type`, `weather`, `time_of_day`, `season`, `dial_choice`, `atom`, `atom_kind`, `nav_mode`, `reason`, `step`, `load_ms`, `full_res`, `scene`, `outcome`, `country`, `surface`, `device`. That's 20 of the 50 allowed.
+`room`, `from_room`, `object`, `object_type`, `weather`, `time_of_day`, `season`, `dial_choice`, `atom`, `atom_kind`, `nav_mode`, `reason`, `step`, `load_ms`, `full_res`, `scene`, `outcome`, `country`, `surface`, `device`, and `film` (added with the front door). That's 21 of the 50 allowed.
 
 ## Deliberately not collected
 

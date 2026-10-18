@@ -3,8 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WhiskedAway — the Cuddlecore Kitchen</title>
-<meta name="description" content="Step into Gemma's kitchen: an experiment in exploring a website instead of navigating it.">
+<title>WhiskedAway: Gemma's Inn</title>
+<meta name="description" content="Step inside Gemma's Inn: wander the rooms, and the kitchen genie finds you something to cook from what you're drawn to.">
+<link rel="canonical" href="https://whiskedaway.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://whiskedaway.com/">
+<meta property="og:title" content="WhiskedAway: Gemma's Inn">
+<meta property="og:description" content="Step inside Gemma's Inn: wander the rooms, and the kitchen genie finds you something to cook from what you're drawn to.">
+<meta property="og:image" content="https://whiskedaway.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The WhiskedAway Inn, a stone cottage by the sea, held inside a balloon whisk">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
@@ -139,17 +151,68 @@
     .cw-log { max-height: 26vh; }
   }
 </style>
+<style>
+  /* The front door (docs/front-door-spec.md): the storybook picture, the film, the welcome and the bell */
+  #front-door { position: fixed; inset: 0; z-index: 50; background: #fcf6e5; transition: opacity .6s ease; }
+  #front-door[hidden] { display: none; }
+  #front-door.leaving { opacity: 0; pointer-events: none; }
+  #front-door .fd-enter { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; padding: 0; background: none; cursor: pointer; }
+  #front-door img, #front-door video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  #front-door .fd-hall { opacity: 0; transition: opacity .5s ease; }
+  #front-door.short .fd-hall { opacity: 1; }
+  #front-door .fd-words { position: absolute; left: 0; right: 0; bottom: max(4vh, 18px); margin: 0; text-align: center; pointer-events: none;
+                          color: #5c3a2e; transition: opacity .4s; }
+  #front-door .fd-words h1 { margin: 0; font: 600 clamp(26px, 4vw, 44px) 'Crimson Pro', Georgia, serif; letter-spacing: .02em; }
+  #front-door .fd-words p { margin: 2px 0 0; font: 500 clamp(14px, 1.6vw, 17px) 'Quicksand', system-ui, sans-serif; }
+  #front-door.playing .fd-words, #front-door.short .fd-words { opacity: 0; }
+  #front-door .fd-enter:focus-visible { outline: 3px solid #8b4d5c; outline-offset: -6px; }
+  #front-door.waiting .fd-words p::after { content: ' …'; }
+  .chip.bell { padding: 3px 8px; line-height: 0; }
+  .chip.bell img { width: 26px; height: 26px; transform-origin: 50% 12%; }
+  .chip.bell.ring img { animation: ring .9s ease-in-out; }
+  @keyframes ring { 15% { transform: rotate(18deg); } 35% { transform: rotate(-15deg); } 55% { transform: rotate(10deg); } 75% { transform: rotate(-6deg); } }
+  .tool .box.welcome { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
+  .welcome .who { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .welcome .who img { width: 40px; height: 40px; image-rendering: pixelated; }
+  .welcome .help { margin: 4px 0 14px; padding-left: 18px; font-size: 14px; color: var(--ink-soft); }
+  .welcome .help li { margin: 4px 0; }
+  /* Phones: the room's name on its own line, so the chips and the bell fit beneath it */
+  @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; justify-content: flex-end; } .bar h1 { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; } }
+  @media (prefers-reduced-motion: reduce) { .chip.bell.ring img { animation: none; } #front-door { transition-duration: .2s; } }
+</style>
 </head>
 <body>
+<!-- The front door: shown at / on a new visit (or with ?door=1), never with ?room= -->
+<div id="front-door" hidden>
+  <button class="fd-enter" id="fd-enter" aria-label="Step inside the Inn">
+    <picture>
+      <source media="(max-aspect-ratio: 3/2)" srcset="explore/assets/front-door/picture-portrait.webp">
+      <img id="fd-pic" src="explore/assets/front-door/picture-landscape.webp" alt="The WhiskedAway Inn, a stone cottage by the sea, held inside a balloon whisk" fetchpriority="high">
+    </picture>
+  </button>
+  <div class="fd-words"><h1>WhiskedAway</h1><p>Gemma's Inn. Step inside.</p></div>
+</div>
+<script>
+  // Decide before anything paints, so the Inn never flashes up first
+  (() => {
+    const q = new URLSearchParams(location.search);
+    let done = false;
+    try { done = sessionStorage.getItem('wa-door-done') === '1'; } catch { /* storage blocked */ }
+    const on = !q.has('room') && (q.get('door') === '1' || (location.pathname === '/' && !done));
+    document.getElementById('front-door').hidden = !on;
+    window.__doorActive = on;
+  })();
+</script>
 <div id="stage"></div>
 <div id="tint" aria-hidden="true"></div>
 
 <div class="bar">
   <h1 id="room-title">Cuddlecore Kitchen</h1>
   <span class="mode" id="mode"></span>
-  <a class="chip" id="btn-inn" href="/">Back to the inn</a>
+  <a class="chip" id="btn-inn" href="/?door=1">Front door</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
   <button class="chip" id="btn-notes" aria-expanded="false">Gemma's notebook</button>
+  <button class="chip bell" id="btn-bell" aria-label="Ring for Gemma: welcome and help" aria-haspopup="dialog"><img src="explore/assets/front-door/bell.webp" alt=""></button>
 </div>
 
 <aside class="panel" id="map" aria-label="Map">
@@ -161,7 +224,7 @@
 
 <aside class="panel" id="notes" aria-label="Gemma's notebook">
   <h2>Gemma's notebook</h2>
-  <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave. The inn does count, anonymously, which rooms and recipes get visited, but never who.</p>
+  <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave, except a note that you've been welcomed, so I don't say it twice. The inn does count, anonymously, which rooms and recipes get visited, but never who.</p>
   <h3>My best guess</h3>
   <div id="guess" class="small">Nothing yet. Have a wander.</div>
   <div class="meter"><i id="conf" style="width:0"></i></div>
@@ -201,7 +264,7 @@
       <li><b>Counting visitors</b>: Cloudflare Web Analytics and Google Analytics, with no cookies and nothing that identifies you. If your browser asks not to be tracked, nothing is sent.</li>
     </ul>
     <p>Copyleft spirit: take what helps you, credit what you borrow, share what you make.</p>
-    <button class="ok" id="credits-ok">Back to the kitchen</button>
+    <button class="ok" id="credits-ok">Back to the Inn</button>
   </div>
 </div>
 
@@ -251,6 +314,12 @@
   </div>
 </div>
 
+<script type="module">
+// The front door, the welcome and the bell (blender/explore/front-door.js)
+import { track } from '../src/lib/analytics.js';
+import { frontDoor } from './explore/front-door.js';
+window.__door = frontDoor({ active: window.__doorActive, track });
+</script>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate, aiNavigate } from './explore/navigator.js';
@@ -350,7 +419,8 @@ const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], r
 state.weather = state.weather || world.default_weather || 'rain';
 state.time = state.time || null;
 state.energy = state.energy || null;        // the energy candle the visitor picked, or null
-state.room = ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
+state.room = window.__door?.active ? 'hall-entrance'                  // through the front door: the entrance hall
+  : ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
 const room = () => ROOMS[state.room];
 let spots = room().spots;
 state.chat = state.chat || [];             // Gemma's chat log for this visit
@@ -456,7 +526,9 @@ async function showWeather(w, { fade = true } = {}) {
     if (full && !stale()) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
   }
 }
-showWeather(state.weather, { fade: false }).then(() => {
+const firstView = showWeather(state.weather, { fade: false });
+window.__door?.innShown(firstView);
+firstView.then(() => {
   const s = performance.now() / 1000;
   track('explore_start', { room: state.room, nav_mode: AI ? 'ai' : 'local', full_res: useFull ? 'yes' : 'no',
                            load_ms: s < 2 ? 'under-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : 'over-10s' });
@@ -705,7 +777,7 @@ function setRoomText() {
   $('room-title').textContent = room().title;
   $('cw-title').textContent = `Gemma · ${room().title}`;
   $('cw-where').textContent = room().where;
-  document.title = `WhiskedAway · ${room().title}`;
+  if ($('front-door').hidden) document.title = `WhiskedAway · ${room().title}`;   // at the front door it stays the Inn's name
 }
 
 // ---------- the magic dial beside every hallway door: any room, or wherever the wander points
@@ -1095,15 +1167,41 @@ function chooseEnergy(id) {
 
 // ---------- arrival: Gemma asks once about the visitor's weather
 function arrive() {
-  if (state.asked || state.trail.length || state.room !== 'cuddlecore') return;
-  state.asked = true;
-  store.save(state);
-  chatLine('gemma', "Hello, love. What's the weather like for you today?");
-  setChips([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
-  applyReveal([{ object: 'barometer' }]);
+  if (state.asked || state.trail.length) return;
+  if (state.room === 'cuddlecore') {
+    state.asked = true;
+    store.save(state);
+    chatLine('gemma', "Hello, love. What's the weather like for you today?");
+    setChips([{ label: 'Turn the barometer', act: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); } }]);
+    applyReveal([{ object: 'barometer' }]);
+  } else if (state.room === 'hall-entrance') {
+    // In through the front door: the barometer is in the kitchen, so the weathers are right there in the chat
+    state.asked = true;
+    store.save(state);
+    chatLine('gemma', "Hello, love. What's the weather like for you today?");
+    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.label, act: () => chooseWeather(id) })));
+  }
+}
+// The film ends looking level down the hall through a narrower lens: start there, then ease out to the usual view
+function settle(fromFov) {
+  const to = innerWidth < 720 ? 82 : 72, t0 = performance.now();
+  look.yaw = room().yaw ?? 0;
+  const step = now => {
+    const k = Math.min(1, (now - t0) / 1600), e = k * k * (3 - 2 * k);
+    camera.fov = fromFov + (to - fromFov) * e;
+    look.pitch = -6 * e;
+    camera.updateProjectionMatrix();
+    render();
+    if (k < 1) requestAnimationFrame(step);
+  };
+  look.pitch = 0;
+  camera.fov = fromFov;
+  camera.updateProjectionMatrix();
+  render();
+  requestAnimationFrame(step);
 }
 
-window.__explore = { state, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, settle, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();
@@ -1117,7 +1215,7 @@ renderChat();
 soundLabel();
 if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);
-arrive();
+(window.__door?.entered ?? Promise.resolve()).then(arrive);
 resize();
 </script>
 </body>

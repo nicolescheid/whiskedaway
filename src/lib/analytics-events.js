@@ -10,7 +10,7 @@
  */
 
 export const EVENTS = {
-  // The explore world (/explore)
+  // The 360° Inn (/, was /explore)
   explore_start: ['room', 'nav_mode', 'load_ms', 'full_res'],
   room_enter: ['room', 'from_room', 'step'],
   hotspot_touch: ['room', 'object', 'object_type'],   // energy candles: object_type only, never which candle
@@ -26,9 +26,15 @@ export const EVENTS = {
   map_open: ['room'],
   notebook_open: ['room'],
   visit_forget: [],
-  leave_to_inn: ['room', 'step'],
+  leave_to_inn: ['room', 'step'],         // "Front door": back out to the picture
 
-  // The React Inn (/)
+  // The front door at / (docs/front-door-spec.md)
+  door_view: [],
+  door_open: ['film'],                    // film: full, or short (reduced motion or Data Saver)
+  welcome_close: [],
+  bell_ring: ['room'],
+
+  // The React Inn, now the archive (/archive/)
   scene_view: ['scene'],
   recipe_request: ['scene'],
   recipe_result: ['scene', 'outcome'],

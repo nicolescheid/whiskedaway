@@ -1049,7 +1049,7 @@ async function handleMeasure(request, env, ctx) {
   const visit = typeof body.visit === 'string' && /^[0-9a-f-]{36}$/.test(body.visit) ? body.visit : null;
   const session = Number.isInteger(body.session) && body.session > 0 ? body.session : null;
   if (!visit || !session) return done();
-  const surface = body.surface === 'explore' ? 'explore' : 'inn';
+  const surface = ['explore', 'archive'].includes(body.surface) ? body.surface : 'inn';   // 'inn': pages from before the front door
   const device = body.device === 'mobile' ? 'mobile' : 'desktop';
   const country = /^[A-Z]{2}$/.test(request.cf?.country || '') ? request.cf.country : null;
 

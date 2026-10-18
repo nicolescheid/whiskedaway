@@ -16,7 +16,7 @@ mkdirSync(join(out, 'out'), { recursive: true });
 // client and the analytics counter) sit beside it
 const shared = ['genie.js', 'analytics.js', 'analytics-events.js'];
 let html = readFileSync(join(src, 'explore.html'), 'utf8');
-for (const f of shared) html = html.replace(`from '../src/lib/${f}'`, `from './${f}'`);
+for (const f of shared) html = html.replaceAll(`from '../src/lib/${f}'`, `from './${f}'`);
 if (html.includes('../src/')) throw new Error('explore.html still references ../src/');
 writeFileSync(join(out, 'index.html'), html);
 for (const f of shared) cpSync(join(root, 'src', 'lib', f), join(out, f));
