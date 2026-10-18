@@ -17,7 +17,7 @@
                      "themes": ["learning", "why", "treat"] },
     "lectern": { "label": "The occasion", "map": "The open book", "ref": "the open book on the lectern", "type": "interactive", "tool": "occasion",
                  "themes": ["celebration", "baking", "fruity", "creamy"] },
-    "potion-cabinet": { "label": "Level up your spell", "map": "The potion cabinet", "ref": "the potion cabinet", "type": "interactive", "tool": "level-up",
+    "potion-cabinet": { "label": "Level up your spell", "map": "The potion cabinet", "ref": "the potion cabinet", "type": "interactive", "tool": "level-up", "always_visible": true,
                         "themes": ["sweet", "honey", "fruity", "learning"] },
     "music-box": { "label": "The music box", "ref": "the music box", "type": "ambient", "themes": ["calm", "evening", "celebration"],
                    "moment": "Lift the lid and she dances. The tunes are still on their way to me." },
