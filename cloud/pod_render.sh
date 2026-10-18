@@ -73,11 +73,15 @@ grep -qE "\[probe\] (OPTIX|CUDA) \['" /tmp/probe.log || nogpu "Blender can't see
 [ "$WA_JOBS" = "probe" ] && { log "probe only: DONE"; sleep 45; exit 0; }   # pause so render.sh sees it
 
 log "cloning ${WA_BRANCH}"
+# Sparse: the committed renders (blender/out/*.jpg) and the concept art of rooms not yet in Blender are
+# most of the repo, and no build reads them. A full clone had grown to about 6 minutes.
 for i in 1 2 3; do
-  timeout 300 git clone -q --depth 1 --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work && break
-  rm -rf /work; [ "$i" = 3 ] && fail "git clone"; sleep 10
+  rm -rf /work
+  timeout 300 git clone -q --depth 1 --filter=blob:none --no-checkout --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work     && git -C /work sparse-checkout set --no-cone '/*' '!/blender/out/*.jpg' '!/art-inbox/'          '/art-inbox/cuddlecore/' '/art-inbox/inn-hallway/' '/art-inbox/glasshouse/'     && timeout 300 git -C /work checkout -q "$WA_BRANCH" && break
+  [ "$i" = 3 ] && fail "git clone"; sleep 10
 done
 cd /work
+log "cloned ($(du -sh . | cut -f1))"
 rm -rf blender/assets && ln -s "$WA_ASSETS" blender/assets
 if [ "$(sha256sum blender/fetch_assets.py | cut -d' ' -f1)" = "$(cat "$WA_ASSETS/.fetch_assets.sha256" 2>/dev/null)" ]; then
   log "assets: using the $(du -sh "$WA_ASSETS" | cut -f1) baked into the image"
@@ -122,7 +126,10 @@ for job in "${JOBS[@]}"; do
   wait "$pid" || { tail -30 blender.log >>"$LOG"; fail "Blender exited with an error on: ${job}"; }
   grep -m1 "\[whisked\] rendering on" blender.log >>"$LOG" || log "warning: the build never said it was using the GPU"
   log "peak GPU use: ${peak}%"
-  [ "$peak" -ge 30 ] || fail "the GPU stayed idle, so this rendered on the CPU: ${job}"
+  # A quick preview can finish between two looks at the GPU; only fail when sampling was seen with the GPU idle
+  if [ "$peak" -lt 30 ]; then
+    [ "$gpu_checked" = 0 ] && log "warning: too quick to catch the GPU at work (peak ${peak}%)"       || fail "the GPU stayed idle, so this rendered on the CPU: ${job}"
+  fi
   log "finished in $(( ($(date +%s) - start) / 60 )) min: ${job}"
 done
 

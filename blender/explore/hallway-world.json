@@ -19,7 +19,7 @@
     "door-sweet-spells": { "label": "Sweet Spells", "ref": "the Sweet Spells door", "type": "door", "themes": [],
                            "closed": "Sweet Spells isn't open yet. You can smell the sugar from here, though." },
     "door-chiapothecary": { "label": "Chiapothecary", "ref": "the Chiapothecary door", "type": "door", "themes": [], "always_visible": true,
-                            "closed": "The still-room isn't ready yet. The glasshouse through there is next." },
+                            "closed": "The still-room isn't ready yet. Turn the dial to the Glasshouse and you can go straight through." },
     "dial-cuddlecore": { "label": "The dial", "map": "The dial by the kitchen door", "ref": "the dial by the kitchen door", "type": "dial", "door": "door-cuddlecore", "themes": [] },
     "dial-flourish": { "label": "The dial", "map": "The dial by the Flourish door", "ref": "the dial by the Flourish door", "type": "dial", "door": "door-flourish", "themes": [] },
     "dial-sweet-spells": { "label": "The dial", "map": "The dial by the Sweet Spells door", "ref": "the dial by the Sweet Spells door", "type": "dial", "door": "door-sweet-spells", "themes": [] },
@@ -41,7 +41,7 @@
     { "label": "Flourish" },
     { "label": "Sweet Spells" },
     { "label": "Chiapothecary" },
-    { "label": "Glasshouse" },
+    { "label": "Glasshouse", "go": "glasshouse" },
     { "label": "Nourish Academy" },
     { "label": "Cravings Decoded" },
     { "label": "The Hall", "go": "hall-entrance" }

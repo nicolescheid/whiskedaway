@@ -16,6 +16,7 @@
  *   { kind: 'time',    id }          pushed the clock to a time of day (id = a key of world.times)
  *   { kind: 'clock',   id }          the device's own time of day, observed rather than chosen
  *   { kind: 'energy',  id }          picked one of the energy candles (id = a key of world.energies)
+ *   { kind: 'season',  id }          turned the glasshouse's seasons wheel (id = a key of world.seasons)
  */
 
 const WEIGHTS = { touch: 3, linger: 1.5, map: 1, open: 2.5, dismiss: -2, choose: 4 };
@@ -26,6 +27,7 @@ const FORK_BELOW = 0.2;       // confidence below which Gemma offers a fork inst
 const WEATHER_WEIGHT = 3;     // the chosen weather is a standing mood: it holds until changed, it doesn't fade
 const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more than the device's clock
 const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signal like the weather
+const SEASON_WEIGHT = 2.5;    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
 // Each energy level also has a spoon_bias: added per spoon to an atom's score, so a burnt-out candle
 // (-3) all but rules out two-spoon pieces and a full one (+1) leans toward the hands-on ones.
 
@@ -46,7 +48,17 @@ export function themeWeights(trail, world) {
   if (time) add(world.times[time.id].themes, TIME_WEIGHT[time.kind]);
   const energy = currentEnergy(trail, world);
   if (energy) add(world.energies[energy].themes, ENERGY_WEIGHT);
+  const season = currentSeason(trail, world);
+  if (season) add(world.seasons[season].themes, SEASON_WEIGHT);
   return w;
+}
+
+/** The season the visitor last turned the seasons wheel to, if any. */
+export function currentSeason(trail, world) {
+  for (let i = trail.length - 1; i >= 0; i--) {
+    if (trail[i].kind === 'season' && world.seasons && world.seasons[trail[i].id]) return trail[i].id;
+  }
+  return null;
 }
 
 /** The energy candle the visitor last picked, if any. */
@@ -97,6 +109,10 @@ function reasonsFor(themes, trail, world, spoons = null) {
   const weather = currentWeather(trail, world);
   if (weather && world.weathers[weather].themes.some(t => themes.includes(t))) {
     why.push(`turned the barometer to ${world.weathers[weather].label}`);
+  }
+  const season = currentSeason(trail, world);
+  if (season && world.seasons[season].themes.some(t => themes.includes(t))) {
+    why.push(`turned the seasons wheel to ${world.seasons[season].label.toLowerCase()}`);
   }
   const time = currentTime(trail, world);
   if (time && world.times[time.id].themes.some(t => themes.includes(t))) {
@@ -178,17 +194,21 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const trailIds = new Set(trail.map(e => e.id).filter(Boolean));
+    const here = new Set(state.here || []);
+    const things = Object.entries(world.objects)
+      .filter(([id, o]) => o.type !== 'energy' && (o.themes.length || trailIds.has(id)))
+      .map(([id, o]) => ({ id, label: o.label, type: o.type, themes: o.themes }));
+    // The Worker reads at most 40 objects. Send what the visitor has touched first, then the standing signals
+    // (weathers, times, energies, seasons), then the rest of the room they're in, then anything else with themes.
+    const rank = o => trailIds.has(o.id) ? 0 : here.has(o.id) ? 2 : 3;
+    const signals = Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: `Weather: ${w.label}`, type: 'weather', themes: w.themes }))
+      .concat(Object.entries(world.times || {}).map(([id, t]) => ({ id, label: `Time of day: ${t.label}`, type: 'time', themes: t.themes })))
+      .concat(Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: `Energy: ${e.label} (the ${e.candle})`, type: 'energy', themes: e.themes, spoon_bias: e.spoon_bias })))
+      .concat(Object.entries(world.seasons || {}).map(([id, s]) => ({ id, label: `Season: ${s.label}`, type: 'season', themes: s.themes })));
     const payload = {
         room: world.name,
         trail: trail.slice(-30),
-        // The Worker reads at most 40 objects, so send the ones that mean something: objects with themes,
-        // the standing signals (weathers, times, energies), and whatever else the visitor has actually touched
-        objects: Object.entries(world.objects)
-          .filter(([id, o]) => o.type !== 'energy' && (o.themes.length || trailIds.has(id)))
-          .map(([id, o]) => ({ id, label: o.label, type: o.type, themes: o.themes }))
-          .concat(Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: `Weather: ${w.label}`, type: 'weather', themes: w.themes })))
-          .concat(Object.entries(world.times || {}).map(([id, t]) => ({ id, label: `Time of day: ${t.label}`, type: 'time', themes: t.themes })))
-          .concat(Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: `Energy: ${e.label} (the ${e.candle})`, type: 'energy', themes: e.themes, spoon_bias: e.spoon_bias }))),
+        objects: [...things.filter(o => rank(o) === 0), ...signals, ...things.filter(o => rank(o) > 0).sort((a, b) => rank(a) - rank(b))].slice(0, 40),
         atoms: world.atoms.map(({ id, title, kind, themes, spoons }) => ({ id, title, kind, themes, spoons })),
         clusters: Object.entries(world.clusters).map(([id, c]) => ({ id, label: c.label })),
         already_served: state.served || [],

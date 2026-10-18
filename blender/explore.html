@@ -195,6 +195,7 @@
       <li><b>The kitchen's furniture and materials</b>: Poly Haven, CC0. Given to everyone, no strings.</li>
       <li><b>The room</b>: built and rendered in Blender, free and open source (GPL).</li>
       <li><b>The 360° view</b>: three.js, MIT licence.</li>
+      <li><b>The glasshouse plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
       <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
     </ul>
@@ -223,6 +224,15 @@
   </div>
 </div>
 
+<div class="tool" id="seasondlg" role="dialog" aria-modal="true" aria-labelledby="season-title">
+  <div class="box">
+    <h2 id="season-title">The seasons wheel</h2>
+    <p id="season-text">Turn it to any season.</p>
+    <div class="dial" id="seasondial"></div>
+    <p style="margin:12px 0 0"><button class="ok" id="season-ok">Done</button></p>
+  </div>
+</div>
+
 <div class="tool" id="weather" role="dialog" aria-modal="true" aria-labelledby="weather-title">
   <div class="box">
     <h2 id="weather-title">The barometer</h2>
@@ -243,21 +253,24 @@
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate, aiNavigate } from './explore/navigator.js';
-import { genieFetch } from '../src/lib/genie.js';
+import { genieFetch, GENIE_URL } from '../src/lib/genie.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, kitchenSpots, hallWorld, hallSpots] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
   fetch('explore/hallway-world.json').then(r => r.json()),
   fetch('out/hallway_hotspots.json').then(r => r.json()),
+  fetch('explore/glasshouse-world.json').then(r => r.json()),
+  fetch('out/glasshouse_hotspots.json').then(r => r.json()),
 ]);
-// One world for the navigator: the kitchen's objects and the hallway's together
-Object.assign(world.objects, hallWorld.objects);
+// One world for the navigator: the kitchen's objects, the hallway's and the glasshouse's together
+Object.assign(world.objects, hallWorld.objects, glassWorld.objects);
+world.seasons = glassWorld.seasons;
 
 // ---------- rooms: the kitchen, and the hallway's two camera stops
 const ROOMS = {
@@ -271,6 +284,14 @@ for (const [id, st] of Object.entries(hallWorld.stops)) {
   Object.assign(stopSpots, hallWorld.walks[id] || {});
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock,
                 pano: (w, night, full) => `out/hallway_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+}
+// The glasshouse: one view per season, by day only (at night the day render is dimmed), whatever the weather
+for (const [id, st] of Object.entries(glassWorld.stops)) {
+  const stop = glassSpots.stops[st.stop];
+  const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
+    .filter(([k, h]) => glassWorld.objects[k] && (h.visible || glassWorld.objects[k].always_visible)));
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, dayOnly: true,
+                pano: (w, night, full) => `out/glasshouse_pano_${seasonNow()}${full ? '' : '_preview'}.jpg` };
 }
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
 const $ = id => document.getElementById(id);
@@ -300,6 +321,33 @@ const isNight = () => timeNow() === 'night';
 /** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */
 const navTrail = () => state.trail.some(e => e.kind === 'time') ? state.trail : [{ kind: 'clock', id: deviceTime() }, ...state.trail];
 $('mode').textContent = AI ? 'AI navigator' : 'Local navigator';
+
+// ---------- season: a good guess from where the visitor seems to be, never a lock (docs/inn-floorplan.html)
+// North of the equator March to May is spring; south of it, September to November. Only the guess is used, in the page.
+const NORTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
+const FLIP = { spring: 'autumn', summer: 'winter', autumn: 'spring', winter: 'summer' };
+const seasonFor = hemi => { const n = NORTH[new Date().getMonth()]; return hemi === 'south' ? FLIP[n] : n; };
+const SOUTH_TZ = /^(Australia\/|Antarctica\/|Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Apia|Noumea|Efate|Norfolk|Tahiti|Rarotonga|Pago_Pago|Port_Moresby|Guadalcanal|Niue|Wallis|Funafuti|Easter)|America\/(Argentina\/|Sao_Paulo|Santiago|Montevideo|Asuncion|La_Paz|Lima|Bahia|Recife|Fortaleza|Belem|Maceio|Araguaina|Campo_Grande|Cuiaba|Porto_Velho|Rio_Branco|Punta_Arenas|Noronha)|Africa\/(Johannesburg|Maputo|Harare|Lusaka|Windhoek|Gaborone|Maseru|Mbabane|Blantyre|Lubumbashi|Luanda|Dar_es_Salaam|Kinshasa|Kigali|Bujumbura)|Indian\/(Mauritius|Reunion|Antananarivo|Comoro|Mayotte)|Atlantic\/(St_Helena|Stanley|South_Georgia))/;
+const tzHemisphere = () => { try { return SOUTH_TZ.test(Intl.DateTimeFormat().resolvedOptions().timeZone || '') ? 'south' : 'north'; } catch { return 'north'; } };
+let seasonGuess = seasonFor(tzHemisphere());
+state.season = state.season || null;        // a season the visitor turned the wheel to, or null for their own
+const seasonNow = () => state.season || seasonGuess;
+// The rough latitude Cloudflare attaches to the visit (via the Worker) beats the time zone, when it answers.
+// Asked once, on the way to the glasshouse; nothing about it is kept.
+let hemiAsked = null;
+function askHemisphere() {
+  return hemiAsked || (hemiAsked = (async () => {
+    try {
+      const r = await fetch(`${GENIE_URL}/hemisphere`, { signal: AbortSignal.timeout(2500) });
+      const { hemisphere } = r.ok ? await r.json() : {};
+      if (hemisphere !== 'north' && hemisphere !== 'south') return;
+      const guess = seasonFor(hemisphere);
+      if (guess === seasonGuess) return;
+      seasonGuess = guess;
+      if (!state.season && room().dayOnly) showWeather(state.weather);
+    } catch { /* the time zone's guess stands */ }
+  })());
+}
 
 // ---------- panorama
 const stage = $('stage');
@@ -350,18 +398,19 @@ function crossFade(tex) {
 
 /** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
 async function showWeather(w, { fade = true } = {}) {
-  const night = isNight(), R = room(), at = state.room;
+  const night = isNight(), R = room(), at = state.room, season = seasonNow();
+  const stale = () => w !== state.weather || night !== isNight() || at !== state.room || season !== seasonNow();
   let shown = w;                                     // a room without this weather's render falls back to rain
-  let preview = night ? await loadTex(R.pano(w, true, false)) : null;
+  let preview = night && !R.dayOnly ? await loadTex(R.pano(w, true, false)) : null;
   const haveNight = !!preview;                       // until the night renders exist, darken the day render
   if (!preview) preview = await loadTex(R.pano(w, false, false));
   if (!preview && w !== 'rain') { shown = 'rain'; preview = await loadTex(R.pano('rain', false, false)); }
-  if (w !== state.weather || night !== isNight() || at !== state.room) return;
+  if (stale()) return;
   $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
   if (preview) fade && sphere.material.map ? crossFade(preview) : (sphere.material = new THREE.MeshBasicMaterial({ map: preview }), render());
   if (useFull) {
     const full = await loadTex(R.pano(shown, haveNight, true));
-    if (full && w === state.weather && night === isNight() && at === state.room) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
+    if (full && !stale()) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
   }
 }
 showWeather(state.weather, { fade: false });
@@ -511,6 +560,7 @@ const SYS = {
   touch: e => `You went to ${world.objects[e.id]?.ref || label(e.id)}`,
   weather: e => `You turned the barometer to ${world.weathers[e.id]?.label}`,
   time: e => `You pushed the clock to ${world.times[e.id]?.label.toLowerCase()}`,
+  season: e => `You turned the seasons wheel to ${world.seasons[e.id]?.label.toLowerCase()}`,
   energy: e => `You picked the ${world.energies[e.id]?.candle}`,
   choose: e => `You chose ${world.clusters[e.cluster]?.label}`,
   room: e => `You went into ${ROOMS[e.id]?.title.replace(/^The /, 'the ')}`,
@@ -547,6 +597,8 @@ function touch(id) {
     openWeather();
   } else if (obj.type === 'time') {
     openClock();
+  } else if (obj.type === 'season') {
+    openSeasons();
   } else if (obj.type === 'door' || obj.type === 'walk') {
     if (!obj.go) return say(obj.closed || "That one's not open yet.", [], true);
     if (obj.go.startsWith('/')) {
@@ -578,6 +630,14 @@ function goRoom(id, yaw) {
   record({ kind: 'room', id });
   if (state.result) applyReveal(state.result.reveal);
   render();
+  if (id !== 'cuddlecore') askHemisphere();
+  if (room().dayOnly && !state.seasonTold) {
+    // First time in the glasshouse: say which season it opened in, and that the wheel changes it
+    state.seasonTold = true;
+    askHemisphere().then(() => say(state.season
+      ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
+      : `It's ${seasonGuess} where you are, I think, so that's what's growing. The wheel by the door turns it to any season.`, [], true));
+  }
 }
 function setRoomText() {
   $('room-title').textContent = room().title;
@@ -614,7 +674,7 @@ function scheduleNavigate() {
 }
 async function navigate() {
   const seq = ++navSeq;
-  const opts = { served: state.served, dismissed: state.dismissed };
+  const opts = { served: state.served, dismissed: state.dismissed, here: Object.keys(spots) };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
   if (AI) {
@@ -798,9 +858,9 @@ function renderNotes() {
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the' };
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Found on the map', open: 'Read', dismiss: 'Set aside', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
   $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e =>
-    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
+    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? label(e.id) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
 function togglePanel(id, btn) {
   const p = $(id), open = !p.classList.contains('open');
@@ -812,7 +872,7 @@ $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
 $('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
 $('forget').onclick = () => {
   store.clear();
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, energy: null, asked: false, chat: [] });
+  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, energy: null, season: null, seasonTold: false, asked: false, chat: [] });
   showCandle();
   renderChat(); setChips([]);
   setHands(handsHour());
@@ -874,6 +934,36 @@ function chooseTime(id) {
 $('clock-ok').onclick = () => $('clockdlg').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('clockdlg').classList.remove('open'); });
 
+// ---------- seasons wheel: the glasshouse opens in the visitor's season; the wheel shows any other
+function openSeasons() {
+  $('season-text').textContent = `Where you are it's probably ${seasonGuess}. Turn the wheel to see the glasshouse in any season.`;
+  const opts = Object.entries(world.seasons).map(([id, s]) => ({ id, label: s.label }))
+    .concat(state.season ? [{ id: '', label: 'Back to my season' }] : []);
+  $('seasondial').innerHTML = opts.map(o => `<button data-s="${esc(o.id)}" class="${o.id && o.id === seasonNow() ? 'on' : ''}" aria-pressed="${!!o.id && o.id === seasonNow()}">${esc(o.label)}</button>`).join('');
+  $('seasondial').querySelectorAll('button').forEach(b => b.onclick = () => chooseSeason(b.dataset.s || null));
+  $('seasondlg').classList.add('open');
+  $('seasondial').querySelector('.on')?.focus();
+}
+function chooseSeason(id) {
+  if (id && !world.seasons[id]) return;
+  if (id === state.season) return;
+  const before = seasonNow();
+  state.season = id;
+  if (seasonNow() !== before) showWeather(state.weather);
+  if (id) {
+    say(world.seasons[id].moment, [], true);
+    record({ kind: 'season', id });
+  } else {
+    say(`Back to your own season: ${seasonGuess}.`, [], true);
+    state.trail = state.trail.filter(e => e.kind !== 'season');
+    store.save(state);
+    scheduleNavigate();
+  }
+  if ($('seasondlg').classList.contains('open')) openSeasons();   // show or drop "Back to my season"
+}
+$('season-ok').onclick = () => $('seasondlg').classList.remove('open');
+addEventListener('keydown', e => { if (e.key === 'Escape') $('seasondlg').classList.remove('open'); });
+
 // ---------- energy candles: pick the one that matches how much you've got in you today
 // A warm glow drawn over the render marks the chosen candle (it's a standing signal, like the weather)
 const candleGlow = (() => {
@@ -927,11 +1017,12 @@ function arrive() {
   applyReveal([{ object: 'barometer' }]);
 }
 
-window.__explore = { state, touch, chooseWeather, chooseTime, chooseEnergy, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();
 showClock();
+if (state.room !== 'cuddlecore') askHemisphere();
 look.yaw = room().yaw ?? 0;
 fillMap();
 renderCards();
