@@ -121,7 +121,7 @@
   #stage.dragging { cursor: grabbing; }
   #stage:focus { outline: none; }
   #stage:focus-visible { outline: 3px solid var(--amber-glow); outline-offset: -3px; }   /* keyboard look-around */
-  /* A room without a render for the chosen weather (the glasshouse has seasons only) still follows the barometer */
+  /* A room without a render for the chosen weather still follows the barometer */
   #stage canvas { transition: filter 1.4s ease; }
   #stage.wx-rain canvas { filter: saturate(.75) brightness(.9); }
   #stage.wx-stormy canvas { filter: saturate(.6) brightness(.72) contrast(1.05); }
@@ -405,7 +405,7 @@
       <div><dt>Flourish</dt><dd>Proper meals from whole foods. The kitchen where a bit more prep goes in.</dd></div>
       <div><dt>Sweet Spells</dt><dd>For the sweet tooth. Treats for any time of day, and a few for later.</dd></div>
       <div><dt>The Chiapothecary</dt><dd>Your chia routine. Jars to set the night before, or keep in the fridge for any time.</dd></div>
-      <div><dt>The glasshouse</dt><dd>What's growing this season. Herbs and plants for the time of year where you are.</dd></div>
+      <div><dt>The Conservatory</dt><dd>What's growing this season. Herbs and plants for the time of year where you are.</dd></div>
       <div><dt>The hallway</dt><dd>The way between them all. A magic dial by each door takes you to any room, or wherever your wander points.</dd></div>
     </dl>
     <p>Upstairs, the library and the turret are coming.</p>
@@ -430,7 +430,7 @@
 
     <h2>Change anything</h2>
     <p>It's your Inn, so it's yours to change. Turn the barometer to change the weather. Push the hands of a clock to
-      cook for another time of day. Turn the seasons wheel in the glasshouse. Pick an energy candle to say how you're
+      cook for another time of day. Turn the seasons wheel in the Conservatory. Pick an energy candle to say how you're
       feeling. Gemma's ideas change with you, and what you tell her follows you through every room for the visit.
       Telling her what's in your pantry, where you live and what you can't eat is coming.</p>
 
@@ -567,7 +567,7 @@
       <li><b>The Inn's sounds</b>: Gemma's shimmer, the bell, the doors, the grandfather clock, every room's rain, wind, fire and garden, and the music box are synthesised in your browser with the Web Audio API, made for WhiskedAway and given away as CC0.</li>
       <li><b>The songbird's song</b>: a tūī recorded by the Department of Conservation, Crown copyright, CC BY 4.0. Source: Department of Conservation (NZ).</li>
       <li><b>The phonograph's records</b>: Grieg's Morning Mood by the Musopen Symphony Orchestra (courtesy of Musopen), Vivaldi's Spring by The Modena Chamber Orchestra, and Dvořák's Humoresque by the Boudini Brothers (1922). All public domain, from Wikimedia Commons.</li>
-      <li><b>The glasshouse plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
+      <li><b>The Conservatory's plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
       <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
       <li><b>The weather where you are</b>: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, CC BY 4.0. Our server asks it about the rough area Cloudflare places your connection in, never anything that identifies you, and keeps nothing about you.</li>
@@ -695,13 +695,13 @@ for (const [id, st] of Object.entries(hallWorld.stops)) {
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock,
                 pano: (w, night, full) => `out/hallway_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
-// The glasshouse: one view per season, by day only (at night the day render is dimmed), whatever the weather
+// The Conservatory (id glasshouse): every season, in every weather, by day and night
 for (const [id, st] of Object.entries(glassWorld.stops)) {
   const stop = glassSpots.stops[st.stop];
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => glassWorld.objects[k] && (h.visible || glassWorld.objects[k].always_visible)));
-  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, dayOnly: true,
-                pano: (w, night, full) => `out/glasshouse_pano_${seasonNow()}${full ? '' : '_preview'}.jpg` };
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, seasons: true,
+                pano: (w, night, full) => `out/glasshouse_pano_${seasonNow()}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
 // Flourish: the second kitchen, in every weather by day and night, like Cuddlecore
 for (const [id, st] of Object.entries(flWorld.stops)) {
@@ -809,7 +809,7 @@ let seasonGuess = seasonFor(tzHemisphere());
 state.season = state.season || null;        // a season the visitor turned the wheel to, or null for their own
 const seasonNow = () => state.season || seasonGuess;
 // The rough latitude Cloudflare attaches to the visit (via the Worker) beats the time zone, when it answers.
-// Asked once, on the way to the glasshouse; nothing about it is kept.
+// Asked once, on the way to the Conservatory; nothing about it is kept.
 let hemiAsked = null;
 function askHemisphere() {
   return hemiAsked || (hemiAsked = (async () => {
@@ -820,7 +820,7 @@ function askHemisphere() {
       const guess = seasonFor(hemisphere);
       if (guess === seasonGuess) return;
       seasonGuess = guess;
-      if (!state.season && room().dayOnly) showWeather(state.weather);
+      if (!state.season && room().seasons) showWeather(state.weather);
     } catch { /* the time zone's guess stands */ }
   })());
 }
@@ -1203,8 +1203,8 @@ function goRoom(id, yaw) {
   if (state.result) applyReveal(state.result.reveal);
   render();
   if (id !== 'cuddlecore') askHemisphere();
-  if (room().dayOnly && !state.seasonTold) {
-    // First time in the glasshouse: say which season it opened in, and that the wheel changes it
+  if (room().seasons && !state.seasonTold) {
+    // First time in the Conservatory: say which season it opened in, and that the wheel changes it
     state.seasonTold = true;
     askHemisphere().then(() => say(state.season
       ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
@@ -1802,9 +1802,9 @@ function chooseTime(id) {
 $('clock-ok').onclick = () => $('clockdlg').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('clockdlg').classList.remove('open'); });
 
-// ---------- seasons wheel: the glasshouse opens in the visitor's season; the wheel shows any other
+// ---------- seasons wheel: the Conservatory opens in the visitor's season; the wheel shows any other
 function openSeasons() {
-  $('season-text').textContent = `Where you are it's probably ${seasonGuess}. Turn the wheel to see the glasshouse in any season.`;
+  $('season-text').textContent = `Where you are it's probably ${seasonGuess}. Turn the wheel to see the Conservatory in any season.`;
   const opts = Object.entries(world.seasons).map(([id, s]) => ({ id, label: s.label }))
     .concat(state.season ? [{ id: '', label: 'Back to my season' }] : []);
   $('seasondial').innerHTML = opts.map(o => `<button data-s="${esc(o.id)}" class="${o.id && o.id === seasonNow() ? 'on' : ''}" aria-pressed="${!!o.id && o.id === seasonNow()}">${esc(o.label)}</button>`).join('');

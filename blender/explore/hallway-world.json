@@ -39,7 +39,7 @@
     { "label": "Flourish", "go": "flourish", "blurb": "Proper meals from whole foods" },
     { "label": "Sweet Spells", "go": "sweet-spells", "blurb": "For the sweet tooth" },
     { "label": "Chiapothecary", "go": "chiapothecary", "blurb": "Your chia routine" },
-    { "label": "Glasshouse", "go": "glasshouse", "blurb": "What's growing this season" },
+    { "label": "Conservatory", "go": "glasshouse", "blurb": "What's growing this season" },
     { "label": "Nourish Academy" },
     { "label": "Cravings Decoded" },
     { "label": "The foyer", "go": "hall-entrance" }

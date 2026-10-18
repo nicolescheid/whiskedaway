@@ -18,8 +18,8 @@ This is the canonical repo (consolidated 17 Oct 2026). Older copies at `C:\dev\w
     five energy candles.
   - **The hallway:** the entrance hall and the middle of the hall, with a magic dial beside the
     doors that takes you to any open room, or wherever your wander points.
-  - **The glasshouse:** opens in the visitor's season, with a seasons wheel to change it and a
-    glazed door looking into the Chiapothecary.
+  - **The Conservatory** (room id `glasshouse`): opens in the visitor's season, with a seasons wheel to change it, follows
+    the barometer and the clock (five weathers, day and night), and has a glazed door looking into the Chiapothecary.
 - **The genie Worker** (`whiskedaway-genie`): recipes, the AI navigator and the Turnstile bot guard.
 
 Flourish, Sweet Spells and the Chiapothecary are being built on their own branches.

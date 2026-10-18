@@ -48,7 +48,7 @@
     "chia-lane-window": { "label": "The lane", "ref": "the lane outside", "type": "ambient", "themes": ["slow", "cosy"],
                      "moment": "The same lane Sweet Spells looks out on. On a quiet day you can hear its music box across the hall." },
     "chia-exit-door": { "label": "Into the hallway", "ref": "the door to the hallway", "type": "door", "go": "hall-middle", "arrive_yaw": 0, "themes": [] },
-    "chia-glasshouse-door": { "label": "Into the glasshouse", "blurb": "What's growing this season", "ref": "the glass door to the glasshouse", "type": "door", "go": "glasshouse", "arrive_yaw": 45,
+    "chia-glasshouse-door": { "label": "Into the Conservatory", "blurb": "What's growing this season", "ref": "the glass door to the Conservatory", "type": "door", "go": "glasshouse", "arrive_yaw": 45,
                               "themes": [], "always_visible": true },
     "chia-dial": { "label": "The dial", "map": "The dial by the hallway door", "ref": "the dial in the Chiapothecary", "type": "dial", "themes": [] }
   },

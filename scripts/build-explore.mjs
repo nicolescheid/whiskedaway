@@ -24,11 +24,11 @@ for (const f of shared) cpSync(join(root, 'src', 'lib', f), join(out, f));
 // Room data, navigator, Gemma's avatars (explore/assets/gemma, from art-inbox/gemma), sounds and the front door
 cpSync(join(src, 'explore'), join(out, 'explore'), { recursive: true });
 
-// Renders: every room and weather by day and night, the glasshouse's four seasons, their previews and the hotspots
+// Renders: every room and weather by day and night, the Conservatory's four seasons in every weather, their previews and the hotspots
 const keep = new RegExp([
   /^cuddlecore_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
   /^hallway_pano_(entrance|middle)_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
-  /^glasshouse_pano_(spring|summer|autumn|winter)(_preview)?\.jpg$/.source,
+  /^glasshouse_pano_(spring|summer|autumn|winter)_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
   /^flourish_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
   /^sweet_spells_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
   /^chiapothecary_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
