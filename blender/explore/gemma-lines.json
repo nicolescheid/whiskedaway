@@ -1,0 +1,32 @@
+{
+  "_about": "Gemma's lines for the recipe book (recipe-book-ux.md sections 7 and 8). Content editor owns the wording; docs/gemma-voice-guide.md applies. Where a value is a list, rotate without repeating in a visit. {placeholders} are filled by the page.",
+  "keep": {
+    "_when": "Speak on the 1st keep of the visit, the 3rd, then every 4th (7th, 11th...). Otherwise stay quiet: the animation and the live region are enough.",
+    "first_ever": "That's in your book now. It's up at the top, and it stays on this device.",
+    "first_this_visit": ["In the book it goes.", "Kept. It's in your book."],
+    "third": ["Three in the book. I'm starting to see what you like.", "Three kept. I'd say you're after {cluster_label}."],
+    "later": ["Kept.", "Good one.", "That's in.", "In it goes."]
+  },
+  "dismiss": {
+    "_when": "Speak on the 1st dismiss of the visit only. After that, the undo line is enough.",
+    "first": "Fair enough. Fewer like that, then.",
+    "undo": "Back it comes."
+  },
+  "swipe_hint": "Swipe right to keep one, or left if it's not for you.",
+  "book": {
+    "full": "Your book's full, so I've taken out the oldest one to make room.",
+    "no_storage": "I can't keep a book on this device, so these are just for today.",
+    "cleared": "All cleared. A fresh book."
+  },
+  "room_empty": "That's everything I've got in here. Try next door.",
+  "diet_clash": "I've taken the {title} away. It isn't {diet}.",
+  "write_out": {
+    "button": "Write it out in full",
+    "remaining": "I can write out {n} more today.",
+    "remaining_one": "I can write out one more today.",
+    "writing": "Gemma is writing…",
+    "at_cap": "That's three I've written out today. The short version's above.",
+    "failed": "My pen's run dry. The short version's above. Try again in a bit.",
+    "diet_question": "Anything I should avoid?"
+  }
+}

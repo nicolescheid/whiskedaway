@@ -54,15 +54,19 @@ Each atom is a **snippet**: a card brief enough to read at a glance, which the v
 recipe book or open as a full recipe. The full recipe is written later by the genie Worker from the atom's seed.
 
 - **Title:** what it is, plainly. "Tomato toast with basil", not "Sunny tomato toast".
-- **Body:** the snippet, one or two short sentences (about 15 to 30 words), in the imperative. A short Gemma
-  aside at the end is fine ("You won't taste the spinach, honestly.").
-- **Seed:** what the full recipe is built from.
+- **Hook** (70 characters at most): the one line on the card. One sentence, no weather or time-of-day words.
+- **Time:** active minutes, as a number. **Wait** (optional): what happens without you, e.g. "overnight" or
+  "2 hours in the fridge". For "why it works" and "ingredient story" cards, both belong to the seed dish.
+- **Key ingredients:** 3 to 6, lower case, not a full list. The written-out recipe adds the rest.
+- **Method short:** the recipe in the imperative, one to three sentences. A short Gemma aside at the end is
+  fine ("You won't taste the spinach, honestly."). The book page shows it before anything is written out.
+- **Body:** the old card text, the same as method_short. It goes once the tray and book replace today's cards.
+- **Seed:** what the written-out recipe is built from, together with the fields above.
   - `name`: the full recipe's name. It can be a fuller version of the title ("Soft-boiled egg with toast soldiers").
   - `why`: one sentence on why this dish, in Gemma's voice. Factual, no health claims ("Kiwifruit and oranges
     are both high in vitamin C, which your body uses to make collagen" is the furthest it goes).
-  - `ingredients`: the 2 to 6 key ingredients, lower case, not a full list.
-  - `time`: rough total, e.g. "15 min", "10 min, then overnight", "1 hr 15 min".
   - "why it works" and "ingredient story" cards get a seed for a dish that shows the idea.
+- **Diet:** see "Diet tags" below.
 - **Kind:** one of `recipe idea`, `technique`, `ritual`, `ingredient story`, `why it works`. Nothing else;
   the kind is printed on every card.
 - **Spoons:** 0 if it needs no cooking or effort, 1 for a few minutes at the stove, 2 for real cooking.
@@ -73,6 +77,27 @@ recipe book or open as a full recipe. The full recipe is written later by the ge
   `breakfast`, `evening`...), so the navigator can find the card, plus the room-identity tags below.
 - **Count:** the AI navigator gets a shortlist of at most 40 per step (30 from the room you're in, 10 from
   elsewhere), so the pool can grow. Keep each room at about 20 or fewer.
+
+## Diet tags
+
+The dietary filter is the strongest serving rule: a card that clashes is never served. So a tag is a promise.
+
+- Tags: `vegetarian`, `vegan`, `gluten-free`, `dairy-free`, `nut-free`.
+- **Tag only what is certainly true of the base recipe** (its key ingredients and method). When unsure, leave
+  it off. An untagged card is only hidden from people who asked; a wrong tag could make someone ill.
+- Cheese is not tagged vegetarian: parmesan, feta and many cheddars use animal rennet.
+- Oats, soy sauce, miso, stock, garam masala and chocolate are not tagged gluten-free: they can contain gluten or meet it.
+- "Any milk", stock cubes and chocolate are not tagged dairy-free unless the recipe names a non-dairy one.
+- Coconut, granola and chocolate are not tagged nut-free.
+- Honey is vegetarian, not vegan.
+- Not used: halal, kosher, Jain, Hindu or Buddhist vegetarian, low-FODMAP. The old app offered them, but they
+  depend on certification, sourcing or portion size, which a card can't promise. A written-out recipe can
+  still respect them when a visitor asks.
+
+## Gemma's book lines
+
+Keep, dismiss, the book and the write-out lines live in `blender/explore/gemma-lines.json`, with when each one
+is said. She speaks on the 1st keep of a visit, the 3rd, then every 4th, and on the 1st dismiss only.
 
 ## Room identities (Nicole, 19 Oct 2026)
 
