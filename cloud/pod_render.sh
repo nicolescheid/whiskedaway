@@ -49,12 +49,6 @@ wget -q -O blender.sha256 "https://download.blender.org/release/${SERIES}/blende
 tar -xf "$TARBALL" || fail "Blender unpack"
 BLENDER="/opt/blender-${BLENDER_VERSION}-linux-x64/blender"
 
-log "cloning ${WA_BRANCH}"
-git clone -q --depth 1 --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work || fail "git clone"
-cd /work
-log "fetching Poly Haven assets"
-python3 -I blender/fetch_assets.py >assets.log 2>&1 || { tail -20 assets.log >>"$LOG"; fail "fetch_assets"; }
-log "assets ready ($(grep -c '^  got' assets.log) files)"
 log "GPU: $(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>&1)"
 log "NVIDIA libraries: $(ls /usr/lib/x86_64-linux-gnu/ 2>/dev/null | grep -oE '^lib(cuda|nvoptix|nvidia-rtcore)\.so[.0-9]*' | sort -u | tr '\n' ' ')"
 log "driver capabilities: ${NVIDIA_DRIVER_CAPABILITIES:-unset}"
@@ -77,6 +71,13 @@ PY
 grep -E "\[probe\]|cuda|optix|CUDA|OptiX" probe.log | head -12 >>"$LOG"
 grep -qE "\[probe\] (OPTIX|CUDA) \['" probe.log || fail "Blender can't see the GPU"
 [ "$WA_JOBS" = "probe" ] && { log "probe only: DONE"; exit 0; }
+
+log "cloning ${WA_BRANCH}"
+git clone -q --depth 1 --branch "$WA_BRANCH" https://github.com/nicolescheid/whiskedaway.git /work || fail "git clone"
+cd /work
+log "fetching Poly Haven assets"
+python3 -I blender/fetch_assets.py >assets.log 2>&1 || { tail -20 assets.log >>"$LOG"; fail "fetch_assets"; }
+log "assets ready ($(grep -c '^  got' assets.log) files)"
 
 IFS=';' read -ra JOBS <<<"$WA_JOBS"
 for job in "${JOBS[@]}"; do
