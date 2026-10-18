@@ -302,7 +302,7 @@ def build():
     beam_wood = pbr("beams", "wood_table_worn", 1.5, tint=srgb("#7a5536"), tint_mix=0.45, rot_z=90)
     oak = pbr("oak", "wood_table_worn", 1.0, tint=srgb("#a57543"), tint_mix=0.35, rot_z=90)
     honey = pbr("honey_oak", "wood_table_worn", 1.2, tint=srgb("#b18451"), tint_mix=0.35)
-    pine = pbr("scrubbed_pine", "wood_table_worn", 1.4, tint=srgb("#c6a171"), tint_mix=0.55, rough_add=0.15, rot_z=90)
+    pine = pbr("scrubbed_pine", "wood_table_worn", 1.4, tint=srgb("#c6a171"), tint_mix=0.3, rough_add=0.15, rot_z=90)
     door_oak = pbr("door_oak", "medieval_wood", 2.0, tint=srgb("#9b693e"), tint_mix=0.55)
     door_dark = pbr("door_dark", "medieval_wood", 2.0, tint=srgb("#6e4a2b"), tint_mix=0.6)
     door_cream = pbr("door_cream", "worn_planks", 1.2, tint=srgb("#e6dcc4"), tint_mix=0.8, rough_add=0.1)
@@ -339,7 +339,7 @@ def build():
     crust = color_noise_mat("crust", "#7e431c", "#c98f4e", rough=0.7, scale=25, bump=0.4)
     flour = mat("flour", srgb("#eee8dc"), rough=0.95)
     egg_mats = [mat(f"egg_{i}", srgb(c), rough=0.5) for i, c in enumerate(("#b67e55", "#a86f48", "#c29169", "#9c6640"))]
-    oats = color_noise_mat("oats", "#bfa476", "#e2cfa3", rough=0.85, scale=90, bump=0.6)
+    oats = color_noise_mat("oats", "#9c7d4e", "#d2b985", rough=0.85, scale=140, bump=1.0)
     soil = color_noise_mat("soil", "#2c2416", "#514331", rough=0.95, scale=60, bump=0.5)
     kale = color_noise_mat("kale", "#1f3520", "#3f5e35", rough=0.55, scale=30, bump=0.4, sss=0.1)
     greens = color_noise_mat("greens", "#3f6b2a", "#6f9a3c", rough=0.5, scale=25, bump=0.2, sss=0.15)
@@ -589,9 +589,9 @@ def build():
     m_low = m_closed.copy()
     m_low.translation = Vector((W + 0.12, sy0 + 0.01, 0))
     low_g = group("sd_lower", m_low, low)
-    # upper leaf: swung into the room on its hinge, about 150 degrees, so it stands off the wall by the door
+    # upper leaf: swung right round into the room and back against the wall, so the morning sun comes straight in
     up = stable_leaf("sd_up", SD_SPLIT + 0.005, SD_H - 0.02)
-    m_up = Matrix.Rotation(math.radians(150), 4, "Z") @ m_closed
+    m_up = Matrix.Rotation(math.radians(172), 4, "Z") @ m_closed
     m_up.translation = Vector((W - 0.01, sy0 + 0.01, 0))
     up_g = group("sd_upper", m_up, up)
     hotspot("fl-back-door", "The garden door", meshes_of(low_g) + meshes_of(up_g), kind="door")
@@ -602,7 +602,7 @@ def build():
     box_span("garden_step", W + 0.3, W + 1.0, sy0 - 0.2, sy1 + 0.2, -0.12, -0.05, pbr("brick", "terracotta_floor_tiles", 0.8))
 
     # Trug of vegetables on the floor beside the door, soil still on them
-    tx, ty = 4.08, 2.95
+    tx, ty = 4.1, 2.3
     trug = []
     a_, b_, c_ = 0.27, 0.16, 0.1
     verts, faces = [], []
@@ -679,6 +679,16 @@ def build():
     art = image_mat("botanical", os.path.join(PACK, "10-botanical-flat.png"), rough=0.8)
     wall_plane("botanical", (W - 0.012, 1.55, 1.6), (0.3, 0.375), "-x", art)
     box_span("botanical_back", W - 0.01, W, 1.55 - 0.15, 1.55 + 0.15, 1.6 - 0.19, 1.6 + 0.19, oak)
+
+    # Peg rail on the hallway wall, between the door and the front corner: an apron and a tea towel
+    box_span("peg_rail", 0, 0.03, 0.55, 1.95, 1.62, 1.72, honey, bevel=0.005)
+    for k, y in enumerate((0.75, 1.1, 1.45, 1.8)):
+        cyl(f"peg_{k}", (0.07, y, 1.67), 0.013, 0.08, honey, rot=(0, math.radians(90), 0))
+    box_span("apron", 0.03, 0.05, 0.92, 1.28, 0.95, 1.66, marigold_linen, bevel=0.01)
+    box_span("apron_tie", 0.03, 0.045, 1.08, 1.12, 1.66, 1.69, marigold_linen)
+    box_span("peg_towel", 0.04, 0.055, 1.63, 1.95, 1.25, 1.66, towel_mat, bevel=0.006)
+    model("wicker_basket_01", (0.3, 1.0, 0), rot_z=80, scale=1.1)
+    model("potted_plant_04", (4.2, 0.35, 0), rot_z=30, scale=1.6)
 
     # ---- Front wall: the painted dresser, and the phonograph on its own little table at the hallway end
     dx0, dx1 = 1.6, 3.7
@@ -822,9 +832,6 @@ def build():
     board = model("wooden_cutting_board", (cx + 0.05, cy - 0.15, z_on), rot_z=8, scale=1.05)
     loaf = sphere("loaf", (cx + 0.05, cy - 0.15, z_on + 0.06), 0.14, crust, scale=(1, 0.88, 0.55))
     bumpy(loaf, strength=0.012, size=0.05)
-    for k in range(3):                              # three slashes across the top, floured
-        s = box(f"loaf_score_{k}", (cx + 0.05 - 0.06 + k * 0.06, cy - 0.15, z_on + 0.135), (0.012, 0.16, 0.01), flour, bevel=0.004)
-        s.rotation_euler = (0, math.radians((k - 1) * 14), math.radians(20))
     box("knife_blade", (cx + 0.12, cy - 0.27, z_on + 0.045), (0.2, 0.025, 0.002), chrome, bevel=0.001).rotation_euler = (0, 0, math.radians(-6))
     box("knife_handle", (cx - 0.02, cy - 0.26, z_on + 0.048), (0.11, 0.022, 0.016), walnut, bevel=0.005).rotation_euler = (0, 0, math.radians(-6))
     for k in range(12):
@@ -834,12 +841,12 @@ def build():
     gb_at = (cx - 0.35, cy + 0.2)
     gbowl = model("wooden_bowl_01", (*gb_at, z_on), scale=1.25)
     gs = [gbowl]
-    for i in range(12):
+    for i in range(20):                             # curly kale: short, frilly, flopping over the rim
         a = i * 2.39996
-        d_ = Vector((math.cos(a) * 0.5, math.sin(a) * 0.5, 1.0))
-        gs.append(leaf(f"bowl_kale_{i}", (gb_at[0] + 0.04 * math.cos(a), gb_at[1] + 0.04 * math.sin(a), z_on + 0.04), d_,
-                       rnd.uniform(0.24, 0.34), rnd.uniform(0.08, 0.12), kale if i % 3 else greens, crinkle=0.016, curl=0.9,
-                       seed=100 + i))
+        d_ = Vector((math.cos(a) * 0.9, math.sin(a) * 0.9, 0.7))
+        gs.append(leaf(f"bowl_kale_{i}", (gb_at[0] + 0.05 * math.cos(a), gb_at[1] + 0.05 * math.sin(a), z_on + 0.05), d_,
+                       rnd.uniform(0.17, 0.25), rnd.uniform(0.09, 0.13), kale, crinkle=0.028, curl=1.3, seed=100 + i,
+                       nx=12, ny=18))
     for i in range(10):
         a = rnd.uniform(0, 6.28)
         gs.append(leaf(f"bowl_herb_{i}", (gb_at[0] + 0.08 * math.cos(a), gb_at[1] + 0.08 * math.sin(a), z_on + 0.05),
@@ -850,6 +857,11 @@ def build():
     obowl = lathe("oat_bowl", [(0.0, 0.0), (0.055, 0.0), (0.1, 0.035), (0.12, 0.08), (0.125, 0.09)], stoneware, (*ob_at, z_on), thick=0.006)
     oat_fill = cyl("oat_fill", (*ob_at, z_on + 0.072), 0.112, 0.012, oats, bevel=0.006)
     bumpy(oat_fill, strength=0.006, size=0.02, subsurf=2)
+    seed_mats = [mat("pumpkin_seed", srgb("#5d6b35"), rough=0.6), mat("sunflower_seed", srgb("#8a7d68"), rough=0.6)]
+    for k in range(26):
+        a, r = rnd.uniform(0, 6.28), rnd.uniform(0, 0.09)
+        sphere(f"seed_{k}", (ob_at[0] + r * math.cos(a), ob_at[1] + r * math.sin(a), z_on + 0.08), 0.007, seed_mats[k % 2],
+               scale=(1.5, 0.8, 0.35)).rotation_euler = (0, 0, rnd.uniform(0, 3))
     for k in range(40):
         sphere(f"oat_{k}", (ob_at[0] + rnd.uniform(-0.3, 0.15), ob_at[1] + rnd.uniform(-0.3, 0.05), z_on + 0.002), 0.006, oats,
                scale=(1.4, 1, 0.25)).rotation_euler = (0, 0, rnd.uniform(0, 3))
@@ -868,12 +880,14 @@ def build():
     hotspot("fl-table", "The table", [table_top] + runner, kind="submit")
 
     # Four mismatched chairs
-    c1 = model("dining_chair_02", (cx - 0.45, cy + tw / 2 + 0.28, 0), rot_z=4)
+    c1 = model("painted_wooden_chair_01", (cx - 0.45, cy + tw / 2 + 0.28, 0), rot_z=4)
+    retint(c1, "#6e4a2b", lo=0.6, hi=1.2)
     c2 = model("painted_wooden_chair_01", (cx + 0.45, cy + tw / 2 + 0.3, 0), rot_z=-7)
     retint(c2, "#8a6a48", lo=0.6, hi=1.15)
     c3 = model("gallinera_chair", (cx - tl / 2 - 0.32, cy - 0.05, 0), rot_z=92)
-    c4 = model("dining_chair_02", (cx + tl / 2 + 0.28, cy + 0.08, 0), rot_z=-84)
-    retint(c4, "#6e4a2b", lo=0.6, hi=1.2)
+    retint(c3, "#8a6440", lo=0.6, hi=1.2)
+    c4 = model("painted_wooden_chair_01", (cx + tl / 2 + 0.3, cy + 0.25, 0), rot_z=-80)
+    retint(c4, "#a07a4e", lo=0.6, hi=1.15)
 
     # ---- Light: the weather through the sea window and the open door, the lamps when it's grey or dark
     world = bpy.data.worlds.new("world")
