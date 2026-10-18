@@ -7,9 +7,12 @@ compatibility_date = "2024-01-01"
 # wrangler secret put ANTHROPIC_API_KEY
 
 # Bot guard (see the bottom of whiskedaway-worker.js).
-# Secrets, set with `wrangler secret put`: TURNSTILE_SECRET_KEY, PASS_SECRET
+# Secrets, set with `wrangler secret put`: TURNSTILE_SECRET_KEY, PASS_SECRET, GA_API_SECRET (analytics)
 [vars]
 BOT_GUARD = "enforce"   # "log" records would-be blocks without blocking (use while rolling out frontend changes)
+# Google Analytics web stream for whiskedaway.com (public). The Measurement Protocol secret is a
+# secret: wrangler secret put GA_API_SECRET. Without both, POST /m counts nothing.
+GA_MEASUREMENT_ID = "G-PBDF79MT72"
 ALLOWED_ORIGINS = "https://whiskedaway.com,https://www.whiskedaway.com,http://localhost:5173,http://localhost:5174,http://localhost:4173"
 
 # Per visitor pass: 6 recipes and 30 navigation steps a minute is far more than a person needs
@@ -49,4 +52,12 @@ name = "GLOBAL_LIMIT"
 namespace_id = "4205"
   [ratelimits.simple]
   limit = 120
+  period = 60
+
+# Analytics events (POST /m) per visitor pass. The page batches, so a person sends a few a minute
+[[ratelimits]]
+name = "MEASURE_LIMIT"
+namespace_id = "4206"
+  [ratelimits.simple]
+  limit = 60
   period = 60

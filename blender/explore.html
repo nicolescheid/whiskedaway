@@ -147,7 +147,7 @@
 <div class="bar">
   <h1 id="room-title">Cuddlecore Kitchen</h1>
   <span class="mode" id="mode"></span>
-  <a class="chip" href="/">Back to the inn</a>
+  <a class="chip" id="btn-inn" href="/">Back to the inn</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
   <button class="chip" id="btn-notes" aria-expanded="false">Gemma's notebook</button>
 </div>
@@ -161,7 +161,7 @@
 
 <aside class="panel" id="notes" aria-label="Gemma's notebook">
   <h2>Gemma's notebook</h2>
-  <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave.</p>
+  <p class="small">What I've noticed on this visit. It lives only in this tab, and nothing here is kept after you leave. The inn does count, anonymously, which rooms and recipes get visited, but never who.</p>
   <h3>My best guess</h3>
   <div id="guess" class="small">Nothing yet. Have a wander.</div>
   <div class="meter"><i id="conf" style="width:0"></i></div>
@@ -198,6 +198,7 @@
       <li><b>The glasshouse plants</b>: modelled in Blender for WhiskedAway, from the concept art.</li>
       <li><b>The window views and concept art</b>: made with ChatGPT for WhiskedAway.</li>
       <li><b>Bot protection</b>: Cloudflare Turnstile.</li>
+      <li><b>Counting visitors</b>: Cloudflare Web Analytics and Google Analytics, with no cookies and nothing that identifies you. If your browser asks not to be tracked, nothing is sent.</li>
     </ul>
     <p>Copyleft spirit: take what helps you, credit what you borrow, share what you make.</p>
     <button class="ok" id="credits-ok">Back to the kitchen</button>
@@ -254,6 +255,8 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate, aiNavigate } from './explore/navigator.js';
 import { genieFetch, GENIE_URL } from '../src/lib/genie.js';
+import { track } from '../src/lib/analytics.js';
+import { stepBucket } from '../src/lib/analytics-events.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -439,7 +442,11 @@ async function showWeather(w, { fade = true } = {}) {
     if (full && !stale()) { sphere.material = new THREE.MeshBasicMaterial({ map: full }); if (!fader.visible) render(); }
   }
 }
-showWeather(state.weather, { fade: false });
+showWeather(state.weather, { fade: false }).then(() => {
+  const s = performance.now() / 1000;
+  track('explore_start', { room: state.room, nav_mode: AI ? 'ai' : 'local', full_res: useFull ? 'yes' : 'no',
+                           load_ms: s < 2 ? 'under-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : 'over-10s' });
+});
 
 // yaw: 0 = front wall, + = right; pitch: + = up (same convention as the Blender export)
 const dir = (yaw, pitch) => {
@@ -593,6 +600,14 @@ const SYS = {
   dial: e => `You turned the dial to ${e.id}`,
   dismiss: e => `You set aside "${atomsById[e.atom]?.title}"`,
 };
+// ---------- counting (docs/analytics-plan.md): what happens to the site, never the wander itself
+const stepNow = () => stepBucket(state.trail.length);
+const servedBy = {};                      // which navigator served each card, kept for this page only
+function countAtom(name, atom) {
+  track(name, { atom, atom_kind: atomsById[atom]?.kind, nav_mode: servedBy[atom] || state.result?.mode || (AI ? 'ai' : 'local'),
+                room: state.room, step: stepNow() });
+}
+
 function record(e) {
   if (SYS[e.kind]) chatLine('sys', SYS[e.kind](e));
   state.trail.push({ ...e, t: Date.now() });
@@ -617,6 +632,7 @@ function touch(id) {
   const obj = world.objects[id];
   if (obj.type === 'energy') return chooseEnergy(obj.energy);   // the candle is the event: no separate touch
   record({ kind: 'touch', id });
+  track('hotspot_touch', { room: state.room, object: id, object_type: obj.type });
   if (obj.type === 'ambient') {
     say(obj.moment, [], true);
   } else if (obj.type === 'weather') {
@@ -626,8 +642,12 @@ function touch(id) {
   } else if (obj.type === 'season') {
     openSeasons();
   } else if (obj.type === 'door' || obj.type === 'walk') {
-    if (!obj.go) return say(obj.closed || "That one's not open yet.", [], true);
+    if (!obj.go) {
+      track('door_closed', { room: state.room, object: id });
+      return say(obj.closed || "That one's not open yet.", [], true);
+    }
     if (obj.go.startsWith('/')) {
+      track('leave_to_inn', { room: state.room, step: stepNow() });
       say(obj.leaving || 'Mind the step, love.', [], true);
       return setTimeout(() => { location.href = obj.go; }, 1200);
     }
@@ -644,6 +664,7 @@ function touch(id) {
 // ---------- moving between rooms
 function goRoom(id, yaw) {
   if (!ROOMS[id] || id === state.room) return;
+  const from = state.room;
   state.room = id;
   spots = room().spots;
   look.yaw = yaw ?? room().yaw ?? 0;
@@ -654,6 +675,7 @@ function goRoom(id, yaw) {
   showClock();
   showWeather(state.weather);
   record({ kind: 'room', id });
+  track('room_enter', { room: id, from_room: from, step: stepNow() });
   if (state.result) applyReveal(state.result.reveal);
   render();
   if (id !== 'cuddlecore') askHemisphere();
@@ -682,6 +704,7 @@ function openDial() {
 function turnDial(o) {
   $('dialdlg').classList.remove('open');
   record({ kind: 'dial', id: o.star ? 'the star' : o.label });
+  track('dial_turn', { dial_choice: o.star ? 'star' : o.go || 'closed' });
   // The star: three rooms are open so far. A wander toward building up, fresh food or busy hands opens Flourish;
   // one toward a good-for-you treat, something frozen or baking to share opens Sweet Spells;
   // anything else, and a wander that hasn't said much yet, opens Cuddlecore
@@ -719,6 +742,8 @@ async function navigate() {
     r = await aiNavigate(AI, navTrail(), world, opts);
     if (seq !== navSeq) return;                            // a newer event superseded this one
     typing(false);
+    if (r.fallback) track('nav_fallback', { reason: /timeout|abort/i.test(r.fallback) ? 'timeout' : /429/.test(r.fallback) ? 'rate_limited'
+                                                    : /403/.test(r.fallback) ? 'bot_check' : 'error' });
   }
   state.result = r;
   $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
@@ -730,7 +755,7 @@ async function navigate() {
   const gemma = reacted && r.gemma ? r.gemma.replace(/^[^…]*… /, '').replace(/^./, c => c.toUpperCase()) : r.gemma;
   if (gemma) say(gemma, r.fork);
   // One new piece per step (two to start), so the counter fills at the pace of the wander
-  r.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(serve);
+  r.serve.filter(s => !state.served.includes(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(s => serve(s, r.mode));
   store.save(state);
   renderNotes();
 }
@@ -828,10 +853,12 @@ $('credits-ok').onclick = () => $('credits').classList.remove('open');
   }, 2500 + Math.random() * 4000);
 })();
 
-function serve({ atom, why }) {
+function serve({ atom, why }, mode) {
   const a = atomsById[atom];
   if (!a || state.served.includes(atom)) return;
   state.served.push(atom);
+  servedBy[atom] = mode;
+  countAtom('atom_served', atom);
   state.cards.unshift({ atom, why });
   state.cards = state.cards.slice(0, 4);
   renderCards();
@@ -850,7 +877,7 @@ function renderCards() {
     card.querySelector('[data-act=open]').onclick = () => {
       const entry = state.cards.find(x => x.atom === atom);
       entry.opened = !entry.opened;
-      if (entry.opened) record({ kind: 'open', atom });
+      if (entry.opened) { record({ kind: 'open', atom }); countAtom('atom_open', atom); }
       renderCards();
       store.save(state);
     };
@@ -858,6 +885,7 @@ function renderCards() {
       state.cards = state.cards.filter(x => x.atom !== atom);
       state.dismissed.push(atom);
       record({ kind: 'dismiss', atom });
+      countAtom('atom_dismiss', atom);
       renderCards();
     };
     c.appendChild(card);
@@ -899,10 +927,13 @@ function togglePanel(id, btn) {
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('open'));
   document.querySelectorAll('.bar .chip').forEach(x => { x.classList.remove('on'); x.setAttribute('aria-expanded', 'false'); });
   if (open) { p.classList.add('open'); btn.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); }
+  if (open) track(id === 'map' ? 'map_open' : 'notebook_open', { room: state.room });
 }
 $('btn-map').onclick = e => togglePanel('map', e.currentTarget);
 $('btn-notes').onclick = e => togglePanel('notes', e.currentTarget);
+$('btn-inn').onclick = () => track('leave_to_inn', { room: state.room, step: stepNow() });
 $('forget').onclick = () => {
+  track('visit_forget');
   store.clear();
   Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], result: null, weather: world.default_weather || 'rain', time: null, energy: null, season: null, seasonTold: false, asked: false, chat: [] });
   showCandle();
@@ -934,6 +965,7 @@ function chooseWeather(id) {
   showWeather(id);
   say(world.weathers[id].moment, [], true);
   record({ kind: 'weather', id });
+  track('weather_change', { room: state.room, weather: id });
 }
 $('weather-ok').onclick = () => $('weather').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('weather').classList.remove('open'); });
@@ -950,6 +982,7 @@ function openClock() {
 function chooseTime(id) {
   if (id === state.time) return;
   state.time = id;
+  if (id) track('time_change', { room: state.room, time_of_day: id });
   setHands(handsHour());
   showWeather(state.weather);                                        // re-light: tint, or the night render
   $('clockdial').querySelectorAll('button').forEach(b => b.classList.toggle('on', !!id && b.dataset.t === id));
@@ -957,6 +990,7 @@ function chooseTime(id) {
     say(world.times[id].moment, [], true);
     record({ kind: 'time', id });
   } else {
+    track('time_change', { room: state.room, time_of_day: 'own' });
     say(`Back to your own time: ${world.times[deviceTime()].label.toLowerCase()}.`, [], true);
     state.trail = state.trail.filter(e => e.kind !== 'time');
     store.save(state);
@@ -985,7 +1019,9 @@ function chooseSeason(id) {
   if (id) {
     say(world.seasons[id].moment, [], true);
     record({ kind: 'season', id });
+    track('season_change', { season: id });
   } else {
+    track('season_change', { season: 'own' });
     say(`Back to your own season: ${seasonGuess}.`, [], true);
     state.trail = state.trail.filter(e => e.kind !== 'season');
     store.save(state);
@@ -1034,6 +1070,7 @@ function chooseEnergy(id) {
   const e = world.energies?.[id];
   if (!e || id === state.energy) return;
   state.energy = id;
+  track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
   showCandle();
   say(e.moment, [], true);
   record({ kind: 'energy', id });

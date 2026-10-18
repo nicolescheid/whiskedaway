@@ -12,12 +12,14 @@ const out = join(root, 'public', 'explore');
 rmSync(out, { recursive: true, force: true });
 mkdirSync(join(out, 'out'), { recursive: true });
 
-// The page: same relative layout as in blender/, except the visitor-pass client sits beside it
-const html = readFileSync(join(src, 'explore.html'), 'utf8')
-  .replace("from '../src/lib/genie.js'", "from './genie.js'");
+// The page: same relative layout as in blender/, except the shared browser modules (the visitor-pass
+// client and the analytics counter) sit beside it
+const shared = ['genie.js', 'analytics.js', 'analytics-events.js'];
+let html = readFileSync(join(src, 'explore.html'), 'utf8');
+for (const f of shared) html = html.replace(`from '../src/lib/${f}'`, `from './${f}'`);
 if (html.includes('../src/')) throw new Error('explore.html still references ../src/');
 writeFileSync(join(out, 'index.html'), html);
-cpSync(join(root, 'src', 'lib', 'genie.js'), join(out, 'genie.js'));
+for (const f of shared) cpSync(join(root, 'src', 'lib', f), join(out, f));
 
 // Room data, navigator, Gemma's pixel avatar (and the Fluent Emoji MIT licence)
 cpSync(join(src, 'explore'), join(out, 'explore'), { recursive: true });

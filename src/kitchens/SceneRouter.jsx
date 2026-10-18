@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useScene } from '../contexts/SceneContext';
 import { getSceneIdFromRoute, getRouteFromSceneId } from '../scenes/sceneData';
+import { track } from '../lib/analytics.js';
 
 import InnExteriorController from './InnExteriorController';
 import CuddlecoreController from './CuddlecoreController';
@@ -46,6 +47,11 @@ export default function SceneRouter() {
       navigate(route, { replace: true });
     }
   }, [currentScene]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Count which scenes are seen (docs/analytics-plan.md)
+  useEffect(() => {
+    if (currentScene) track('scene_view', { scene: currentScene });
+  }, [currentScene]);
 
   const SceneComponent = sceneComponents[currentScene] || InnExteriorController;
   return <SceneComponent />;
