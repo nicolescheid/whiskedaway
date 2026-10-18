@@ -257,7 +257,7 @@
       ]
     },
     "locale-map": {
-      "label": "Location",
+      "label": "The map",
       "ref": "the map",
       "type": "interactive",
       "tool": "locale",
@@ -373,7 +373,8 @@
         "comfort",
         "unwell",
         "quick",
-        "rain"
+        "rain",
+        "japanese"
       ],
       "seed": {
         "name": "Miso broth with tofu and greens",
@@ -410,7 +411,8 @@
         "breakfast",
         "comfort",
         "quick",
-        "unwell"
+        "unwell",
+        "kiwi"
       ],
       "seed": {
         "name": "Soft-boiled egg with toast soldiers",
@@ -448,7 +450,8 @@
         "cosy",
         "comfort",
         "unwell",
-        "simple"
+        "simple",
+        "chinese"
       ],
       "seed": {
         "name": "Quick chicken and ginger congee",
@@ -591,7 +594,8 @@
         "quick",
         "stress",
         "evening",
-        "hearty"
+        "hearty",
+        "italian"
       ],
       "seed": {
         "name": "One-pot tomato pasta",
@@ -710,7 +714,7 @@
       ],
       "seed": {
         "name": "Carrot, orange and ginger juice",
-        "why": "A sharp, bright glass for the start of the day."
+        "why": "A sharp, bright glass of juice."
       },
       "body": "Carrots, two oranges and a thumb of ginger, juiced. Bright orange and sharp."
     },
@@ -861,7 +865,8 @@
         "no-cook",
         "light",
         "snack",
-        "midday"
+        "midday",
+        "mediterranean"
       ],
       "seed": {
         "name": "Tzatziki with flatbread",
@@ -939,7 +944,8 @@
         "pantry",
         "what-you-have",
         "cooking",
-        "warming"
+        "warming",
+        "chinese"
       ],
       "seed": {
         "name": "Egg fried rice with peas",
@@ -974,7 +980,8 @@
         "warming",
         "simple",
         "comfort",
-        "quick"
+        "quick",
+        "kiwi"
       ],
       "seed": {
         "name": "Cheese toastie",
@@ -991,14 +998,14 @@
       "short": "Warm milk",
       "icon": "🥛",
       "ref": "the warm milk",
-      "hook": "Warm milk with cinnamon and honey, to close the day.",
+      "hook": "Warm milk with cinnamon and a little honey, sipped slowly.",
       "time": 5,
       "key_ingredients": [
         "milk",
         "cinnamon",
         "honey"
       ],
-      "method_short": "Milk warmed with a pinch of cinnamon and a little honey. A way of telling yourself the day is done.",
+      "method_short": "Milk warmed with a pinch of cinnamon and a little honey. Something quiet to sit with.",
       "diet": [
         "vegetarian",
         "gluten-free",
@@ -1017,9 +1024,9 @@
       ],
       "seed": {
         "name": "Warm cinnamon and honey milk",
-        "why": "Something warm and quiet for the end of the day."
+        "why": "Something warm and quiet to sit with."
       },
-      "body": "Milk warmed with a pinch of cinnamon and a little honey. A way of telling yourself the day is done."
+      "body": "Milk warmed with a pinch of cinnamon and a little honey. Something quiet to sit with."
     },
     {
       "id": "slow-porridge",
@@ -1055,7 +1062,7 @@
       ],
       "seed": {
         "name": "Creamy porridge with apple and honey",
-        "why": "Warm, filling and easy first thing."
+        "why": "Warm, filling and easy to make."
       },
       "body": "Oats, milk and a pinch of salt, stirred over a low heat for five minutes. Honey or grated apple on top."
     }
