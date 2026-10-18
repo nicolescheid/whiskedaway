@@ -474,7 +474,7 @@ def build():
             fd_parts.append(box_span(f"front_panel_{px}_{pz0}", px - 0.17, px + 0.17, FRONT - 0.15, FRONT - 0.141, pz0, pz1, front_paint, bevel=0.006))
     fd_parts.append(cyl("front_knob", (0.38, FRONT - 0.12, 1.0), 0.03, 0.05, brass_worn, rot=(math.radians(90), 0, 0)))
     fd_parts.append(box("front_letter_plate", (0, FRONT - 0.138, 1.02), (0.26, 0.006, 0.07), brass, bevel=0.003))
-    hotspot("front-door", "The front door", fd_parts, kind="door")
+    hotspot("front-door", "Exit out the front door", fd_parts, kind="door")
     # The outside face: berry paint, four raised panels, a brass knob and letter plate (seen only from the lane)
     fd_parts.append(box_span("front_outside", -fd_w / 2 + 0.01, fd_w / 2 - 0.01, FRONT - 0.205, FRONT - 0.2, 0.01, fd_h - 0.005, front_berry, bevel=0.002))
     for px in (-0.22, 0.22):

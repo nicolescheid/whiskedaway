@@ -2,7 +2,7 @@
   "room": "hallway",
   "name": "The hallway",
   "stops": {
-    "hall-entrance": { "stop": "entrance", "title": "The entrance hall", "where": "In the entrance hall", "yaw": 0 },
+    "hall-entrance": { "stop": "entrance", "title": "The foyer", "where": "In the foyer", "yaw": 0 },
     "hall-middle": { "stop": "middle", "title": "The hallway", "where": "In the hallway", "yaw": 0 }
   },
   "walks": {
@@ -12,7 +12,7 @@
   "clock": { "center": [-0.585, 4.0, 1.732], "normal": [1, 0, 0], "radius": 0.13, "in_render": true },
   "objects": {
     "walk-hall": { "label": "Down the hall", "ref": "the hallway", "type": "walk", "go": "hall-middle", "themes": [] },
-    "walk-front": { "label": "To the front door", "ref": "the entrance hall", "type": "walk", "go": "hall-entrance", "arrive_yaw": 180, "themes": [] },
+    "walk-front": { "label": "Foyer and stairs", "ref": "the foyer", "type": "walk", "go": "hall-entrance", "arrive_yaw": 180, "themes": [] },
     "door-cuddlecore": { "label": "Cuddlecore", "blurb": "Quick comfort, juices and snacks", "ref": "the Cuddlecore door", "type": "door", "go": "cuddlecore", "themes": [] },
     "door-flourish": { "label": "Flourish", "blurb": "Proper meals from whole foods", "ref": "the Flourish door", "type": "door", "go": "flourish", "themes": [] },
     "door-sweet-spells": { "label": "Sweet Spells", "blurb": "For the sweet tooth", "ref": "the Sweet Spells door", "type": "door", "go": "sweet-spells", "themes": [] },
@@ -23,7 +23,7 @@
     "dial-sweet-spells": { "label": "The dial", "map": "The dial by the Sweet Spells door", "ref": "the dial by the Sweet Spells door", "type": "dial", "door": "door-sweet-spells", "themes": [] },
     "dial-chiapothecary": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial by the Chiapothecary door", "type": "dial", "door": "door-chiapothecary", "themes": [] },
     "grandfather-clock": { "label": "The clock", "ref": "the grandfather clock", "type": "time", "tool": "time", "themes": [] },
-    "front-door": { "label": "The front door", "ref": "the front door", "type": "door", "go": "/", "themes": [],
+    "front-door": { "label": "Exit out the front door", "ref": "the front door", "type": "door", "go": "/", "themes": [],
                     "leaving": "Off out? Mind the step, love." },
     "stairs": { "label": "Up the stairs", "ref": "the stairs", "type": "ambient", "themes": [],
                 "moment": "Upstairs is the library and the turret. They're not open yet, and the guest rooms are all taken." },
@@ -42,6 +42,6 @@
     { "label": "Glasshouse", "go": "glasshouse", "blurb": "What's growing this season" },
     { "label": "Nourish Academy" },
     { "label": "Cravings Decoded" },
-    { "label": "The entrance hall", "go": "hall-entrance" }
+    { "label": "The foyer", "go": "hall-entrance" }
   ]
 }

@@ -112,7 +112,7 @@
           }
         },
         "front-door": {
-          "label": "The front door",
+          "label": "Exit out the front door",
           "type": "door",
           "overlay": null,
           "yaw": 180.0,
@@ -260,7 +260,7 @@
           }
         },
         "front-door": {
-          "label": "The front door",
+          "label": "Exit out the front door",
           "type": "door",
           "overlay": null,
           "yaw": 180.0,
