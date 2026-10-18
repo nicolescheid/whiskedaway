@@ -211,7 +211,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
   let gemma, fork = [];
   if (confidence < FORK_BELOW && clusters[1].score > 0 && meaningful.length >= 2) {
     fork = [top.id, clusters[1].id];
-    gemma = `${lead}I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;
+    gemma = `I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;   // no lead: a question stays under 100 characters
   } else {
     gemma = `${lead}I think you're after ${top.label}.`;   // no "I found you something": the rising idea says that (Ideas, v4)
   }
