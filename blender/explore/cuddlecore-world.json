@@ -307,6 +307,20 @@
       "kind": "ritual",
       "spoons": 0,
       "title": "Honey, ginger and lemon in a mug",
+      "hook": "Ginger, lemon and honey in hot water, held in both hands.",
+      "time": 5,
+      "key_ingredients": [
+        "fresh ginger",
+        "lemon",
+        "honey"
+      ],
+      "method_short": "Ginger slices, a squeeze of lemon and a spoon of honey in hot water. Hold it with both hands.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "warming",
         "tea",
@@ -319,17 +333,11 @@
         "unwell",
         "quick"
       ],
-      "body": "Ginger slices, a squeeze of lemon and a spoon of honey in hot water. Hold it with both hands.",
       "seed": {
         "name": "Honey, ginger and lemon drink",
-        "why": "Warm and gentle, and easy to sip when you're not up to much.",
-        "ingredients": [
-          "fresh ginger",
-          "lemon",
-          "honey"
-        ],
-        "time": "5 min"
-      }
+        "why": "Warm and gentle, and easy to sip when you're not up to much."
+      },
+      "body": "Ginger slices, a squeeze of lemon and a spoon of honey in hot water. Hold it with both hands."
     },
     {
       "id": "five-minute-miso",
@@ -337,6 +345,19 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Five-minute miso broth",
+      "hook": "Salty, warm and light, and ready before the kettle cools.",
+      "time": 5,
+      "key_ingredients": [
+        "white miso",
+        "silken tofu",
+        "spinach",
+        "spring onion"
+      ],
+      "method_short": "A spoon of miso stirred into hot water, with tofu, spinach or leftover rice. Sip it slowly.",
+      "diet": [
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "broth",
         "warming",
@@ -347,18 +368,11 @@
         "quick",
         "rain"
       ],
-      "body": "A spoon of miso stirred into hot water, with tofu, spinach or leftover rice. Sip it slowly.",
       "seed": {
         "name": "Miso broth with tofu and greens",
-        "why": "Salty, warm and light, and done before the kettle's cooled.",
-        "ingredients": [
-          "white miso",
-          "silken tofu",
-          "spinach",
-          "spring onion"
-        ],
-        "time": "5 min"
-      }
+        "why": "Salty, warm and light, and done before the kettle's cooled."
+      },
+      "body": "A spoon of miso stirred into hot water, with tofu, spinach or leftover rice. Sip it slowly."
     },
     {
       "id": "toast-soldiers",
@@ -366,6 +380,18 @@
       "kind": "recipe idea",
       "spoons": 0,
       "title": "Buttered toast, cut into soldiers",
+      "hook": "Toast in strips, with a soft egg to dip them in.",
+      "time": 10,
+      "key_ingredients": [
+        "eggs",
+        "bread",
+        "butter"
+      ],
+      "method_short": "Toast counts. Cut it into strips and it feels like someone's looking after you.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
       "themes": [
         "bread",
         "simple",
@@ -376,17 +402,11 @@
         "quick",
         "unwell"
       ],
-      "body": "Toast counts. Cut it into strips and it feels like someone's looking after you.",
       "seed": {
         "name": "Soft-boiled egg with toast soldiers",
-        "why": "Plain, soft and easy to eat when your appetite is low.",
-        "ingredients": [
-          "eggs",
-          "bread",
-          "butter"
-        ],
-        "time": "10 min"
-      }
+        "why": "Plain, soft and easy to eat when your appetite is low."
+      },
+      "body": "Toast counts. Cut it into strips and it feels like someone's looking after you."
     },
     {
       "id": "congee",
@@ -394,6 +414,20 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Quick congee from leftover rice",
+      "hook": "Leftover rice simmered soft in stock, with ginger on top.",
+      "time": 20,
+      "key_ingredients": [
+        "cooked rice",
+        "chicken stock",
+        "fresh ginger",
+        "spring onion",
+        "soy sauce"
+      ],
+      "method_short": "Simmer leftover rice in plenty of stock until it goes soft and thick. Ginger and spring onion on top.",
+      "diet": [
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "broth",
         "warming",
@@ -403,19 +437,11 @@
         "unwell",
         "simple"
       ],
-      "body": "Simmer leftover rice in plenty of stock until it goes soft and thick. Ginger and spring onion on top.",
       "seed": {
         "name": "Quick chicken and ginger congee",
-        "why": "Soft, warm and very easy to eat.",
-        "ingredients": [
-          "cooked rice",
-          "chicken stock",
-          "fresh ginger",
-          "spring onion",
-          "soy sauce"
-        ],
-        "time": "20 min"
-      }
+        "why": "Soft, warm and very easy to eat."
+      },
+      "body": "Simmer leftover rice in plenty of stock until it goes soft and thick. Ginger and spring onion on top."
     },
     {
       "id": "why-warm-food",
@@ -423,6 +449,20 @@
       "kind": "why it works",
       "spoons": 0,
       "title": "Why warm food feels like comfort",
+      "hook": "Why soft, warm, salty food is easy when your appetite is low.",
+      "time": 20,
+      "key_ingredients": [
+        "chicken stock",
+        "egg noodles",
+        "cooked chicken",
+        "carrot",
+        "spring onion"
+      ],
+      "method_short": "Warm, soft, salty food is easy to eat when your appetite is low, and the smell does half the work. Comfort is a real thing, not a weakness.",
+      "diet": [
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "warming",
         "why",
@@ -431,19 +471,11 @@
         "broth",
         "comfort"
       ],
-      "body": "Warm, soft, salty food is easy to eat when your appetite is low, and the smell does half the work. Comfort is a real thing, not a weakness.",
       "seed": {
         "name": "Simple chicken noodle soup",
-        "why": "Warm, salty and soft, all in one bowl.",
-        "ingredients": [
-          "chicken stock",
-          "egg noodles",
-          "cooked chicken",
-          "carrot",
-          "spring onion"
-        ],
-        "time": "20 min"
-      }
+        "why": "Warm, salty and soft, all in one bowl."
+      },
+      "body": "Warm, soft, salty food is easy to eat when your appetite is low, and the smell does half the work. Comfort is a real thing, not a weakness."
     },
     {
       "id": "story-ginger",
@@ -451,6 +483,21 @@
       "kind": "ingredient story",
       "spoons": 0,
       "title": "Why ginger feels warming",
+      "hook": "Ginger's gentle heat is a milder cousin of chilli's kick.",
+      "time": 15,
+      "key_ingredients": [
+        "egg noodles",
+        "fresh ginger",
+        "garlic",
+        "spring onion",
+        "soy sauce"
+      ],
+      "method_short": "Ginger's gentle heat comes from gingerol, a milder cousin of the compound behind chilli's kick. That's why ginger tea warms you from the middle.",
+      "diet": [
+        "vegetarian",
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "ginger",
         "warming",
@@ -458,19 +505,11 @@
         "why",
         "quick"
       ],
-      "body": "Ginger's gentle heat comes from gingerol, a milder cousin of the compound behind chilli's kick. That's why ginger tea warms you from the middle.",
       "seed": {
         "name": "Ginger and spring onion noodles",
-        "why": "A quick way to taste what ginger does in hot oil.",
-        "ingredients": [
-          "egg noodles",
-          "fresh ginger",
-          "garlic",
-          "spring onion",
-          "soy sauce"
-        ],
-        "time": "15 min"
-      }
+        "why": "A quick way to taste what ginger does in hot oil."
+      },
+      "body": "Ginger's gentle heat comes from gingerol, a milder cousin of the compound behind chilli's kick. That's why ginger tea warms you from the middle."
     },
     {
       "id": "spoons",
@@ -478,24 +517,27 @@
       "kind": "why it works",
       "spoons": 0,
       "title": "What \"spoons\" means",
+      "hook": "The spoons on each card show how much energy it costs.",
+      "time": 5,
+      "key_ingredients": [
+        "crackers",
+        "cheese",
+        "apple",
+        "nuts"
+      ],
+      "method_short": "Spoon theory: some days you only have a few units of energy to spend. The spoons on each card show what it costs.",
+      "diet": [],
       "themes": [
         "low-spoons",
         "why",
         "learning",
         "rest"
       ],
-      "body": "Spoon theory: some days you only have a few units of energy to spend. The spoons on each card show what it costs.",
       "seed": {
         "name": "A no-cook snack plate",
-        "why": "A meal that costs no spoons at all.",
-        "ingredients": [
-          "crackers",
-          "cheese",
-          "apple",
-          "nuts"
-        ],
-        "time": "5 min"
-      }
+        "why": "A meal that costs no spoons at all."
+      },
+      "body": "Spoon theory: some days you only have a few units of energy to spend. The spoons on each card show what it costs."
     },
     {
       "id": "pantry-pasta",
@@ -503,6 +545,19 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "No-chop pantry pasta",
+      "hook": "Pasta, a tin of tomatoes and dried herbs. Nothing to chop.",
+      "time": 15,
+      "key_ingredients": [
+        "pasta",
+        "tinned tomatoes",
+        "olive oil",
+        "dried oregano",
+        "parmesan"
+      ],
+      "method_short": "Pasta, a tin of tomatoes, a glug of oil and dried herbs. Nothing to chop, one pot, fifteen minutes.",
+      "diet": [
+        "nut-free"
+      ],
       "themes": [
         "pantry",
         "simple",
@@ -513,19 +568,11 @@
         "evening",
         "hearty"
       ],
-      "body": "Pasta, a tin of tomatoes, a glug of oil and dried herbs. Nothing to chop, one pot, fifteen minutes.",
       "seed": {
         "name": "One-pot tomato pasta",
-        "why": "Dinner from the cupboard on a day with nothing left in the tank.",
-        "ingredients": [
-          "pasta",
-          "tinned tomatoes",
-          "olive oil",
-          "dried oregano",
-          "parmesan"
-        ],
-        "time": "15 min"
-      }
+        "why": "Dinner from the cupboard on a day with nothing left in the tank."
+      },
+      "body": "Pasta, a tin of tomatoes, a glug of oil and dried herbs. Nothing to chop, one pot, fifteen minutes."
     },
     {
       "id": "armchair-plate",
@@ -533,6 +580,16 @@
       "kind": "recipe idea",
       "spoons": 0,
       "title": "An armchair plate",
+      "hook": "Crackers, cheese, apple and a few nuts, under a blanket.",
+      "time": 5,
+      "key_ingredients": [
+        "crackers",
+        "cheddar",
+        "apple",
+        "walnuts"
+      ],
+      "method_short": "Crackers, a bit of cheese, apple slices and a few nuts. One plate, eaten under a blanket.",
+      "diet": [],
       "themes": [
         "no-cook",
         "rest",
@@ -543,18 +600,11 @@
         "stress",
         "quick"
       ],
-      "body": "Crackers, a bit of cheese, apple slices and a few nuts. One plate, eaten under a blanket.",
       "seed": {
         "name": "Cheese and apple snack plate",
-        "why": "Nothing to cook and one plate to wash.",
-        "ingredients": [
-          "crackers",
-          "cheddar",
-          "apple",
-          "walnuts"
-        ],
-        "time": "5 min"
-      }
+        "why": "Nothing to cook and one plate to wash."
+      },
+      "body": "Crackers, a bit of cheese, apple slices and a few nuts. One plate, eaten under a blanket."
     },
     {
       "id": "apple-cucumber-juice",
@@ -562,6 +612,22 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Apple, cucumber and mint juice",
+      "hook": "Apple, cucumber and mint, juiced and poured over ice.",
+      "time": 10,
+      "key_ingredients": [
+        "apples",
+        "cucumber",
+        "mint",
+        "lime"
+      ],
+      "method_short": "Two apples, half a cucumber and a few mint leaves through the juicer. Pour it over ice.",
+      "diet": [
+        "vegan",
+        "vegetarian",
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "juice",
         "fresh",
@@ -572,18 +638,11 @@
         "sunny",
         "herbs"
       ],
-      "body": "Two apples, half a cucumber and a few mint leaves through the juicer. Pour it over ice.",
       "seed": {
         "name": "Apple, cucumber and mint juice",
-        "why": "Cold, green and fresh on a hot day.",
-        "ingredients": [
-          "apples",
-          "cucumber",
-          "mint",
-          "lime"
-        ],
-        "time": "10 min"
-      }
+        "why": "Cold, green and fresh on a hot day."
+      },
+      "body": "Two apples, half a cucumber and a few mint leaves through the juicer. Pour it over ice."
     },
     {
       "id": "carrot-orange-juice",
@@ -591,6 +650,21 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Carrot, orange and ginger juice",
+      "hook": "Carrot, orange and a thumb of ginger. Bright and sharp.",
+      "time": 10,
+      "key_ingredients": [
+        "carrots",
+        "oranges",
+        "fresh ginger"
+      ],
+      "method_short": "Carrots, two oranges and a thumb of ginger, juiced. Bright orange and sharp.",
+      "diet": [
+        "vegan",
+        "vegetarian",
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "juice",
         "citrus",
@@ -600,17 +674,11 @@
         "breakfast",
         "quick"
       ],
-      "body": "Carrots, two oranges and a thumb of ginger, juiced. Bright orange and sharp.",
       "seed": {
         "name": "Carrot, orange and ginger juice",
-        "why": "A sharp, bright glass for the start of the day.",
-        "ingredients": [
-          "carrots",
-          "oranges",
-          "fresh ginger"
-        ],
-        "time": "10 min"
-      }
+        "why": "A sharp, bright glass for the start of the day."
+      },
+      "body": "Carrots, two oranges and a thumb of ginger, juiced. Bright orange and sharp."
     },
     {
       "id": "green-smoothie",
@@ -618,6 +686,19 @@
       "kind": "recipe idea",
       "spoons": 0,
       "title": "A green smoothie that tastes nice",
+      "hook": "Spinach, banana, peanut butter and oats. You won't taste the spinach.",
+      "time": 5,
+      "key_ingredients": [
+        "spinach",
+        "banana",
+        "peanut butter",
+        "rolled oats",
+        "milk"
+      ],
+      "method_short": "Spinach, a banana, a spoon of peanut butter, a few oats and milk, blended. You won't taste the spinach, honestly.",
+      "diet": [
+        "vegetarian"
+      ],
       "themes": [
         "smoothie",
         "green",
@@ -627,19 +708,11 @@
         "quick",
         "fresh"
       ],
-      "body": "Spinach, a banana, a spoon of peanut butter, a few oats and milk, blended. You won't taste the spinach, honestly.",
       "seed": {
         "name": "Spinach, banana and peanut butter smoothie",
-        "why": "Breakfast in a glass when there's no time to sit down.",
-        "ingredients": [
-          "spinach",
-          "banana",
-          "peanut butter",
-          "rolled oats",
-          "milk"
-        ],
-        "time": "5 min"
-      }
+        "why": "Breakfast in a glass when there's no time to sit down."
+      },
+      "body": "Spinach, a banana, a spoon of peanut butter, a few oats and milk, blended. You won't taste the spinach, honestly."
     },
     {
       "id": "watermelon-mint",
@@ -647,6 +720,22 @@
       "kind": "recipe idea",
       "spoons": 0,
       "title": "Watermelon with mint and lime",
+      "hook": "Cold watermelon with mint, lime and a pinch of salt.",
+      "time": 5,
+      "key_ingredients": [
+        "watermelon",
+        "mint",
+        "lime",
+        "flaky salt"
+      ],
+      "method_short": "Cold watermelon, torn mint, a squeeze of lime and a pinch of salt. Eat it with your fingers.",
+      "diet": [
+        "vegan",
+        "vegetarian",
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "cooling",
         "hydrating",
@@ -656,18 +745,11 @@
         "citrus",
         "snack"
       ],
-      "body": "Cold watermelon, torn mint, a squeeze of lime and a pinch of salt. Eat it with your fingers.",
       "seed": {
         "name": "Watermelon, mint and lime salad",
-        "why": "Mostly water, very cold, and no cooking.",
-        "ingredients": [
-          "watermelon",
-          "mint",
-          "lime",
-          "flaky salt"
-        ],
-        "time": "5 min"
-      }
+        "why": "Mostly water, very cold, and no cooking."
+      },
+      "body": "Cold watermelon, torn mint, a squeeze of lime and a pinch of salt. Eat it with your fingers."
     },
     {
       "id": "frozen-grapes",
@@ -675,6 +757,22 @@
       "kind": "ritual",
       "spoons": 0,
       "title": "A bowl of frozen grapes",
+      "hook": "Grapes from the freezer turn into little sorbet bites.",
+      "time": 5,
+      "wait": "3 hours in the freezer",
+      "key_ingredients": [
+        "seedless grapes",
+        "lime",
+        "mint"
+      ],
+      "method_short": "Grapes left in the freezer for a few hours turn into little sorbet bites.",
+      "diet": [
+        "vegan",
+        "vegetarian",
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "cooling",
         "no-cook",
@@ -684,16 +782,11 @@
         "night",
         "snack"
       ],
-      "body": "Grapes left in the freezer for a few hours turn into little sorbet bites.",
       "seed": {
         "name": "Frozen grapes with lime",
-        "why": "A cold, sweet snack that asks nothing of you.",
-        "ingredients": [
-          "seedless grapes",
-          "lime"
-        ],
-        "time": "5 min, then 3 hours"
-      }
+        "why": "A cold, sweet snack that asks nothing of you."
+      },
+      "body": "Grapes left in the freezer for a few hours turn into little sorbet bites."
     },
     {
       "id": "cucumber-yoghurt",
@@ -701,6 +794,20 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Cool cucumber and yoghurt dip",
+      "hook": "Cool cucumber, yoghurt, garlic and mint, with flatbread.",
+      "time": 10,
+      "key_ingredients": [
+        "cucumber",
+        "Greek yoghurt",
+        "garlic",
+        "mint",
+        "flatbread"
+      ],
+      "method_short": "Grated cucumber, squeezed dry, stirred into thick yoghurt with garlic, mint and salt. Crackers or flatbread on the side.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
       "themes": [
         "cooling",
         "fresh",
@@ -710,19 +817,11 @@
         "snack",
         "midday"
       ],
-      "body": "Grated cucumber, squeezed dry, stirred into thick yoghurt with garlic, mint and salt. Crackers or flatbread on the side.",
       "seed": {
         "name": "Tzatziki with flatbread",
-        "why": "A cool, quick snack straight from the fridge.",
-        "ingredients": [
-          "cucumber",
-          "Greek yoghurt",
-          "garlic",
-          "mint",
-          "flatbread"
-        ],
-        "time": "10 min"
-      }
+        "why": "A cool, quick snack straight from the fridge."
+      },
+      "body": "Grated cucumber, squeezed dry, stirred into thick yoghurt with garlic, mint and salt. Crackers or flatbread on the side."
     },
     {
       "id": "apple-peanut-butter",
@@ -730,6 +829,20 @@
       "kind": "recipe idea",
       "spoons": 0,
       "title": "Apple slices with peanut butter",
+      "hook": "Apple slices to dip in peanut butter. Crunchy, sweet and salty.",
+      "time": 2,
+      "key_ingredients": [
+        "apple",
+        "peanut butter",
+        "cinnamon"
+      ],
+      "method_short": "An apple in thin slices and a spoon of peanut butter to dip them in. Crunchy, sweet and salty.",
+      "diet": [
+        "vegan",
+        "vegetarian",
+        "gluten-free",
+        "dairy-free"
+      ],
       "themes": [
         "snack",
         "quick",
@@ -739,17 +852,11 @@
         "light",
         "sweet"
       ],
-      "body": "An apple in thin slices and a spoon of peanut butter to dip them in. Crunchy, sweet and salty.",
       "seed": {
         "name": "Apple and peanut butter snack",
-        "why": "A snack with some staying power, ready in a minute.",
-        "ingredients": [
-          "apple",
-          "peanut butter",
-          "cinnamon"
-        ],
-        "time": "2 min"
-      }
+        "why": "A snack with some staying power, ready in a minute."
+      },
+      "body": "An apple in thin slices and a spoon of peanut butter to dip them in. Crunchy, sweet and salty."
     },
     {
       "id": "egg-fried-rice",
@@ -757,6 +864,21 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "Five-minute egg fried rice",
+      "hook": "Leftover rice, an egg, peas and soy sauce in a hot pan.",
+      "time": 10,
+      "key_ingredients": [
+        "cooked rice",
+        "eggs",
+        "frozen peas",
+        "spring onion",
+        "soy sauce"
+      ],
+      "method_short": "Leftover rice in a hot pan with oil, an egg, frozen peas and soy sauce. Dinner in the time it takes to set the table.",
+      "diet": [
+        "vegetarian",
+        "dairy-free",
+        "nut-free"
+      ],
       "themes": [
         "quick",
         "stress",
@@ -767,19 +889,11 @@
         "cooking",
         "warming"
       ],
-      "body": "Leftover rice in a hot pan with oil, an egg, frozen peas and soy sauce. Dinner in the time it takes to set the table.",
       "seed": {
         "name": "Egg fried rice with peas",
-        "why": "A hot dinner from leftovers on a stressful evening.",
-        "ingredients": [
-          "cooked rice",
-          "eggs",
-          "frozen peas",
-          "spring onion",
-          "soy sauce"
-        ],
-        "time": "10 min"
-      }
+        "why": "A hot dinner from leftovers on a stressful evening."
+      },
+      "body": "Leftover rice in a hot pan with oil, an egg, frozen peas and soy sauce. Dinner in the time it takes to set the table."
     },
     {
       "id": "cheese-toastie",
@@ -787,6 +901,17 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "A proper cheese toastie",
+      "hook": "Plenty of cheese between buttered bread, golden in a low pan.",
+      "time": 10,
+      "key_ingredients": [
+        "bread",
+        "butter",
+        "cheddar"
+      ],
+      "method_short": "Butter on the outside, plenty of cheese inside, a low pan and a bit of patience. Eat it straight from the pan.",
+      "diet": [
+        "nut-free"
+      ],
       "themes": [
         "hearty",
         "cosy",
@@ -796,17 +921,11 @@
         "comfort",
         "quick"
       ],
-      "body": "Butter on the outside, plenty of cheese inside, a low pan and a bit of patience. Eat it straight from the pan.",
       "seed": {
         "name": "Cheese toastie",
-        "why": "Hot, crisp and comforting, from things you probably have.",
-        "ingredients": [
-          "bread",
-          "butter",
-          "cheddar"
-        ],
-        "time": "10 min"
-      }
+        "why": "Hot, crisp and comforting, from things you probably have."
+      },
+      "body": "Butter on the outside, plenty of cheese inside, a low pan and a bit of patience. Eat it straight from the pan."
     },
     {
       "id": "evening-milk",
@@ -814,6 +933,19 @@
       "kind": "ritual",
       "spoons": 0,
       "title": "Warm milk with cinnamon",
+      "hook": "Warm milk with cinnamon and honey, to close the day.",
+      "time": 5,
+      "key_ingredients": [
+        "milk",
+        "cinnamon",
+        "honey"
+      ],
+      "method_short": "Milk warmed with a pinch of cinnamon and a little honey. A way of telling yourself the day is done.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "nut-free"
+      ],
       "themes": [
         "evening",
         "calm",
@@ -825,17 +957,11 @@
         "comfort",
         "rest"
       ],
-      "body": "Milk warmed with a pinch of cinnamon and a little honey. A way of telling yourself the day is done.",
       "seed": {
         "name": "Warm cinnamon and honey milk",
-        "why": "Something warm and quiet for the end of the day.",
-        "ingredients": [
-          "milk",
-          "cinnamon",
-          "honey"
-        ],
-        "time": "5 min"
-      }
+        "why": "Something warm and quiet for the end of the day."
+      },
+      "body": "Milk warmed with a pinch of cinnamon and a little honey. A way of telling yourself the day is done."
     },
     {
       "id": "slow-porridge",
@@ -843,6 +969,19 @@
       "kind": "recipe idea",
       "spoons": 1,
       "title": "A quick bowl of porridge",
+      "hook": "Oats stirred slowly in milk, with apple and honey on top.",
+      "time": 10,
+      "key_ingredients": [
+        "rolled oats",
+        "milk",
+        "apple",
+        "honey"
+      ],
+      "method_short": "Oats, milk and a pinch of salt, stirred over a low heat for five minutes. Honey or grated apple on top.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
       "themes": [
         "oats",
         "warming",
@@ -853,18 +992,11 @@
         "comfort",
         "quick"
       ],
-      "body": "Oats, milk and a pinch of salt, stirred over a low heat for five minutes. Honey or grated apple on top.",
       "seed": {
         "name": "Creamy porridge with apple and honey",
-        "why": "Warm, filling and easy first thing.",
-        "ingredients": [
-          "rolled oats",
-          "milk",
-          "apple",
-          "honey"
-        ],
-        "time": "10 min"
-      }
+        "why": "Warm, filling and easy first thing."
+      },
+      "body": "Oats, milk and a pinch of salt, stirred over a low heat for five minutes. Honey or grated apple on top."
     }
   ],
   "weathers": {
