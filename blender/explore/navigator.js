@@ -28,6 +28,8 @@ const WEATHER_WEIGHT = 3;     // the chosen weather is a standing mood: it holds
 const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more than the device's clock
 const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signal like the weather
 const SEASON_WEIGHT = 2.5;    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
+const ROOM_LEAN = 4;          // an atom from the room the visitor is in (if it fits at all): mostly that room's own, the odd one from elsewhere
+const AI_HOME = 30, AI_AWAY = 10;   // the AI's shortlist: the room's own atoms, then the best of the rest by local score
 // Each energy level also has a spoon_bias: added per spoon to an atom's score, so a burnt-out candle
 // (-3) all but rules out two-spoon pieces and a full one (+1) leans toward the hands-on ones.
 
@@ -132,7 +134,7 @@ function reasonsFor(themes, trail, world, spoons = null) {
 
 const listJoin = parts => parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
 
-export function localNavigate(trail, world, { served = [], dismissed = [] } = {}) {
+export function localNavigate(trail, world, { served = [], dismissed = [], room = null } = {}) {
   const meaningful = trail.filter(e => e.kind !== 'map' || trail.length < 3);
   if (meaningful.length === 0) {
     return { mode: 'local', hypothesis: null, confidence: 0, gemma: null, fork: [], reveal: [], serve: [] };
@@ -159,6 +161,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [] } = {}
   const serve = world.atoms
     .filter(a => !skip.has(a.id))
     .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons }))
+    .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: from the room's *-world.json
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)
@@ -178,8 +181,8 @@ export function localNavigate(trail, world, { served = [], dismissed = [] } = {}
     fork = [top.id, clusters[1].id];
     gemma = `${lead}I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;
   } else {
-    const putOut = ["I've put something on the counter for you.", "There's something on the counter for you.",
-      "Have a look on the counter.", "I've left something out for you."][trail.length % 4];
+    const putOut = ["I've left something out for you.", "There's something here for you.",
+      "Have a look at what I've put out.", "I found you something."][trail.length % 4];   // no counter in the hallway or glasshouse
     gemma = `${lead}I think you're after ${top.label}. ${putOut}`;
   }
 
@@ -205,11 +208,17 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
       .concat(Object.entries(world.times || {}).map(([id, t]) => ({ id, label: `Time of day: ${t.label}`, type: 'time', themes: t.themes })))
       .concat(Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: `Energy: ${e.label} (the ${e.candle})`, type: 'energy', themes: e.themes, spoon_bias: e.spoon_bias })))
       .concat(Object.entries(world.seasons || {}).map(([id, s]) => ({ id, label: `Season: ${s.label}`, type: 'season', themes: s.themes })));
+    // The shortlist: the room's own atoms first, then the best of the rest (the hallway and glasshouse have none of
+    // their own, so they get the best of everything). Nothing already served or set aside.
+    const weights = themeWeights(trail, world), skip = new Set([...(state.served || []), ...(state.dismissed || [])]);
+    const ranked = world.atoms.filter(a => !skip.has(a.id)).sort((a, b) => score(b.themes, weights) - score(a.themes, weights));
+    const home = ranked.filter(a => state.room && a.room === state.room).slice(0, AI_HOME);
+    const shortlist = home.concat(ranked.filter(a => !home.includes(a)).slice(0, home.length ? AI_AWAY : AI_HOME + AI_AWAY));
     const payload = {
-        room: world.name,
+        room: state.roomName || world.name,
         trail: trail.slice(-30),
         objects: [...things.filter(o => rank(o) === 0), ...signals, ...things.filter(o => rank(o) > 0).sort((a, b) => rank(a) - rank(b))].slice(0, 40),
-        atoms: world.atoms.map(({ id, title, kind, themes, spoons }) => ({ id, title, kind, themes, spoons })),
+        atoms: (shortlist.length ? shortlist : world.atoms).map(({ id, title, kind, themes, spoons, room }) => ({ id, title, kind, themes, spoons, room })),
         clusters: Object.entries(world.clusters).map(([id, c]) => ({ id, label: c.label })),
         already_served: state.served || [],
         dismissed: state.dismissed || [],
@@ -223,7 +232,7 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
     if (!res.ok) throw new Error(`navigate ${res.status}`);
     const r = await res.json();
     const objects = new Set(Object.keys(world.objects));
-    const atoms = new Set(world.atoms.map(a => a.id));
+    const atoms = new Set(payload.atoms.map(a => a.id));
     const clusters = new Set(Object.keys(world.clusters));
     return {
       mode: 'ai',
