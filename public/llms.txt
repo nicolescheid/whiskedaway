@@ -32,7 +32,9 @@ Visitors can change all three, and Gemma's ideas change with them.
 ## Privacy
 
 No account and no name. A visit is forgotten when the tab closes. To choose ideas, what the visitor touched is sent
-to Claude, Anthropic's AI model, never who they are, and WhiskedAway's server stores none of it. Visits are counted
+to Claude, Anthropic's AI model, never who they are, and WhiskedAway's server stores none of it. Asking Gemma to write a
+recipe out in full sends that card and what the visitor told her (such as dietary needs) to Claude the same way, and
+nothing is kept. Kept recipes stay on the visitor's device. Visits are counted
 anonymously, without cookies.
 
 ## About

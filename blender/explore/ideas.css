@@ -331,12 +331,19 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-failed { font: italic 15px 'Crimson Pro', Georgia, serif; color: #7a3e1d; }
 .bk-diet { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .bk-diet p { flex-basis: 100%; margin: 0; }
-.bk-diet button { min-height: 40px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 500 13px 'Quicksand'; }
+.bk-diet button { min-height: 44px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 500 13px 'Quicksand'; }
 .bk-diet button[aria-pressed="true"] { background: var(--berry); border-color: var(--berry); color: var(--parchment); }
 .bk-steps { margin: 0; padding-left: 22px; }
 .bk-steps li { margin: 0 0 6px; }
 .bk-tip { margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; background: rgba(139, 77, 92, .07); }
 @media (prefers-reduced-motion: reduce) { .bk-writing .dots { animation: none; } }
+
+/* "Take it out" is the page's one destructive action: a 44 px target */
+.bk-keepbar .link { position: relative; }
+.bk-keepbar .link::after { content: ''; position: absolute; inset: -14px -6px; }
+/* A sideways row of chips fades at its right edge, so it reads as one that scrolls */
+.chatwin .cw-chips { -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+.chatwin .cw-chips:not(:has(> :nth-child(3))) { -webkit-mask-image: none; mask-image: none; }
 
 /* ---------- the tag picker */
 .tag-pick { position: fixed; z-index: 45; width: min(340px, calc(100vw - 16px)); background: var(--parchment); border: 1px solid var(--line);

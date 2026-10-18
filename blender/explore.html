@@ -443,10 +443,11 @@
 
     <h2 id="story-kept">What's kept about you</h2>
     <p>There's no account, and nothing asks for your name. What you do in the Inn, and what you tell Gemma, is
-      forgotten when you close the tab, apart from a note that you've been welcomed, so she doesn't say it twice. To
+      forgotten when you close the tab, apart from small notes so she doesn't repeat herself. To
       choose ideas, the Inn sends your wander to our server: what you touched and changed, never who you are. Our
       server asks Claude, Anthropic's AI model, to pick an idea. It doesn't store your wander, and Anthropic handles it
-      under its own data policy. The Inn counts visits anonymously, without cookies, and never who. If your browser asks not to be tracked,
+      under its own data policy. When you ask Gemma to write a recipe out in full, that card and what you've told her this
+      visit, such as dietary needs or what's in your pantry, go to Claude the same way, and our server keeps none of it. The Inn counts visits anonymously, without cookies, and never who. If your browser asks not to be tracked,
       nothing is counted. Your recipe book stays on your device until you clear it.</p>
 
     <h2 id="story-faq">Questions</h2>
@@ -1440,6 +1441,7 @@ const sizeBucket = n => (n <= 0 ? '0' : n <= 2 ? '1-2' : n <= 5 ? '3-5' : n <= 1
 function steer() {
   const kept = book.list();
   return {
+    awayOk: !awayOut(),
     served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
     about: { pantry: visit.get('pantry') || [], cuisines: visit.get('cuisines') || [] },
@@ -1449,9 +1451,14 @@ function steer() {
 const dietClash = a => [].concat(visit.get('dietary') || []).find(d => !(a.diet || []).includes(d)) || null;
 const CLASH_NOTE = { vegetarian: 'not vegetarian', vegan: 'not vegan', 'gluten-free': 'has gluten', 'dairy-free': 'has dairy', 'nut-free': 'has nuts' };
 
+// At most one of the ideas out is from another room (PM on T4); the hallway and glasshouse have none of their own
+const hasOwn = () => world.atoms.some(x => x.room === homeOf(state.room));
+const isAway = a => hasOwn() && a.room !== homeOf(state.room);
+const awayOut = () => state.cards.some(c => atomsById[c.atom] && isAway(atomsById[c.atom]));
 function serve({ atom, why, fromKeep }, mode) {
   const a = atomsById[atom];
   if (!a || state.served.includes(atom) || book.has(atom)) return;
+  if (isAway(a) && awayOut()) return;                    // not served, so it can come another time
   state.served.push(atom);
   servedBy[atom] = mode;
   countAtom('atom_served', atom);

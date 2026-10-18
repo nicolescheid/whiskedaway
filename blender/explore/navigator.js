@@ -166,13 +166,19 @@ const shareVerbs = parts => parts.map((p, i) => {
   return i && verb && parts[i - 1].startsWith(verb) ? p.slice(verb.length).replace(/^/, verb === 'turned the ' ? 'the ' : '') : p;
 });
 
-export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {} } = {}) {
+/** The clusters Gemma may name in this room: its own, or every one where a room has none (the hallway, the glasshouse) */
+export function roomClusters(world, room) {
+  const own = Object.entries(world.clusters).filter(([, c]) => room && c.room === room);
+  return Object.fromEntries(own.length ? own : Object.entries(world.clusters));
+}
+
+export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {}, awayOk = true } = {}) {
   const meaningful = trail.filter(e => e.kind !== 'map' || trail.length < 3);
   if (meaningful.length === 0) {
     return { mode: 'local', hypothesis: null, confidence: 0, gemma: null, fork: [], reveal: [], serve: [] };
   }
   const weights = themeWeights(trail, world, book);
-  const clusters = clusterScores(weights, world);
+  const clusters = clusterScores(weights, { ...world, clusters: roomClusters(world, room) });
   const top = clusters[0];
   // Confidence is how clearly the leading reading beats the runner-up
   const confidence = top.score ? Math.round(((top.score - clusters[1].score) / top.score) * 100) / 100 : 0;
@@ -192,6 +198,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
   const skip = new Set([...served, ...dismissed, ...trail.filter(e => e.kind === 'dismiss').map(e => e.atom)]);
   const serve = world.atoms
     .filter(a => !skip.has(a.id))
+    .filter(a => awayOk || !room || a.room === room || !world.atoms.some(x => x.room === room))   // an away idea only while none is out
     .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons
                        + Math.min(PANTRY_MAX, pantryHits(a, about.pantry).length * PANTRY_EACH)
                        + ((about.cuisines || []).some(c => a.themes.includes(c)) ? CUISINE : 0) }))
@@ -258,8 +265,7 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
         objects: [...things.filter(o => rank(o) === 0), ...signals, ...things.filter(o => rank(o) > 0).sort((a, b) => rank(a) - rank(b))].slice(0, 40),
         atoms: (shortlist.length ? shortlist : world.atoms).map(({ id, title, kind, themes, spoons, room }) => ({ id, title, kind, themes, spoons, room })),
         // the room's own readings first, so a cap at the Worker never drops them
-        clusters: Object.entries(world.clusters).sort(([, a], [, b]) => (b.room === state.room) - (a.room === state.room))
-          .map(([id, c]) => ({ id, label: c.label, room: c.room })),
+        clusters: Object.entries(roomClusters(world, state.room)).map(([id, c]) => ({ id, label: c.label, room: c.room })),
         already_served: state.served || [],
         dismissed: state.dismissed || [],
     };
@@ -273,7 +279,7 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
     const r = await res.json();
     const objects = new Set(Object.keys(world.objects));
     const atoms = new Set(payload.atoms.map(a => a.id));
-    const clusters = new Set(Object.keys(world.clusters));
+    const clusters = new Set(Object.keys(roomClusters(world, state.room)));
     return {
       mode: 'ai',
       hypothesis: String(r.hypothesis || local.hypothesis),
