@@ -1400,6 +1400,8 @@ function chatLine(who, text) {
 // Chips are data ({ label, do: [action, ...args] }), so the last question's answers are kept with the visit and come
 // back after a reload (J9)
 const CHIP_ACTS = {
+  // The check-in sheet (the Ideas build's). Until it exists, the Tell Gemma menu stands in
+  checkin: () => (typeof tell.openCheckin === 'function' ? tell.openCheckin('foyer') : tell.openMenu('foyer')),
   choose: cluster => record({ kind: 'choose', cluster }),
   tell: () => tell.openMenu('offer'),                   // "Want to tell me what's in your cupboard…?" [Tell me]
   later: () => {},                                      // [Not now]: the offer is over for the visit
@@ -2058,8 +2060,25 @@ function confirmGuess(also) {
   chatLine('gemma', GUESSED[state.weather]);
   setChips([{ label: "That's right", do: ['confirm'] }, ...also]);
 }
+// In through the front door, the first stop is the check-in desk: Gemma offers it, and the weather confirm is one of
+// its rows (checkin-views.md). Walking past is fine
+const CHECKIN_LINE = "Hello, love. Check in at the desk if you like, and I'll know what to cook for you.";
+function faceDesk() {
+  const d = spots['checkin-desk'];
+  if (!d) return;
+  const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) * 180 / Math.PI;   // half the view, across
+  if (Math.abs(((d.yaw - look.yaw + 540) % 360) - 180) > half * 0.7) lookTo(d.yaw, d.pitch ?? look.pitch);
+}
 function arrive() {
   if (state.asked || state.trail.length) return;
+  if (state.room === 'hall-entrance') {
+    state.asked = true;
+    store.save(state);
+    chatLine('gemma', CHECKIN_LINE);
+    setChips([{ label: 'Check in', do: ['checkin'] }, { label: 'Later', do: ['later'] }]);
+    setTimeout(faceDesk, reduceMotion() ? 0 : 1100);   // after the film's hand-over has settled
+    return;
+  }
   const guessed = state.weatherFrom === 'local' && GUESSED[state.weather];
   if (state.room === 'cuddlecore' && guessed) {
     state.asked = true;

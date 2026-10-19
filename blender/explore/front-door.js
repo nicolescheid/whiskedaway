@@ -48,9 +48,12 @@ export function frontDoor({ active, track }) {
     card.innerHTML = `
       <div class="box welcome">
         <div class="who"><img src="explore/assets/gemma/avatar-56.png" srcset="explore/assets/gemma/avatar-112.png 2x, explore/assets/gemma/avatar-168.png 3x" width="56" height="56" alt=""><h2 id="welcome-title">Welcome to the Inn, love.</h2></div>
-        <p>Have a wander. Drag to look around, and touch anything that glows.</p>
-        <p>I'll notice what you're drawn to and bring you something to cook. Doors with dials lead to the other rooms.</p>
-        <p>What I notice stays in this tab. My notebook, up at the top, shows you all of it.</p>
+        <p id="welcome-line">Have a wander. Start at the desk if you like.</p>
+        <div id="welcome-intro">
+          <p>Have a wander. Drag to look around, and touch anything that glows.</p>
+          <p>I'll notice what you're drawn to and bring you something to cook. Doors with dials lead to the other rooms.</p>
+          <p>What I notice stays in this tab. My notebook, up at the top, shows you all of it.</p>
+        </div>
         <div id="welcome-help">
           <p><b>Ring the bell any time.</b></p>
           <ul class="help">
@@ -73,6 +76,10 @@ export function frontDoor({ active, track }) {
     if (!card) buildCard();
     if (card.classList.contains('open')) return closing;
     $('welcome-help').hidden = !help;
+    // First visit: one line, then Gemma's check-in offer in the chat (one opener, not three: checkin-views.md).
+    // The bell brings back the full welcome and help
+    $('welcome-line').hidden = help;
+    $('welcome-intro').hidden = !help;
     $('welcome-ok').textContent = help ? 'Back to the Inn' : 'Come in';
     card.classList.add('open');
     $('welcome-ok').focus();
