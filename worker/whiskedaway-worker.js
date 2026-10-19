@@ -783,6 +783,14 @@ function buildUserMessage(payload) {
       : `Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
+    // The check-in (checkin-views.md): how at home they are cooking, and how long they've got
+    const CONFIDENCE = {
+      starting: 'Cooking confidence: just starting out. Name the tools each step needs and explain any cooking term in a few plain words.',
+      happy: 'Cooking confidence: happy enough. Plain steps; no need to explain the basics.',
+      confident: 'Cooking confidence: confident. Skip the basics and keep the steps brisk.',
+    };
+    if (CONFIDENCE[payload.confidence]) parts.push(CONFIDENCE[payload.confidence]);
+    if (Number(payload.time_available) > 0) parts.push(`Time they have: about ${Math.round(Number(payload.time_available))} minutes of active cooking. Keep the hands-on time within that; a hands-off wait (oven, fridge) is fine if you say so.`);
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
     // Each room has its own identity (Nicole, Oct 2026); the full recipe keeps to the room the idea came from
     const ROOM_RULES = {
@@ -831,8 +839,8 @@ function buildUserMessage(payload) {
       + 'one action each. No em dashes. No hype words (perfect, amazing, delicious, boost, guilt-free). At most one short dry aside in the whole recipe, '
       + 'and only in the tip or the last step. Say what the food is, never what it does for health. '
       + 'Keep to the idea and its key ingredients, '
-      + 'scale to 2 servings, respect every dietary restriction, and use ingredient names for my location. '
-      + 'Respond with JSON only, in exactly this shape: {"name": "...", "serves": 2, "time": "35 min", '
+      + `scale to ${servingsFor(payload)} servings, respect every dietary restriction, and use ingredient names for my location. `
+      + `Respond with JSON only, in exactly this shape: {"name": "...", "serves": ${servingsFor(payload)}, "time": "35 min", `
       + '"ingredients": [{"item": "ripe pears", "amount": "2", "unit": "", "key": "pear"}, {"item": "maple syrup", "amount": "2", "unit": "tbsp", "key": "maple syrup"}], '
       + '"steps": [{"text": "Halve the pears and scoop out the cores.", "uses": ["pear"]}, {"text": "Bake until soft.", "minutes": 25}], "tip": "one short tip"}. '
       + 'Ingredients: 4 to 12. "item" in my shopping words; "amount" a number or fraction (1, 1/2, 1 1/2); "unit" one of g, kg, ml, l, tsp, tbsp, cup, pinch, '
@@ -852,6 +860,9 @@ function buildUserMessage(payload) {
 // pick from the IDs the page sends (enforced by the JSON schema, then re-checked).
 // ---------------------------------------------------------------------------
 
+// The check-in's "cooking for" (1–6, or 'crowd' = 8); 2 when they haven't said
+const servingsFor = p => (p?.servings === 'crowd' ? 8 : Number(p?.servings) >= 1 && Number(p?.servings) <= 12 ? Math.round(Number(p.servings)) : 2);
+
 const NAVIGATOR_SYSTEM = `You are the navigator for WhiskedAway, an experimental website where a visitor explores a photoreal kitchen instead of clicking a menu. Gemma, a warm kitchen genie, is their host.
 
 You receive the visitor's trail for this visit only: objects they touched, objects they held their gaze on ("linger"), content they opened or set aside, and forks they chose. Read the trail as a hypothesis about what this wander is about. It is not a profile of the person, and it may change direction.
@@ -862,6 +873,8 @@ Time of day works the same way. A "time" event is the visitor pushing the kitche
 
 An "energy" event is the visitor picking one of five candles to say how much energy they have today: burnt out, low, half, three-quarters or full (objects of type "energy" describe each one). It's a deliberate choice that holds until they pick another, like the weather. It's the strongest guide to effort: each energy object has a spoon_bias, and the lower it is, the more you should favour atoms with fewer spoons. For burnt out or low, serve only 0-spoon atoms (a 1-spoon atom at most, if nothing else fits); for full, hands-on cooking is welcome. In a why, say it plainly ("Because you picked the burnt-out candle"). Never reveal an energy object.
 A "season" event is the visitor turning the Conservatory's seasons wheel to spring, summer, autumn or winter (objects of type "season" describe each one). It's a deliberate choice that holds until they turn it again, like the weather: spring and summer lean fresh, green and cooling, autumn and winter warm and hearty. Never reveal a season object.
+
+"visitor" is what they told the check-in, when they did. time_available is how long they have to cook: favour atoms whose "time" (active minutes; "wait" is hands-off and doesn't count) fits inside it, but don't rule others out. confidence is how at home they are in a kitchen ("starting" leans to fewer spoons and simple methods, "confident" welcomes hands-on ones); energy is today, confidence is skill. Never reveal either in a why beyond plain words ("Because you've got about 15 minutes").
 
 Decide:
 - hypothesis: a short, plain-language reading of the wander (e.g. "something warm you don't have to stand up for").
@@ -916,6 +929,10 @@ async function handleNavigate(request, env) {
       room: p.room, clusters, objects, atoms, trail,
       already_served: (p.already_served || []).slice(0, 60),
       set_aside: (p.dismissed || []).slice(0, 60),
+      visitor: {
+        time_available: p.visitor?.time_available ? String(p.visitor.time_available).slice(0, 20) : null,
+        confidence: ['starting', 'happy', 'confident'].includes(p.visitor?.confidence) ? p.visitor.confidence : null,
+      },
     });
 
     const res = await fetch(ANTHROPIC_API_URL, {

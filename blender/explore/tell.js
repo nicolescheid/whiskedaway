@@ -6,6 +6,7 @@
 // the lists here only stand in if those files can't be read.
 
 import { DIETS } from './writeout.js';
+import { SERVINGS, checkinWords } from './checkin.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -47,7 +48,8 @@ export function parsePantry(text) {
     .filter(w => w && w.length <= 24);
 }
 
-export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage }) {
+export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {} }) {
+  const W = checkinWords(lines);                               // the check-in's words (checkin.js)
   const P = lines.pantry || {}, M = lines.map || {}, D = lines.dietary || {}, N = lines.menu || {}, B = lines.buttons || {};   // gemma-lines.json `tell`
   const L = {
     pantry: { title: P.title || 'What have you got to use?', helper: P.helper || '', placeholder: P.placeholder || 'eggs, spinach, leftover rice',
@@ -55,7 +57,8 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     map: { title: M.title || 'Where shall we take it?', helper: M.helper || '', shop: (M.shop || 'Shopping words for').replace(/:\s*$/, ''), choose: M.choose || 'Choose…' },
     dietary: { title: D.title || 'Anything I should avoid?', other: D.other || 'Something else?', otherPlaceholder: D.otherPlaceholder || '',
                otherNote: D.otherNote || "I'll pass that on when I write a recipe out. I can't check my cards for it." },
-    menu: { title: N.title || 'Tell me about you', energy: N.energy || 'Energy', pantry: N.pantry || 'Pantry', map: N.map || 'The map',
+    checkin: { title: W.title },
+    menu: { title: N.title || 'Tell me about you', checkin: N.checkin || W.title, energy: N.energy || 'Energy', pantry: N.pantry || 'Pantry', map: N.map || 'The map',
             dietary: N.dietary || 'Dietary needs', none: N.none || 'not yet' },
     forget: B.forget || 'Forget this', done: B.done || 'Done', close: B.close || 'Close',
   };
@@ -81,6 +84,8 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     pantry: pantryNow(),
     map: { cuisines: [].concat(visit.get('cuisines') || []), country: visit.get('country') || defaultCountry() },
     dietary: { dietary: [].concat(visit.get('dietary') || []), other: visit.get('dietaryOther') || '' },
+    checkin: { energy: visit.get('energy'), time: visit.get('time'), servings: visit.get('servings'), confidence: visit.get('confidence'),
+               weather: checkin.weather?.() || null },
   }[k]);
 
   // ---------- the contents
@@ -137,9 +142,35 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     input.oninput = () => { d.other = input.value.slice(0, 60); };
     input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
   }
+  // The check-in (checkin-views.md V1): your candle and how long you've got first, then "A bit more" (cooking for, confidence, the
+  // weather). Every row can be skipped, and tapping a chosen answer again unchooses it. Gemma says one line on Done.
+  function drawCheckin() {
+    const d = draft, more = !!(d.servings || d.confidence);
+    const chips = (k, ids, label) => `<div class="tl-chips tl-pick" role="group" aria-label="${esc(W.rows[k])}">${ids.map(id =>
+      `<button data-a="${k}" data-v="${esc(id)}" aria-pressed="${d[k] === id}">${esc(label(id))}</button>`).join('')}</div>`;
+    const energies = checkin.energies?.() || [], weathers = checkin.weathers?.() || [];
+    body.innerHTML = `${W.helper ? `<p class="small">${esc(W.helper)}</p>` : ''}
+      ${energies.length ? `<h3 class="tl-h">${esc(W.rows.energy)}</h3><p class="small">${esc(W.energyHelper)}</p>
+        <div class="tl-candles" role="group" aria-label="${esc(W.rows.energy)}">${energies.map(e =>
+          `<button data-a="energy" data-v="${esc(e.id)}" aria-pressed="${d.energy === e.id}" aria-label="${esc(e.label)}"><span class="tl-wick" aria-hidden="true"><i class="tl-flame"></i></span><span class="tl-wax tl-wax-${esc(e.id)}" aria-hidden="true"></span><b>${esc(e.label)}</b></button>`).join('')}</div>` : ''}
+      <h3 class="tl-h">${esc(W.rows.time)}</h3>${chips('time', Object.keys(W.time), id => W.time[id])}
+      <details class="tl-more" ${more ? 'open' : ''}><summary>${esc(W.more)}</summary>
+        <h3 class="tl-h">${esc(W.rows.servings)}</h3>${chips('servings', SERVINGS, id => W.servings[id])}
+        <h3 class="tl-h">${esc(W.rows.confidence)}</h3><p class="small">${esc(W.confidenceHelper)}</p>${chips('confidence', Object.keys(W.confidence), id => W.confidence[id])}
+        ${weathers.length ? `<h3 class="tl-h">${esc(W.rows.weather)}</h3>${chips('weather', weathers.map(w => w.id), id => weathers.find(w => w.id === id).label)}` : ''}
+      </details>`;
+    body.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+      const k = b.dataset.a, v = b.dataset.v;
+      d[k] = d[k] === v && k !== 'weather' ? null : v;           // tap again to unchoose (the weather always has one)
+      body.querySelectorAll(`[data-a="${k}"]`).forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === d[k])));
+      if (k === 'energy' && d[k]) { b.classList.add('lit'); checkin.onLight?.(); }   // the match strikes (sound, if any)
+    });
+  }
   function drawMenu() {
     const p = pantryNow(), cu = [].concat(visit.get('cuisines') || []), di = [].concat(visit.get('dietary') || []);
-    const rows = [['energy', L.menu.energy, energyLabel?.() || ''], ['pantry', L.menu.pantry, p.items.slice(0, 2).join(', ') + (p.items.length > 2 ? ` +${p.items.length - 2}` : '')],
+    const t = visit.get('time'), sv = visit.get('servings'), cf = visit.get('confidence');
+    const rows = [['checkin', L.menu.checkin, [t && W.time[t], sv && W.servings[sv], cf && W.confidence[cf]].filter(Boolean).join(', ')],
+      ['energy', L.menu.energy, energyLabel?.() || ''], ['pantry', L.menu.pantry, p.items.slice(0, 2).join(', ') + (p.items.length > 2 ? ` +${p.items.length - 2}` : '')],
       ['map', L.menu.map, cu.map(cuisineLabel).join(', ')], ['dietary', L.menu.dietary, di.join(', ') + (visit.get('dietaryOther') ? (di.length ? ' +1' : 'something else') : '')]];
     body.innerHTML = `<ul class="tl-menu">${rows.map(([k, n, v]) => `<li><button data-k="${k}"><b>${esc(n)}</b><span>${esc(v || L.menu.none)}</span><i aria-hidden="true">›</i></button></li>`).join('')}</ul>`;
     body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
@@ -147,7 +178,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
       open(b.dataset.k, 'menu', { keepOpener: true });
     });
   }
-  const DRAW = { pantry: drawPantry, map: drawMap, dietary: drawDietary, menu: drawMenu };
+  const DRAW = { pantry: drawPantry, map: drawMap, dietary: drawDietary, checkin: drawCheckin, menu: drawMenu };
 
   // ---------- open, Done, forget, close
   function open(k, src = 'tag', { keepOpener = false } = {}) {
@@ -182,6 +213,14 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   function done(forget = false) {
     if (!kind || kind === 'menu') return close();
     const k = kind, before = current(k);
+    if (k === 'checkin') {                                         // the page sets each answer through its one setter (checkin.js)
+      const after = forget ? { ...before, energy: null, time: null, servings: null, confidence: null } : draft;
+      const changed = Object.keys(after).filter(x => (before[x] ?? null) !== (after[x] ?? null));
+      close();
+      if (!changed.length) return;
+      setTimeout(() => onDone?.(k, { before, after, changed, from, forgot: forget }), reduce() ? 0 : 200);
+      return;
+    }
     const empty = { pantry: { items: [], useUp: false }, map: { cuisines: [], country: null }, dietary: { dietary: [], other: '' } }[k];
     const after = forget ? empty : draft;
     if (k === 'pantry' && !forget) {                               // a word still in the box counts
