@@ -795,7 +795,8 @@
         "no-cook",
         "sunny",
         "citrus",
-        "snack"
+        "snack",
+        "summer"
       ],
       "seed": {
         "name": "Watermelon, mint and lime salad",
@@ -1072,13 +1073,175 @@
         "simple",
         "breakfast",
         "comfort",
-        "quick"
+        "quick",
+        "winter"
       ],
       "seed": {
         "name": "Creamy porridge with apple and honey",
         "why": "Warm, filling and easy to make."
       },
       "body": "Oats, milk and a pinch of salt, stirred over a low heat for five minutes. Honey or grated apple on top."
+    },
+    {
+      "id": "asparagus-toast",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Asparagus on buttered toast",
+      "short": "Asparagus toast",
+      "icon": "🌿",
+      "ref": "the asparagus toast",
+      "hook": "Asparagus spears, softened in a pan, on hot buttered toast.",
+      "time": 10,
+      "key_ingredients": [
+        "asparagus",
+        "bread",
+        "butter",
+        "lemon"
+      ],
+      "method_short": "Cook the asparagus in a pan with a little butter for four minutes. Pile it on hot toast with a squeeze of lemon.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
+      "themes": [
+        "spring",
+        "quick",
+        "simple",
+        "bread",
+        "fresh",
+        "green",
+        "comfort",
+        "midday",
+        "light"
+      ],
+      "seed": {
+        "name": "Asparagus on toast with lemon butter",
+        "why": "Spring asparagus needs very little done to it."
+      },
+      "body": "Cook the asparagus in a pan with a little butter for four minutes. Pile it on hot toast with a squeeze of lemon."
+    },
+    {
+      "id": "tomato-salad",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Tomatoes with salt and basil",
+      "short": "Tomato salad",
+      "icon": "🍅",
+      "ref": "the tomato salad",
+      "hook": "Ripe tomatoes, sliced thick, with basil, oil and flaky salt.",
+      "time": 5,
+      "key_ingredients": [
+        "tomatoes",
+        "basil",
+        "olive oil",
+        "flaky salt"
+      ],
+      "method_short": "Slice ripe tomatoes thickly onto a plate. Scatter torn basil and salt, and pour over a little olive oil.",
+      "diet": [
+        "vegan",
+        "vegetarian",
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
+      "themes": [
+        "summer",
+        "fresh",
+        "no-cook",
+        "quick",
+        "light",
+        "sunny",
+        "snack",
+        "cooling"
+      ],
+      "seed": {
+        "name": "Summer tomato salad with basil",
+        "why": "In summer, ripe tomatoes need nothing else."
+      },
+      "body": "Slice ripe tomatoes thickly onto a plate. Scatter torn basil and salt, and pour over a little olive oil."
+    },
+    {
+      "id": "feijoa-smoothie",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Feijoa and banana smoothie",
+      "short": "Feijoa smoothie",
+      "icon": "🥝",
+      "ref": "the feijoa smoothie",
+      "hook": "Scooped-out feijoas blended with banana, yoghurt and honey.",
+      "time": 5,
+      "key_ingredients": [
+        "feijoas",
+        "banana",
+        "Greek yoghurt",
+        "honey"
+      ],
+      "method_short": "Scoop the flesh from four feijoas. Blend with a banana, a few spoons of yoghurt and a little honey.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "themes": [
+        "autumn",
+        "smoothie",
+        "quick",
+        "fresh",
+        "breakfast",
+        "no-cook",
+        "fruity"
+      ],
+      "seed": {
+        "name": "Feijoa, banana and yoghurt smoothie",
+        "why": "Feijoas only come for a few weeks in autumn."
+      },
+      "body": "Scoop the flesh from four feijoas. Blend with a banana, a few spoons of yoghurt and a little honey."
+    },
+    {
+      "id": "kumara-mash",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Buttery kūmara mash",
+      "short": "Kūmara mash",
+      "icon": "🍠",
+      "ref": "the kūmara mash",
+      "hook": "Kūmara boiled soft and mashed with butter and pepper.",
+      "time": 20,
+      "key_ingredients": [
+        "kūmara",
+        "butter",
+        "salt",
+        "black pepper"
+      ],
+      "method_short": "Peel and chunk the kūmara, boil for fifteen minutes until soft, then mash with butter, salt and pepper.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "themes": [
+        "winter",
+        "comfort",
+        "warming",
+        "cosy",
+        "simple",
+        "evening"
+      ],
+      "seed": {
+        "name": "Buttery kūmara mash",
+        "why": "Soft, sweet and warm, from one pot."
+      },
+      "body": "Peel and chunk the kūmara, boil for fifteen minutes until soft, then mash with butter, salt and pepper."
     }
   ],
   "weathers": {

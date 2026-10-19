@@ -43,5 +43,83 @@
     { "label": "Nourish Academy" },
     { "label": "Cravings Decoded" },
     { "label": "The foyer", "go": "hall-entrance" }
-  ]
+  ],
+  "noticeboard": {
+    "_when": "The hallway notice board: touching it says the line for the visitor's hemisphere and season, and serves one of its ideas.",
+    "south": {
+      "spring": {
+        "line": "Asparagus is in, and the first strawberries. Rhubarb too.",
+        "atoms": [
+          "asparagus-toast",
+          "asparagus-eggs",
+          "rhubarb-yoghurt",
+          "chia-strawberry"
+        ]
+      },
+      "summer": {
+        "line": "Tomatoes, sweetcorn and stone fruit are in. Passionfruit too.",
+        "atoms": [
+          "tomato-salad",
+          "corn-fritters",
+          "grilled-peaches",
+          "chia-passionfruit"
+        ]
+      },
+      "autumn": {
+        "line": "Feijoas are in, and the first kūmara.",
+        "atoms": [
+          "feijoa-smoothie",
+          "kumara-lentil",
+          "feijoa-fool",
+          "chia-feijoa"
+        ]
+      },
+      "winter": {
+        "line": "Tamarillos, mandarins and silverbeet are in.",
+        "atoms": [
+          "kumara-mash",
+          "silverbeet-pie",
+          "tamarillo-poached",
+          "chia-mandarin"
+        ]
+      }
+    },
+    "north": {
+      "spring": {
+        "line": "Asparagus and rhubarb are in, and the first strawberries.",
+        "atoms": [
+          "asparagus-toast",
+          "asparagus-eggs",
+          "rhubarb-yoghurt",
+          "chia-strawberry"
+        ]
+      },
+      "summer": {
+        "line": "Tomatoes, sweetcorn and stone fruit are in.",
+        "atoms": [
+          "tomato-salad",
+          "corn-fritters",
+          "grilled-peaches",
+          "chia-passionfruit"
+        ]
+      },
+      "autumn": {
+        "line": "Apples, pears and squash are in.",
+        "atoms": [
+          "warm-pears",
+          "oat-crumble",
+          "kumara-lentil"
+        ]
+      },
+      "winter": {
+        "line": "Citrus and kale are in. Good soup weather.",
+        "atoms": [
+          "chia-mandarin",
+          "story-kale",
+          "red-lentil-soup",
+          "rain-soup-ritual"
+        ]
+      }
+    }
+  }
 }

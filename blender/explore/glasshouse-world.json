@@ -59,13 +59,13 @@
                      "moment": "The herb garden, then the wall, then the sea." }
   },
   "seasons": {
-    "spring": { "label": "Spring", "themes": ["fresh", "green", "light"],
+    "spring": { "label": "Spring", "themes": ["spring", "fresh", "green", "light"],
                 "moment": "Spring. Everything's in a hurry to grow." },
-    "summer": { "label": "Summer", "themes": ["cooling", "sunny", "fresh", "chilled"],
+    "summer": { "label": "Summer", "themes": ["summer", "cooling", "sunny", "fresh", "chilled"],
                 "moment": "Summer. The bees have found the borage." },
-    "autumn": { "label": "Autumn", "themes": ["warming", "slow", "broth", "hearty"],
+    "autumn": { "label": "Autumn", "themes": ["autumn", "warming", "slow", "broth", "hearty", "fruity"],
                 "moment": "Autumn. Time to lift the ginger and hang up more bunches." },
-    "winter": { "label": "Winter", "themes": ["warming", "cosy", "broth", "hearty"],
+    "winter": { "label": "Winter", "themes": ["winter", "warming", "cosy", "broth", "hearty", "citrus"],
                 "moment": "Winter. Just the tough ones now: rosemary, thyme, sage and the aloe." }
   }
 }
