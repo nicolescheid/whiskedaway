@@ -161,6 +161,24 @@ step('front door and star dial');
   await context.close();
 }
 
+// Gemma reads the wander in every room the way the page runs it (navigate(), with the room's own id): a separate page, so the
+// ideas she puts out don't change the hotspot checks above
+step('Gemma in every room');
+{
+  const { page, context, where } = await openPage({ width: 1280, height: 800, time: 'midday', path: '/?room=cuddlecore', phone: false });
+  await page.waitForFunction(() => window.__explore?.navigate, null, { timeout: 15000 });
+  for (const room of ROOMS) {
+    const err = await page.evaluate(async id => {
+      const ex = window.__explore;
+      ex.goRoom(id);
+      ex.state.trail.push({ kind: 'weather', id: 'rain', t: Date.now() }, { kind: 'time', id: 'evening', t: Date.now() });
+      try { await ex.navigate(); return ex.state.result?.cluster ? null : 'named no reading'; } catch (e) { return String(e.message); }
+    }, room);
+    if (err) fail(`${where} ${room}: the navigator: ${err.slice(0, 120)}`);
+  }
+  await context.close();
+}
+
 await browser.close();
 server.close();
 
