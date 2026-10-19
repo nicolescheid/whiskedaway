@@ -33,20 +33,31 @@ function loadTurnstile() {
 
 async function solveChallenge() {
   const turnstile = await loadTurnstile();
-  // Turnstile stays invisible unless it needs the visitor to tick its box. Then it sits on a small paper card
-  // with one plain line, in the Inn's colours, instead of floating on its own
+  // Turnstile stays invisible unless it needs the visitor to tick its box. In the Inn it then appears inside Gemma's chat,
+  // as her message (brainstorm #6); elsewhere (the archive) on a small paper card, bottom-centre.
+  // It's placed before Turnstile renders: moving its frame later would reload it
+  const chat = document.getElementById('chatwin');
   const box = document.createElement('div');
   box.setAttribute('role', 'status');
-  box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483000;'
-    + 'display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 10px 8px;border-radius:14px;box-sizing:border-box;'
-    + 'background:#f4efe4;border:1px solid rgba(139,77,92,.25);box-shadow:0 10px 30px rgba(0,0,0,.3);'
-    + "font:500 13px Quicksand,system-ui,sans-serif;color:#2c2416;max-width:calc(100vw - 32px);";
   const note = document.createElement('p');
-  note.style.cssText = 'margin:0;text-align:center;';
-  note.textContent = 'One quick check that you’re a person, then the Inn carries on.';
   const slot = document.createElement('div');
+  if (chat) {
+    box.className = 'cw-check';
+    box.style.cssText = 'display:none;flex-direction:column;align-items:flex-start;gap:6px;margin:0 0 6px;padding:8px 10px;border-radius:10px 10px 10px 2px;'
+      + 'background:#fff;border:1px solid rgba(139,77,92,.25);box-shadow:0 6px 18px rgba(0,0,0,.2);pointer-events:auto;box-sizing:border-box;max-width:100%;';
+    note.style.cssText = "margin:0;font:16px/1.4 'Crimson Pro',Georgia,serif;color:#2c2416;";
+    note.textContent = 'One quick check that you’re a person, then I’ll carry on.';
+    chat.insertBefore(box, chat.querySelector('.cw-body'));
+  } else {
+    box.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483000;'
+      + 'display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 10px 8px;border-radius:14px;box-sizing:border-box;'
+      + 'background:#f4efe4;border:1px solid rgba(139,77,92,.25);box-shadow:0 10px 30px rgba(0,0,0,.3);'
+      + "font:500 13px Quicksand,system-ui,sans-serif;color:#2c2416;max-width:calc(100vw - 32px);";
+    note.style.cssText = 'margin:0;text-align:center;';
+    note.textContent = 'One quick check that you’re a person, then the Inn carries on.';
+    document.body.appendChild(box);
+  }
   box.append(note, slot);
-  document.body.appendChild(box);
   try {
     return await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('turnstile_timeout')), 60000);
@@ -75,9 +86,8 @@ async function solveChallenge() {
   }
 }
 
-// The check never shows at the front door: it waits until the visitor has stepped inside. In the Inn it docks
-// just above Gemma's chat, at the chat's width, clear of the room's hotspots; elsewhere (the archive) it sits
-// bottom-centre. The card isn't moved in the page (that would reload Turnstile's frame), only positioned
+// The check never shows at the front door: it waits until the visitor has stepped inside. In the Inn it's already
+// inside Gemma's chat, so it only needs showing; elsewhere (the archive) it sits bottom-centre
 function showWhenInside(box) {
   const door = document.getElementById('front-door');
   if (door && !door.hidden) {
@@ -88,11 +98,6 @@ function showWhenInside(box) {
     });
     watch.observe(door, { attributes: true, attributeFilter: ['hidden'] });
     return;
-  }
-  const chat = document.getElementById('chatwin');
-  const r = chat && chat.getClientRects().length ? chat.getBoundingClientRect() : null;   // (the chat is fixed, so no offsetParent)
-  if (r && r.width) {
-    Object.assign(box.style, { left: `${r.left}px`, width: `${r.width}px`, bottom: `${innerHeight - r.top + 8}px`, transform: 'none' });
   }
   box.style.display = 'flex';
 }
