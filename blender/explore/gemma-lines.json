@@ -83,7 +83,9 @@
     "dietary": {
       "title": "Anything I should avoid?",
       "other": "Something else?",
-      "otherNote": "I'll pass that on when I write a recipe out. I can't check my cards for it."
+      "otherNote": "I'll pass that on when I write a recipe out. I can't check my cards for it.",
+      "fodmapLabel": "Low-FODMAP",
+      "fodmapNote": "I'll pass it on when I write a recipe out. I only leave out cards I've checked."
     },
     "ack": {
       "pantry": "{two}. I'll work with those.",
@@ -698,6 +700,137 @@
       "breakfastLine": "Set it tonight and it's ready by morning.",
       "jars": "Make 4 jars",
       "jarsLine": "Four jars, one batch. That's most of the week sorted."
+    }
+  },
+  "sweet": {
+    "_about": "Sweet Spells (rooms-views.md, stage B). How sweet and sweeteners are Inn-wide answers (the Chiapothecary uses them too). Atoms carry `sweetener` (sugar, honey, maple, agave, dates, fruit) and `added_sugar` (true for honey, maple, sugar, agave, chocolate or granola; false for fruit and dates, assuming plain peanut butter and unsweetened milks). Every line under 100 characters.",
+    "howSweet": {
+      "title": "How sweet?",
+      "options": {
+        "full": "The full treat",
+        "less": "A bit less sugar",
+        "none": "No added sugar"
+      }
+    },
+    "sweetenWith": {
+      "title": "Sweeten with…",
+      "helper": "Only if you'd like less sugar. Pick any.",
+      "options": {
+        "sugar": "Sugar",
+        "honey": "Honey",
+        "maple": "Maple syrup",
+        "agave": "Agave",
+        "dates": "Dates or fruit",
+        "sweeteners": "Sweeteners are fine"
+      }
+    },
+    "cravings": {
+      "title": "What are you craving?",
+      "helper": "Pick any.",
+      "options": {
+        "chocolate": "Chocolate",
+        "fruity": "Fruit",
+        "creamy": "Something creamy",
+        "crunchy": "Something crunchy",
+        "warming": "Something warm",
+        "chilled": "Something cold"
+      }
+    },
+    "occasions": {
+      "title": "What's it for?",
+      "helper": "I'll suggest how many and how long, unless you've already told me.",
+      "options": {
+        "now": {
+          "label": "A treat now",
+          "line": "Something for right now, then.",
+          "servings": 1,
+          "time": 15
+        },
+        "tea": {
+          "label": "Afternoon tea",
+          "line": "Afternoon tea. Something to share with a cuppa.",
+          "servings": 4,
+          "time": 60
+        },
+        "dinner": {
+          "label": "A dinner party",
+          "line": "A dinner party. A pudding for six, I'd say.",
+          "servings": 6,
+          "time": 60
+        },
+        "celebration": {
+          "label": "A celebration",
+          "line": "A celebration. Let's make it look the part.",
+          "servings": 8,
+          "time": null
+        }
+      },
+      "suggest": "{n} of you, then?"
+    },
+    "ack": {
+      "howSweet": {
+        "full": "The full treat it is.",
+        "less": "A bit less sugar. I'll go gently.",
+        "none": "No added sugar. Fruit can do the work."
+      },
+      "sweetener": "{s} it is.",
+      "cravings": "{c}. Noted."
+    },
+    "swap": {
+      "_when": "On Sweet Spells recipe pages, when the visitor's sweetener differs from the recipe's. Checked kitchen guidance, not invented ratios.",
+      "title": "Swap the sugar",
+      "rules": [
+        {
+          "from": "sugar",
+          "to": "maple",
+          "line": "Use about ¾ as much maple syrup, and a little less of any other liquid."
+        },
+        {
+          "from": "sugar",
+          "to": "honey",
+          "line": "Use about ¾ as much honey and a little less liquid. It browns faster, so bake a bit cooler."
+        },
+        {
+          "from": "sugar",
+          "to": "agave",
+          "line": "Use about ⅔ as much agave, and a little less of any other liquid."
+        },
+        {
+          "from": "sugar",
+          "to": "dates",
+          "line": "Blend soft dates to a paste, about the same amount as the sugar. Best in puddings, not crisp bakes."
+        },
+        {
+          "from": "honey",
+          "to": "maple",
+          "line": "Swap one for one. Maple is a little thinner and not quite as sweet."
+        },
+        {
+          "from": "maple",
+          "to": "honey",
+          "line": "Swap one for one. Honey is a little sweeter, so a touch less is fine."
+        },
+        {
+          "from": "honey",
+          "to": "agave",
+          "line": "Swap one for one. Agave is runnier, so drizzle it rather than spoon it."
+        },
+        {
+          "from": "maple",
+          "to": "agave",
+          "line": "Swap one for one. Agave is a little sweeter."
+        },
+        {
+          "from": "*",
+          "to": "sweeteners",
+          "line": "Follow the packet. Sweeteners vary a lot in strength, and some don't brown or bake like sugar."
+        },
+        {
+          "from": "*",
+          "to": "none",
+          "line": "Leave it out and let ripe fruit do the work. It will be less sweet."
+        }
+      ]
     }
   }
 }
