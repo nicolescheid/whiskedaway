@@ -2199,6 +2199,7 @@ function settle(fromFov) {
 }
 
 function endCheckinOffer() {
+  if (state.chips?.some(c => c.do?.[0] === 'checkin')) setChips([]);   // the offer's chips go with it (the pill path)
   if (!state.checkinPill) return;
   state.checkinPill = false;
   store.save(state);
