@@ -484,3 +484,8 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ck-said { margin: 6px 16px 0; padding: 8px 12px; border-radius: 12px 12px 12px 4px; background: #fff; border: 1px solid var(--line);
            font: 17px/1.35 'Crimson Pro', Georgia, serif; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
 .ck-said[hidden] { display: none; }
+.ck-offer { margin-top: 14px; padding: 10px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--line); font: 18px/1.4 'Crimson Pro', Georgia, serif; }
+.ck-offer p { margin: 0 0 8px; font-size: 18px !important; }
+.ck-offer button { margin: 0 6px 6px 0; }
+.ck-offer .dots { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
+.ck-step p.ck-quiet { margin-top: 14px; font: italic 18px/1.4 'Crimson Pro', Georgia, serif; font-size: 18px !important; color: var(--ink-soft); }

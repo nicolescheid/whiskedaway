@@ -16,7 +16,32 @@ const plural = w => /s$/.test(w) && !/ss$/.test(w);                // "pears are
 /** The recipe's steps as { text, minutes?, uses? }: a write-out's (either shape), else the short method in sentences */
 export function stepsOf(rec, full) {
   const raw = full?.steps?.length ? full.steps : String(rec.method_short || rec.body || '').match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [];
-  return raw.map(x => (typeof x === 'string' ? { text: x.trim() } : x)).filter(x => x.text);
+  const steps = raw.map(x => (typeof x === 'string' ? { text: x.trim() } : { ...x })).filter(x => x.text);
+  // A step without `minutes` may still say how long ("simmer for 30 minutes", "bake 25–30 min": the upper figure)
+  for (const st of steps) if (!st.minutes) { const m = minutesIn(st.text); if (m) st.minutes = m; }
+  // Still no timer: one on the waiting step (a waiting verb, else the last step), from the recipe's own wait or its time
+  if (!steps.some(st => st.minutes) && steps.length) {
+    const wait = rec.wait ? minutesIn(rec.wait) : null;
+    const fromTime = rec.time >= 20 ? Math.max(5, Math.round((rec.time - 10) / 5) * 5) : null;
+    const target = steps.findLast(st => WAITING.test(st.text));   // only a step that waits gets one (not "let it melt on your tongue")
+    const m = /overnight/i.test(rec.wait || '') ? null : wait || fromTime;
+    if (target && m) target.minutes = m;
+  }
+  return steps;
+}
+const WAITING = /simmer|tick over|bake|roast|\brest|chill|\bset\b|soak|steep|braise|stew|left in|leave it|in the freezer/i;   // not "from the fridge"
+const WORDS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, ten: 10, fifteen: 15, twenty: 20, 'twenty-five': 25, thirty: 30,
+  forty: 40, 'forty-five': 45, fifty: 50, sixty: 60, ninety: 90, 'a couple of': 2 };
+/** Minutes named in a piece of text: "30 minutes", "25–30 min", "1 hour", "Twenty minutes", "2 hours in the freezer" → a number (≤ 600), or null */
+export function minutesIn(text) {
+  const t = String(text || '').toLowerCase().replace(/½/g, '.5');
+  const n = t.match(/(\d+(?:\.\d+)?)(?:\s*(?:–|-|to)\s*(\d+(?:\.\d+)?))?\s*(minutes?|mins?\b|min\b|hours?|hrs?\b|hr\b)/);
+  const w = !n && t.match(/\b(a couple of|twenty-five|forty-five|an|a|one|two|three|four|five|ten|fifteen|twenty|thirty|forty|fifty|sixty|ninety)\s+(minutes?|hours?)\b/);
+  if (!n && !w) return null;
+  if (/^\s*before\b/.test(t.slice((n || w).index + (n || w)[0].length))) return null;   // "two minutes before bed" isn't a wait
+  const v = n ? Number(n[2] || n[1]) : WORDS[w[1]], unit = n ? n[3] : w[2];
+  const mins = Math.round(/^h/.test(unit) ? v * 60 : v);
+  return mins > 0 && mins <= 600 ? mins : null;
 }
 /** "You'll need": a write-out's ingredients with amounts, else the seed's key ingredients */
 export function needsOf(rec, full) {
@@ -24,8 +49,8 @@ export function needsOf(rec, full) {
   return (rec.key_ingredients || rec.seed?.ingredients || []).slice();
 }
 
-export function createCook({ written, sound, track, say, lines = {}, beforeOpen, onList, isKept }) {
-  const L = { dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
+export function createCook({ written, sound, track, say, lines = {}, beforeOpen, onList, isKept, writer }) {
+  const L = { writing: "Gemma's writing it out…", failed: "I couldn't write this one out just now, so here's the short version.", dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
               late: 'Your {what} finished {n} min ago.', done: 'Enjoy it.', need: "You'll need", ...lines };
   const root = document.createElement('div');
   root.id = 'cook';
@@ -69,7 +94,11 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     const st = steps[at - 1];
     const step = $('.ck-step');
     if (at === 0) {
+      // Gemma's write-out on its way (cook mode started it, or joined the book page's), or one quiet line if it couldn't be
+      const inflight = !hasFull && writer?.busyFor === rec.id;
       step.innerHTML = `<h3>${esc(L.need)}</h3><ul class="ck-needs">${needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
+        + (inflight ? `<div class="ck-offer"><p>${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
+          : !hasFull && failedWrite ? `<p class="ck-quiet">${esc(L.failed)}</p>` : '')
         + (onList && isKept?.(rec.id) ? `<p><button class="bk-outline ck-list">What do I need?</button></p>` : '');
       step.querySelector('.ck-list')?.addEventListener('click', () => { close(); onList(); });
       step.classList.remove('long');
@@ -222,15 +251,28 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     }
   }
 
+  // ---------- the recipe's steps and "You'll need": its write-out if there is one, else the short version
+  let hasFull = false, failedWrite = false;
+  function load(r) {
+    const full = written?.(r.id) || r.full || null;
+    hasFull = !!full;
+    steps = stepsOf(r, full);
+    needs = needsOf(r, full);
+    rec._tip = full?.tip || '';
+  }
+
   // ---------- open and close
   function open(r, from = 'book') {
     beforeOpen?.();
     opener = document.activeElement;
     rec = r;
-    const full = written?.(r.id) || r.full || null;
-    steps = stepsOf(r, full);
-    needs = needsOf(r, full);
-    rec._tip = full?.tip || '';
+    failedWrite = false;
+    load(r);
+    // "Cook this" just works: no write-out yet, so Gemma starts one (or joins the one on its way); it lands via refresh()
+    if (!hasFull && writer && writer.busyFor !== r.id) {
+      if (writer.left > 0 && !writer.busy) writer.writeNow(r);
+      else failedWrite = true;                          // 3 a visit used, or busy on another: the short version and its fallback timer
+    }
     at = Math.min(saved()[r.id] ?? 0, steps.length);
     wake();                                                       // in the tap, as the mobile lead asked
     root.hidden = false;
@@ -261,5 +303,14 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
   }
   addEventListener('popstate', () => { if (pushed && !history.state?.cook) { pushed = false; close(true); } });
 
-  return { open, close, get isOpen() { return !root.hidden; } };
+  /** A write-out landed (or failed) for a recipe: if it's the one open, reload its steps and timers, keeping the step */
+  function refresh(id) {
+    if (root.hidden || !rec || rec.id !== id) return;
+    const keep = at;
+    load(rec);
+    failedWrite = !hasFull;                             // it didn't come: say so once, quietly, on step 0
+    at = Math.min(keep, steps.length);
+    draw();
+  }
+  return { open, close, refresh, get isOpen() { return !root.hidden; } };
 }
