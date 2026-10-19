@@ -773,6 +773,10 @@ state.time = state.time || null;
 // shared visit store (explore/visit-state.js), read in every room. A visit saved before the store keeps its candle.
 if (state.energy && !visit.get('energy')) visit.set('energy', state.energy);
 delete state.energy;
+// Back at the front door mid-visit (C1): the film still ends in the foyer, then a short walk returns the visitor to the
+// room they left, facing where they were (state.look, saved when the page is left). A first visit has no room to go back to
+const leftFrom = window.__door?.active && state.trail?.length && ROOMS[state.room] && state.room !== 'hall-entrance'
+  ? { room: state.room, look: state.look } : null;
 state.room = window.__door?.active ? 'hall-entrance'                  // through the front door: the entrance hall
   : ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
 const room = () => ROOMS[state.room];
@@ -2078,7 +2082,16 @@ if (state.chips?.length) setChips(state.chips);   // the last question's answers
 soundLabel();
 if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);
-(window.__door?.entered ?? Promise.resolve()).then(arrive);
+// Leaving the page (the Front door chip, About the Inn, a reload) keeps the view, for coming back in (C1)
+addEventListener('pagehide', () => { state.look = { yaw: Math.round(look.yaw), pitch: Math.round(look.pitch) }; store.save(state); });
+(window.__door?.entered ?? Promise.resolve()).then(() => {
+  if (!leftFrom) return arrive();
+  // Let the film's hand-over (settle) finish, then walk back to the room they left
+  setTimeout(() => {
+    goRoom(leftFrom.room, leftFrom.look?.yaw);
+    if (leftFrom.look) { look.pitch = leftFrom.look.pitch; render(); }
+  }, reduceMotion() ? 0 : 1700);
+});
 resize();
 </script>
 </body>
