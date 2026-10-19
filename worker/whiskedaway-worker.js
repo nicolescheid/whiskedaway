@@ -654,6 +654,9 @@ async function handleRecipe(request, env) {
 }
 
 // Build a natural language message from the structured intake
+// How many the write-out serves: the check-in's answer (1-6, 8 for a crowd), else 2
+const servingsOf = p => { const n = Math.round(Number(p?.servings)); return n >= 1 ? Math.min(12, n) : 2; };
+
 function buildUserMessage(payload) {
   const parts = [];
   
@@ -792,6 +795,15 @@ function buildUserMessage(payload) {
       chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time.',
     };
     if (ROOM_RULES[payload.room]) parts.push(ROOM_RULES[payload.room]);
+    // The foyer check-in (checkin-views.md): skill, time and how many, when the visitor has said
+    const CONFIDENCE = {
+      starting: 'Cooking confidence: just starting out. Name every tool, explain any cooking term in a few words (until it just wobbles), and keep to one thing at a time.',
+      happy: 'Cooking confidence: happy enough. Plain steps, nothing fancy.',
+      confident: 'Cooking confidence: confident. Fewer words, and techniques are fine.',
+    };
+    if (CONFIDENCE[payload.confidence]) parts.push(CONFIDENCE[payload.confidence]);
+    const mins = Math.round(Number(payload.time_available));
+    if (mins > 0) parts.push(`Time available: about ${Math.min(240, mins)} minutes of hands-on cooking. Keep the active time within it; waiting time (setting, chilling, baking) is fine if you say so.`);
   } else if (payload.tome_id === 'nourish-academy') {
     // Nourish Academy specific fields
     parts.push(`Question: ${payload.question}`);
@@ -831,8 +843,8 @@ function buildUserMessage(payload) {
       + 'one action each. No em dashes. No hype words (perfect, amazing, delicious, boost, guilt-free). At most one short dry aside in the whole recipe, '
       + 'and only in the tip or the last step. Say what the food is, never what it does for health. '
       + 'Keep to the idea and its key ingredients, '
-      + 'scale to 2 servings, respect every dietary restriction, and use ingredient names for my location. '
-      + 'Respond with JSON only, in exactly this shape: {"name": "...", "serves": 2, "time": "35 min", '
+      + `scale to ${servingsOf(payload)} servings, respect every dietary restriction, and use ingredient names for my location. `
+      + `Respond with JSON only, in exactly this shape: {"name": "...", "serves": ${servingsOf(payload)}, "time": "35 min", `
       + '"ingredients": [{"item": "ripe pears", "amount": "2", "unit": "", "key": "pear"}, {"item": "maple syrup", "amount": "2", "unit": "tbsp", "key": "maple syrup"}], '
       + '"steps": [{"text": "Halve the pears and scoop out the cores.", "uses": ["pear"]}, {"text": "Bake until soft.", "minutes": 25}], "tip": "one short tip"}. '
       + 'Ingredients: 4 to 12. "item" in my shopping words; "amount" a number or fraction (1, 1/2, 1 1/2); "unit" one of g, kg, ml, l, tsp, tbsp, cup, pinch, '

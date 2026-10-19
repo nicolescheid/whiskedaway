@@ -64,7 +64,10 @@
       "pantry": "Pantry",
       "map": "The map",
       "dietary": "Dietary needs",
-      "none": "not yet"
+      "none": "not yet",
+      "confidence": "Cooking confidence",
+      "time": "Time",
+      "servings": "Cooking for"
     },
     "pantry": {
       "title": "What have you got to use?",
@@ -375,6 +378,78 @@
       "locale-map": "Pick a few places to cook from, and where you do your shopping.",
       "dietary-shelf": "Tell me what to steer clear of, and I'll keep to it."
     },
-    "_objects": "Gemma's line when the visitor touches the object, as its sheet opens (optional)."
+    "_objects": "Gemma's line when the visitor touches the object, as its sheet opens (optional).",
+    "checkin": {
+      "_about": "The check-in sheet (Ideas build, checkin-build). One wording set per answer for every door. {t} {n} {c} are filled from the option labels below, lower-cased mid-sentence. Every line under 100 characters.",
+      "title": "Check in",
+      "helper": "All optional. Skip anything you like.",
+      "more": "A bit more",
+      "rows": {
+        "energy": "How's your energy today?",
+        "time": "How long have you got?",
+        "servings": "How many are you cooking for?",
+        "confidence": "How do you feel in the kitchen?",
+        "weather": "Is this your weather?"
+      },
+      "time": {
+        "quick": "About 15 minutes",
+        "half": "About half an hour",
+        "hour": "About an hour",
+        "any": "No rush"
+      },
+      "servings": {
+        "1": "Just me",
+        "2": "Two",
+        "3": "Three",
+        "4": "Four",
+        "5": "Five",
+        "6": "Six",
+        "crowd": "A crowd"
+      },
+      "confidence": {
+        "starting": "Just starting out",
+        "happy": "Happy enough",
+        "confident": "Confident"
+      },
+      "confidenceHelper": "This is about skill. Your candle is about today.",
+      "ack": {
+        "_when": "One line on Done, only if something changed. Energy uses the candle's own moment.",
+        "checkin": "Thanks. I'll keep all that in mind.",
+        "time": "{t}. I'll keep to that.",
+        "servings": "Cooking for {n}. I'll do the maths.",
+        "servingsOne": "Just you. I'll keep it small.",
+        "confidence": "{c}. I'll pitch the recipes to suit."
+      },
+      "told": {
+        "time": "You've got {t}.",
+        "servings": "You're cooking for {n}.",
+        "confidence": "In the kitchen: {c}."
+      },
+      "ask": {
+        "_when": "Gemma's one gentle ask per visit, for one missing answer, only when it would change her picks.",
+        "time": "How long have you got? It changes what I'd pick.",
+        "servings": "How many are you cooking for? I'll scale the recipe.",
+        "confidence": "How do you feel in the kitchen? I'll pitch the recipe to suit."
+      }
+    }
+  },
+  "checkin": {
+    "_about": "The foyer check-in pieces outside the sheet (checkin-views.md): the opener (front door) and the desk and groceries hotspots. The sheet copy is tell.checkin.",
+    "opener": {
+      "welcome": "Have a wander. Start at the desk if you like.",
+      "line": "Hello, love. Want to check in? It helps me pick for you.",
+      "yes": "Check in",
+      "no": "Later"
+    },
+    "desk": {
+      "label": "The front desk",
+      "ref": "the front desk",
+      "moment": "Sign in if you like. It helps me pick, and none of it is kept."
+    },
+    "groceries": {
+      "label": "The groceries",
+      "ref": "the grocery bags",
+      "moment": "What did you bring in? Tell me and I'll cook around it."
+    }
   }
 }
