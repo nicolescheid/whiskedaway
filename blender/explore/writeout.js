@@ -89,10 +89,18 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
 
   async function write(rec, el, seedEl) {
     if (busy || !left()) return;
+    const p = writeNow(rec);
+    render(el, rec, seedEl);
+    await p;
+    // The page may have been redrawn while she wrote: draw it again (or this slot, if nothing redraws)
+    if (onChange) onChange(); else render(el, rec, seedEl);
+  }
+  /** Write one out (the page's button, or cook mode's offer): the recipe, or null if it failed. Counts against the cap. */
+  async function writeNow(rec) {
+    if (busy || !left()) return null;
     busy = rec.id;
     failed = null;
     mem.dietAsked = true; save();
-    render(el, rec, seedEl);
     let reason = null, recipe = null;
     try {
       const res = await fetchRecipe(payloadFor(rec));
@@ -114,9 +122,8 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
       failed = rec.id;
       track?.('recipe_full_failed', { atom: rec.id, room: rec.room, reason });
     }
-    // The page may have been redrawn while she wrote: draw it again (or this slot, if nothing redraws)
-    if (onChange) onChange(); else render(el, rec, seedEl);
+    return recipe;
   }
 
-  return { render, written, get left() { return left(); }, clear() { mem = { n: mem.n, recipes: {} }; save(); } };
+  return { render, written, writeNow, get left() { return left(); }, get busy() { return !!busy; }, clear() { mem = { n: mem.n, recipes: {} }; save(); } };
 }

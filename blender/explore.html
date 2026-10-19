@@ -1626,7 +1626,7 @@ const writer = createWriteOut({
   onChange: () => bookView.refresh(),
 });
 // Cook mode (explore/cook.js, cook-mode-ux.md §1): one step at a time over everything, with timers
-const cook = createCook({ written: id => writer.written(id), sound, track, say: t => say(t, [], true), lines: LINES.cook,
+const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: LINES.cook,
   isKept: id => book.has(id), onList: () => { track('list_open'); bookView.open('list', { from: 'cook' }); } });
 // "What do I need?" (explore/list.js): one shopping list from the book, the pantry set aside
 const shopList = createList({ book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS, track });
