@@ -16,7 +16,16 @@ export function createTilt({ stage, look, render }) {
   css.textContent = `
     .bar .chip.tilt.on { background: var(--berry); color: var(--parchment); border-color: var(--berry); }
     .bar .chip.tilt[hidden] { display: none; }
-    @media (max-width: 560px) { body.can-tilt .bar .room-title { flex-basis: calc(100% - 84px); } }   /* the chip shares the title's row */`;
+    .bar .chip.tilt { position: relative; }
+    .bar .chip.tilt::after { content: ''; position: absolute; inset: -12px -4px -6px; }   /* 44 px to tap without a taller bar */
+    .tilt-note { position: fixed; z-index: 21; right: calc(16px + env(safe-area-inset-right, 0px)); top: calc(var(--bar-h, 73px) + 6px);
+                 max-width: min(260px, calc(100vw - 32px)); padding: 6px 10px; border-radius: 10px; background: var(--parchment-90);
+                 border: 1px solid var(--line); font: 500 13px/1.35 'Quicksand', system-ui, sans-serif; color: var(--ink);
+                 box-shadow: 0 4px 14px rgba(0,0,0,.2); pointer-events: none; transition: opacity .3s; }
+    .tilt-note[hidden] { display: none; }
+    @media (max-width: 560px) { body.can-tilt .bar .room-title { flex-basis: calc(100% - 84px); }   /* the chip shares the title's row */
+      /* the speaker chip sits under it: start its (taller) tap area a little lower so Tilt keeps 44 px; it keeps ≥ 44 */
+      body.can-tilt .bar .chip.speaker::after { top: -4px; } }`;
   document.head.append(css);
   const chip = document.createElement('button');
   chip.type = 'button';
@@ -25,6 +34,16 @@ export function createTilt({ stage, look, render }) {
   chip.setAttribute('aria-label', 'Tilt your phone to look around');
   chip.textContent = '📱 Tilt';
   title.after(chip);
+  // When tilt can't run (permission refused, or no motion sensor), say so briefly and leave the chip off
+  const note = document.createElement('p');
+  note.className = 'tilt-note'; note.hidden = true; note.setAttribute('role', 'status');
+  document.body.append(note);
+  let noteTimer;
+  const sayNo = () => {
+    note.textContent = 'Tilt needs motion access on this phone. You can still drag to look around.';
+    note.hidden = false; clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { note.hidden = true; }, 4000);
+  };
   const showChip = () => { chip.hidden = !phoneSized.matches; document.body.classList.toggle('can-tilt', phoneSized.matches); if (!phoneSized.matches && on) stop(); };
   phoneSized.addEventListener?.('change', showChip);
   showChip();
@@ -45,6 +64,7 @@ export function createTilt({ stage, look, render }) {
   const wrap = a => ((a + 540) % 360) - 180;
   function onOrient(e) {
     const p = pose(e);
+    if (p) heard = true;
     if (!p || dragging) { last = p; return; }
     last = p;
     if (!anchor) { anchor = { yaw: look.yaw - p.yaw, pitch: look.pitch - p.pitch }; return; }   // no jump when it starts
@@ -57,13 +77,17 @@ export function createTilt({ stage, look, render }) {
   stage.addEventListener('pointerdown', () => { if (on) dragging = true; });
   addEventListener('pointerup', () => { if (on && dragging) { dragging = false; anchor = last ? { yaw: look.yaw - last.yaw, pitch: look.pitch - last.pitch } : null; } });
 
+  let heard = false, heardTimer;
   function start() {
-    on = true; anchor = null;
+    on = true; anchor = null; heard = false;
     addEventListener('deviceorientation', onOrient);
+    // No readings within 1.5 s: there's no motion sensor (or it's blocked), so turn back off and say so
+    clearTimeout(heardTimer);
+    heardTimer = setTimeout(() => { if (on && !heard) { stop(); sayNo(); } }, 1500);
     chip.classList.add('on'); chip.setAttribute('aria-pressed', 'true'); chip.textContent = '📱 Tilt on';
   }
   function stop() {
-    on = false;
+    on = false; clearTimeout(heardTimer);
     removeEventListener('deviceorientation', onOrient);
     chip.classList.remove('on'); chip.setAttribute('aria-pressed', 'false'); chip.textContent = '📱 Tilt';
   }
@@ -72,7 +96,7 @@ export function createTilt({ stage, look, render }) {
     if (on) return stop();
     const ask = window.DeviceOrientationEvent?.requestPermission;       // iOS 13+: must be asked from this tap
     if (typeof ask === 'function') {
-      try { if (await ask.call(DeviceOrientationEvent) !== 'granted') return; } catch { return; }
+      try { if (await ask.call(DeviceOrientationEvent) !== 'granted') return sayNo(); } catch { return sayNo(); }
     }
     start();
   });
