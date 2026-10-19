@@ -216,6 +216,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     if (k === 'checkin') {                                         // the page sets each answer through its one setter (checkin.js)
       const after = forget ? { ...before, energy: null, time: null, servings: null, confidence: null } : draft;
       const changed = Object.keys(after).filter(x => (before[x] ?? null) !== (after[x] ?? null));
+      if (!forget) checkin.onDone?.(after);                       // every Done, changed or not (the weather guess kept)
       close();
       if (!changed.length) return;
       setTimeout(() => onDone?.(k, { before, after, changed, from, forgot: forget }), reduce() ? 0 : 200);

@@ -1765,6 +1765,12 @@ const tell = createTell({
     weathers: () => Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: w.label })),
     weather: () => state.weather || null,
     onTap: (k, v, prev) => k !== 'weather' && answerSound(k, v, prev),
+    // Done with the weather still on the local guess: the guess was right (analytics; once a visit, like the old "That's right")
+    onDone: after => {
+      if (state.weatherFrom !== 'local' || after.weather !== state.weather || state.guessKept) return;
+      state.guessKept = true;
+      track('weather_guess', { weather: state.weather, outcome: 'kept' });
+    },
   },
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 });
