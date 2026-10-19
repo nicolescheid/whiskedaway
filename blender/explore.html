@@ -1404,8 +1404,8 @@ function chatLine(who, text) {
 // Chips are data ({ label, do: [action, ...args] }), so the last question's answers are kept with the visit and come
 // back after a reload (J9)
 const CHIP_ACTS = {
-  // The check-in sheet (the Ideas build's). Until it exists, the Tell Gemma menu stands in
-  checkin: () => { endCheckinOffer(); typeof tell.openCheckin === 'function' ? tell.openCheckin('foyer') : tell.openMenu('foyer'); },
+  // The check-in sheet is the Ideas build's (checkin-build, which also sets window.__explore.checkin); the Tell menu until then
+  checkin: () => { endCheckinOffer(); window.__explore?.checkin ? tell.open('checkin', 'foyer') : tell.openMenu('foyer'); },
   choose: cluster => record({ kind: 'choose', cluster }),
   tell: () => tell.openMenu('offer'),                   // "Want to tell me what's in your cupboard…?" [Tell me]
   later: () => endCheckinOffer(),                                      // [Not now]: the offer is over for the visit
