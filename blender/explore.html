@@ -2122,36 +2122,80 @@ $('season-ok').onclick = () => $('seasondlg').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('seasondlg').classList.remove('open'); });
 
 // ---------- energy candles: pick the one that matches how much you've got in you today
-// A warm glow drawn over the render marks the chosen candle (it's a standing signal, like the weather)
-const candleGlow = (() => {
+// The candles are rendered unlit (the kitchen's five and the foyer desk's five). The chosen one is lit here:
+// a flame drawn at its wick, sized for its real distance, with a warm glow behind it. It's a standing signal, like the weather.
+const spriteFrom = (draw, additive) => {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
-  const g = c.getContext('2d');
-  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-  grad.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
-  grad.addColorStop(0.4, 'rgba(255, 176, 90, 0.28)');
-  grad.addColorStop(1, 'rgba(255, 150, 60, 0)');
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 256, 256);
-  g.strokeStyle = 'rgba(255, 220, 160, 0.7)';                       // a soft ring around the candle
-  g.lineWidth = 5;
-  g.beginPath(); g.ellipse(128, 128, 70, 104, 0, 0, Math.PI * 2); g.stroke();
+  draw(c.getContext('2d'));
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false,
-                                                             blending: THREE.AdditiveBlending }));
-  sprite.scale.set(0.95, 1.4, 1);                                   // about 5 x 8 degrees at 10 units
-  sprite.renderOrder = 10;
+                                                             blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
   sprite.visible = false;
   scene.add(sprite);
   return sprite;
-})();
+};
+const candleGlow = spriteFrom(g => {
+  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
+  grad.addColorStop(0.4, 'rgba(255, 176, 90, 0.22)');
+  grad.addColorStop(1, 'rgba(255, 150, 60, 0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+}, true);
+candleGlow.renderOrder = 10;
+const candleFlame = spriteFrom(g => {
+  // a teardrop: round at the base, drawn up to a point; hot white-yellow core, orange edge, a blue foot
+  g.translate(128, 150);
+  const body = new Path2D();
+  body.moveTo(0, -128); body.bezierCurveTo(46, -48, 58, 30, 0, 74); body.bezierCurveTo(-58, 30, -46, -48, 0, -128);
+  const edge = g.createRadialGradient(0, 30, 4, 0, 10, 120);
+  edge.addColorStop(0, 'rgba(255, 252, 235, 1)');
+  edge.addColorStop(0.35, 'rgba(255, 220, 120, 0.95)');
+  edge.addColorStop(0.75, 'rgba(255, 140, 40, 0.7)');
+  edge.addColorStop(1, 'rgba(230, 90, 20, 0)');
+  g.fillStyle = edge;
+  g.fill(body);
+  const foot = g.createRadialGradient(0, 62, 0, 0, 62, 24);
+  foot.addColorStop(0, 'rgba(90, 120, 255, 0.55)');
+  foot.addColorStop(1, 'rgba(90, 120, 255, 0)');
+  g.fillStyle = foot;
+  g.fillRect(-30, 38, 60, 48);
+}, true);
+candleFlame.renderOrder = 11;
 const candleSpot = id => Object.keys(world.objects).find(k => world.objects[k].type === 'energy' && world.objects[k].energy === id);
+/** Where the chosen candle's flame goes in this room: a kitchen candle's own flame point, or the foyer desk's */
+function flamePoint(id) {
+  const key = candleSpot(id);
+  return (key && spots[key]?.flame) || spots['checkin-desk']?.flames?.[id] || null;
+}
+let flicker = null;
+function placeFlame(f, k = 1) {
+  const near = 10 / Math.max(f.distance || 2.5, 0.4);          // the sphere sits at 10 units: scale real metres to it
+  const small = visit.get('energy') === 'burnt-out' ? 0.55 : 1;    // a guttering stub
+  candleFlame.scale.set(0.024 * near * small * (2 - k), 0.05 * near * small * k, 1);
+  candleFlame.position.copy(dir(f.yaw, f.pitch).multiplyScalar(10));
+  candleGlow.scale.set(0.3 * near * small, 0.36 * near * small, 1);
+  candleGlow.position.copy(candleFlame.position);
+  candleFlame.material.opacity = 0.85 + 0.15 * k;
+}
 function showCandle() {
-  const key = visit.get('energy') && candleSpot(visit.get('energy'));
-  const s = key && spots[key];
-  candleGlow.visible = !!s;
-  if (s) candleGlow.position.copy(dir(s.yaw, s.pitch).multiplyScalar(10));
+  const id = visit.get('energy');
+  const key = id && candleSpot(id);
+  const f = id && flamePoint(id);
+  const s = !f && key && spots[key];                                // no flame point (an old render): glow on the candle
+  candleFlame.visible = !!f;
+  candleGlow.visible = !!(f || s);
+  clearInterval(flicker);
+  if (f) {
+    placeFlame(f);
+    // a slow, small flicker while a flame shows (about 11 frames a second, nothing when the tab is hidden)
+    flicker = setInterval(() => { if (!document.hidden) { placeFlame(f, 0.93 + Math.random() * 0.12); render(); } }, 90);
+  } else if (s) {
+    candleGlow.scale.set(0.95, 1.4, 1);
+    candleGlow.position.copy(dir(s.yaw, s.pitch).multiplyScalar(10));
+  }
   for (const h of hotspots) h.el.classList.toggle('chosen', !!key && h.id === key);
   render();
 }

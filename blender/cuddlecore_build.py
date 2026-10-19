@@ -419,6 +419,8 @@ def drape(name, size, cuts, loc, rot, material, colliders, frames=70):
 
 # ---------------------------------------------------------------- the energy candles
 
+LIT_CANDLES = False   # the page lights the chosen one (a flame overlay), so the render shows them all unlit
+
 # Five pillar candles in a row, left to right as seen from the room: how much energy you have today.
 # (key, body height, wax pool radius, flame size, light watts). The keys match explore/cuddlecore-world.json.
 CANDLES = [("burnt-out", 0.016, 0.052, 0.0, 0.0),
@@ -480,7 +482,12 @@ def energy_candles(x, z0, cast_iron):
             bpy.ops.object.shade_smooth()
             d.data.materials.append(candle_wax)
         wick = cyl(f"candle_wick_{key}", (x, y, top + 0.006), 0.0016, 0.012, cast_iron, verts=8, bevel=0)
-        if size:
+        # Unlit since the check-in (checkin-views.md): the page draws a flame on the candle the visitor lights.
+        # The flame point goes in the hotspot; LIT_CANDLES = True brings the rendered flames back.
+        flame_at = (x, y, top + 0.012 + 0.019 * max(size, 0.6))
+        if not size:
+            wick.rotation_euler = (math.radians(25), 0, 0)   # spent and bent over
+        if size and LIT_CANDLES:
             bpy.ops.mesh.primitive_uv_sphere_add(radius=0.009 * size, location=(x, y, top + 0.012 + 0.019 * size))
             f = bpy.context.active_object
             f.name = f"candle_flame_{key}"
@@ -490,10 +497,13 @@ def energy_candles(x, z0, cast_iron):
             f.visible_shadow = False                   # the flame is the light: it mustn't shade its own candle
             parts.append(f)
             point_light(f"candle_light_{key}", (x + 0.02, y, top + 0.03 * size), watts * lit, (1.0, 0.52, 0.2), radius=0.012)
-        else:
-            wick.rotation_euler = (math.radians(25), 0, 0)   # spent and bent over
+        elif not size and LIT_CANDLES:
             smoke_curl(f"candle_smoke_{key}", (x, y, top + 0.012), smoke)
         hotspot(f"candle-{key}", key.replace("-", " ").capitalize(), "energy", parts, kind="energy")
+        fx, fy, fz = flame_at
+        HOTSPOTS[f"candle-{key}"]["flame"] = {"yaw": round(math.degrees(math.atan2(fx, fy)), 2),
+                                              "pitch": round(math.degrees(math.atan2(fz - EYE, math.hypot(fx, fy))), 2),
+                                              "distance": round(math.sqrt(fx * fx + fy * fy + (fz - EYE) ** 2), 2)}
 
 
 def smoke_curl(name, start, material):

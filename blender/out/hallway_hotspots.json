@@ -146,6 +146,51 @@
           "pitch": -2.41,
           "distance": 2.38,
           "visible": true
+        },
+        "checkin-desk": {
+          "label": "The check-in desk",
+          "type": "checkin",
+          "overlay": null,
+          "yaw": 52.24,
+          "pitch": -10.72,
+          "distance": 1.83,
+          "visible": true,
+          "flames": {
+            "burnt-out": {
+              "yaw": 47.96,
+              "pitch": -12.93,
+              "distance": 1.69
+            },
+            "low": {
+              "yaw": 50.19,
+              "pitch": -11.45,
+              "distance": 1.75
+            },
+            "half": {
+              "yaw": 52.24,
+              "pitch": -9.57,
+              "distance": 1.82
+            },
+            "three-quarters": {
+              "yaw": 54.11,
+              "pitch": -7.83,
+              "distance": 1.89
+            },
+            "full": {
+              "yaw": 55.82,
+              "pitch": -6.21,
+              "distance": 1.97
+            }
+          }
+        },
+        "groceries": {
+          "label": "The shopping",
+          "type": "pantry",
+          "overlay": null,
+          "yaw": 113.35,
+          "pitch": -42.25,
+          "distance": 1.97,
+          "visible": true
         }
       }
     },
@@ -294,6 +339,51 @@
           "pitch": -1.48,
           "distance": 3.87,
           "visible": false
+        },
+        "checkin-desk": {
+          "label": "The check-in desk",
+          "type": "checkin",
+          "overlay": null,
+          "yaw": 157.92,
+          "pitch": -5.14,
+          "distance": 3.79,
+          "visible": false,
+          "flames": {
+            "burnt-out": {
+              "yaw": 160.78,
+              "pitch": -5.81,
+              "distance": 3.73
+            },
+            "low": {
+              "yaw": 159.34,
+              "pitch": -5.32,
+              "distance": 3.76
+            },
+            "half": {
+              "yaw": 157.92,
+              "pitch": -4.59,
+              "distance": 3.79
+            },
+            "three-quarters": {
+              "yaw": 156.53,
+              "pitch": -3.87,
+              "distance": 3.82
+            },
+            "full": {
+              "yaw": 155.16,
+              "pitch": -3.16,
+              "distance": 3.86
+            }
+          }
+        },
+        "groceries": {
+          "label": "The shopping",
+          "type": "pantry",
+          "overlay": null,
+          "yaw": 165.48,
+          "pitch": -13.93,
+          "distance": 5.51,
+          "visible": true
         }
       }
     }
