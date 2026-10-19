@@ -420,7 +420,8 @@
         "time": "{t}. I'll keep to that.",
         "servings": "Cooking for {n}. I'll do the maths.",
         "servingsOne": "Just you. I'll keep it small.",
-        "confidence": "{c}. I'll pitch the recipes to suit."
+        "confidence": "{c}. I'll pitch the recipes to suit.",
+        "checkinTwo": "{a}, and {b}. I'll keep all that in mind."
       },
       "told": {
         "time": "You've got {t}.",
@@ -698,8 +699,10 @@
       "moodAck": "{m}. I'll lean that way.",
       "breakfast": "Ready by breakfast?",
       "breakfastLine": "Set it tonight and it's ready by morning.",
+      "breakfastLineDay": "Set it now and it'll be ready by 7 tomorrow morning.",
       "jars": "Make 4 jars",
-      "jarsLine": "Four jars, one batch. That's most of the week sorted."
+      "jarsLine": "Four jars, one batch. That's most of the week sorted.",
+      "jarsChanged": "Four jars, so I've made it four, not {n}. I've scaled your list."
     }
   },
   "sweet": {
