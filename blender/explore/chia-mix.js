@@ -33,24 +33,50 @@ const DEFAULTS = {
   lines: {
     moodTitle: 'Pick a mood', mixTitle: 'Mix an experiment', names: { mood: 'Mood', base: 'Base', flavour: 'Flavour', topping: 'On top' },
     steps: { mood: 'What mood is it?', base: 'What shall we set it in?', flavour: 'And the flavour?', topping: 'Something on top?' },
-    swapYes: 'Swap to {x}', swapNo: 'Keep mine', back: '‹ Back', next: 'Next ›', skip: 'Skip', write: 'Write it out',
-    cap: 'That uses one of your 3 write-outs this visit ({n} left).', capNone: "I've written three out this visit, so that's my pen done. Your choices are kept.",
+    swapYes: 'Swap to {x}', swapNo: 'Keep mine', swapLine: 'Would you try {x} instead of {y}? {reason}', back: '‹ Back', next: 'Next ›', skip: 'Skip', write: 'Write it out',
+    cap: 'That uses one of your 3 write-outs this visit.', capNone: "I've written three out this visit, so that's my pen done. Your choices are kept.",
     writing: "Gemma's writing it out…", failed: "My pen's run dry. Your choices are kept, so try again in a bit.",
-    summary: 'Your jar', moodAck: "{m}. I'll lean that way.", written: "Here's your jar. Keep it if you like it.",
+    summary: 'Your jar', moodAck: "{x}. I'll lean that way.", written: "Here's your jar. Keep it if you like it.",
     breakfast: 'Ready by breakfast?', breakfastLine: "Set it tonight and it'll be ready by 7.", jars: 'Make 4 jars', jarsLine: "Four jars, then. I've scaled your list.",
   },
 };
 
-/** The content editor's `chia` block over the stand-ins (shallow per block) */
+/** The content editor's `chia` block (gemma-lines.json: moods.options, mix.steps.*.options, swap.rules, ack, breakfast, jars),
+ *  read into one shape; the stand-ins fill anything it doesn't have */
 export function chiaData(lines = {}) {
-  const c = lines.chia || {};
-  return { ...DEFAULTS, ...c, lines: { ...DEFAULTS.lines, ...(c.lines || {}), steps: { ...DEFAULTS.lines.steps, ...(c.lines?.steps || {}) },
-    names: { ...DEFAULTS.lines.names, ...(c.lines?.names || {}) } } };
+  const c = lines.chia || {}, m = c.mix || {}, sw = c.swap || {}, L = DEFAULTS.lines;
+  const opts = list => (Array.isArray(list) && list.length ? Object.fromEntries(list.map(o => [o.id, o.label])) : null);
+  const D = {
+    moods: Array.isArray(c.moods?.options)
+      ? Object.fromEntries(c.moods.options.map(o => [o.id, { label: o.label, inIt: o.inside || '', themes: o.themes || [], suggest: o.suggest }]))
+      : DEFAULTS.moods,
+    bases: opts(m.steps?.base?.options) || DEFAULTS.bases,
+    flavours: opts(m.steps?.flavour?.options) || DEFAULTS.flavours,
+    toppings: opts(m.steps?.topping?.options) || DEFAULTS.toppings,
+  };
+  const low = t => String(t || '').toLowerCase();
+  const name = (step, id) => (step === 'mood' ? D.moods[id]?.label : D[`${step}s`]?.[id]) || id;
+  // A rule's line: "Would you try {x} instead of {y}? {reason}", or the reason alone for a note (swap null)
+  D.swaps = Array.isArray(sw.rules)
+    ? sw.rules.map(r => ({ when: r.when || {}, swap: r.swap || null,
+      line: r.swap ? (sw.line || L.swapLine).replace('{x}', low(name(r.swap.step, r.swap.to))).replace('{y}', low(name(r.swap.step, (r.when || {})[r.swap.step])))
+        .replace('{reason}', r.reason || '').trim() : r.reason || '' }))
+    : DEFAULTS.swaps;
+  D.lines = { ...L,
+    moodTitle: c.moods?.title || L.moodTitle, moodHelper: c.moods?.helper || '', mixTitle: m.title || L.mixTitle, intro: m.intro || '', prefill: m.prefill || '',
+    steps: { mood: m.steps?.mood?.title || L.steps.mood, base: m.steps?.base?.title || L.steps.base, flavour: m.steps?.flavour?.title || L.steps.flavour,
+             topping: m.steps?.topping?.title || L.steps.topping },
+    next: m.next ? `${m.next} ›` : L.next, back: m.back ? `‹ ${m.back}` : L.back, write: m.write || L.write,
+    cap: m.cap || L.cap, writing: m.done || L.writing, swapYes: sw.yes || L.swapYes, swapNo: sw.no || L.swapNo,
+    moodAck: c.ack?.mood || L.moodAck, swapped: c.ack?.swapped || '', kept: c.ack?.kept || '',
+    breakfast: c.breakfast?.label || L.breakfast, breakfastLine: c.breakfast?.line || L.breakfastLine,
+    jars: c.jars?.label || L.jars, jarsLine: c.jars?.line || L.jarsLine };
+  return D;
 }
 /** The first swap whose `when` all match the choices so far and the visitor hasn't turned down; null if none */
 export function swapFor(data, draft, declined = new Set()) {
-  return (data.swaps || []).map((r, i) => ({ ...r, i })).find(r => !declined.has(r.i) && draft[r.swap.step] !== r.swap.to
-    && Object.entries(r.when || {}).every(([k, v]) => draft[k] === v)) || null;
+  return (data.swaps || []).map((r, i) => ({ ...r, i })).find(r => !declined.has(r.i) && (!r.swap || draft[r.swap.step] !== r.swap.to)
+    && Object.keys(r.when || {}).length && Object.entries(r.when).every(([k, v]) => draft[k] === v)) || null;
 }
 const optionsFor = (D, step) => (step === 'mood' ? Object.fromEntries(Object.entries(D.moods).map(([id, m]) => [id, m.label])) : D[`${step}s`] || {});
 export const labelOf = (D, step, id) => (id ? optionsFor(D, step)[id] || id : '');
@@ -68,7 +94,7 @@ export function mixRecipe(D, d) {
     method_short: 'Stir the chia into the base with the flavour, leave it in the fridge overnight, then top it and eat.',
     themes: [...(mood?.themes || []), 'overnight', 'no-cook'], spoons: 0, time: 5, wait: 'overnight', why: mood ? mood.inIt : '',
     seed: { name: title, ingredients: ['chia seeds', ...bits] },
-    mix: Object.fromEntries(STEPS.filter(s => d[s]).map(s => [s, L(s)])),
+    mix: { ...Object.fromEntries(STEPS.filter(s => d[s]).map(s => [s, L(s)])), ...(mood?.inIt ? { inside: mood.inIt } : {}) },
   };
 }
 
@@ -89,7 +115,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const body = $('.tl-body'), foot = $('.mx-foot');
-  let kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, pushed = false, then = null;
+  let kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, pushed = false, then = null, reply = '', prefilled = false;
 
   const save = (step, v) => { visit.setDish(ROOM, step, v ?? null); };
   const chips = step => {
@@ -104,7 +130,8 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   // Gemma's swap: an inline line under the choices, on whichever step it shows, never in the way of Next
   const swapHtml = () => {
     const r = swapFor(D, draft, declined);
-    if (!r) return '';
+    if (!r) return reply ? `<p class="small mx-reply" role="status">${esc(reply)}</p>` : '';
+    if (!r.swap) return `<div class="ck-offer mx-swap mx-note" role="status"><p>${esc(r.line)}</p></div>`;   // a note: nothing to choose
     return `<div class="ck-offer mx-swap" role="status"><p>${esc(r.line)}</p><p><button class="bk-cook" data-swap="${r.i}">${esc(T.swapYes.replace('{x}', labelOf(D, r.swap.step, r.swap.to).toLowerCase()))}</button>
       <button class="bk-outline" data-keep="${r.i}">${esc(T.swapNo)}</button></p></div>`;
   };
@@ -112,12 +139,13 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   function draw() {
     if (kind === 'mood') {
       $('#mx-title').textContent = T.moodTitle;
-      body.innerHTML = chips('mood');
+      body.innerHTML = `${T.moodHelper ? `<p class="small">${esc(T.moodHelper)}</p>` : ''}${chips('mood')}`;
       foot.innerHTML = `<button class="tl-done mx-done">Done</button>`;
     } else if (at < STEPS.length) {
       const step = STEPS[at];
       $('#mx-title').textContent = T.mixTitle;
       body.innerHTML = `<p class="mx-dots" aria-label="Step ${at + 1} of ${STEPS.length + 1}">${[...STEPS, 'write'].map((_, i) => `<i class="${i === at ? 'on' : i < at ? 'done' : ''}"></i>`).join('')}</p>
+        ${at === 0 && T.intro ? `<p class="small">${esc(T.intro)}</p>` : ''}${at === 0 && prefilled && T.prefill ? `<p class="small">${esc(T.prefill)}</p>` : ''}
         <h3 class="tl-h">${esc(T.steps[step])}</h3>${chips(step)}${swapHtml()}`;
       foot.innerHTML = `<button class="bk-outline mx-back" ${at ? '' : 'hidden'}>${esc(T.back)}</button><button class="tl-done mx-next">${esc(draft[step] ? T.next : T.skip)}</button>`;
     } else {
@@ -133,8 +161,9 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     body.querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
       const s = b.dataset.s, v = b.dataset.v;
       draft[s] = draft[s] === v ? null : v;                       // tap again to unchoose
+      reply = '';
       if (kind === 'mix') save(s, draft[s]);
-      if (draft[s]) sound?.answer?.(s);
+      if (draft[s]) { if (s === 'mood') sound?.answer?.('mood'); else sound?.mix?.(s); }   // clink and cork; the potion sounds
       // A mood suggests the rest, where nothing's chosen yet
       if (s === 'mood' && draft.mood && kind === 'mix') for (const [k, x] of Object.entries(D.moods[draft.mood]?.suggest || {})) if (!draft[k]) { draft[k] = x; save(k, x); }
       draw();
@@ -143,11 +172,13 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     body.querySelector('[data-swap]')?.addEventListener('click', e => {
       const r = D.swaps[+e.currentTarget.dataset.swap];
       draft[r.swap.step] = r.swap.to; save(r.swap.step, r.swap.to);
+      reply = T.swapped;
       track?.('mix_swap', { outcome: 'accepted' });
       draw();
     });
     body.querySelector('[data-keep]')?.addEventListener('click', e => {
       declined.add(+e.currentTarget.dataset.keep);
+      reply = T.kept;
       track?.('mix_swap', { outcome: 'declined' });
       draw();
     });
@@ -163,7 +194,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     if ((before ?? null) === (draft.mood ?? null)) return;
     save('mood', draft.mood);
     track?.('tell_set', { kind: 'mood', from });
-    if (draft.mood) setTimeout(() => say?.(T.moodAck.replace('{m}', D.moods[draft.mood].label)), reduce() ? 0 : 200);
+    if (draft.mood) setTimeout(() => say?.(T.moodAck.replace(/\{[xm]\}/, D.moods[draft.mood].label)), reduce() ? 0 : 200);
   }
   async function write() {
     const rec = mixRecipe(D, draft);
@@ -173,6 +204,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     const full = await writer.writeNow(rec);
     writing = false;
     if (!full) { failed = true; return draw(); }
+    sound?.mix?.('done');
     // The book opens once this sheet's history step has gone, or its own would be popped with it
     close({ silent: true, after: () => onWritten?.(rec, full) });
   }
@@ -183,6 +215,8 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     beforeOpen?.();
     kind = k; from = src; writing = false; failed = false;
     draft = { ...visit.dish(ROOM) };
+    prefilled = !!(draft.base || draft.flavour || draft.topping);   // from the fridge, the drawers or an earlier mix
+    reply = '';
     at = step ? Math.max(0, STEPS.indexOf(step)) : 0;
     root.hidden = false;
     root.className = `tell ${mode()} mx-${k}`;

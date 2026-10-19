@@ -822,7 +822,8 @@ const isNight = () => timeNow() === 'night';
 // What the visitor told the Inn (the store) stands for the whole visit: it goes last, so it holds however long the trail gets
 // (the trail keeps 40 steps, and a candle picked early used to drop out of it)
 const navTrail = () => {
-  const told = [...(visit.get('energy') ? [{ kind: 'energy', id: visit.get('energy') }] : [])];
+  const told = [...(visit.get('energy') ? [{ kind: 'energy', id: visit.get('energy') }] : []),
+                ...(visit.dish('chiapothecary', 'mood') ? [{ kind: 'mood', id: visit.dish('chiapothecary', 'mood') }] : [])];
   const trail = state.trail.filter(e => e.kind !== 'energy');
   // The visitor's own season counts lightly, unless they've turned the wheel (that counts in full)
   const own = trail.some(e => e.kind === 'season') ? [] : [{ kind: 'own-season', id: seasonNow() }];
@@ -1620,7 +1621,7 @@ const writer = createWriteOut({
   payloadFor: rec => ({
     tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room,
     idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
-            method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why, mix: rec.mix },
+            method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why }, mix: rec.mix,   // mix: the Chiapothecary's own jar (labels)
     energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,
     theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
     dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
@@ -1658,13 +1659,18 @@ const chia = createChiaMix({
     say(chia.data.lines.written, [], true);
   },
 });
-const CHIA_TOOLS = { superpower: () => chia.open('mood'), generate: () => chia.open('mix'),
+const CHIA_TOOLS = { mood: () => chia.open('mood'), superpower: () => chia.open('mood'), generate: () => chia.open('mix'),
                      milk: () => chia.open('mix', { step: 'base' }), 'add-ins': () => chia.open('mix', { step: 'flavour' }) };
 // A chia jar's own buttons: "Ready by breakfast?" runs cook mode's timer to 7 tomorrow; "Make 4 jars" sets servings and opens the list
 const breakfastAt = () => { const d = new Date(); if (d.getHours() >= 7) d.setDate(d.getDate() + 1); d.setHours(7, 0, 0, 0); return d.getTime(); };
 const chiaActions = [
   { label: chia.data.lines.breakfast, do: rec => { say(chia.data.lines.breakfastLine, [], true); cook.open(rec, 'breakfast', { until: breakfastAt() }); } },
-  { label: chia.data.lines.jars, do: () => { visit.set('servings', '4'); track('tell_set', { kind: 'servings', from: 'jars' }); bookView.open('list', { from: 'jars' }); say(chia.data.lines.jarsLine, [], true); } },
+  // With the check-in in (its setAnswer and list scaling), 4 jars is the same servings answer as the desk's; before it, just the store
+  { label: chia.data.lines.jars, do: () => {
+    if (typeof setAnswer === 'function') setAnswer('servings', '4', { from: 'jars', quiet: true });
+    else { visit.set('servings', '4'); track('tell_set', { kind: 'servings', from: 'jars' }); }
+    bookView.open('list', { from: 'jars' }); say(chia.data.lines.jarsLine, [], true);
+  } },
 ];
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs

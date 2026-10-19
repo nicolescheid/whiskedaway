@@ -786,13 +786,6 @@ function buildUserMessage(payload) {
       : `Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
-    // The Chiapothecary's "Mix an experiment" (rooms-views.md): the visitor's own jar. A mood is a flavour mood and what's in it,
-    // never a promise about the body (moods, not medicine)
-    const mix = idea.mix && typeof idea.mix === 'object' ? idea.mix : null;
-    if (mix) {
-      parts.push(`Their mix: ${['mood', 'base', 'flavour', 'topping'].filter(k => mix[k]).map(k => `${k} ${txt(mix[k], 40)}`).join(', ')}. Keep to their choices.`);
-      parts.push('The mood is a feeling and a set of ingredients only. Never say or hint what the jar does for energy, focus, sleep, skin, gut or mood.');
-    }
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
     // Each room has its own identity (Nicole, Oct 2026); the full recipe keeps to the room the idea came from
     const ROOM_RULES = {
@@ -885,6 +878,8 @@ You receive the visitor's trail for this visit only: objects they touched, objec
 A "weather" event is the visitor turning the barometer to change the weather outside the window (objects of type "weather" describe each one). It's a deliberate choice of mood that holds until they change it again: weigh it strongly and keep honouring it as they wander. Sunny or hot weather leans to light, fresh, cooling food; storms and rain lean to warm, hearty, slow food. Never reveal a weather object.
 
 Time of day works the same way. A "time" event is the visitor pushing the kitchen clock to a time of day (a deliberate choice: weigh it like the weather); a "clock" event is just their device's own time of day (observed, not chosen: weigh it lightly). Objects of type "time" describe each one. Mornings lean to breakfast and gentle starts, midday to light food, evenings to a proper meal, late night to gentle, low-effort things. If you mention a "clock" time in a why, phrase it as context ("and it's late where you are"), not as something they did. Never reveal a time object.
+
+A "mood" event is the visitor choosing a mood for a chia jar in the Chiapothecary (morning-spark, deep-focus, calm, cultured, bright or by-flavour). It's a standing choice like the weather: lean towards atoms whose themes fit it. Moods are ingredients and feelings, never health effects: don't say what a jar does for the body.
 
 An "energy" event is the visitor picking one of five candles to say how much energy they have today: burnt out, low, half, three-quarters or full (objects of type "energy" describe each one). It's a deliberate choice that holds until they pick another, like the weather. It's the strongest guide to effort: each energy object has a spoon_bias, and the lower it is, the more you should favour atoms with fewer spoons. For burnt out or low, serve only 0-spoon atoms (a 1-spoon atom at most, if nothing else fits); for full, hands-on cooking is welcome. In a why, say it plainly ("Because you picked the burnt-out candle"). Never reveal an energy object.
 A "season" event is the visitor turning the Conservatory's seasons wheel to spring, summer, autumn or winter (objects of type "season" describe each one). It's a deliberate choice that holds until they turn it again, like the weather: spring and summer lean fresh, green and cooling, autumn and winter warm and hearty. Never reveal a season object.

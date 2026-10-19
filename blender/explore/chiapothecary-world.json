@@ -21,7 +21,7 @@
                  "themes": ["fruity", "crunchy", "spiced", "learning", "vitamins"] },
     "fridge": { "label": "Choose a milk", "map": "The fridge", "ref": "the display fridge", "type": "interactive", "tool": "milk",
                 "themes": ["creamy", "chilled", "breakfast"] },
-    "flasks": { "label": "Pick a mood", "map": "The flasks", "ref": "the bubbling flasks", "type": "interactive", "tool": "superpower",
+    "flasks": { "label": "Pick a mood", "map": "The flasks", "ref": "the bubbling flasks", "type": "interactive", "tool": "mood",
                 "themes": ["energising", "calming", "focus", "skin", "cultured", "refreshing", "indulgent"] },
     "songbird": { "label": "The clockwork songbird", "ref": "the clockwork songbird", "type": "ambient", "themes": ["calm", "sunny", "slow"], "plays": "songbird",
                   "moment": "Wind her up and she sings. A real tūī taught her the song.",
