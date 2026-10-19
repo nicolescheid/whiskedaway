@@ -6,7 +6,7 @@
     "hall-middle": { "stop": "middle", "title": "The hallway", "where": "In the hallway", "yaw": 0 }
   },
   "walks": {
-    "hall-entrance": { "walk-hall": { "yaw": 0, "pitch": -14 } },
+    "hall-entrance": { "walk-hall": { "yaw": 0, "pitch": -16 } },
     "hall-middle": { "walk-front": { "yaw": 180, "pitch": -14 } }
   },
   "clock": { "center": [-0.585, 4.0, 1.732], "normal": [1, 0, 0], "radius": 0.13, "in_render": true },
