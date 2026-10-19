@@ -45,6 +45,13 @@ const DEFAULTS = {
  *  read into one shape; the stand-ins fill anything it doesn't have */
 export function chiaData(lines = {}) {
   const c = lines.chia || {}, m = c.mix || {}, sw = c.swap || {}, L = DEFAULTS.lines;
+  // The reshaped block (content/chia-mix-reshape): already this module's own shape, keyed by id
+  if (c.moods && !Array.isArray(c.moods.options) && !c.mix) {
+    const cl = c.lines || {};
+    return { moods: c.moods, bases: c.bases || DEFAULTS.bases, flavours: c.flavours || DEFAULTS.flavours, toppings: c.toppings || DEFAULTS.toppings,
+      fromDrawers: c.fromDrawers || {}, swaps: Array.isArray(c.swaps) ? c.swaps : DEFAULTS.swaps,
+      lines: { ...L, ...cl, intro: cl.mixIntro ?? cl.intro ?? '', steps: { ...L.steps, ...(cl.steps || {}) }, names: { ...L.names, ...(cl.names || {}) } } };
+  }
   const opts = list => (Array.isArray(list) && list.length ? Object.fromEntries(list.map(o => [o.id, o.label])) : null);
   const D = {
     moods: Array.isArray(c.moods?.options)
