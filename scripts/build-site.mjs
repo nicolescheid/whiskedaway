@@ -64,7 +64,10 @@ writeFileSync(join(dist, '404.html'), `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Not here: WhiskedAway</title>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f4efe4; color: #2c2416;
          font: 16px/1.5 Georgia, 'Times New Roman', serif; padding: 24px; box-sizing: border-box; }

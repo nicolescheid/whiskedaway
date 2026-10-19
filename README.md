@@ -95,7 +95,7 @@ This project uses a **component-based architecture** where reusable UI pieces ar
 ```
 whiskedaway-react/
 ├── public/
-│   └── favicon.svg
+│   └── favicon.ico, favicon-16|32|48.png, apple-touch-icon.png
 ├── src/
 │   ├── components/           # 🧱 REUSABLE COMPONENTS
 │   │   ├── DietaryOptions/   # Dietary restrictions + religious/cultural
