@@ -167,7 +167,7 @@ function reasonsFor(themes, trail, world, spoons = null, first = []) {
   return { why, context };
 }
 
-const listJoin = parts => parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
+export const listJoin = parts => parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
 /** Reasons with the same verb share it: ["went to the window seat", "went to the music box"] → ["went to the window seat", "the music box"] */
 const shareVerbs = parts => parts.map((p, i) => {
   const verb = ['went to ', 'lingered by ', 'turned the '].find(v => p.startsWith(v));
