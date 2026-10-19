@@ -150,7 +150,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
       `<button data-a="${k}" data-v="${esc(id)}" aria-pressed="${d[k] === id}">${esc(label(id))}</button>`).join('')}</div>`;
     const energies = checkin.energies?.() || [], weathers = checkin.weathers?.() || [];
     body.innerHTML = `${W.helper ? `<p class="small">${esc(W.helper)}</p>` : ''}
-      ${energies.length ? `<h3 class="tl-h">${esc(W.rows.energy)}</h3><p class="small">${esc(W.energyHelper)}</p>
+      ${energies.length ? `<h3 class="tl-h">${esc(W.rows.energy)}</h3>${W.energyHelper ? `<p class="small">${esc(W.energyHelper)}</p>` : ''}
         <div class="tl-candles" role="group" aria-label="${esc(W.rows.energy)}">${energies.map(e =>
           `<button data-a="energy" data-v="${esc(e.id)}" aria-pressed="${d.energy === e.id}" aria-label="${esc(e.label)}"><span class="tl-wick" aria-hidden="true"><i class="tl-flame"></i></span><span class="tl-wax tl-wax-${esc(e.id)}" aria-hidden="true"></span><b>${esc(e.label)}</b></button>`).join('')}</div>` : ''}
       <h3 class="tl-h">${esc(W.rows.time)}</h3>${chips('time', Object.keys(W.time), id => W.time[id])}
@@ -160,10 +160,10 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
         ${weathers.length ? `<h3 class="tl-h">${esc(W.rows.weather)}</h3>${chips('weather', weathers.map(w => w.id), id => weathers.find(w => w.id === id).label)}` : ''}
       </details>`;
     body.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
-      const k = b.dataset.a, v = b.dataset.v;
+      const k = b.dataset.a, v = b.dataset.v, prev = d[k];
       d[k] = d[k] === v && k !== 'weather' ? null : v;           // tap again to unchoose (the weather always has one)
       body.querySelectorAll(`[data-a="${k}"]`).forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === d[k])));
-      if (k === 'energy' && d[k]) { b.classList.add('lit'); checkin.onLight?.(); }   // the match strikes (sound, if any)
+      if (prev !== d[k]) checkin.onTap?.(k, d[k], prev);         // the answer's sound, in the tap (sound.js)
     });
   }
   function drawMenu() {

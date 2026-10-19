@@ -38,7 +38,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     },
     cuisines: { icon: '🗺', name: 'The map', sheet: 'map', word: v => [].concat(v || []).map(cuisineLabel).join(', ') },   // the country is in the sheet only
     time: answer('time', '⏳', 'Time', Object.keys(W.time)),
-    servings: { ...answer('servings', '🍽', 'Cooking for', SERVINGS), word: v => (v === '1' ? W.servings[1] : v === 'crowd' ? W.servings.crowd : `for ${v}`).toLowerCase() },
+    servings: { ...answer('servings', '🍽', 'Cooking for', SERVINGS), word: v => (v === '1' || v === 'crowd' ? W.servings[v] : `for ${W.servings[v] || v}`).toLowerCase() },
     confidence: answer('confidence', '🧑‍🍳', 'Confidence', Object.keys(W.confidence)),
   };
   el.setAttribute('role', 'list');

@@ -654,6 +654,9 @@ async function handleRecipe(request, env) {
 }
 
 // Build a natural language message from the structured intake
+// How many the write-out serves: the check-in's answer (1-6, 8 for a crowd), else 2
+const servingsOf = p => { const n = Math.round(Number(p?.servings)); return n >= 1 ? Math.min(12, n) : 2; };
+
 function buildUserMessage(payload) {
   const parts = [];
   
@@ -783,14 +786,6 @@ function buildUserMessage(payload) {
       : `Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
-    // The check-in (checkin-views.md): how at home they are cooking, and how long they've got
-    const CONFIDENCE = {
-      starting: 'Cooking confidence: just starting out. Name the tools each step needs and explain any cooking term in a few plain words.',
-      happy: 'Cooking confidence: happy enough. Plain steps; no need to explain the basics.',
-      confident: 'Cooking confidence: confident. Skip the basics and keep the steps brisk.',
-    };
-    if (CONFIDENCE[payload.confidence]) parts.push(CONFIDENCE[payload.confidence]);
-    if (Number(payload.time_available) > 0) parts.push(`Time they have: about ${Math.round(Number(payload.time_available))} minutes of active cooking. Keep the hands-on time within that; a hands-off wait (oven, fridge) is fine if you say so.`);
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
     // Each room has its own identity (Nicole, Oct 2026); the full recipe keeps to the room the idea came from
     const ROOM_RULES = {
@@ -800,6 +795,15 @@ function buildUserMessage(payload) {
       chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time.',
     };
     if (ROOM_RULES[payload.room]) parts.push(ROOM_RULES[payload.room]);
+    // The foyer check-in (checkin-views.md): skill, time and how many, when the visitor has said
+    const CONFIDENCE = {
+      starting: 'Cooking confidence: just starting out. Name every tool, explain any cooking term in a few words (until it just wobbles), and keep to one thing at a time.',
+      happy: 'Cooking confidence: happy enough. Plain steps, nothing fancy.',
+      confident: 'Cooking confidence: confident. Fewer words, and techniques are fine.',
+    };
+    if (CONFIDENCE[payload.confidence]) parts.push(CONFIDENCE[payload.confidence]);
+    const mins = Math.round(Number(payload.time_available));
+    if (mins > 0) parts.push(`Time available: about ${Math.min(240, mins)} minutes of hands-on cooking. Keep the active time within it; waiting time (setting, chilling, baking) is fine if you say so.`);
   } else if (payload.tome_id === 'nourish-academy') {
     // Nourish Academy specific fields
     parts.push(`Question: ${payload.question}`);
@@ -839,8 +843,8 @@ function buildUserMessage(payload) {
       + 'one action each. No em dashes. No hype words (perfect, amazing, delicious, boost, guilt-free). At most one short dry aside in the whole recipe, '
       + 'and only in the tip or the last step. Say what the food is, never what it does for health. '
       + 'Keep to the idea and its key ingredients, '
-      + `scale to ${servingsFor(payload)} servings, respect every dietary restriction, and use ingredient names for my location. `
-      + `Respond with JSON only, in exactly this shape: {"name": "...", "serves": ${servingsFor(payload)}, "time": "35 min", `
+      + `scale to ${servingsOf(payload)} servings, respect every dietary restriction, and use ingredient names for my location. `
+      + `Respond with JSON only, in exactly this shape: {"name": "...", "serves": ${servingsOf(payload)}, "time": "35 min", `
       + '"ingredients": [{"item": "ripe pears", "amount": "2", "unit": "", "key": "pear"}, {"item": "maple syrup", "amount": "2", "unit": "tbsp", "key": "maple syrup"}], '
       + '"steps": [{"text": "Halve the pears and scoop out the cores.", "uses": ["pear"]}, {"text": "Bake until soft.", "minutes": 25}], "tip": "one short tip"}. '
       + 'Ingredients: 4 to 12. "item" in my shopping words; "amount" a number or fraction (1, 1/2, 1 1/2); "unit" one of g, kg, ml, l, tsp, tbsp, cup, pinch, '
@@ -859,9 +863,6 @@ function buildUserMessage(payload) {
 // room reveals, what Gemma says, and which content atoms to serve. The model can only
 // pick from the IDs the page sends (enforced by the JSON schema, then re-checked).
 // ---------------------------------------------------------------------------
-
-// The check-in's "cooking for" (1–6, or 'crowd' = 8); 2 when they haven't said
-const servingsFor = p => (p?.servings === 'crowd' ? 8 : Number(p?.servings) >= 1 && Number(p?.servings) <= 12 ? Math.round(Number(p.servings)) : 2);
 
 const NAVIGATOR_SYSTEM = `You are the navigator for WhiskedAway, an experimental website where a visitor explores a photoreal kitchen instead of clicking a menu. Gemma, a warm kitchen genie, is their host.
 

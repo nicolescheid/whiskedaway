@@ -14,7 +14,7 @@ const DEFAULTS = {
   title: 'Check in', helper: 'Tell me a little, or skip any of it. You can change it later.', more: 'A bit more',
   rows: { energy: 'Light your candle', time: 'How long have you got?', servings: "Who's eating?", confidence: 'How at home are you in a kitchen?',
           weather: "What's it like out?" },
-  energyHelper: 'How much you have in you today.',
+  energyHelper: '',
   time: { quick: 'About 15 minutes', half: 'About half an hour', hour: 'An hour or so', any: 'No rush' },
   servings: { 1: 'Just me', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', crowd: 'A crowd' },
   confidence: { starting: 'Just starting out', happy: 'Happy enough', confident: 'Confident' },
@@ -36,7 +36,7 @@ export function checkinWords(lines = {}) {
 
 /** "about 15 minutes" for a why ("Because you've got about 15 minutes"), from the time label */
 export const timeWords = (W, v) => (v && v !== 'any' ? W.time[v].replace(/^./, ch => ch.toLowerCase()) : '');
-export const servingsWords = (W, v) => (v === 'crowd' ? W.servings.crowd.toLowerCase() : String(v));
+export const servingsWords = (W, v) => String(W.servings[v] || v).toLowerCase();        // "Cooking for four.
 
 /** Gemma's line for a newly set answer, or null when it isn't one of these */
 export function ackLine(W, key, value) {
@@ -51,6 +51,6 @@ export function toldLine(W, key, value) {
   if (!value) return '';
   if (key === 'time') return value === 'any' ? W.told.timeAny : W.told.time.replace('{t}', timeWords(W, value));
   if (key === 'servings') return value === '1' ? W.told.servingsOne : W.told.servings.replace('{n}', servingsWords(W, value));
-  if (key === 'confidence') return W.told.confidence.replace('{c}', W.confidence[value]?.toLowerCase() || value);
+  if (key === 'confidence') return W.told.confidence.replace('{c}', W.confidence[value] || value);   // {c} stays as the label
   return '';
 }

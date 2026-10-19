@@ -1623,7 +1623,7 @@ const writer = createWriteOut({
     theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
     dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
     country: countryLabel(visit.get('country') || mapDefault()), dish: visit.dish(rec.room),
-    servings: visit.get('servings') || null, confidence: visit.get('confidence') || null, time_available: TIME_LIMIT[visit.get('time')] || null,
+    servings: servingsNumber(visit.get('servings')), confidence: visit.get('confidence') || null, time_available: TIME_LIMIT[visit.get('time')] || null,
   }),
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
@@ -1648,13 +1648,17 @@ const bookView = createBookView({
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {};
-const CW = checkinWords(T);                              // the check-in's words (checkin.js; gemma-lines.json tell.checkin)
+const CW = checkinWords(T);
+// Each answer's sound, whichever door (sound.js: the same family for every object that sets one answer)
+const answerSound = (key, value, prev = null) => (value ? sound.answer(key, { change: key === 'energy' && !!prev, count: servingsNumber(value) || 1 })
+  : sound.unanswer(key));                              // the check-in's words (checkin.js; gemma-lines.json tell.checkin)
 // The one setter for the check-in's answers, whichever door they come through (the desk's sheet, a tag): the same key, the same
 // tag, the same line from Gemma (checkin-views.md: one home per answer, many doors to it). `quiet` when the sheet says one line for all.
 function setAnswer(key, value, { from = 'tag', quiet = false } = {}) {
   if (visit.get(key) === (value ?? null)) return false;
   visit.set(key, value ?? null);
-  track('tell_set', { kind: key, count: value ? '1' : '0', from });
+  track('tell_set', { kind: key, from });               // single-choice: never a count (analytics-events.js ANSWER_KINDS)
+  if (!quiet) answerSound(key, value);                   // the sheet plays its sounds in the tap
   if (!quiet && value) { say(capFirst(ackLine(CW, key, value) || ''), [], true); holdLine(); }
   scheduleNavigate();                                    // the next idea leans on it
   return true;
@@ -1696,6 +1700,7 @@ function acknowledge(kind, { after, forgot }) {
   if (forgot) return say(TL.forgot, [], true);
   let line = '';
   if (kind === 'pantry') {
+    if (after.items.length) sound.answer('pantry');      // the paper bag
     const xs = after.items, two = listOf(xs.slice(0, 2)), many = `${xs[0]}, ${xs[1]} and a few more`;
     line = after.useUp ? (A.pantryUseUp || '{two} first, then.').replace('{two}', two)
       : xs.length >= 3 ? (A.pantryMany || '{many}. Noted.').replace('{many}', many) : (A.pantry || "{two}. I'll work with those.").replace('{two}', two);
@@ -1759,6 +1764,7 @@ const tell = createTell({
     energies: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
     weathers: () => Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: w.label })),
     weather: () => state.weather || null,
+    onTap: (k, v, prev) => k !== 'weather' && answerSound(k, v, prev),
   },
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 });
@@ -2076,8 +2082,10 @@ function showCandle() {
 function chooseEnergy(id, { quiet = false, from = null } = {}) {
   const e = world.energies?.[id];
   if (!e || id === visit.get('energy')) return;
+  const prev = visit.get('energy');
   visit.set('energy', id);
-  if (from) track('tell_set', { kind: 'energy', count: '1', from });   // the check-in's candle; in Cuddlecore the candle is a touch
+  if (!quiet) answerSound('energy', id, prev);
+  if (from) track('tell_set', { kind: 'energy', from });   // the check-in's candle; in Cuddlecore the candle is a touch
   else track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
   showCandle();
   if (!quiet) say(e.moment, [], true);
