@@ -109,6 +109,47 @@ function strikes(t, gain) {                      // the timer's ring: the bell's
 }
 function stopRinging() { clearInterval(ringing); ringing = null; }
 
+// ---------- the check-in (checkin-views.md): one short sound family per answer, so every way of giving
+// that answer (a candle here, a lamp there) sounds the same. Each is under a second and quieter than Gemma.
+// Filtered noise that sweeps in pitch and swells and fades: scrapes, flares, puffs
+function sweep(t, { dur, from, to, type = 'bandpass', q = 1, gain, attack = 0.02, out = master }) {
+  const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  src.buffer = noiseBuffer();
+  f.type = type; f.Q.value = q;
+  f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(g).connect(out);
+  src.start(t, Math.random() * 0.5, dur + 0.05);
+}
+const CHECKIN = {
+  // Energy: strike a match and the flame takes (the candle, or later a lamp turned up)
+  light: t => {
+    sweep(t, { dur: 0.16, from: 1400, to: 3800, q: 2, gain: 0.1, attack: 0.03 });               // the scrape
+    sweep(t + 0.15, { dur: 0.4, from: 400, to: 1600, type: 'lowpass', q: 0.7, gain: 0.08 });     // the flare
+    for (let i = 0; i < 3; i++) noise(t + 0.4 + i * rnd(0.05, 0.08), { len: 0.01, freq: rnd(1500, 3000), q: 1.5, gain: 0.03 });   // it settles
+  },
+  // Changing your mind: the old flame pinched out
+  snuff: t => sweep(t, { dur: 0.22, from: 900, to: 300, q: 0.8, gain: 0.07, attack: 0.01 }),
+  // Time: the hourglass turned, sand running through
+  sand: t => {
+    for (let i = 0; i < 45; i++) {
+      const at = i / 45 * 0.85;
+      noise(t + at + rnd(0, 0.02), { len: 0.006, freq: rnd(4000, 8000), q: 2, gain: 0.035 * (1 - at), out: master });
+    }
+  },
+  // Servings: a place set at the table, one soft china clink each (up to four)
+  clink: (t, n = 1) => {
+    for (let i = 0; i < Math.min(Math.max(n, 1), 4); i++) note(rnd(2500, 3100), t + i * 0.14, { gain: 0.025, decay: 0.45, partials: [[1, 1], [2.37, 0.3], [5.1, 0.08]] });
+  },
+  // Groceries: a paper bag set down and opened
+  rustle: t => {
+    sweep(t, { dur: 0.12, from: 300, to: 120, type: 'lowpass', q: 0.7, gain: 0.08, attack: 0.01 });   // set down
+    for (let i = 0; i < 8; i++) noise(t + 0.12 + i * rnd(0.04, 0.08), { len: rnd(0.03, 0.08), freq: rnd(2000, 5000), q: 0.8, gain: rnd(0.04, 0.08) });
+  },
+};
+// Which family each answer uses
+const ANSWER = { energy: 'light', time: 'sand', servings: 'clink', pantry: 'rustle' };
+
 let lastShimmer = -Infinity;
 
 // The grandfather clock: tick-tock once a second while you're in the hallway
@@ -457,6 +498,19 @@ export const sound = {
     ringing = setInterval(() => { if (++n > 12) return stopRinging(); play(t => strikes(t, 0.07), true); }, 10000);
     return stopRinging;
   },
+
+  // The check-in: an answer given (energy, time, servings or pantry), from any object that sets it.
+  // `change`: an energy answer replaced another (the old flame snuffed first). `count`: servings, for the clinks.
+  answer(key, { change = false, count = 1 } = {}) {
+    const fam = ANSWER[key];
+    if (!fam) return;
+    play(t => {
+      if (fam === 'light' && change) { CHECKIN.snuff(t); CHECKIN.light(t + 0.22); }
+      else CHECKIN[fam](t, count);
+    });
+  },
+  // An answer taken back (energy cleared): the flame snuffed
+  unanswer(key) { if (ANSWER[key] === 'light') play(t => CHECKIN.snuff(t)); },
 
   // A dial clicking round one notch: a tiny filtered noise burst
   tick() { play(t => noise(t)); },
