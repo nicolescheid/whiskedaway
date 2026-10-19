@@ -1588,7 +1588,7 @@ const writer = createWriteOut({
   // window.__recipeFetch is a test seam (scripted checks without the Worker); the site always uses the genie
   fetchRecipe: payload => (window.__recipeFetch || (p => genieFetch('/recipe', p, { signal: AbortSignal.timeout(45000) })))(payload),
   payloadFor: rec => ({
-    tome_id: 'inn-idea', locale: navigator.language || 'en',
+    tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room,
     idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
             method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why },
     energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,

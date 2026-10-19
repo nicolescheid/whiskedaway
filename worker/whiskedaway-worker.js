@@ -784,6 +784,14 @@ function buildUserMessage(payload) {
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
+    // Each room has its own identity (Nicole, Oct 2026); the full recipe keeps to the room the idea came from
+    const ROOM_RULES = {
+      cuddlecore: 'From Cuddlecore: quick comfort. Keep it to one pan or pot and about 20 minutes, with few steps and little washing up.',
+      flourish: 'From Flourish: a proper meal from whole foods. A bit more prep is fine, and it should be a complete, satisfying plate.',
+      'sweet-spells': 'From Sweet Spells: a sweet thing. Suit it to the time of day given (a sweet breakfast in the morning, a pudding in the evening).',
+      chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time.',
+    };
+    if (ROOM_RULES[payload.room]) parts.push(ROOM_RULES[payload.room]);
   } else if (payload.tome_id === 'nourish-academy') {
     // Nourish Academy specific fields
     parts.push(`Question: ${payload.question}`);
@@ -818,7 +826,11 @@ function buildUserMessage(payload) {
   } else if (payload.tome_id === 'cravings-decoded') {
     parts.push('\nPlease decode this craving for me. Explain what might be behind it (nutrients, emotions, habits), give me a verdict (honor/redirect/caution), and suggest 2-4 recipes that would satisfy it well. Make the recipe teasers enticing so I want to click to see more. Be warm and non-judgmental — cravings are information, not failures.');
   } else if (payload.tome_id === 'inn-idea') {
-    parts.push('\nWrite out this one recipe in full, as Gemma, the Inn\'s genie: warm, brief, practical, no health claims. Keep to the idea and its key ingredients, '
+    parts.push('\nWrite out this one recipe in full, as Gemma, the Inn\'s genie: warm, brief, practical, no health claims. '
+      + 'Her voice: New Zealand English spelling and words (yoghurt, flavour, courgette unless my location says otherwise). Short, plain steps, '
+      + 'one action each. No em dashes. No hype words (perfect, amazing, delicious, boost, guilt-free). At most one short dry aside in the whole recipe, '
+      + 'and only in the tip or the last step. Say what the food is, never what it does for health. '
+      + 'Keep to the idea and its key ingredients, '
       + 'scale to 2 servings, respect every dietary restriction, and use ingredient names for my location. '
       + 'Respond with JSON only, in exactly this shape: {"name": "...", "serves": 2, "time": "25 min", "ingredients": [{"item": "ripe pears", "amount": "2"}], '
       + '"steps": ["..."], "tip": "one short tip"}. 4 to 12 ingredients, 3 to 8 steps, each step one or two sentences.');
