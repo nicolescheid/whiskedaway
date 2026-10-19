@@ -27,13 +27,18 @@ from PIL import Image, ImageFilter
 PREVIEW = "--preview" in sys.argv
 HERE = os.path.dirname(os.path.abspath(__file__))
 MASTER = os.path.join(os.path.dirname(HERE), "art-inbox", "inn-exterior", "whisk-inn-master.png")
+# The tall version for phones (ChatGPT, 19 Oct): the whisk upright, the Inn in its balloon. Without it, portrait
+# films put the landscape picture on a tall sheet of paper
+PORTRAIT = os.path.join(os.path.dirname(HERE), "art-inbox", "inn-exterior", "whisk-inn-portrait.png")
+DOOR_PORTRAIT = (0.431, 0.412)   # its front door, measured
 FRAMES = os.path.join(HERE, "out", "door-film")
 SITE = os.path.join(HERE, "explore", "assets", "front-door")
 FPS = 24
 SWIRL = 60                 # frames of swirl before the dissolve (2.5 s)
 DISSOLVE = 12              # frames where the picture, still rushing in, fades into the rendered door
 DOOR = (0.623, 0.494)      # the front door's centre in the picture, as a fraction of its size
-ZOOM_END = 16.0            # how close the picture gets by the end of the dissolve (the door fills the frame)
+ZOOM_END = {"landscape": 16.0, "portrait": 22.0}   # how close the picture gets by the end of the dissolve (the door fills the frame)
+ONLY = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), None)   # build one shape: landscape or portrait
 SUB = 3                    # samples per frame for motion blur
 SHAPES = {"landscape": (1920, 1080), "portrait": (1080, 1920)}
 
@@ -52,6 +57,9 @@ def canvas(shape, scale=1):
     paper = paper_colour(pic)
     if shape == "landscape":
         return pic.resize((W, H), Image.LANCZOS), (DOOR[0] * W, DOOR[1] * H), paper
+    if os.path.exists(PORTRAIT):
+        tall = Image.open(PORTRAIT).convert("RGB")
+        return tall.resize((W, H), Image.LANCZOS), (DOOR_PORTRAIT[0] * W, DOOR_PORTRAIT[1] * H), paper_colour(tall)
     # Portrait: the picture across 84% of the width, centred, its edges feathered into plain paper
     pw = int(W * 0.84)
     ph = round(pw * pic.height / pic.width)
@@ -92,7 +100,7 @@ def swirl_frame(src, door, fill, W, H, scale, t):
     the turn strongest around the door and unwinding again as the door arrives."""
     u = min(t, 1.0)
     reach = (SWIRL + DISSOLVE) / SWIRL                      # t at the end of the dissolve
-    zoom = np.exp(np.log(ZOOM_END) * (ease(min(t / reach, 1.0)) ** 1.6))
+    zoom = np.exp(np.log(ZOOM_END['portrait' if H > W else 'landscape']) * (ease(min(t / reach, 1.0)) ** 1.6))
     cx = W / 2 + (door[0] / scale - W / 2) * ease(u)        # the view's centre glides onto the door
     cy = H / 2 + (door[1] / scale - H / 2) * ease(u)
     roll = 0.9 * np.sin(np.pi * u) ** 2                     # radians; back to level by the dissolve
@@ -173,7 +181,7 @@ def encode(tmp, out, crf, width=None):
 def main():
     os.makedirs(SITE, exist_ok=True)
     os.makedirs(FRAMES, exist_ok=True)
-    for shape in SHAPES:
+    for shape in [ONLY] if ONLY else SHAPES:
         with tempfile.TemporaryDirectory() as tmp:
             make(shape, tmp)
             if PREVIEW:
