@@ -65,6 +65,16 @@ for (const room of ROOMS) test(`at most one of three ideas comes from another ro
   }
 });
 
+// The hallway and the Conservatory (glasshouse) have no readings or ideas of their own: the page runs the navigator there with the
+// merged world and that room's id, so every reading is open and nothing gets a home bonus
+for (const room of ['hallway', 'glasshouse']) test(`Gemma reads the wander in the ${room}`, () => {
+  for (const trail of WANDERS) {
+    const r = localNavigate(trail, world, { room });
+    assert.ok(r.cluster && world.clusters[r.cluster], `${room} ${JSON.stringify(trail)}`);
+    assert.ok(r.serve.length <= 2);
+  }
+});
+
 test('an empty wander serves nothing and names nothing', () => {
   const r = localNavigate([], world, { room: 'cuddlecore' });
   assert.equal(r.serve.length, 0);
