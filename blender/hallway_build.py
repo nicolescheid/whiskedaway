@@ -129,6 +129,106 @@ def half_disc(name, r, material, segs=48):
     return o
 
 
+# ---------------------------------------------------------------- the check-in (docs: checkin-views.md, checkin-ux.md)
+
+# The five energy candles, as in the Cuddlecore kitchen: (key, body height). Unlit; the page lights the one you choose.
+CHECKIN_CANDLES = [("burnt-out", 0.016), ("low", 0.045), ("half", 0.09), ("three-quarters", 0.135), ("full", 0.18)]
+
+
+def checkin_props(oak, tread_oak, brass, brass_worn, berry_linen, paint):
+    """A narrow console against the foyer's back wall, right of the hall opening and under the notice board:
+    five unlit candles on a brass tray (the hotspot), an hourglass, two place settings, an apron on a peg above.
+    And two paper bags of shopping just inside the front door, between the umbrella stand and the boot bench."""
+    x0, x1, y0, y1, top = 1.14, 2.42, -0.36, -0.02, 0.82
+    box_span("desk_top", x0, x1, y0, y1, top - 0.03, top, oak, bevel=0.008)
+    box_span("desk_apron", x0 + 0.04, x1 - 0.04, y0 + 0.03, y1 - 0.02, top - 0.12, top - 0.03, tread_oak, bevel=0.004)
+    box_span("desk_shelf", x0 + 0.05, x1 - 0.05, y0 + 0.04, y1 - 0.02, 0.16, 0.18, tread_oak, bevel=0.004)
+    for lx in (x0 + 0.05, x1 - 0.05):
+        for ly in (y0 + 0.05, y1 - 0.04):
+            box_span(f"desk_leg_{lx:.2f}_{ly:.2f}", lx - 0.022, lx + 0.022, ly - 0.022, ly + 0.022, 0, top - 0.03, tread_oak, bevel=0.004)
+    model("wicker_basket_01", (x0 + 0.35, -0.2, 0.18), rot_z=10, scale=0.9)     # on the shelf below
+
+    # Five candles on a brass tray, shortest (burnt out) on the left as you face the desk
+    wax = mat("checkin_wax", srgb("#e6b04a"), rough=0.45)
+    p = wax.node_tree.nodes["Principled BSDF"]
+    p.inputs["Subsurface Weight"].default_value = 0.45
+    p.inputs["Subsurface Radius"].default_value = (1.0, 0.75, 0.35)
+    p.inputs["Subsurface Scale"].default_value = 0.012
+    wick_m = mat("checkin_wick", srgb("#2a2420"), rough=0.8)
+    tray_x, ty = x0 + 0.33, -0.2
+    stand = [box("checkin_tray", (tray_x, ty, top + 0.008), (0.5, 0.11, 0.016), brass, bevel=0.005)]
+    flames = {}
+    for i, (key, h) in enumerate(CHECKIN_CANDLES):
+        cx = tray_x - 0.2 + i * 0.1
+        stand.append(cyl(f"checkin_dish_{key}", (cx, ty, top + 0.02), 0.042, 0.01, brass_worn, bevel=0.003))
+        base = top + 0.025
+        stand.append(cyl(f"checkin_candle_{key}", (cx, ty, base + h / 2), 0.028, h, wax, bevel=0.005))
+        wick = cyl(f"checkin_wick_{key}", (cx, ty, base + h + 0.006), 0.0015, 0.012, wick_m, verts=8, bevel=0)
+        if key == "burnt-out":
+            wick.rotation_euler = (math.radians(25), 0, 0)              # spent and bent over
+        flames[key] = [round(cx, 3), ty, round(base + h + 0.022, 3)]    # where the page draws the flame when lit
+    hotspot("checkin-desk", "The check-in desk", stand, kind="checkin")
+    HOTSPOTS["checkin-desk"]["flames"] = flames
+
+    # An hourglass: two glass bulbs between turned wooden ends, sand mostly run through
+    hx, hy = x0 + 0.72, -0.17
+    glass = mat("hourglass_glass", (0.95, 0.97, 0.98, 1), rough=0.03, transmission=1.0, ior=1.5)
+    sand = mat("hourglass_sand", srgb("#d8b47a"), rough=0.9)
+    for z, r in ((top + 0.008, 0.05), (top + 0.172, 0.05)):
+        cyl(f"hourglass_end_{z:.2f}", (hx, hy, z), r, 0.016, tread_oak, bevel=0.004)
+    for k in range(3):
+        a = 2 * math.pi * k / 3
+        cyl(f"hourglass_post_{k}", (hx + 0.04 * math.cos(a), hy + 0.04 * math.sin(a), top + 0.09), 0.005, 0.16, tread_oak, verts=8)
+    for z, rot in ((top + 0.051, 0), (top + 0.129, math.pi)):
+        bpy.ops.mesh.primitive_cone_add(vertices=32, radius1=0.032, radius2=0.004, depth=0.074, location=(hx, hy, z),
+                                        rotation=(rot, 0, 0))
+        b = bpy.context.active_object
+        bpy.ops.object.shade_smooth()
+        b.data.materials.append(glass)
+        b.visible_shadow = False
+    bpy.ops.mesh.primitive_cone_add(vertices=32, radius1=0.028, radius2=0.002, depth=0.03, location=(hx, hy, top + 0.031))
+    bpy.ops.object.shade_smooth()
+    bpy.context.active_object.data.materials.append(sand)                # the heap below
+    cyl("hourglass_sand_top", (hx, hy, top + 0.096), 0.008, 0.006, sand, verts=16, bevel=0)
+
+    # Two place settings: plate, folded napkin, knife and fork
+    plate_m = mat("plate_glaze", srgb("#efe8da"), rough=0.25)
+    steel = mat("cutlery", srgb("#b9b6ae"), rough=0.3, metal=1.0)
+    for i, px in enumerate((x0 + 0.93, x0 + 1.15)):
+        cyl(f"setting_plate_{i}", (px, -0.19, top + 0.007), 0.095, 0.012, plate_m, verts=48, bevel=0.004)
+        box(f"setting_napkin_{i}", (px, -0.19, top + 0.017), (0.09, 0.09, 0.008), berry_linen, bevel=0.003)
+        box(f"setting_knife_{i}", (px + 0.11, -0.19, top + 0.003), (0.012, 0.18, 0.004), steel, bevel=0.001)
+        box(f"setting_fork_{i}", (px - 0.11, -0.19, top + 0.003), (0.014, 0.17, 0.004), steel, bevel=0.001)
+
+    # An apron on a peg on the back wall, past the notice board
+    ax = 2.58
+    cyl("apron_peg", (ax, -0.04, 1.78), 0.012, 0.08, oak, rot=(math.radians(90), 0, 0))
+    sphere("apron_peg_end", (ax, -0.08, 1.78), 0.018, oak)
+    curtain("apron", ax, -0.05, 1.77, 0.34, 0.72, mat("apron_linen", srgb("#d9cdb4"), rough=0.95), pleats=3, amp=0.012, seed=8)
+    box("apron_strap", (ax, -0.045, 1.83), (0.02, 0.01, 0.12), mat("apron_tie", srgb("#8b4d5c"), rough=0.9), bevel=0.002)
+
+    # The shopping: two paper bags just inside the front door, the produce showing
+    kraft = mat("kraft_paper", srgb("#b48a58"), rough=0.92)
+    bags = []
+    for i, (bx, by, rot, h) in enumerate(((1.30, FRONT + 0.17, 8, 0.34), (1.40, FRONT + 0.46, -14, 0.3))):
+        b = box(f"grocery_bag_{i}", (bx, by, h / 2), (0.24, 0.15, h), kraft, bevel=0.006)
+        b.rotation_euler = (0, 0, math.radians(rot))
+        bags.append(b)
+        cuff = box(f"grocery_bag_cuff_{i}", (bx, by, h - 0.02), (0.245, 0.155, 0.04), kraft, bevel=0.004)
+        cuff.rotation_euler = (0, 0, math.radians(rot))
+    model("lemon", (1.26, FRONT + 0.15, 0.35), rot_z=30)
+    model("yellow_onion", (1.33, FRONT + 0.2, 0.33), rot_z=80)
+    model("food_apple_01", (1.36, FRONT + 0.45, 0.29), rot_z=10)
+    model("food_apple_01", (1.43, FRONT + 0.48, 0.28), rot_z=140)
+    bread = cyl("grocery_loaf", (1.22, FRONT + 0.17, 0.38), 0.035, 0.32, mat("loaf_crust", srgb("#b47a3c"), rough=0.75),
+                verts=16, bevel=0.03, rot=(math.radians(-20), math.radians(15), 0))
+    leaves = mat("leek_green", srgb("#5f7f3c"), rough=0.6)
+    for k in range(3):
+        cyl(f"grocery_greens_{k}", (1.44 + 0.02 * k, FRONT + 0.43, 0.38), 0.008, 0.18, leaves, verts=8,
+            rot=(math.radians(12 - 9 * k), math.radians(-10 + 8 * k), 0))
+    hotspot("groceries", "The shopping", bags + [bread], kind="pantry")
+
+
 # ---------------------------------------------------------------- build
 
 def build():
@@ -566,6 +666,7 @@ def build():
     model("painted_wooden_bench", (2.1, FRONT + 0.27, 0), rot_z=180)
     model("rubber_boots", (3.05, FRONT + 0.3, 0), rot_z=200)
     model("antique_ceramic_vase_01", (1.0, FRONT + 0.22, 0), rot_z=30, scale=1.25)
+    checkin_props(oak, tread_oak, brass, brass_worn, berry_linen, paint)
     for i, (dx, dy, tilt, cloth) in enumerate(((-0.03, 0.01, 7, 0), (0.035, -0.02, -9, 1))):
         bx, by = 1.0 + dx, FRONT + 0.22 + dy
         bpy.ops.mesh.primitive_cone_add(vertices=16, radius1=0.015, radius2=0.055, depth=0.6,
@@ -650,6 +751,9 @@ def stop_hotspots(cam):
                  "distance": round((Vector(hs["center"]) - Vector(cam)).length, 2), "visible": visible_from(cam, hs)}
         if "face" in hs:
             entry["face"] = hs["face"]
+        if "flames" in hs:                                           # where each candle's flame goes, seen from here
+            entry["flames"] = {k: dict(zip(("yaw", "pitch"), look(cam, f, cam[2])), distance=round((Vector(f) - Vector(cam)).length, 2))
+                               for k, f in hs["flames"].items()}
         out[key] = entry
     return out
 
