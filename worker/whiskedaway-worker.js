@@ -799,9 +799,16 @@ function buildUserMessage(payload) {
       cuddlecore: 'From Cuddlecore: quick comfort. Keep it to one pan or pot and about 20 minutes, with few steps and little washing up.',
       flourish: 'From Flourish: a proper meal from whole foods. A bit more prep is fine, and it should be a complete, satisfying plate.',
       'sweet-spells': 'From Sweet Spells: a sweet thing. Suit it to the time of day given (a sweet breakfast in the morning, a pudding in the evening).',
-      chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time.',
+      chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time. '
+        + 'Moods, not medicine: you may name what is in the jar (fibre, protein, vitamin C, caffeine in matcha) as plain facts, but never say what it does '
+        + 'for energy, focus, mood, skin, gut, sleep or health.',
     };
     if (ROOM_RULES[payload.room]) parts.push(ROOM_RULES[payload.room]);
+    // Mix an experiment (rooms-views.md): the visitor's own mood, base, flavour and topping; keep to them
+    const mix = payload.mix || {};
+    const mixed = [['Mood', mix.mood, 40], ['What the mood is made of', mix.inside, 120], ['Base', mix.base, 40], ['Flavour', mix.flavour, 40], ['Topping', mix.topping, 40]]
+      .filter(([, v]) => v).map(([k, v, n]) => `${k}: ${txt(v, n).replace(/\.$/, '')}`);
+    if (mixed.length) parts.push(`Their own mix, to keep to: ${mixed.join('; ')}.`);
     // The foyer check-in (checkin-views.md): skill, time and how many, when the visitor has said
     const CONFIDENCE = {
       starting: 'Cooking confidence: just starting out. Name every tool, explain any cooking term in a few words (until it just wobbles), and keep to one thing at a time.',

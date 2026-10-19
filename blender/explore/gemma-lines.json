@@ -451,5 +451,311 @@
       "ref": "the grocery bags",
       "moment": "What did you bring in? Tell me and I'll cook around it."
     }
+  },
+  "chia": {
+    "_about": "The Chiapothecary's moods and Mix an experiment (rooms-views.md, stage A). Moods, not medicine: each says what's in it, never what it does. Reasons in the swap table are food facts only. Every line under 100 characters. {x}/{y} are option labels, lower-cased mid-sentence.",
+    "moods": {
+      "title": "Pick a mood",
+      "helper": "Each one is a set of ingredients. What it does for you is your call.",
+      "options": [
+        {
+          "id": "morning-spark",
+          "label": "Morning spark",
+          "inside": "Matcha, citrus and a spoon of peanut butter.",
+          "themes": [
+            "energy",
+            "energising"
+          ]
+        },
+        {
+          "id": "deep-focus",
+          "label": "Deep focus",
+          "inside": "Walnuts, blueberries and a little cacao.",
+          "themes": [
+            "focus"
+          ]
+        },
+        {
+          "id": "calm",
+          "label": "Calm",
+          "inside": "Chamomile, vanilla and warm spice.",
+          "themes": [
+            "calming",
+            "restorative"
+          ]
+        },
+        {
+          "id": "cultured",
+          "label": "Cultured",
+          "inside": "Kefir or yoghurt, with kiwifruit and oats.",
+          "themes": [
+            "cultured"
+          ]
+        },
+        {
+          "id": "bright",
+          "label": "Bright",
+          "inside": "Kiwifruit, oranges and berries.",
+          "themes": [
+            "skin",
+            "vitamins"
+          ]
+        },
+        {
+          "id": "by-flavour",
+          "label": "By flavour",
+          "inside": "Just whatever tastes good to you.",
+          "themes": []
+        }
+      ]
+    },
+    "mix": {
+      "title": "Mix an experiment",
+      "intro": "Four choices, then I'll write it out.",
+      "steps": {
+        "mood": {
+          "title": "First, a mood"
+        },
+        "base": {
+          "title": "What shall we set it in?",
+          "options": [
+            {
+              "id": "milk",
+              "label": "Milk"
+            },
+            {
+              "id": "oat",
+              "label": "Oat milk"
+            },
+            {
+              "id": "coconut",
+              "label": "Coconut milk"
+            },
+            {
+              "id": "almond",
+              "label": "Almond milk"
+            },
+            {
+              "id": "soy",
+              "label": "Soy milk"
+            },
+            {
+              "id": "kefir",
+              "label": "Kefir"
+            }
+          ]
+        },
+        "flavour": {
+          "title": "And the flavour?",
+          "options": [
+            {
+              "id": "vanilla",
+              "label": "Vanilla"
+            },
+            {
+              "id": "cocoa",
+              "label": "Cocoa"
+            },
+            {
+              "id": "matcha",
+              "label": "Matcha"
+            },
+            {
+              "id": "chai",
+              "label": "Chai spice"
+            },
+            {
+              "id": "chamomile",
+              "label": "Chamomile"
+            },
+            {
+              "id": "lemon",
+              "label": "Lemon"
+            },
+            {
+              "id": "mango",
+              "label": "Mango"
+            }
+          ]
+        },
+        "topping": {
+          "title": "Something on top?",
+          "options": [
+            {
+              "id": "berries",
+              "label": "Berries"
+            },
+            {
+              "id": "kiwifruit",
+              "label": "Kiwifruit"
+            },
+            {
+              "id": "passionfruit",
+              "label": "Passionfruit"
+            },
+            {
+              "id": "walnuts",
+              "label": "Walnuts"
+            },
+            {
+              "id": "toasted-coconut",
+              "label": "Toasted coconut"
+            },
+            {
+              "id": "cacao-nibs",
+              "label": "Cacao nibs"
+            },
+            {
+              "id": "granola",
+              "label": "Granola"
+            }
+          ]
+        }
+      },
+      "next": "Next",
+      "back": "Back",
+      "write": "Write it out",
+      "cap": "That's one of the three I can write out this visit.",
+      "done": "Good mix. I'll write it out.",
+      "prefill": "I've started with what you picked from the drawers and the fridge."
+    },
+    "swap": {
+      "_when": "Checked after each choice. Show the first rule that matches, one at a time, inline, never blocking Next. A rule matches when every `when` key equals the current choice. `swap` is null for a note.",
+      "line": "Would you try {x} instead of {y}? {reason}",
+      "yes": "Swap to {x}",
+      "no": "Keep mine",
+      "rules": [
+        {
+          "when": {
+            "mood": "cultured",
+            "base": "almond"
+          },
+          "swap": {
+            "step": "base",
+            "to": "kefir"
+          },
+          "reason": "Kefir is what makes it cultured."
+        },
+        {
+          "when": {
+            "mood": "cultured",
+            "base": "oat"
+          },
+          "swap": {
+            "step": "base",
+            "to": "kefir"
+          },
+          "reason": "Kefir is what makes it cultured."
+        },
+        {
+          "when": {
+            "base": "milk",
+            "flavour": "lemon"
+          },
+          "swap": {
+            "step": "base",
+            "to": "coconut"
+          },
+          "reason": "Lemon can split milk overnight. Coconut milk stays smooth."
+        },
+        {
+          "when": {
+            "base": "soy",
+            "flavour": "lemon"
+          },
+          "swap": {
+            "step": "base",
+            "to": "oat"
+          },
+          "reason": "Lemon can curdle soy milk overnight. Oat milk stays smooth."
+        },
+        {
+          "when": {
+            "base": "kefir",
+            "flavour": "matcha"
+          },
+          "swap": {
+            "step": "flavour",
+            "to": "vanilla"
+          },
+          "reason": "Kefir is already tangy. Vanilla softens it; matcha adds more bitterness."
+        },
+        {
+          "when": {
+            "mood": "calm",
+            "flavour": "matcha"
+          },
+          "swap": {
+            "step": "flavour",
+            "to": "chamomile"
+          },
+          "reason": "Matcha has caffeine. Chamomile is part of what Calm is made of."
+        },
+        {
+          "when": {
+            "mood": "calm",
+            "topping": "cacao-nibs"
+          },
+          "swap": {
+            "step": "topping",
+            "to": "toasted-coconut"
+          },
+          "reason": "Cacao nibs have a little caffeine. Toasted coconut keeps it mellow."
+        },
+        {
+          "when": {
+            "mood": "morning-spark",
+            "flavour": "chamomile"
+          },
+          "swap": {
+            "step": "flavour",
+            "to": "matcha"
+          },
+          "reason": "Matcha is the one with caffeine, and Morning spark is built around it."
+        },
+        {
+          "when": {
+            "mood": "deep-focus",
+            "topping": "granola"
+          },
+          "swap": {
+            "step": "topping",
+            "to": "walnuts"
+          },
+          "reason": "Walnuts are part of what Deep focus is made of."
+        },
+        {
+          "when": {
+            "mood": "bright",
+            "topping": "cacao-nibs"
+          },
+          "swap": {
+            "step": "topping",
+            "to": "kiwifruit"
+          },
+          "reason": "Kiwifruit is part of what Bright is made of."
+        },
+        {
+          "when": {
+            "topping": "granola"
+          },
+          "swap": null,
+          "reason": "Granola goes soft overnight, so add it just before you eat."
+        }
+      ]
+    },
+    "ack": {
+      "mood": "{x}. Good choice.",
+      "swapped": "Swapped. I think you'll like it.",
+      "kept": "Fair enough. Yours to choose."
+    },
+    "breakfast": {
+      "label": "Ready by breakfast?",
+      "line": "Set it tonight and it's ready when you are."
+    },
+    "jars": {
+      "label": "Make 4 jars",
+      "line": "Four jars, one batch. That's most of the week sorted."
+    }
   }
 }
