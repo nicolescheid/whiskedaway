@@ -12,7 +12,7 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });   // "19 Oct"
 
-export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut }) {
+export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook }) {
   const root = document.createElement('div');
   root.id = 'book';
   root.className = 'book';
@@ -94,7 +94,8 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     return `<div class="bk-seed">${ing.length ? `<h4>You'll need</h4><ul class="bk-ing">${ing.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
       <h4>How</h4><p class="bk-method">${esc(r.method_short || r.body)}</p>
       ${r.seed?.time ? `<p class="small">${esc(r.seed.time)}</p>` : ''}</div>
-      <div class="bk-write"></div>`;
+      <div class="bk-write"></div>
+      ${onCook ? '<p><button class="bk-cook">Cook this</button></p>' : ''}`;
   }
   function contentsPage() {
     const kept = book.list();
@@ -135,6 +136,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
       right.hidden = !desk;
       const slot = root.querySelector('.bk-write');
       if (slot) writeOut?.(slot, rec, root.querySelector('.bk-seed'));   // "Write it out in full" (stage 4)
+      root.querySelector('.bk-cook')?.addEventListener('click', () => onCook(rec, kept ? 'book' : 'loose'));   // cook mode
     }
     // Footer: Keep on a loose page, "Kept · Take it out" on a kept one
     const kb = $('.bk-keepbar');

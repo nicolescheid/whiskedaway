@@ -660,6 +660,7 @@ import { book, snapshot } from './explore/book.js';
 import { createBookView } from './explore/book-view.js';
 import { visitTheme, themeSentence } from './explore/theme.js';
 import { createWriteOut } from './explore/writeout.js';
+import { createCook } from './explore/cook.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 
 const params = new URLSearchParams(location.search);
@@ -1613,7 +1614,10 @@ const writer = createWriteOut({
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
 });
+// Cook mode (explore/cook.js, cook-mode-ux.md §1): one step at a time over everything, with timers
+const cook = createCook({ written: id => writer.written(id), sound, track, say: t => say(t, [], true), lines: LINES.cook });
 const bookView = createBookView({
+  onCook: (rec, from) => cook.open(rec, from),
   writeOut: (el, rec, seed) => writer.render(el, rec, seed),
   themeLine: () => themeNow().sentence, clashNote: rec => CLASH_NOTE[dietClash(rec)] || '',
   book, atoms: atomsById, chip: $('btn-book'), notes: $('notes'), track, bucket: sizeBucket,
