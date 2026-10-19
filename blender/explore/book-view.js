@@ -105,7 +105,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     return `<h3 class="bk-h">Contents</h3>
       ${rooms.length > 1 ? `<div class="bk-filter" role="group" aria-label="Show recipes from"><button data-f="" aria-pressed="${!filter}">All</button>${rooms.map(r => `<button data-f="${esc(r)}" aria-pressed="${filter === r}" style="--ring:${RIBBONS[r].colour}"><i></i>${esc(RIBBONS[r].name)}</button>`).join('')}</div>` : ''}
       <ul class="bk-list">${shown.map(k => `<li><button data-open="${esc(k.id)}" style="--ring:${RIBBONS[k.room]?.colour || 'var(--berry)'}"><i></i><span>${esc(k.title)}</span><small>${esc(RIBBONS[k.room]?.name || '')} · ${esc(day(k.kept))}</small></button></li>`).join('')}</ul>
-      ${list ? '<p><button class="bk-cook bk-list">What do I need?</button></p>' : ''}
+      ${list ? '<p><button class="bk-cook bk-need">What do I need?</button></p>' : ''}
       <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">Every recipe you've kept, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.</span></p>`;
   }
   function theme() {
@@ -168,7 +168,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     root.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { onRead?.(b.dataset.open); go(b.dataset.open); });
     root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; draw(); root.querySelector(`[data-f="${filter || ''}"]`)?.focus(); });
     root.querySelectorAll('.bk-clear, .bk-clear2').forEach(b => b.onclick = clearBook);
-    root.querySelector('.bk-list')?.addEventListener('click', () => { track?.('list_open'); go('list'); });
+    root.querySelector('.bk-need')?.addEventListener('click', () => { track?.('list_open'); go('list'); });   // not .bk-list: that's Contents' own list of recipes
   }
   function go(page) {
     loose = null;
