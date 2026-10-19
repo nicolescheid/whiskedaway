@@ -788,7 +788,8 @@
         {
           "from": "sugar",
           "to": "honey",
-          "line": "Use about ¾ as much honey and a little less liquid. It browns faster, so bake a bit cooler."
+          "line": "Use about ¾ as much honey and a little less liquid. It browns faster, so bake a bit cooler.",
+          "noBake": "Use about ¾ as much honey and a little less liquid."
         },
         {
           "from": "sugar",
@@ -819,6 +820,11 @@
           "from": "maple",
           "to": "agave",
           "line": "Swap one for one. Agave is a little sweeter."
+        },
+        {
+          "from": "agave",
+          "to": "maple",
+          "line": "Swap one for one. Maple is a little thicker and not quite as sweet."
         },
         {
           "from": "*",

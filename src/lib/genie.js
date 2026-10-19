@@ -41,14 +41,13 @@ async function solveChallenge() {
   box.setAttribute('role', 'status');
   const note = document.createElement('p');
   const slot = document.createElement('div');
-  // Turnstile's normal widget is 300x65; its compact one 150x140. In the chat on a phone the normal one is far shorter,
-  // so the card may run a little wider than Gemma's bubble (over the ideas column, only while it shows) to fit it
-  const wide = innerWidth - 32 >= 318;
+  // Turnstile's normal widget is 300x65; its compact one 150x140. The card stays within Gemma's bubble (never over the
+  // hotspots beside it), so the normal widget needs a bubble at least 316 wide; narrower ones get the compact widget
+  const wide = chat ? chat.getBoundingClientRect().width >= 316 : innerWidth - 32 >= 318;
   if (chat) {
     box.className = 'cw-check';
     box.style.cssText = 'display:none;flex-direction:column;align-items:flex-start;gap:4px;margin:0 0 4px;padding:6px 8px;border-radius:10px 10px 10px 2px;'
-      + 'background:#fff;border:1px solid rgba(139,77,92,.25);box-shadow:0 6px 18px rgba(0,0,0,.2);pointer-events:auto;box-sizing:border-box;'
-      + (wide ? 'width:318px;max-width:calc(100vw - 32px);position:relative;z-index:1;' : 'max-width:100%;');
+      + 'background:#fff;border:1px solid rgba(139,77,92,.25);box-shadow:0 6px 18px rgba(0,0,0,.2);pointer-events:none;box-sizing:border-box;max-width:100%;';   // only the widget's own frame takes taps
     note.style.cssText = "margin:0;font:15px/1.35 'Crimson Pro',Georgia,serif;color:#2c2416;";
     note.textContent = 'One quick check that you’re a person, then I’ll carry on.';
     chat.insertBefore(box, chat.querySelector('.cw-body'));
@@ -61,6 +60,7 @@ async function solveChallenge() {
     note.textContent = 'One quick check that you’re a person, then the Inn carries on.';
     document.body.appendChild(box);
   }
+  if (chat) slot.style.cssText = 'pointer-events:auto;width:fit-content;max-width:100%;';
   box.append(note, slot);
   try {
     return await new Promise((resolve, reject) => {

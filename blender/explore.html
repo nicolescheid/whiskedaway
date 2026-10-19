@@ -254,7 +254,7 @@
   .blurb { display: block; font: 500 12px 'Quicksand'; letter-spacing: 0; text-transform: none; opacity: .8; margin-top: 2px; }
   .spot .name:has(.blurb) { border-radius: 12px; }
   .spot .blurb { white-space: normal; max-width: 190px; }
-  @media (max-width: 720px) { .spot .blurb { display: none; } }
+  @media (max-width: 720px), (max-height: 420px) { .spot .blurb { display: none; } }   /* short landscape phones: one-line labels, so the foyer's don't pile up */
 
 </style>
 <style>
@@ -2280,7 +2280,7 @@ function faceDesk() {
   if (!d) return;
   if (innerWidth < innerHeight) return lookTo(PHONE_FOYER_VIEW.yaw, PHONE_FOYER_VIEW.pitch);
   const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) * 180 / Math.PI;   // half the view, across
-  if (Math.abs(((d.yaw - look.yaw + 540) % 360) - 180) > half - 4) lookTo(WIDE_FOYER_YAW, look.pitch);
+  if (Math.abs(((d.yaw - look.yaw + 540) % 360) - 180) > half - 16) lookTo(WIDE_FOYER_YAW, look.pitch);   // 16: room for the desk's label beside its dot
 }
 function arrive() {
   if (state.asked || state.trail.length) return;
