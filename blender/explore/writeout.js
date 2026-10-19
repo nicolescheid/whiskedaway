@@ -31,7 +31,7 @@ export function cleanRecipe(r) {
            ingredients, steps, tip: s(r.tip, 240) };
 }
 
-export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange }) {
+export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange, onLanded }) {
   const L = {
     button: lines.button || 'Write it out in full',
     remaining: lines.remaining || 'I can write out {n} more this visit.',
@@ -122,8 +122,9 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
       failed = rec.id;
       track?.('recipe_full_failed', { atom: rec.id, room: rec.room, reason });
     }
+    onLanded?.(rec);                                    // whoever's showing this recipe (cook mode) can update
     return recipe;
   }
 
-  return { render, written, writeNow, get left() { return left(); }, get busy() { return !!busy; }, clear() { mem = { n: mem.n, recipes: {} }; save(); } };
+  return { render, written, writeNow, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { n: mem.n, recipes: {} }; save(); } };
 }

@@ -51,7 +51,7 @@ export function needsOf(rec, full) {
 
 export function createCook({ written, sound, track, say, lines = {}, beforeOpen, onList, isKept, writer }) {
   const L = { offer: "Want it in full, with timers? I'll write it out.", write: 'Write it out', short: 'Just the short version',
-              writing: 'Gemma is writing…', failed: "My pen's run dry. The short version's here, and you can try again.", dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
+              writing: "Gemma's writing it out…", failed: "My pen's run dry. The short version's here, and you can try again.", dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
               late: 'Your {what} finished {n} min ago.', done: 'Enjoy it.', need: "You'll need", ...lines };
   const root = document.createElement('div');
   root.id = 'cook';
@@ -96,9 +96,10 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     const step = $('.ck-step');
     if (at === 0) {
       // No write-out yet: Gemma offers one, for the amounts and the timers (the short version stays one tap away)
-      const offer = !hasFull && !declined && writer && (writer.left > 0 || writer.busy);
+      const inflight = writing || writer?.busyFor === rec.id;           // a write-out already on its way (from the book page)
+      const offer = !hasFull && writer && (inflight || (!declined && writer.left > 0));
       step.innerHTML = `<h3>${esc(L.need)}</h3><ul class="ck-needs">${needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
-        + (offer ? (writing ? `<p class="ck-offer">${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p>`
+        + (offer ? (inflight ? `<div class="ck-offer"><p>${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
           : `<div class="ck-offer"><p>${esc(failedWrite ? L.failed : L.offer)}</p><p><button class="bk-cook ck-write">${esc(L.write)}</button>
              <button class="bk-outline ck-short">${esc(L.short)}</button></p></div>`) : '')
         + (onList && isKept?.(rec.id) ? `<p><button class="bk-outline ck-list">What do I need?</button></p>` : '');
@@ -309,5 +310,13 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
   }
   addEventListener('popstate', () => { if (pushed && !history.state?.cook) { pushed = false; close(true); } });
 
-  return { open, close, get isOpen() { return !root.hidden; } };
+  /** A write-out landed (or failed) for a recipe: if it's the one open, reload its steps and timers, keeping the step */
+  function refresh(id) {
+    if (root.hidden || !rec || rec.id !== id) return;
+    const keep = at;
+    load(rec);
+    at = Math.min(keep, steps.length);
+    draw();
+  }
+  return { open, close, refresh, get isOpen() { return !root.hidden; } };
 }
