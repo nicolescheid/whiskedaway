@@ -264,7 +264,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     // "Ready by breakfast?" (a chia jar): the setting step's timer runs to that time, not the recipe's own minutes
     if (readyBy && steps.length) {
       const st = steps.findLast(x => WAITING.test(x.text)) || steps.at(-1);
-      st.minutes = Math.max(1, Math.min(720, Math.round((readyBy - Date.now()) / 60000)));
+      st.minutes = Math.max(1, Math.min(1440, Math.round((readyBy - Date.now()) / 60000)));   // to the next 7:00, even from the morning (QA 7)
     }
   }
   let readyBy = null;

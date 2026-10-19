@@ -51,18 +51,32 @@ export function sweetData(lines = {}) {
   };
 }
 
+// The sweetener has to be one you spoon in (in the key ingredients), not one inside the chocolate or the granola
+const SPOONED = { sugar: /\bsugar\b/i, honey: /\bhoney\b/i, maple: /\bmaple\b/i, agave: /\bagave\b/i };
+// High-FODMAP sweeteners: with low-FODMAP on, Gemma suggests maple instead (QA 7)
+const HIGH_FODMAP = new Set(['honey', 'agave']);
+const bakes = rec => (rec.themes || []).includes('baking');
+
 /** The swap-the-sugar lines for a recipe and what the visitor told Gemma: the recipe's own sweetener (`from`) to the ones
- *  they picked (`to`), or "none" when they'd rather no added sugar. Only recipes with added sugar; nothing if one of their
- *  picks is the recipe's own. At most two lines. */
-export function swapLines(D, rec, { sweetness = null, sweeteners = [] } = {}) {
+ *  they picked (`to`), or "none" when they'd rather no added sugar. Only recipes with added sugar that's spooned in (a key
+ *  ingredient); nothing if one of their picks is the recipe's own. A rule's baking advice only where the recipe bakes (its
+ *  `noBake` line, else the line without its baking sentences). With low-FODMAP, never honey or agave: maple instead.
+ *  At most two lines. */
+export function swapLines(D, rec, { sweetness = null, sweeteners = [], dietary = [] } = {}) {
   if (!rec?.added_sugar || !rec.sweetener || !sweetness || sweetness === 'full') return [];
-  const picks = [].concat(sweeteners || []);
+  if (!SPOONED[rec.sweetener] || !(rec.key_ingredients || []).some(i => SPOONED[rec.sweetener].test(i))) return [];
+  const fodmap = [].concat(dietary || []).includes('low-fodmap');
+  let picks = [].concat(sweeteners || []);
+  if (picks.includes(rec.sweetener)) return [];
+  if (fodmap && picks.some(x => HIGH_FODMAP.has(x))) picks = [...new Set(picks.map(x => (HIGH_FODMAP.has(x) ? 'maple' : x)))];
   if (picks.includes(rec.sweetener)) return [];
   const wants = sweetness === 'none' && !picks.length ? ['none'] : picks;
   const out = [];
   for (const to of wants) {
     const r = D.swap.rules.find(x => x.to === to && x.from === rec.sweetener) || D.swap.rules.find(x => x.to === to && x.from === '*');
-    if (r && !out.includes(r.line)) out.push(r.line);
+    if (!r) continue;
+    const line = bakes(rec) ? r.line : r.noBake || String(r.line).split(/(?<=\.)\s+/).filter(t => !/\bbak|\bbrown/i.test(t)).join(' ');
+    if (line && !out.includes(line)) out.push(line);
   }
   return out.slice(0, 2);
 }
