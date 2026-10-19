@@ -350,7 +350,10 @@
   /* The check-in offer on the chat's Line row: portrait phones only, where Line hides the chips */
   .cw-checkin { display: none; flex: none; margin-left: 8px; min-height: 44px; padding: 8px 14px; border: 1.5px solid var(--berry);
                 border-radius: 999px; background: var(--parchment); color: var(--berry); font: 600 14px 'Quicksand', system-ui, sans-serif; cursor: pointer; }
-  @media (orientation: portrait) and (max-width: 719px) { .chatwin.size-line .cw-checkin:not([hidden]) { display: inline-flex; align-items: center; pointer-events: auto; } }
+  @media (orientation: portrait) and (max-width: 719px) {
+    .chatwin.size-line .cw-checkin:not([hidden]) { display: inline-flex; align-items: center; pointer-events: auto; }
+    .chatwin.size-line.has-checkin-pill .cw-chips { display: none; }   /* the pill is the offer at Line; Short and Full keep the chips */
+  }
   .chip.bell img { width: 26px; height: 26px; transform-origin: 50% 12%; }
   .chip.bell.ring img { animation: ring .9s ease-in-out; }
   /* The speaker beside the bell: crossed out while the Inn is quiet, which it is until the visitor says */
@@ -2136,6 +2139,7 @@ function checkinPill() {
   }
   pill.textContent = OPENER().yes;
   pill.hidden = !state.checkinPill;
+  $('chatwin').classList.toggle('has-checkin-pill', !!state.checkinPill);
   if (state.checkinPill) chatUI.setAsking(false);   // the offer never raises the chat (it would cover the desk)
 }
 // After the film's hand-over (facing down the hall), make sure the desk shows (checkin-ux.md §5): a portrait phone turns
