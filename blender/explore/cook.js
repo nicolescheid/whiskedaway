@@ -41,6 +41,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
       <button class="ck-size" aria-pressed="false" aria-label="Larger text">A A</button>
     </header>
     <p class="ck-dim small" hidden></p>
+    <p class="ck-said" role="status" hidden></p>
     <div class="ck-timers" aria-label="Running timers"></div>
     <div class="ck-progress"><span class="ck-dots" aria-hidden="true"></span><span class="ck-count" aria-live="polite"></span></div>
     <main class="ck-main">
@@ -63,7 +64,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
   function draw() {
     const n = steps.length;
     $('#cook-title').textContent = rec.title;
-    $('.ck-count').textContent = at === 0 ? L.need : `Step ${at} of ${n}`;
+    $('.ck-count').textContent = at === 0 ? '' : `Step ${at} of ${n}`;   // step 0's own heading says "You'll need"
     $('.ck-dots').innerHTML = Array.from({ length: n + 1 }, (_, i) => `<i class="${i === at ? 'on' : i < at ? 'past' : ''}"></i>`).join('');
     const st = steps[at - 1];
     const step = $('.ck-step');
@@ -116,7 +117,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     sound?.unlock?.();                                            // the tap is the audio gesture (iOS)
     timers.push({ step, label: what().replace(/^./, c => c.toUpperCase()), end: Date.now() + minutes * 60000, paused: false });
     track?.('timer_start');
-    if (!firstTimerSaid) { firstTimerSaid = true; say?.(L.first); }
+    if (!firstTimerSaid) { firstTimerSaid = true; speak(L.first); }
     draw();
   }
   function toggle(t) {
@@ -135,7 +136,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     try { navigator.vibrate?.([200, 100, 200]); } catch { /* not supported */ }
     track?.('timer_done');
     const w = what();
-    say?.((late >= 1 ? L.late.replace('{n}', late) : L.ready).replace('{what}', w).replace(/is ready/, plural(w) ? 'are ready' : 'is ready'));
+    speak((late >= 1 ? L.late.replace('{n}', late) : L.ready).replace('{what}', w).replace(/is ready/, plural(w) ? 'are ready' : 'is ready'));
     draw();
   }
   setInterval(() => {
@@ -158,6 +159,17 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     for (const t of timers) if (!t.rang && !t.paused && now >= t.end) ring(t, Math.floor((now - t.end) / 60000));
     if (!root.hidden) wake();
   });
+
+  // Gemma's lines while cooking show inside cook mode, under the timers (the chat is behind it), and go to her chat too
+  let saidTimer = null;
+  function speak(t) {
+    say?.(t);
+    const p = $('.ck-said');
+    p.textContent = t;
+    p.hidden = false;
+    clearTimeout(saidTimer);
+    saidTimer = setTimeout(() => { p.hidden = true; }, 12000);
+  }
 
   // ---------- moving
   function go(i) {
@@ -204,8 +216,9 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
       lock = await navigator.wakeLock.request('screen');
       $('.ck-dim').hidden = true;
     } catch {
+      // Only phones and tablets dim while you cook: the line isn't shown on desktop (QA pass 5)
       $('.ck-dim').textContent = L.dim;
-      $('.ck-dim').hidden = false;
+      $('.ck-dim').hidden = !matchMedia('(pointer: coarse)').matches;
     }
   }
 
