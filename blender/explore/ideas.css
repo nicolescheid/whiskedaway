@@ -489,3 +489,24 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ck-offer button { margin: 0 6px 6px 0; }
 .ck-offer .dots { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
 .ck-step p.ck-quiet { margin-top: 14px; font: italic 18px/1.4 'Crimson Pro', Georgia, serif; font-size: 18px !important; color: var(--ink-soft); }
+
+/* ---------- the Chiapothecary's moods and Mix an experiment (chia-mix.js): the Tell Gemma sheet, one step per screen */
+.mx-moods { list-style: none; margin: 4px 0 10px; padding: 0; display: grid; gap: 6px; }
+.mx-moods button { width: 100%; min-height: 52px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; text-align: left;
+  border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); font: 14px/1.3 'Quicksand'; }
+.mx-moods b { font-weight: 600; color: var(--berry); }
+.mx-moods span { color: var(--ink-soft); font-size: 13px; }
+.mx-moods button[aria-pressed="true"] { border-color: var(--berry); box-shadow: inset 0 0 0 1px var(--berry); background: #fbf3f4; }
+.mx-dots { display: flex; gap: 6px; margin: 2px 0 4px; }
+.mx-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.mx-dots i.done { background: var(--berry-soft); }
+.mx-dots i.on { background: var(--berry); }
+.mx-sum { list-style: none; margin: 4px 0 10px; padding: 0; font-size: 15px; }
+.mx-sum li { padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.mx-sum span { color: var(--ink-soft); }
+.mx-swap { margin-top: 10px; }
+.mx-swap .bk-cook, .mx-swap .bk-outline { margin: 0 6px 4px 0; }
+.mx-foot .mx-back[hidden] { display: none; }
+.tell.mx-mix .tl-foot { justify-content: space-between; }
+.tell.mx-mood .tl-foot, .tell.mx-mix .tl-foot { display: flex; }
+.tell.mx-mood .tl-foot { justify-content: flex-end; }

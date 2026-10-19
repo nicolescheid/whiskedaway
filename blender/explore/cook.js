@@ -7,7 +7,9 @@ import { pageSwipe } from './swipe.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const mmss = ms => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+// 25:00, or 10:00:00 from an hour up (a jar set for breakfast)
+const mmss = ms => { const t = Math.max(0, Math.ceil(ms / 1000)), p = n => String(n).padStart(2, '0');
+  return t >= 3600 ? `${Math.floor(t / 3600)}:${p(Math.floor(t / 60) % 60)}:${p(t % 60)}` : `${Math.floor(t / 60)}:${p(t % 60)}`; };
 const STORE = 'wa-cook';                                       // the step you were on, per recipe, for this visit
 const BIG = 'wa-cook-big';                                     // the larger text, remembered on the device
 const RING_EVERY = 10000, RING_FOR = 120000;
@@ -259,13 +261,20 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     steps = stepsOf(r, full);
     needs = needsOf(r, full);
     rec._tip = full?.tip || '';
+    // "Ready by breakfast?" (a chia jar): the setting step's timer runs to that time, not the recipe's own minutes
+    if (readyBy && steps.length) {
+      const st = steps.findLast(x => WAITING.test(x.text)) || steps.at(-1);
+      st.minutes = Math.max(1, Math.min(720, Math.round((readyBy - Date.now()) / 60000)));
+    }
   }
+  let readyBy = null;
 
   // ---------- open and close
-  function open(r, from = 'book') {
+  function open(r, from = 'book', { until = null } = {}) {
     beforeOpen?.();
     opener = document.activeElement;
     rec = r;
+    readyBy = until;
     failedWrite = false;
     load(r);
     // "Cook this" just works: no write-out yet, so Gemma starts one (or joins the one on its way); it lands via refresh()

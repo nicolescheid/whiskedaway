@@ -662,6 +662,7 @@ import { createBookView } from './explore/book-view.js';
 import { visitTheme, themeSentence } from './explore/theme.js';
 import { createWriteOut } from './explore/writeout.js';
 import { createCook } from './explore/cook.js';
+import { createChiaMix, chiaData } from './explore/chia-mix.js';
 import { createList } from './explore/list.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 
@@ -1217,6 +1218,8 @@ function touch(id) {
     goRoom(obj.go, obj.arrive_yaw);
   } else if (obj.type === 'dial') {
     openDial();
+  } else if (CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
+    CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
   } else if (obj.type === 'submit') {
     openTool(obj.tool_title || 'Find Comfort', obj.tool_text || "The pot can't cook you a full recipe yet. Soon. For now, keep looking around and I'll leave ideas out for you.");
   } else if (TELL_TOOLS[obj.tool]) {
@@ -1494,6 +1497,7 @@ function steer() {
   const kept = book.list();
   return {
     awayOk: !awayOut() || !!state.awayLift?.[homeOf(state.room)],
+    moodThemes: chiaData(LINES).moods[visit.dish('chiapothecary', 'mood')]?.themes || [],   // not chia.data: steer() can run before it's made
     served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
     about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS,
@@ -1616,7 +1620,7 @@ const writer = createWriteOut({
   payloadFor: rec => ({
     tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room,
     idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
-            method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why },
+            method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why, mix: rec.mix },
     energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,
     theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
     dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
@@ -1640,7 +1644,28 @@ const bookView = createBookView({
   onKeep: rec => keepIdea(rec.id, rec.why, 'book'),
   onRead: id => countAtom('atom_open', id, { from: 'book' }),     // a kept recipe opened from Contents
   onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); say(L.cleared, [], true); },
+  actions: rec => (rec.room === 'chiapothecary' ? chiaActions : []),
 });
+// ---------- the Chiapothecary (explore/chia-mix.js, rooms-views.md Stage A): moods on the flasks, Mix an experiment with
+// Gemma's swaps, then the write-out as a loose page in the book, ready to keep or cook
+const chia = createChiaMix({
+  visit, lines: LINES, writer, track, sound,
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
+  say: t => { say(t, [], true); holdLine(); },
+  onStart: rec => { atomsById[rec.id] = rec; },               // so the notebook, Keep and Cook this treat it like any idea
+  onWritten: rec => {
+    bookView.open(null, { from: 'mix', loosePage: rec });
+    say(chia.data.lines.written, [], true);
+  },
+});
+const CHIA_TOOLS = { superpower: () => chia.open('mood'), generate: () => chia.open('mix'),
+                     milk: () => chia.open('mix', { step: 'base' }), 'add-ins': () => chia.open('mix', { step: 'flavour' }) };
+// A chia jar's own buttons: "Ready by breakfast?" runs cook mode's timer to 7 tomorrow; "Make 4 jars" sets servings and opens the list
+const breakfastAt = () => { const d = new Date(); if (d.getHours() >= 7) d.setDate(d.getDate() + 1); d.setHours(7, 0, 0, 0); return d.getTime(); };
+const chiaActions = [
+  { label: chia.data.lines.breakfast, do: rec => { say(chia.data.lines.breakfastLine, [], true); cook.open(rec, 'breakfast', { until: breakfastAt() }); } },
+  { label: chia.data.lines.jars, do: () => { visit.set('servings', '4'); track('tell_set', { kind: 'servings', from: 'jars' }); bookView.open('list', { from: 'jars' }); say(chia.data.lines.jarsLine, [], true); } },
+];
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {};

@@ -36,6 +36,7 @@ const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more th
 const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signal like the weather
 const SEASON_WEIGHT = 2.5;
 const OWN_SEASON_WEIGHT = 1.2;  // the visitor's own season, not chosen: counted lightly (`own-season` in the trail)    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
+const MOOD_EACH = 2, MOOD_MAX = 4;   // the Chiapothecary's mood (its themes): +2 per shared theme, at most +4, like the pantry
 const ROOM_LEAN = 4;          // an atom from the room the visitor is in (if it fits at all): mostly that room's own, the odd one from elsewhere
 const AI_HOME = 30, AI_AWAY = 10;
 const KEEP_NOW = 3, KEEP_BEFORE = 1, KEEP_BEFORE_MAX = 10;   // keeps weigh more than touches and don't fade; older ones only nudge
@@ -185,7 +186,7 @@ export function roomClusters(world, room) {
   return Object.fromEntries(own.length ? own : Object.entries(world.clusters));
 }
 
-export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {}, awayOk = true } = {}) {
+export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {}, awayOk = true, moodThemes = [] } = {}) {
   const meaningful = trail.filter(e => e.kind !== 'map' || trail.length < 3);
   if (meaningful.length === 0) {
     return { mode: 'local', hypothesis: null, confidence: 0, gemma: null, fork: [], reveal: [], serve: [] };
@@ -217,6 +218,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
                        + Math.min(PANTRY_MAX * (about.useUp ? 2 : 1), pantryHits(a, about.pantry, about.synonyms).length * PANTRY_EACH * (about.useUp ? 2 : 1))
                        + (cuisineHit(a, about.cuisines) ? CUISINE : 0) }))
     .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: from the room's *-world.json
+    .map(x => ({ ...x, s: x.s + Math.min(MOOD_MAX, x.a.themes.filter(t => moodThemes.includes(t)).length * MOOD_EACH) }))
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)

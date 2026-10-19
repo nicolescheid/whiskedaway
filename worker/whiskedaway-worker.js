@@ -786,6 +786,13 @@ function buildUserMessage(payload) {
       : `Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
+    // The Chiapothecary's "Mix an experiment" (rooms-views.md): the visitor's own jar. A mood is a flavour mood and what's in it,
+    // never a promise about the body (moods, not medicine)
+    const mix = idea.mix && typeof idea.mix === 'object' ? idea.mix : null;
+    if (mix) {
+      parts.push(`Their mix: ${['mood', 'base', 'flavour', 'topping'].filter(k => mix[k]).map(k => `${k} ${txt(mix[k], 40)}`).join(', ')}. Keep to their choices.`);
+      parts.push('The mood is a feeling and a set of ingredients only. Never say or hint what the jar does for energy, focus, sleep, skin, gut or mood.');
+    }
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
     // Each room has its own identity (Nicole, Oct 2026); the full recipe keeps to the room the idea came from
     const ROOM_RULES = {
