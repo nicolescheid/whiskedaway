@@ -147,8 +147,41 @@ const CHECKIN = {
     for (let i = 0; i < 8; i++) noise(t + 0.12 + i * rnd(0.04, 0.08), { len: rnd(0.03, 0.08), freq: rnd(2000, 5000), q: 0.8, gain: rnd(0.04, 0.08) });
   },
 };
+// ---------- the rooms' own asks (rooms-views.md), same rules: short, quiet, one family per answer
+const glass = (t, f, gain = 0.03, out = master) => note(f, t, { gain, decay: 0.5, partials: [[1, 1], [2.32, 0.35], [4.25, 0.12]], out });
+const pop = (t, gain = 0.12) => {                // a cork or a lid coming free: a quick falling thump
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(700, t); o.frequency.exponentialRampToValueAtTime(180, t + 0.06);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+  o.connect(g).connect(master); o.start(t); o.stop(t + 0.1);
+};
+const plop = (t, gain = 0.05) => {               // something small dropped into liquid
+  const o = ctx.createOscillator(), g = ctx.createGain(), f = rnd(350, 500);
+  o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 2.4, t + 0.07);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+  o.connect(g).connect(master); o.start(t); o.stop(t + 0.12);
+};
+Object.assign(CHECKIN, {
+  // The Chiapothecary: a mood bottle taken down, a clink of glass and the cork out
+  cork: t => { glass(t, rnd(1700, 2000), 0.025); pop(t + 0.18, 0.1); },
+  // Sweet Spells: a canister lid twisted and lifted (How sweet? and Sweeten with…)
+  lid: t => { sweep(t, { dur: 0.18, from: 1200, to: 2200, q: 3, gain: 0.04, attack: 0.05 }); pop(t + 0.2, 0.09); },
+  // Sweet Spells: a craving jar tapped; each jar its own note (a pentatonic run along the shelf)
+  tap: (t, n = 0) => glass(t, [1046.5, 1174.7, 1318.5, 1568, 1760, 2093][((n % 6) + 6) % 6], 0.035),
+});
 // Which family each answer uses
-const ANSWER = { energy: 'light', time: 'sand', servings: 'clink', pantry: 'rustle' };
+const ANSWER = { energy: 'light', time: 'sand', servings: 'clink', pantry: 'rustle', mood: 'cork', sweetness: 'lid', sweetener: 'lid', craving: 'tap' };
+// The Chiapothecary's "Mix an experiment", step by step
+const MIX = {
+  base: t => sweep(t, { dur: 0.6, from: 500, to: 900, type: 'lowpass', q: 0.8, gain: 0.05, attack: 0.08 }),   // a pour
+  flavour: t => { plop(t); plop(t + rnd(0.12, 0.2), 0.03); },                                                  // a drop or two
+  topping: t => { for (let i = 0; i < 10; i++) noise(t + i * rnd(0.02, 0.05), { len: 0.008, freq: rnd(3000, 6000), q: 2, gain: rnd(0.03, 0.06) }); },   // a scatter
+  done: t => {                                                                                                 // a spoon round the jar, and one bubble
+    for (let i = 0; i < 3; i++) glass(t + i * 0.18, 2300 + i * 40, 0.012);
+    sweep(t, { dur: 0.55, from: 600, to: 1100, q: 1.5, gain: 0.025, attack: 0.1 });
+    plop(t + 0.62, 0.03);
+  },
+};
 
 let lastShimmer = -Infinity;
 
@@ -501,14 +534,21 @@ export const sound = {
 
   // The check-in: an answer given (energy, time, servings or pantry), from any object that sets it.
   // `change`: an energy answer replaced another (the old flame snuffed first). `count`: servings, for the clinks.
-  answer(key, { change = false, count = 1 } = {}) {
+  // `index`: which craving jar (0–5), for its note.
+  answer(key, { change = false, count = 1, index = 0 } = {}) {
     const fam = ANSWER[key];
     if (!fam) return;
     play(t => {
       if (fam === 'light' && change) { CHECKIN.snuff(t); CHECKIN.light(t + 0.22); }
-      else CHECKIN[fam](t, count);
+      else CHECKIN[fam](t, fam === 'tap' ? index : count);
     });
   },
+  // The Chiapothecary's Mix: 'base', 'flavour', 'topping', then 'done' when the jar's ready
+  mix(step) { if (MIX[step]) play(t => MIX[step](t)); },
+
+  // A page turned: the Occasions book in Sweet Spells (and any book that wants it)
+  page() { play(t => { sweep(t, { dur: 0.32, from: 2500, to: 900, q: 0.6, gain: 0.06, attack: 0.04 }); noise(t + 0.3, { len: 0.03, freq: 700, q: 1, gain: 0.08 }); }); },
+
   // An answer taken back (energy cleared): the flame snuffed
   unanswer(key) { if (ANSWER[key] === 'light') play(t => CHECKIN.snuff(t)); },
 

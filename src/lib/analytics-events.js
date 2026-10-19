@@ -41,8 +41,9 @@ export const EVENTS = {
   timer_done: [],
   list_open: [],
   list_share: [],                         // the share sheet or copy was used; what was shared never leaves the device through us
-  tell_open: ['kind', 'from'],          // Tell Gemma: kind pantry|map|dietary|confidence|time|servings|energy; from object|tag|menu|book|offer|foyer
-  tell_set: ['kind', 'count', 'use_up', 'from'],   // count 0|1|2-3|4+ (pantry, map, dietary only); never the values (see ANSWER_KINDS)
+  tell_open: ['kind', 'from'],          // Tell Gemma: kind pantry|map|dietary|confidence|time|servings|energy|sweetness|sweetener|craving|occasion|mood|mix; from object|tag|menu|book|offer|foyer
+  tell_set: ['kind', 'count', 'use_up', 'from'],   // count 0|1|2-3|4+ (pantry, map, dietary, sweetener, craving); never the values (see ANSWER_KINDS). Dietary values (FODMAP included) never leave the page
+  mix_swap: ['outcome'],                 // the Chiapothecary: Gemma suggested a swap; outcome accepted or declined. Never the ingredients
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3
   recipe_full_failed: ['atom', 'room', 'reason'],                  // reason: timeout, bot_check, rate_limited, error
 
@@ -63,9 +64,9 @@ export const EVENTS = {
 // Short IDs from the world files and the code, never free text (a trailing + for open-ended buckets like 16+)
 const VALUE = /^[a-z0-9][a-z0-9 ._-]{0,38}\+?$/i;
 
-// Check-in answers that are a single choice: any count would be the answer itself (2 servings = "2-3"),
-// so only the fact that one was set is ever sent
-const ANSWER_KINDS = new Set(['confidence', 'time', 'servings', 'energy']);
+// Answers that are a single choice (the check-in, and Sweet Spells' and the Chiapothecary's): any count would be
+// the answer itself (2 servings = "2-3"), so only the fact that one was set is ever sent
+const ANSWER_KINDS = new Set(['confidence', 'time', 'servings', 'energy', 'sweetness', 'occasion', 'mood', 'mix']);
 
 /** The event with only its allowed parameters, or null if the event isn't on the list. */
 export function cleanEvent(name, params = {}) {
