@@ -802,6 +802,17 @@ function buildUserMessage(payload) {
     const mixed = [['Mood', mix.mood, 40], ['What the mood is made of', mix.inside, 120], ['Base', mix.base, 40], ['Flavour', mix.flavour, 40], ['Topping', mix.topping, 40]]
       .filter(([, v]) => v).map(([k, v, n]) => `${k}: ${txt(v, n).replace(/\.$/, '')}`);
     if (mixed.length) parts.push(`Their own mix, to keep to: ${mixed.join('; ')}.`);
+    // Sweet Spells (rooms-views.md, Stage B): how sweet and what with (Inn-wide), and what it's for
+    const SWEETNESS = {
+      'The full treat': 'How sweet: the full treat. Sweeten it as the recipe usually would.',
+      'A bit less sugar': 'How sweet: a bit less sugar. Use noticeably less added sugar than usual, and say so in a few words.',
+      'No added sugar': 'How sweet: no added sugar. Use no sugar, honey, syrup or other added sweetener; let fruit (or dates, if they allow) do the sweetening, and say it will be less sweet.',
+    };
+    if (SWEETNESS[payload.sweetness]) parts.push(SWEETNESS[payload.sweetness]);
+    if (list(payload.sweeteners, 6).length) parts.push(`Sweeten with: ${list(payload.sweeteners, 6).join(', ')} (only these; if you swap from the recipe's usual, say how much in plain kitchen terms, never a made-up ratio)`);
+    if (payload.occasion) parts.push(`What it's for: ${txt(payload.occasion, 40)} (suit the look and the size to it)`);
+    // Low-FODMAP depends on portions: avoid the common high-FODMAP ingredients, and say portions matter (content editor)
+    if ((payload.dietary_restrictions || []).includes('low-fodmap')) parts.push('Low-FODMAP: leave out common high-FODMAP ingredients (onion, garlic, wheat, honey, apple, pear, mango, agave, inulin, large amounts of dairy) and add one short line that portions matter for low-FODMAP. Never claim it treats or helps a condition.');
     // The foyer check-in (checkin-views.md): skill, time and how many, when the visitor has said
     const CONFIDENCE = {
       starting: 'Cooking confidence: just starting out. Name every tool, explain any cooking term in a few words (until it just wobbles), and keep to one thing at a time.',

@@ -37,6 +37,7 @@ const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signa
 const SEASON_WEIGHT = 2.5;
 const OWN_SEASON_WEIGHT = 1.2;  // the visitor's own season, not chosen: counted lightly (`own-season` in the trail)    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
 const MOOD_EACH = 2, MOOD_MAX = 4;   // the Chiapothecary's mood (its themes): +2 per shared theme, at most +4, like the pantry
+const NO_ADDED = 2;           // "No added sugar" (Sweet Spells' cabinet): a soft penalty on atoms with added sugar, never a filter
 const ROOM_LEAN = 4;          // an atom from the room the visitor is in (if it fits at all): mostly that room's own, the odd one from elsewhere
 const AI_HOME = 30, AI_AWAY = 10;
 const KEEP_NOW = 3, KEEP_BEFORE = 1, KEEP_BEFORE_MAX = 10;   // keeps weigh more than touches and don't fade; older ones only nudge
@@ -186,7 +187,8 @@ export function roomClusters(world, room) {
   return Object.fromEntries(own.length ? own : Object.entries(world.clusters));
 }
 
-export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {}, awayOk = true, moodThemes = [] } = {}) {
+export function localNavigate(trail, world, { served = [], dismissed = [], room = null, book = null, about = {}, awayOk = true, moodThemes = [],
+                              cravingThemes = [], cravingRoom = null, noAddedSugar = false } = {}) {
   const meaningful = trail.filter(e => e.kind !== 'map' || trail.length < 3);
   if (meaningful.length === 0) {
     return { mode: 'local', hypothesis: null, confidence: 0, gemma: null, fork: [], reveal: [], serve: [] };
@@ -219,6 +221,10 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
                        + (cuisineHit(a, about.cuisines) ? CUISINE : 0) }))
     .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: from the room's *-world.json
     .map(x => ({ ...x, s: x.s + Math.min(MOOD_MAX, x.a.themes.filter(t => moodThemes.includes(t)).length * MOOD_EACH) }))
+    // Sweet Spells' cravings (themes of the same names): +2 each, at most +4, on that room's own atoms only (they're for this dish)
+    .map(x => (cravingThemes.length && (!cravingRoom || x.a.room === cravingRoom)
+      ? { ...x, s: x.s + Math.min(MOOD_MAX, x.a.themes.filter(t => cravingThemes.includes(t)).length * MOOD_EACH) } : x))
+    .map(x => (noAddedSugar && x.a.added_sugar ? { ...x, s: x.s - NO_ADDED } : x))
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
     .slice(0, 2)

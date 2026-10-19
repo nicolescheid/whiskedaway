@@ -9,7 +9,7 @@ import { cuisineLabel } from './tell.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you' }) {
+export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you', extra = {} }) {
   // Each kind: its icon, its words for a value, the picker's options and how a pick is made
   const KINDS = {
     energy: {
@@ -21,7 +21,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     // Dietary needs: the cookbook shelf's sheet, or the recipe page's "Anything I should avoid?". "Something else" shows as +1
     dietary: {
       icon: '🌱', name: 'Dietary needs', title: 'Anything I should avoid?', multi: true, sheet: 'dietary',
-      word: v => [].concat(v || []).map(d => DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d).join(', ') + (visit.get('dietaryOther') ? ' +1' : ''),
+      word: v => [].concat(v || []).map(d => (d === 'low-fodmap' ? 'low-FODMAP' : DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d)).join(', ') + (visit.get('dietaryOther') ? ' +1' : ''),
       options: () => DIETS.map(([id, label]) => ({ id, label })),
       pick: id => { const now = [].concat(visit.get('dietary') || []); const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id]; visit.set('dietary', next.length ? next : null); },
     },
@@ -32,6 +32,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
       word: v => { const items = Array.isArray(v) ? v : v?.items || []; return items.length ? items.slice(0, 2).join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '') : ''; },
     },
     cuisines: { icon: '🗺', name: 'The map', sheet: 'map', word: v => [].concat(v || []).map(cuisineLabel).join(', ') },   // the country is in the sheet only
+    ...extra,                     // a room's own about-you answers, each with open() for its sheet (Sweet Spells' how sweet)
   };
   el.setAttribute('role', 'list');
   el.setAttribute('aria-label', "What you've told Gemma");
@@ -52,6 +53,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     el.querySelectorAll('.tag[data-k]').forEach(b => b.onclick = e => {
       e.stopPropagation();
       const K = KINDS[b.dataset.k];
+      if (K.open) return K.open();
       if (K.sheet && tell) return tell.open(K.sheet, 'tag');
       openPick(b.dataset.k, b);
     });

@@ -54,7 +54,8 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
               useUp: P.useUp || 'Use these up first', privacy: P.privacy || "Only used for Gemma's ideas and the recipes she writes out for you." },
     map: { title: M.title || 'Where shall we take it?', helper: M.helper || '', shop: (M.shop || 'Shopping words for').replace(/:\s*$/, ''), choose: M.choose || 'Choose…' },
     dietary: { title: D.title || 'Anything I should avoid?', other: D.other || 'Something else?', otherPlaceholder: D.otherPlaceholder || '',
-               otherNote: D.otherNote || "I'll pass that on when I write a recipe out. I can't check my cards for it." },
+               otherNote: D.otherNote || "I'll pass that on when I write a recipe out. I can't check my cards for it.",
+               fodmapNote: D.fodmapNote || "I'll pass it on when I write a recipe out. I only leave out cards I've checked." },
     menu: { title: N.title || 'Tell me about you', energy: N.energy || 'Energy', pantry: N.pantry || 'Pantry', map: N.map || 'The map',
             dietary: N.dietary || 'Dietary needs', none: N.none || 'not yet' },
     forget: B.forget || 'Forget this', done: B.done || 'Done', close: B.close || 'Close',
@@ -127,11 +128,13 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     const d = draft;
     body.innerHTML = `<div class="tl-chips tl-pick" role="group" aria-label="${esc(L.dietary.title)}">${DIETS.map(([id, n]) => `<button data-d="${id}" aria-pressed="${d.dietary.includes(id)}">${esc(n)}</button>`).join('')}</div>
       <label class="tl-field">${esc(L.dietary.other)} <input class="tl-input" type="text" autocomplete="off" enterkeyhint="done" maxlength="60" placeholder="${esc(L.dietary.otherPlaceholder)}" value="${esc(d.other)}"></label>
+      <p class="small tl-fodmap" ${d.dietary.includes('low-fodmap') ? '' : 'hidden'}>${esc(L.dietary.fodmapNote)}</p>
       <p class="small">${esc(L.dietary.otherNote)}</p>`;
     body.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
       const id = b.dataset.d, on = d.dietary.includes(id);
       d.dietary = on ? d.dietary.filter(x => x !== id) : [...d.dietary, id];
       b.setAttribute('aria-pressed', String(!on));
+      body.querySelector('.tl-fodmap').hidden = !d.dietary.includes('low-fodmap');   // portions matter: say what she can and can't check
     });
     const input = body.querySelector('.tl-input');
     input.oninput = () => { d.other = input.value.slice(0, 60); };

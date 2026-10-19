@@ -663,6 +663,7 @@ import { visitTheme, themeSentence } from './explore/theme.js';
 import { createWriteOut } from './explore/writeout.js';
 import { createCook } from './explore/cook.js';
 import { createChiaMix, chiaData } from './explore/chia-mix.js';
+import { createSweetSheets, sweetData, swapLines, sweetSteer, sweetTold, sweetTags } from './explore/sweet-spells.js';
 import { createList } from './explore/list.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 
@@ -1219,6 +1220,8 @@ function touch(id) {
     goRoom(obj.go, obj.arrive_yaw);
   } else if (obj.type === 'dial') {
     openDial();
+  } else if (SWEET_TOOLS[obj.tool] && state.room === 'sweet-spells') {
+    SWEET_TOOLS[obj.tool]();                                  // Sweet Spells' cabinet, spell books and lectern (sweet-spells.js)
   } else if (CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
     CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
   } else if (obj.type === 'submit') {
@@ -1499,6 +1502,7 @@ function steer() {
   return {
     awayOk: !awayOut() || !!state.awayLift?.[homeOf(state.room)],
     moodThemes: chiaData(LINES).moods[visit.dish('chiapothecary', 'mood')]?.themes || [],   // not chia.data: steer() can run before it's made
+    ...sweetSteer(visit),                                                                    // Sweet Spells' cravings and "no added sugar"
     served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
     about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS,
@@ -1506,7 +1510,8 @@ function steer() {
   };
 }
 // The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
-const dietClash = a => [].concat(visit.get('dietary') || []).find(d => !(a.diet || []).includes(d)) || null;
+// Low-FODMAP is a hard filter only on atoms checked against a source (`fodmap_checked`; none yet): it goes into write-outs as an avoid
+const dietClash = a => [].concat(visit.get('dietary') || []).find(d => (d !== 'low-fodmap' || a.fodmap_checked) && !(a.diet || []).includes(d)) || null;
 const CLASH_NOTE = { vegetarian: 'not vegetarian', vegan: 'not vegan', 'gluten-free': 'has gluten', 'dairy-free': 'has dairy', 'nut-free': 'has nuts' };
 
 // At most one of the ideas out is from another room (PM on T4); the hallway and glasshouse have none of their own
@@ -1626,6 +1631,10 @@ const writer = createWriteOut({
     theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
     dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
     country: countryLabel(visit.get('country') || mapDefault()), dish: visit.dish(rec.room),
+    // Sweet Spells (Inn-wide): how sweet and what with, as words; the occasion as words (the dish has its id)
+    sweetness: sweet.data.howSweet.options[visit.get('sweetness')] || null,
+    sweeteners: [].concat(visit.get('sweeteners') || []).map(x => sweet.data.sweetenWith.options[x] || x),
+    occasion: rec.room === 'sweet-spells' ? sweet.data.occasions.options[visit.dish('sweet-spells', 'occasion')]?.label || null : null,
   }),
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
@@ -1646,6 +1655,7 @@ const bookView = createBookView({
   onRead: id => countAtom('atom_open', id, { from: 'book' }),     // a kept recipe opened from Contents
   onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); say(L.cleared, [], true); },
   actions: rec => (rec.room === 'chiapothecary' ? chiaActions : []),
+  extra: rec => sweetSwapHtml(rec),                              // Sweet Spells' swap-the-sugar lines
 });
 // ---------- the Chiapothecary (explore/chia-mix.js, rooms-views.md Stage A): moods on the flasks, Mix an experiment with
 // Gemma's swaps, then the write-out as a loose page in the book, ready to keep or cook
@@ -1659,6 +1669,26 @@ const chia = createChiaMix({
     say(chia.data.lines.written, [], true);
   },
 });
+// ---------- Sweet Spells (explore/sweet-spells.js, rooms-views.md Stage B): the cabinet asks how sweet, the spell books the
+// cravings, the lectern's Occasions book what it's for (suggesting servings and time only where the check-in hasn't answered)
+const sweet = createSweetSheets({
+  visit, lines: LINES, track, sound,
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
+  say: t => { say(t, [], true); holdLine(); scheduleNavigate(); },
+  // With the check-in in, its own setter (the same tag and store); before it, just the store
+  answer: (k, v) => {
+    if (typeof setAnswer === 'function') setAnswer(k, v, { from: 'occasion', quiet: true });
+    else { visit.set(k, v); track('tell_set', { kind: k, from: 'occasion' }); }
+  },
+});
+const SWEET_TOOLS = { 'level-up': () => sweet.open('sweet'), flavour: () => sweet.open('cravings'), occasion: () => sweet.open('occasion') };
+// The swap-the-sugar lines on a Sweet Spells recipe page, when the visitor's sweetener differs from the recipe's (read from the
+// atom: a page's snapshot doesn't carry sweetener or added_sugar)
+function sweetSwapHtml(rec) {
+  if (rec.room !== 'sweet-spells') return '';
+  const xs = swapLines(sweet.data, atomsById[rec.id] || rec, { sweetness: visit.get('sweetness'), sweeteners: visit.get('sweeteners') });
+  return xs.length ? `<div class="bk-swap"><h4>${esc(sweet.data.swap.title)}</h4>${xs.map(x => `<p>${esc(x)}</p>`).join('')}</div>` : '';
+}
 const CHIA_TOOLS = { mood: () => chia.open('mood'), superpower: () => chia.open('mood'), generate: () => chia.open('mix'),
                      milk: () => chia.open('mix', { step: 'base' }), 'add-ins': () => chia.open('mix', { step: 'flavour' }) };
 // A chia jar's own buttons: "Ready by breakfast?" runs cook mode's timer to 7 tomorrow; "Make 4 jars" sets servings and opens the list
@@ -1688,7 +1718,7 @@ const SYNONYMS = {};
 for (const [w, xs] of Object.entries(T.synonyms || {})) SYNONYMS[w.toLowerCase()] = [].concat(xs).map(x => String(x).toLowerCase());
 const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : { items: p?.items || [], useUp: !!p?.useUp }; };
 const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
-const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free' };
+const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free', 'low-fodmap': 'low-FODMAP' };
 const capFirst = t => t.replace(/^./, c => c.toUpperCase());
 // Her one line on Done, naming two things at most, never the list (tell-gemma-ux §4); {two} {many} {c} {d} {country}
 function acknowledge(kind, { after, forgot }) {
@@ -1704,9 +1734,10 @@ function acknowledge(kind, { after, forgot }) {
     line = xs.length ? (A.map || "{c} it is. I'll lean that way.").replace('{c}', listOf(xs.slice(0, 2)))
       : (A.country || 'Shopping words for {country}, then.').replace('{country}', countryLabel(after.country) || 'everywhere');
   } else if (kind === 'dietary') {
-    const xs = after.dietary.map(d => DIET_WORD[d] || d);
-    // every need is named, so none seems dropped (QA pass 4)
-    line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : (A.dietaryOther || "Noted. I'll pass it on when I write a recipe out.");
+    const xs = after.dietary.filter(d => d !== 'low-fodmap').map(d => DIET_WORD[d] || d);
+    // every need is named, so none seems dropped (QA pass 4); low-FODMAP isn't kept to (no cards checked yet), only passed on
+    const fodmap = after.dietary.includes('low-fodmap') ? `${T.dietary?.fodmapLabel || 'Low-FODMAP'}. ${T.dietary?.fodmapNote || "I'll pass it on when I write a recipe out. I only leave out cards I've checked."}` : '';
+    line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : fodmap || (A.dietaryOther || "Noted. I'll pass it on when I write a recipe out.");
   }
   say(capFirst(line), [], true);
   holdLine();
@@ -1715,7 +1746,7 @@ function acknowledge(kind, { after, forgot }) {
 // One fact on a room's first visit: dietary, then the pantry (in the kitchens that cook), then a cuisine (Inn rule 11)
 function entryFact(id) {
   const F = T.entry || {};
-  const d = [].concat(visit.get('dietary') || []), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
+  const d = [].concat(visit.get('dietary') || []).filter(x => x !== 'low-fodmap'), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
   if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', listOf(d.map(x => DIET_WORD[x] || x)));
   if (p.length && ['cuddlecore', 'flourish'].includes(id)) return (F.pantry || "I'll look for things that use your {p}.").replace('{p}', listOf(p.slice(0, 2)));
   if (c.length) return (F.cuisine || "I'll lean {c} where I can.").replace('{c}', cuisineLabel(c[0]));
@@ -1734,7 +1765,7 @@ function emptyRoomLine() {
   const home = homeOf(state.room);
   if (!hasOwn()) return null;
   if (world.atoms.some(a => a.room === home && fits(a))) return null;
-  const diet = [].concat(visit.get('dietary') || []);
+  const diet = [].concat(visit.get('dietary') || []).filter(x => x !== 'low-fodmap');   // not a filter yet (no cards checked), so never the reason
   if (!world.atoms.some(fits)) {
     if (!diet.length || state.nothingSaid) return null;
     state.nothingSaid = true;
@@ -1757,7 +1788,8 @@ const tell = createTell({
   openEnergy: () => tagsUI.openEnergy(),
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 });
-const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) }, tell, chipLabel: `+ ${T.menu?.title || 'Tell me about you'}` });
+const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) }, tell, chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`,
+  extra: sweetTags(sweet.data, (k, src) => sweet.open(k, src)) });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
 // the book's "This visit" page and the hallway notice board, once something's been kept
@@ -1835,19 +1867,19 @@ const TOLD_ENERGY = { 'burnt-out': "You're running on empty today.", low: "You'r
                       half: "You've got about half your energy today.", 'three-quarters': "You've got plenty in you today.",
                       full: "You're full of beans today." };
 const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]),
-               dietary: v => [].concat(v || []).length && `You're eating ${listOf([].concat(v))}.`,
+               dietary: v => [].concat(v || []).length && `You're eating ${listOf([].concat(v).map(d => DIET_WORD[d] || d))}.`,
                dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
                cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
-               country: v => v && `Shopping words for ${countryLabel(v) || v}.` };
-const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map' };
+               country: v => v && `Shopping words for ${countryLabel(v) || v}.`, ...sweetTold(sweet.data) };
+const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', sweetness: 'sweet', sweeteners: 'sweet' };
 const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 function renderTold() {
   const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
   $('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
     : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
   $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
-  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = () => tell.open(b.dataset.change, 'book'));
+  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = () => (b.dataset.change === 'sweet' ? sweet.open('sweet', 'book') : tell.open(b.dataset.change, 'book')));
   $('told').querySelector('[data-menu]')?.addEventListener('click', () => tell.openMenu('book'));
 }
 visit.subscribe(({ part, key, value }) => {

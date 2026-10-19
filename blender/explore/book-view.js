@@ -12,7 +12,7 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });   // "19 Oct"
 
-export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook, list, actions }) {
+export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook, list, actions, extra }) {
   // actions(rec): a room's own buttons under Cook this ([{ label, do }]), e.g. the Chiapothecary's "Ready by breakfast?" 
   const root = document.createElement('div');
   root.id = 'book';
@@ -97,7 +97,8 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
       ${r.seed?.time ? `<p class="small">${esc(r.seed.time)}</p>` : ''}</div>
       <div class="bk-write"></div>
       ${onCook ? '<p><button class="bk-cook">Cook this</button></p>' : ''}
-      ${(actions?.(r) || []).map((a, i) => `<p><button class="bk-outline bk-act" data-act-i="${i}">${esc(a.label)}</button></p>`).join('')}`;
+      ${(actions?.(r) || []).map((a, i) => `<p><button class="bk-outline bk-act" data-act-i="${i}">${esc(a.label)}</button></p>`).join('')}
+      ${extra?.(r) || ''}`;   // extra(rec): a room's own lines under the buttons (escaped HTML), e.g. Sweet Spells' swap the sugar
   }
   function contentsPage() {
     const kept = book.list();

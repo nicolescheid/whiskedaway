@@ -5,7 +5,7 @@
 
 const KEY = 'wa-written';
 export const WRITE_CAP = 3;
-export const DIETS = [['vegetarian', 'Vegetarian'], ['vegan', 'Vegan'], ['gluten-free', 'Gluten-free'], ['dairy-free', 'Dairy-free'], ['nut-free', 'Nut-free']];
+export const DIETS = [['vegetarian', 'Vegetarian'], ['vegan', 'Vegan'], ['gluten-free', 'Gluten-free'], ['dairy-free', 'Dairy-free'], ['nut-free', 'Nut-free'], ['low-fodmap', 'Low-FODMAP']];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function load() { try { return JSON.parse(sessionStorage.getItem(KEY) || 'null') || { n: 0, recipes: {} }; } catch { return { n: 0, recipes: {} }; } }
