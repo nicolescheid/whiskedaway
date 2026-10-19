@@ -875,6 +875,8 @@ Time of day works the same way. A "time" event is the visitor pushing the kitche
 An "energy" event is the visitor picking one of five candles to say how much energy they have today: burnt out, low, half, three-quarters or full (objects of type "energy" describe each one). It's a deliberate choice that holds until they pick another, like the weather. It's the strongest guide to effort: each energy object has a spoon_bias, and the lower it is, the more you should favour atoms with fewer spoons. For burnt out or low, serve only 0-spoon atoms (a 1-spoon atom at most, if nothing else fits); for full, hands-on cooking is welcome. In a why, say it plainly ("Because you picked the burnt-out candle"). Never reveal an energy object.
 A "season" event is the visitor turning the Conservatory's seasons wheel to spring, summer, autumn or winter (objects of type "season" describe each one). It's a deliberate choice that holds until they turn it again, like the weather: spring and summer lean fresh, green and cooling, autumn and winter warm and hearty. Never reveal a season object.
 
+"visitor" is what they told the check-in, when they did. time_available is how long they have to cook: favour atoms whose "time" (active minutes; "wait" is hands-off and doesn't count) fits inside it, but don't rule others out. confidence is how at home they are in a kitchen ("starting" leans to fewer spoons and simple methods, "confident" welcomes hands-on ones); energy is today, confidence is skill. Never reveal either in a why beyond plain words ("Because you've got about 15 minutes").
+
 Decide:
 - hypothesis: a short, plain-language reading of the wander (e.g. "something warm you don't have to stand up for").
 - cluster: the closest cluster id.
@@ -928,6 +930,10 @@ async function handleNavigate(request, env) {
       room: p.room, clusters, objects, atoms, trail,
       already_served: (p.already_served || []).slice(0, 60),
       set_aside: (p.dismissed || []).slice(0, 60),
+      visitor: {
+        time_available: p.visitor?.time_available ? String(p.visitor.time_available).slice(0, 20) : null,
+        confidence: ['starting', 'happy', 'confident'].includes(p.visitor?.confidence) ? p.visitor.confidence : null,
+      },
     });
 
     const res = await fetch(ANTHROPIC_API_URL, {

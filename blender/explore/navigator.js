@@ -23,6 +23,8 @@
  *   book:  { now: [snapshot], before: [snapshot] }   this visit's keeps (×3 on their themes) and older ones (×1)
  *   about: { pantry: [...], useUp, cuisines: [...], synonyms }   a bonus per key ingredient they have (+2 each, max +4; doubled
  *                                                                with "use these up first"), and for a chosen cuisine (+2)
+ *          timeLimit, confidence                      the check-in's "how long have you got" (minutes, or none for no rush) and
+ *                                                     cooking confidence ('starting' | 'happy' | 'confident'): see TIME_OVER, CONFIDENCE
  * Dietary needs are a hard filter: the page leaves clashing atoms out (they arrive as served).
  */
 
@@ -39,7 +41,13 @@ const OWN_SEASON_WEIGHT = 1.2;  // the visitor's own season, not chosen: counted
 const ROOM_LEAN = 4;          // an atom from the room the visitor is in (if it fits at all): mostly that room's own, the odd one from elsewhere
 const AI_HOME = 30, AI_AWAY = 10;
 const KEEP_NOW = 3, KEEP_BEFORE = 1, KEEP_BEFORE_MAX = 10;   // keeps weigh more than touches and don't fade; older ones only nudge
-const PANTRY_EACH = 2, PANTRY_MAX = 4, CUISINE = 2;   // the AI's shortlist: the room's own atoms, then the best of the rest by local score
+const PANTRY_EACH = 2, PANTRY_MAX = 4, CUISINE = 2;
+// How long they've got is soft, never a filter: an idea whose active `time` runs over loses up to 6 (3 per 100% over), so a
+// visitor with 15 minutes still gets ideas, just the quick ones first. `wait` is hands-off and doesn't count (an overnight chia is quick)
+const TIME_OVER = 3, TIME_OVER_MAX = 6;
+// Cooking confidence nudges by effort, like an energy's spoon_bias (added per spoon): starting out leans gentle, confident hands-on
+const CONFIDENCE = { starting: -1.5, happy: 0, confident: 0.5 };
+export const timePenalty = (a, limit) => (limit && a.time > limit ? Math.min(TIME_OVER_MAX, TIME_OVER * (a.time - limit) / limit) : 0);   // the AI's shortlist: the room's own atoms, then the best of the rest by local score
 // Each energy level also has a spoon_bias: added per spoon to an atom's score, so a burnt-out candle
 // (-3) all but rules out two-spoon pieces and a full one (+1) leans toward the hands-on ones.
 
@@ -215,7 +223,8 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
     .filter(a => awayOk || !room || a.room === room || !world.atoms.some(x => x.room === room))   // an away idea only while none is out
     .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons
                        + Math.min(PANTRY_MAX * (about.useUp ? 2 : 1), pantryHits(a, about.pantry, about.synonyms).length * PANTRY_EACH * (about.useUp ? 2 : 1))
-                       + (cuisineHit(a, about.cuisines) ? CUISINE : 0) }))
+                       + (cuisineHit(a, about.cuisines) ? CUISINE : 0)
+                       - timePenalty(a, about.timeLimit) + (CONFIDENCE[about.confidence] || 0) * a.spoons }))
     .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: from the room's *-world.json
     .filter(x => x.s >= SERVE_MIN)
     .sort((x, y) => y.s - x.s)
@@ -227,8 +236,11 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
       const cuisine = !hits.length && !kept && (about.cuisines || []).find(c => cuisineHit(a, [c]));
       const W = about.why || {};                                   // gemma-lines.json tell.why: "you've got {a} to use", "you chose {a} on the map"
       const fillWhy = (t, a) => t.replace(/^you've/, "'ve").replace(/^you\s+/, '').replace(/\{[apc]\}/, a);   // "Because you" comes first
+      // A short time is a reason when the idea fits inside it ("Because you've got about 15 minutes")
+      const quick = !hits.length && !kept && !cuisine && about.timeLimit && about.timeLimit <= 30 && a.time <= about.timeLimit && about.timeWords;
       const first = [...(hits.length ? [fillWhy(W.pantry || "you've got {p} to use", listJoin(hits.slice(0, 2)))] : []), ...(kept ? [kept] : []),
-                     ...(cuisine ? [fillWhy(W.cuisine || 'you chose {c} on the map', about.cuisineLabel?.(cuisine) || cuisine)] : [])];
+                     ...(cuisine ? [fillWhy(W.cuisine || 'you chose {c} on the map', about.cuisineLabel?.(cuisine) || cuisine)] : []),
+                     ...(quick ? [fillWhy(W.time || "you've got {t}", about.timeWords).replace('{t}', about.timeWords)] : [])];
       const { why, context } = reasonsFor(a.themes, trail, world, a.spoons, first.slice(0, 2));
       const parts = shareVerbs(why.slice(0, 2));
       const text = (parts.length ? `Because you ${listJoin(parts)}${context && parts.length < 2 ? `, and ${context}` : ''}.`
@@ -278,7 +290,9 @@ export async function aiNavigate(endpoint, trail, world, state, { timeoutMs = 20
         room: state.roomName || world.name,
         trail: trail.slice(-30),
         objects: [...things.filter(o => rank(o) === 0), ...signals, ...things.filter(o => rank(o) > 0).sort((a, b) => rank(a) - rank(b))].slice(0, 40),
-        atoms: (shortlist.length ? shortlist : world.atoms).map(({ id, title, kind, themes, spoons, room }) => ({ id, title, kind, themes, spoons, room })),
+        atoms: (shortlist.length ? shortlist : world.atoms).map(({ id, title, kind, themes, spoons, room, time, wait }) => ({ id, title, kind, themes, spoons, room, time, wait })),
+        // What they told the check-in, when they did: how long they've got (active minutes) and how at home they are cooking
+        visitor: { time_available: state.about?.timeLimit ? `${state.about.timeLimit} minutes` : null, confidence: state.about?.confidence || null },
         // the room's own readings first, so a cap at the Worker never drops them
         clusters: Object.entries(roomClusters(world, state.room)).map(([id, c]) => ({ id, label: c.label, room: c.room })),
         already_served: state.served || [],

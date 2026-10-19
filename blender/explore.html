@@ -667,6 +667,7 @@ import { visitTheme, themeSentence } from './explore/theme.js';
 import { createWriteOut } from './explore/writeout.js';
 import { createCook } from './explore/cook.js';
 import { createList } from './explore/list.js';
+import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine } from './explore/checkin.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 
 const params = new URLSearchParams(location.search);
@@ -1404,8 +1405,7 @@ function chatLine(who, text) {
 // Chips are data ({ label, do: [action, ...args] }), so the last question's answers are kept with the visit and come
 // back after a reload (J9)
 const CHIP_ACTS = {
-  // The check-in sheet is the Ideas build's (checkin-build, which also sets window.__explore.checkin); the Tell menu until then
-  checkin: () => { endCheckinOffer(); window.__explore?.checkin ? tell.open('checkin', 'foyer') : tell.openMenu('foyer'); },
+  checkin: () => { endCheckinOffer(); tell.open('checkin', 'foyer'); },   // the check-in sheet (the Ideas build's)
   choose: cluster => record({ kind: 'choose', cluster }),
   tell: () => tell.openMenu('offer'),                   // "Want to tell me what's in your cupboard…?" [Tell me]
   later: () => endCheckinOffer(),                                      // [Not now]: the offer is over for the visit
@@ -1503,7 +1503,8 @@ function steer() {
     served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
     about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS,
-             why: T.why, cuisineLabel },
+             why: { ...CW.why, ...T.why }, cuisineLabel,
+             timeLimit: TIME_LIMIT[visit.get('time')] || null, timeWords: timeWords(CW, visit.get('time')), confidence: visit.get('confidence') },
   };
 }
 // The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
@@ -1627,6 +1628,7 @@ const writer = createWriteOut({
     theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
     dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
     country: countryLabel(visit.get('country') || mapDefault()), dish: visit.dish(rec.room),
+    servings: servingsNumber(visit.get('servings')), confidence: visit.get('confidence') || null, time_available: TIME_LIMIT[visit.get('time')] || null,
   }),
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
@@ -1636,7 +1638,8 @@ const writer = createWriteOut({
 const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: LINES.cook,
   isKept: id => book.has(id), onList: () => { track('list_open'); bookView.open('list', { from: 'cook' }); } });
 // "What do I need?" (explore/list.js): one shopping list from the book, the pantry set aside
-const shopList = createList({ book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS, track });
+const shopList = createList({ book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
+  servings: () => servingsNumber(visit.get('servings')), track });
 const bookView = createBookView({
   onCook: (rec, from) => cook.open(rec, from),
   list: shopList,
@@ -1650,12 +1653,28 @@ const bookView = createBookView({
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {};
+const CW = checkinWords(T);
+// Each answer's sound, whichever door (sound.js: the same family for every object that sets one answer)
+const answerSound = (key, value, prev = null) => (value ? sound.answer(key, { change: key === 'energy' && !!prev, count: servingsNumber(value) || 1 })
+  : sound.unanswer(key));                              // the check-in's words (checkin.js; gemma-lines.json tell.checkin)
+// The one setter for the check-in's answers, whichever door they come through (the desk's sheet, a tag): the same key, the same
+// tag, the same line from Gemma (checkin-views.md: one home per answer, many doors to it). `quiet` when the sheet says one line for all.
+function setAnswer(key, value, { from = 'tag', quiet = false } = {}) {
+  if (visit.get(key) === (value ?? null)) return false;
+  visit.set(key, value ?? null);
+  track('tell_set', { kind: key, from });               // single-choice: never a count (analytics-events.js ANSWER_KINDS)
+  if (!quiet) answerSound(key, value);                   // the sheet plays its sounds in the tap
+  if (!quiet && value) { say(capFirst(ackLine(CW, key, value) || ''), [], true); holdLine(); }
+  scheduleNavigate();                                    // the next idea leans on it
+  return true;
+}
 const TL = {
   offer: T.offer || "Want to tell me what's in your cupboard, or anything to avoid?", offerYes: T.offerYes || 'Tell me', offerNo: T.offerNo || 'Not now',
   forgot: T.forgot || 'Forgotten.', nothingAnywhere: T.nothingAnywhere || "I can't find anything on my shelves that fits all of that.",
   roomNone: T.roomNone || "Nothing in here fits {diet}, I'm afraid. {room} has a few.",
 };
-const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary' };
+// A world object with "tool": "checkin" (the foyer desk) opens the check-in; "pantry" (the groceries by the door too) the pantry
+const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary', checkin: 'checkin' };
 // The Map's starting country: the connection's (from /local-weather), else the browser's language region (PM, option b)
 const mapDefault = () => (state.connCountry && countryLabel(state.connCountry) ? state.connCountry : countryFromLanguage());
 // Words that mean the same in the kitchen (tell-data.json groups): each word maps to the rest of its group
@@ -1666,11 +1685,27 @@ const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
 const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free' };
 const capFirst = t => t.replace(/^./, c => c.toUpperCase());
 // Her one line on Done, naming two things at most, never the list (tell-gemma-ux §4); {two} {many} {c} {d} {country}
+// The check-in's Done: each answer through its own door's setter, quietly, then one line from Gemma (the answer's own line when
+// only one changed, else her thanks)
+function checkedIn({ after, changed, from, forgot }) {
+  if (forgot) return say(TL.forgot, [], true);
+  for (const k of changed) {
+    if (k === 'energy') { if (after.energy) chooseEnergy(after.energy, { quiet: true, from }); else visit.forget('energy'); }
+    else if (k === 'weather') chooseWeather(after.weather, { quiet: true });
+    else setAnswer(k, after[k], { from, quiet: true });
+  }
+  const one = changed.length === 1 && after[changed[0]] ? changed[0] : null;
+  const line = !one ? CW.ack.checkin : one === 'energy' ? world.energies?.[after.energy]?.moment : one === 'weather' ? world.weathers[after.weather]?.moment
+    : ackLine(CW, one, after[one]);
+  if (line) { say(capFirst(line), [], true); holdLine(); }
+  scheduleNavigate();
+}
 function acknowledge(kind, { after, forgot }) {
   const A = T.ack || {};
   if (forgot) return say(TL.forgot, [], true);
   let line = '';
   if (kind === 'pantry') {
+    if (after.items.length) sound.answer('pantry');      // the paper bag
     const xs = after.items, two = listOf(xs.slice(0, 2)), many = `${xs[0]}, ${xs[1]} and a few more`;
     line = after.useUp ? (A.pantryUseUp || '{two} first, then.').replace('{two}', two)
       : xs.length >= 3 ? (A.pantryMany || '{many}. Noted.').replace('{many}', many) : (A.pantry || "{two}. I'll work with those.").replace('{two}', two);
@@ -1728,11 +1763,18 @@ function emptyRoomLine() {
 const tell = createTell({
   visit, lines: LINES.tell, track, defaultCountry: mapDefault,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
-  onDone: acknowledge,
+  onDone: (k, r) => (k === 'checkin' ? checkedIn(r) : acknowledge(k, r)),
   openEnergy: () => tagsUI.openEnergy(),
+  checkin: {
+    energies: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
+    weathers: () => Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: w.label })),
+    weather: () => state.weather || null,
+    onTap: (k, v, prev) => k !== 'weather' && answerSound(k, v, prev),
+  },
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 });
-const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) }, tell, chipLabel: `+ ${T.menu?.title || 'Tell me about you'}` });
+const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
+  chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
 // the book's "This visit" page and the hallway notice board, once something's been kept
@@ -1814,8 +1856,9 @@ const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TO
                dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
                cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
-               country: v => v && `Shopping words for ${countryLabel(v) || v}.` };
-const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map' };
+               country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
+               time: v => toldLine(CW, 'time', v), servings: v => toldLine(CW, 'servings', v), confidence: v => toldLine(CW, 'confidence', v) };
+const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin' };
 const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 function renderTold() {
   const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
@@ -1828,7 +1871,8 @@ function renderTold() {
 visit.subscribe(({ part, key, value }) => {
   renderTold();
   if (part === 'all' || key === 'energy') showCandle();               // forgetting the energy puts the candle out
-  if (part === 'about' && key === 'energy' && !value) scheduleNavigate();
+  if (part === 'about' && ['energy', 'time', 'servings', 'confidence'].includes(key) && !value) scheduleNavigate();
+  if ((part === 'about' && key === 'servings') || part === 'all') bookView.refresh();   // the shopping list's amounts
   if ((part === 'about' && key === 'dietary') || part === 'all') {
     const gone = state.cards.filter(c => atomsById[c.atom] && dietClash(atomsById[c.atom]));
     gone.forEach(c => ideas.remove(c.atom));
@@ -1920,14 +1964,14 @@ function openWeather() {
   $('weather').classList.add('open');
   $('dial').querySelector('.on')?.focus();
 }
-function chooseWeather(id) {
+function chooseWeather(id, { quiet = false } = {}) {
   if (!world.weathers[id]) return;
   $('dial').querySelectorAll('button').forEach(b => { const on = b.dataset.w === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   if (id === state.weather) return introduce();
   state.weather = id;
   state.weatherFrom = 'visitor';
   showWeather(id);
-  say(world.weathers[id].moment, [], true);
+  if (!quiet) say(world.weathers[id].moment, [], true);
   record({ kind: 'weather', id });
   track('weather_change', { room: state.room, weather: id });
   introduce();
@@ -2040,13 +2084,16 @@ function showCandle() {
   for (const h of hotspots) h.el.classList.toggle('chosen', !!key && h.id === key);
   render();
 }
-function chooseEnergy(id) {
+function chooseEnergy(id, { quiet = false, from = null } = {}) {
   const e = world.energies?.[id];
   if (!e || id === visit.get('energy')) return;
+  const prev = visit.get('energy');
   visit.set('energy', id);
-  track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
+  if (!quiet) answerSound('energy', id, prev);
+  if (from) track('tell_set', { kind: 'energy', from });   // the check-in's candle; in Cuddlecore the candle is a touch
+  else track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
   showCandle();
-  say(e.moment, [], true);
+  if (!quiet) say(e.moment, [], true);
   record({ kind: 'energy', id });
 }
 
@@ -2157,7 +2204,7 @@ function endCheckinOffer() {
   store.save(state);
   checkinPill();
 }
-window.__explore = { state, visit, lines: LINES, book, ideas, chatUI, bookView, settle, showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, visit, lines: LINES, book, ideas, chatUI, bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();

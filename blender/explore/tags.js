@@ -6,10 +6,15 @@
 
 import { DIETS } from './writeout.js';
 import { cuisineLabel } from './tell.js';
+import { SERVINGS, checkinWords } from './checkin.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you' }) {
+export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you', lines = {} }) {
+  const W = checkinWords(lines);
+  // The check-in's answers (checkin.js): a small picker like energy's, and the same setter as the desk's sheet (choose.answer)
+  const answer = (k, icon, name, ids) => ({ icon, name, title: W.rows[k], word: v => (W[k][v] || '').toLowerCase(),
+    options: () => ids.map(id => ({ id, label: W[k][id] })), pick: id => choose.answer(k, id) });
   // Each kind: its icon, its words for a value, the picker's options and how a pick is made
   const KINDS = {
     energy: {
@@ -32,6 +37,9 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
       word: v => { const items = Array.isArray(v) ? v : v?.items || []; return items.length ? items.slice(0, 2).join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '') : ''; },
     },
     cuisines: { icon: '🗺', name: 'The map', sheet: 'map', word: v => [].concat(v || []).map(cuisineLabel).join(', ') },   // the country is in the sheet only
+    time: answer('time', '⏳', 'Time', Object.keys(W.time)),
+    servings: { ...answer('servings', '🍽', 'Cooking for', SERVINGS), word: v => (v === '1' || v === 'crowd' ? W.servings[v] : `for ${W.servings[v] || v}`).toLowerCase() },
+    confidence: answer('confidence', '🧑‍🍳', 'Confidence', Object.keys(W.confidence)),
   };
   el.setAttribute('role', 'list');
   el.setAttribute('aria-label', "What you've told Gemma");
