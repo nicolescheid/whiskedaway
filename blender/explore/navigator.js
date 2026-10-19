@@ -188,8 +188,9 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
   const weights = themeWeights(trail, world, book);
   const clusters = clusterScores(weights, { ...world, clusters: roomClusters(world, room) });
   const top = clusters[0];
+  const second = clusters[1] || { score: 0 };   // a room can have a single reading (Flourish: build-up), so there may be no runner-up
   // Confidence is how clearly the leading reading beats the runner-up
-  const confidence = top.score ? Math.round(((top.score - clusters[1].score) / top.score) * 100) / 100 : 0;
+  const confidence = top.score ? Math.round(((top.score - second.score) / top.score) * 100) / 100 : 0;
 
   const touched = new Set(trail.filter(e => e.id).map(e => e.id));
   const reveal = Object.entries(world.objects)
@@ -233,9 +234,9 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
   // No lead naming the last thing touched ("The clock… I think…"): it read oddly for tools, and the idea's own "Because you…" line
   // already says what she noticed. One short line also keeps her clear of the room in phone landscape (QA pass 3)
   let gemma, fork = [];
-  if (confidence < FORK_BELOW && clusters[1].score > 0 && meaningful.length >= 2) {
-    fork = [top.id, clusters[1].id];
-    gemma = `I can't quite tell yet. Are you after ${top.label}, or ${clusters[1].label}?`;   // no lead: a question stays under 100 characters
+  if (confidence < FORK_BELOW && second.score > 0 && meaningful.length >= 2) {
+    fork = [top.id, second.id];
+    gemma = `I can't quite tell yet. Are you after ${top.label}, or ${second.label}?`;   // no lead: a question stays under 100 characters
   } else {
     gemma = `I think you're after ${top.label}.`;   // no "I found you something": the rising idea says that (Ideas, v4)
   }
