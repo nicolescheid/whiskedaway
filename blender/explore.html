@@ -651,6 +651,7 @@ import { genieFetch, getPass, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
 import { sound } from './explore/sound.js';
+import { createEdgeHints } from './explore/edge-hints.js';
 import { saveData } from './explore/data-budget.js';
 import { createIdeas } from './explore/ideas.js';
 import { createChat } from './explore/chat.js';
@@ -851,6 +852,7 @@ function askHemisphere() {
 
 // ---------- panorama
 const stage = $('stage');
+const edgeHints = createEdgeHints({ stage, roomId: () => (state.room.startsWith('hall') ? 'hallway' : state.room) });
 // preserveDrawingBuffer keeps the last frame, so browser screenshot tools capture the room instead of black
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -1063,6 +1065,7 @@ function render() {
     h.el.style.top = `${(1 - p.y) / 2 * innerHeight}px`;
     h.x = p.x;
   }
+  edgeHints.update(hotspots, camera);                     // phones: arrows toward what's off-screen
   // Names trail to the right, so keep the spots in left-to-right order: a spot is always above any name coming
   // from its left, and a shown name never covers the next dot (NEW-4). Only when the order changes, and never
   // while a spot has focus (moving it would drop the focus).
