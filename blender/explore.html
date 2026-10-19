@@ -2138,13 +2138,16 @@ function checkinPill() {
   pill.hidden = !state.checkinPill;
   if (state.checkinPill) chatUI.setAsking(false);   // the offer never raises the chat (it would cover the desk)
 }
-// On a portrait phone the arrival view (down the hall) misses the desk, so after the film's hand-over the view turns
-// to show the notice board and the desk together (checkin-ux.md §5, measured by the mobile lead). Wider screens
-// already see the desk, so nothing moves
-const PHONE_FOYER_VIEW = { yaw: 52, pitch: -6 };
+// After the film's hand-over (facing down the hall), make sure the desk shows (checkin-ux.md §5): a portrait phone turns
+// to the notice board and the desk; a wider screen that doesn't quite reach the desk turns a little, so the hall and
+// the whole desk both show. Screens that already see it don't move
+const PHONE_FOYER_VIEW = { yaw: 52, pitch: -16 }, WIDE_FOYER_YAW = 20;
 function faceDesk() {
-  if (!spots['checkin-desk'] || innerWidth >= innerHeight) return;
-  lookTo(PHONE_FOYER_VIEW.yaw, PHONE_FOYER_VIEW.pitch);
+  const d = spots['checkin-desk'];
+  if (!d) return;
+  if (innerWidth < innerHeight) return lookTo(PHONE_FOYER_VIEW.yaw, PHONE_FOYER_VIEW.pitch);
+  const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) * 180 / Math.PI;   // half the view, across
+  if (Math.abs(((d.yaw - look.yaw + 540) % 360) - 180) > half - 4) lookTo(WIDE_FOYER_YAW, look.pitch);
 }
 function arrive() {
   if (state.asked || state.trail.length) return;
