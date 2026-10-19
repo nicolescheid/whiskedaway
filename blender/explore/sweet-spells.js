@@ -168,9 +168,12 @@ export function createSweetSheets({ visit, lines = {}, track, sound, beforeOpen,
   }
   const redraw = sel => { draw(); body.querySelector(sel)?.focus({ preventScroll: true }); };
 
-  function done() {
+  // Every way out keeps the taps (Done, ✕, the dim, Escape, Back): these are one-tap answers, and a tap just off Done lands
+  // on the dim (PM, live 19 Oct: the answer was lost)
+  function done({ viaBack = false } = {}) {
+    if (root.hidden) return;
     const k = kind;
-    close();
+    close({ viaBack });
     const later = f => setTimeout(f, reduce() ? 0 : 200);           // after the sheet has gone, so her line isn't hidden behind it
     if (k === 'sweet') {
       const sweetness = draft.sweetness || null;
@@ -227,12 +230,12 @@ export function createSweetSheets({ visit, lines = {}, track, sound, beforeOpen,
     if (pushed) { pushed = false; if (!viaBack && history.state?.sweet) history.back(); }
     if (opener?.isConnected) opener.focus({ preventScroll: true });
   }
-  $('.sw-done').onclick = done;
-  $('.tl-x').onclick = () => close();
-  $('.tl-dim').onclick = () => close();
-  addEventListener('popstate', () => { if (pushed && !history.state?.sweet) { pushed = false; close({ viaBack: true }); } });
+  $('.sw-done').onclick = () => done();
+  $('.tl-x').onclick = () => done();
+  $('.tl-dim').onclick = () => done();
+  addEventListener('popstate', () => { if (pushed && !history.state?.sweet) { pushed = false; done({ viaBack: true }); } });
   root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return close(); }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return done(); }
     if (e.key === 'Tab') {
       const f = [...root.querySelectorAll('button')].filter(x => !x.disabled && x.offsetParent);
       const i = f.indexOf(document.activeElement);
