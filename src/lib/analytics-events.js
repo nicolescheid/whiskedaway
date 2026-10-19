@@ -34,12 +34,13 @@ export const EVENTS = {
   chat_size: ['panel_size', 'method'],                             // panel_size: line, short, full; method: drag, tap, button, auto
   book_open: ['from', 'book_size'],                                // from: chip, card, notice_board
   book_clear: ['book_size'],
-  cook_open: ['from'],                                             // cook mode: from book|loose
+  // Cook mode and the shopping list (cook-mode-ux.md §4). Counts only: no recipe names, no ingredients, no list items
+  cook_open: ['from'],                    // from: book, or loose (a recipe not in the book)
   cook_done: [],
   timer_start: [],
   timer_done: [],
-  list_open: [],                                                   // "What do I need?"
-  list_share: [],
+  list_open: [],
+  list_share: [],                         // the share sheet or copy was used; what was shared never leaves the device through us
   tell_open: ['kind', 'from'],                                     // Tell Gemma: kind pantry|map|dietary; from object|tag|menu|book|offer
   tell_set: ['kind', 'count', 'use_up'],                           // count 0|1|2-3|4+; never the values (no ingredients, cuisines, country or diets)
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3
