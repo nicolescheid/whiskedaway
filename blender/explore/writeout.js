@@ -17,12 +17,15 @@ export function cleanRecipe(r) {
   if (!r || typeof r !== 'object') return null;
   const s = (v, n) => String(v ?? '').slice(0, n).trim();
   const ingredients = (Array.isArray(r.ingredients) ? r.ingredients : []).slice(0, 16)
-    .map(i => (typeof i === 'string' ? { item: s(i, 80), amount: '' } : { item: s(i?.item ?? i?.name, 80), amount: s(i?.amount ?? i?.quantity, 40) }))
+    .map(i => (typeof i === 'string' ? { item: s(i, 80), amount: '' } : { item: s(i?.item ?? i?.name, 80), amount: s(i?.amount ?? i?.quantity, 40), unit: s(i?.unit, 12), key: s(i?.key, 40) }))
     .filter(i => i.item);
   const steps = (Array.isArray(r.steps) ? r.steps : []).slice(0, 12).map(x => s(typeof x === 'string' ? x : x?.text, 400)).filter(Boolean);
+  // Cook mode (cook-mode-ux.md §3): each step's timer and what it uses, when the write-out gives them; older recipes have none
+  const detail = (Array.isArray(r.steps) ? r.steps : []).slice(0, 12).filter(x => x && typeof x === 'object' && x.text)
+    .map(x => ({ text: s(x.text, 400), minutes: Number(x.minutes) > 0 ? Math.min(600, Math.round(Number(x.minutes))) : null, uses: (Array.isArray(x.uses) ? x.uses : []).slice(0, 8).map(u => s(u, 40)).filter(Boolean) }));
   if (!ingredients.length || !steps.length) return null;
   return { name: s(r.name, 100), serves: Number(r.serves) > 0 ? Math.min(12, Math.round(Number(r.serves))) : null, time: s(r.time, 40),
-           ingredients, steps, tip: s(r.tip, 240) };
+           ingredients, steps, ...(detail.length === steps.length ? { stepDetail: detail } : {}), tip: s(r.tip, 240) };
 }
 
 export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange }) {
@@ -44,7 +47,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
 
   function fullHtml(f) {
     return `<h4>You'll need${f.serves ? ` <span class="small">(serves ${f.serves})</span>` : ''}</h4>
-      <ul class="bk-ing">${f.ingredients.map(i => `<li>${i.amount ? `<b>${esc(i.amount)}</b> ` : ''}${esc(i.item)}</li>`).join('')}</ul>
+      <ul class="bk-ing">${f.ingredients.map(i => `<li>${i.amount ? `<b>${esc(i.amount)}${i.unit ? ` ${esc(i.unit)}` : ''}</b> ` : ''}${esc(i.item)}</li>`).join('')}</ul>
       <h4>How${f.time ? ` <span class="small">${esc(f.time)}</span>` : ''}</h4>
       <ol class="bk-steps">${f.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>
       ${f.tip ? `<p class="bk-tip"><b>Gemma's tip:</b> ${esc(f.tip)}</p>` : ''}
