@@ -216,7 +216,7 @@ export function frontDoor({ active, track }) {
   // With sound, chosen at the door (W2): the film then comes with its whoosh and latch, and the Inn arrives with sound on.
   // Inside the tap, so the browser lets the sound start
   const soundBtn = $('fd-sound');
-  const showSound = () => { soundBtn.setAttribute('aria-pressed', String(sound.on)); soundBtn.querySelector('span').textContent = sound.on ? 'Sound on' : 'With sound'; };
+  const showSound = () => { soundBtn.setAttribute('aria-pressed', String(sound.on)); soundBtn.querySelector('span').textContent = sound.on ? 'Sound on' : 'Sound off'; };
   if (soundBtn) {
     showSound();
     soundBtn.addEventListener('click', () => { sound.toggle(); showSound(); });
