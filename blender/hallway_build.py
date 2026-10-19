@@ -155,13 +155,17 @@ def checkin_props(oak, tread_oak, brass, brass_worn, berry_linen, paint):
     p.inputs["Subsurface Radius"].default_value = (1.0, 0.75, 0.35)
     p.inputs["Subsurface Scale"].default_value = 0.012
     wick_m = mat("checkin_wick", srgb("#2a2420"), rough=0.8)
-    tray_x, ty = x0 + 0.33, -0.2
-    stand = [box("checkin_tray", (tray_x, ty, top + 0.008), (0.5, 0.11, 0.016), brass, bevel=0.005)]
+    tray_x, ty = x0 + 0.28, -0.2
+    rise = 0.34                                  # a raised stand, so the wick tips sit near pitch -8 from the foyer camera (phones)
+    ctop = top + rise
+    stand = [box_span("checkin_riser", tray_x - 0.27, tray_x + 0.27, ty - 0.085, ty + 0.085, top, ctop, tread_oak, bevel=0.006),
+             box_span("checkin_riser_step", tray_x - 0.3, tray_x + 0.3, ty - 0.1, ty + 0.1, ctop - 0.03, ctop, oak, bevel=0.006),
+             box("checkin_tray", (tray_x, ty, ctop + 0.008), (0.5, 0.11, 0.016), brass, bevel=0.005)]
     flames = {}
     for i, (key, h) in enumerate(CHECKIN_CANDLES):
         cx = tray_x - 0.2 + i * 0.1
-        stand.append(cyl(f"checkin_dish_{key}", (cx, ty, top + 0.02), 0.042, 0.01, brass_worn, bevel=0.003))
-        base = top + 0.025
+        stand.append(cyl(f"checkin_dish_{key}", (cx, ty, ctop + 0.02), 0.042, 0.01, brass_worn, bevel=0.003))
+        base = ctop + 0.025
         stand.append(cyl(f"checkin_candle_{key}", (cx, ty, base + h / 2), 0.028, h, wax, bevel=0.005))
         wick = cyl(f"checkin_wick_{key}", (cx, ty, base + h + 0.006), 0.0015, 0.012, wick_m, verts=8, bevel=0)
         if key == "burnt-out":
