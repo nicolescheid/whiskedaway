@@ -189,8 +189,9 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
       track?.('mix_swap', { outcome: 'declined' });
       draw();
     });
-    foot.querySelector('.mx-back')?.addEventListener('click', () => { at = Math.max(0, at - 1); failed = false; draw(); });
-    foot.querySelector('.mx-next')?.addEventListener('click', () => { at += 1; draw(); foot.querySelector('.mx-next, .mx-write')?.focus({ preventScroll: true }); });
+    // "Swapped." belongs to the step it was said on (QA 7): a new step starts without it
+    foot.querySelector('.mx-back')?.addEventListener('click', () => { at = Math.max(0, at - 1); failed = false; reply = ''; draw(); });
+    foot.querySelector('.mx-next')?.addEventListener('click', () => { at += 1; reply = ''; draw(); foot.querySelector('.mx-next, .mx-write')?.focus({ preventScroll: true }); });
     foot.querySelector('.mx-write')?.addEventListener('click', write);
     foot.querySelector('.mx-done')?.addEventListener('click', doneMood);
   }

@@ -672,7 +672,7 @@ import { createCook } from './explore/cook.js';
 import { createChiaMix, chiaData } from './explore/chia-mix.js';
 import { createSweetSheets, sweetData, swapLines, sweetSteer, sweetTold, sweetTags } from './explore/sweet-spells.js';
 import { createList } from './explore/list.js';
-import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine } from './explore/checkin.js';
+import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine, servingsWords } from './explore/checkin.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 
 const params = new URLSearchParams(location.search);
@@ -1698,20 +1698,38 @@ const SWEET_TOOLS = { 'level-up': () => sweet.open('sweet'), flavour: () => swee
 // atom: a page's snapshot doesn't carry sweetener or added_sugar)
 function sweetSwapHtml(rec) {
   if (rec.room !== 'sweet-spells') return '';
-  const xs = swapLines(sweet.data, atomsById[rec.id] || rec, { sweetness: visit.get('sweetness'), sweeteners: visit.get('sweeteners') });
+  return `<div class="bk-swapslot" data-id="${esc(rec.id)}">${sweetSwapInner(rec.id)}</div>`;
+}
+function sweetSwapInner(id) {
+  const xs = swapLines(sweet.data, atomsById[id] || {}, { sweetness: visit.get('sweetness'), sweeteners: visit.get('sweeteners'), dietary: visit.get('dietary') });
   return xs.length ? `<div class="bk-swap"><h4>${esc(sweet.data.swap.title)}</h4>${xs.map(x => `<p>${esc(x)}</p>`).join('')}</div>` : '';
 }
+// Low-FODMAP chosen on the page itself (Anything to avoid?): the swap line follows, without redrawing the page's diet chips
+addEventListener('wa-visit-state', e => {
+  if (!['dietary', 'sweetness', 'sweeteners', null].includes(e.detail.key)) return;
+  document.querySelectorAll('.bk-swapslot').forEach(el => { el.innerHTML = sweetSwapInner(el.dataset.id); });
+});
 const CHIA_TOOLS = { mood: () => chia.open('mood'), superpower: () => chia.open('mood'), generate: () => chia.open('mix'),
                      milk: () => chia.open('mix', { step: 'base' }), 'add-ins': () => chia.open('mix', { step: 'flavour' }) };
 // A chia jar's own buttons: "Ready by breakfast?" runs cook mode's timer to 7 tomorrow; "Make 4 jars" sets servings and opens the list
 const breakfastAt = () => { const d = new Date(); if (d.getHours() >= 7) d.setDate(d.getDate() + 1); d.setHours(7, 0, 0, 0); return d.getTime(); };
 const chiaActions = [
-  { label: chia.data.lines.breakfast, do: rec => { say(chia.data.lines.breakfastLine, [], true); cook.open(rec, 'breakfast', { until: breakfastAt() }); } },
-  // With the check-in in (its setAnswer and list scaling), 4 jars is the same servings answer as the desk's; before it, just the store
-  { label: chia.data.lines.jars, do: () => {
-    if (typeof setAnswer === 'function') setAnswer('servings', '4', { from: 'jars', quiet: true });
-    else { visit.set('servings', '4'); track('tell_set', { kind: 'servings', from: 'jars' }); }
-    bookView.open('list', { from: 'jars' }); say(chia.data.lines.jarsLine, [], true);
+  // From 7 in the morning on, the next 7:00 is tomorrow's: say so (the line is "Set it tonight…" otherwise)
+  { label: chia.data.lines.breakfast, do: rec => {
+    const day = new Date().getHours() >= 7 && new Date().getHours() < 17;
+    say(day ? chia.data.lines.breakfastLineDay || "Set it now and it'll be ready by 7 tomorrow morning." : chia.data.lines.breakfastLine, [], true);
+    cook.open(rec, 'breakfast', { until: breakfastAt() });
+  } },
+  // 4 jars is the same servings answer as the check-in's (setAnswer, list scaling). The list is made from the book, so a jar
+  // not kept yet goes in first; and if the check-in said another number, Gemma says it's changed (QA 7)
+  { label: chia.data.lines.jars, do: rec => {
+    if (!book.has(rec.id)) keepIdea(rec.id, rec.why, 'jars');
+    const was = visit.get('servings');
+    setAnswer('servings', '4', { from: 'jars', quiet: true });
+    bookView.open('list', { from: 'jars' });
+    const changed = was && was !== '4'
+      ? (chia.data.lines.jarsChanged || "Four jars, so I've made it four, not {n}. I've scaled your list.").replace('{n}', was === '1' ? 'one' : servingsWords(CW, was)) : '';
+    say(changed || chia.data.lines.jarsLine, [], true); holdLine();
   } },
 ];
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
@@ -1759,7 +1777,12 @@ function checkedIn({ after, changed, from, forgot }) {
     else setAnswer(k, after[k], { from, quiet: true });
   }
   const one = changed.length === 1 && after[changed[0]] ? changed[0] : null;
-  const line = !one ? CW.ack.checkin : one === 'energy' ? world.energies?.[after.energy]?.moment : one === 'weather' ? world.weathers[after.weather]?.moment
+  // Several answers: name two of them (QA 6/7), servings, then time, then confidence; the candle and weather say their own
+  const PHRASE = { servings: v => (v === '1' ? 'just you' : `cooking for ${servingsWords(CW, v)}`), time: v => timeWords(CW, v),
+                   confidence: v => String(CW.confidence?.[v] || '').toLowerCase() };
+  const two = ['servings', 'time', 'confidence'].filter(k => changed.includes(k) && after[k]).map(k => PHRASE[k](after[k])).filter(Boolean).slice(0, 2);
+  const named = two.length === 2 ? (CW.ack.checkinTwo || "{a}, and {b}. I'll keep all that in mind.").replace('{a}', two[0]).replace('{b}', two[1]) : '';
+  const line = !one ? named || CW.ack.checkin : one === 'energy' ? world.energies?.[after.energy]?.moment : one === 'weather' ? world.weathers[after.weather]?.moment
     : ackLine(CW, one, after[one]);
   if (line) { say(capFirst(line), [], true); holdLine(); }
   scheduleNavigate();

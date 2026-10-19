@@ -71,7 +71,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     const ask = !diet.length && !mem.dietAsked;
     const offer = !diet.length && mem.dietAsked && !openDiet;     // asked before and not answered: a one-line way back in (UX T6)
     el.innerHTML = `${oops}${offer ? `<p><button class="link bk-dietmore">Anything to avoid? ›</button></p>` : ''}${ask || openDiet ? `<div class="bk-diet" role="group" aria-label="${esc(L.diet)}"><p class="small">${esc(L.diet)}</p>
-        ${DIETS.map(([id, label]) => `<button data-diet="${id}" aria-pressed="false">${esc(label)}</button>`).join('')}</div>` : ''}
+        ${DIETS.map(([id, label]) => `<button data-diet="${id}" aria-pressed="${diet.includes(id)}">${esc(label)}</button>`).join('')}</div>` : ''}
       <button class="bk-writeout">${esc(L.button)}</button>
       <p class="small">${esc(left() === 1 ? L.remainingOne : L.remaining.replace('{n}', left()))}</p>`;
     // An answer here sets the visit's dietary needs, like the cookbook shelf, in every room; it isn't asked again this visit

@@ -516,6 +516,9 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 @keyframes tl-flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(.94, 1.06) rotate(-2deg); } 60% { transform: scale(1.04, .96) rotate(2deg); } }
 @media (prefers-reduced-motion: reduce) { .tl-flame { transition: none; } .tl-candles button[aria-pressed="true"] .tl-flame { animation: none; } }
 /* ---------- the Chiapothecary's moods and Mix an experiment (chia-mix.js): the Tell Gemma sheet, one step per screen */
+/* The Mix keeps one height through its steps, so the header and its ✕ stay put (QA 7); the body scrolls */
+.tell.desk.mx-mix .tl-box { height: min(540px, calc(100vh - 48px)); }
+.tell.phone.mx-mix .tl-box { height: min(70dvh, 560px); }
 .mx-moods { list-style: none; margin: 4px 0 10px; padding: 0; display: grid; gap: 6px; }
 .mx-moods button { width: 100%; min-height: 52px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; text-align: left;
   border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); font: 14px/1.3 'Quicksand'; }
