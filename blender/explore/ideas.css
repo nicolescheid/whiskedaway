@@ -481,3 +481,6 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ls-got summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font: 600 13px 'Quicksand'; color: var(--ink-soft); }
 .ls-got button { min-height: 40px; border: 0; background: none; text-decoration: line-through; color: var(--ink-soft); font: 16px 'Crimson Pro', Georgia, serif; }
 .ls-acts { display: flex; gap: 10px; flex-wrap: wrap; }
+.ck-said { margin: 6px 16px 0; padding: 8px 12px; border-radius: 12px 12px 12px 4px; background: #fff; border: 1px solid var(--line);
+           font: 17px/1.35 'Crimson Pro', Georgia, serif; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.ck-said[hidden] { display: none; }
