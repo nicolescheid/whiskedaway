@@ -652,6 +652,7 @@ import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
 import { sound } from './explore/sound.js';
 import { createEdgeHints } from './explore/edge-hints.js';
+import { createTilt } from './explore/tilt.js';
 import { saveData } from './explore/data-budget.js';
 import { createIdeas } from './explore/ideas.js';
 import { createChat } from './explore/chat.js';
@@ -972,6 +973,7 @@ const dir = (yaw, pitch) => {
   return new THREE.Vector3(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p));
 };
 const look = { yaw: 0, pitch: -6 };
+createTilt({ stage, look, render });                       // phones: an opt-in chip, the room follows the phone
 
 // ---------- the clocks: hands drawn live in true perspective, one set per room view
 // room metres -> viewer space, for a camera standing at eye
