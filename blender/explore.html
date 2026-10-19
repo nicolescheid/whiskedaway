@@ -2063,11 +2063,13 @@ function confirmGuess(also) {
 // In through the front door, the first stop is the check-in desk: Gemma offers it, and the weather confirm is one of
 // its rows (checkin-views.md). Walking past is fine
 const CHECKIN_LINE = "Hello, love. Check in at the desk if you like, and I'll know what to cook for you.";
+// On a portrait phone the arrival view (down the hall) misses the desk, so after the film's hand-over the view turns
+// to show the notice board and the desk together (checkin-ux.md §5, measured by the mobile lead). Wider screens
+// already see the desk, so nothing moves
+const PHONE_FOYER_VIEW = { yaw: 52, pitch: -6 };
 function faceDesk() {
-  const d = spots['checkin-desk'];
-  if (!d) return;
-  const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) * 180 / Math.PI;   // half the view, across
-  if (Math.abs(((d.yaw - look.yaw + 540) % 360) - 180) > half * 0.7) lookTo(d.yaw, d.pitch ?? look.pitch);
+  if (!spots['checkin-desk'] || innerWidth >= innerHeight) return;
+  lookTo(PHONE_FOYER_VIEW.yaw, PHONE_FOYER_VIEW.pitch);
 }
 function arrive() {
   if (state.asked || state.trail.length) return;
@@ -2076,6 +2078,7 @@ function arrive() {
     store.save(state);
     chatLine('gemma', CHECKIN_LINE);
     setChips([{ label: 'Check in', do: ['checkin'] }, { label: 'Later', do: ['later'] }]);
+    chatUI.setAsking(false);                           // keep the chat at Line: raised to Short it would cover the desk
     setTimeout(faceDesk, reduceMotion() ? 0 : 1100);   // after the film's hand-over has settled
     return;
   }
