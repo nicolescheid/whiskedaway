@@ -832,8 +832,13 @@ function buildUserMessage(payload) {
       + 'and only in the tip or the last step. Say what the food is, never what it does for health. '
       + 'Keep to the idea and its key ingredients, '
       + 'scale to 2 servings, respect every dietary restriction, and use ingredient names for my location. '
-      + 'Respond with JSON only, in exactly this shape: {"name": "...", "serves": 2, "time": "25 min", "ingredients": [{"item": "ripe pears", "amount": "2"}], '
-      + '"steps": ["..."], "tip": "one short tip"}. 4 to 12 ingredients, 3 to 8 steps, each step one or two sentences.');
+      + 'Respond with JSON only, in exactly this shape: {"name": "...", "serves": 2, "time": "35 min", '
+      + '"ingredients": [{"item": "ripe pears", "amount": "2", "unit": "", "key": "pear"}, {"item": "maple syrup", "amount": "2", "unit": "tbsp", "key": "maple syrup"}], '
+      + '"steps": [{"text": "Halve the pears and scoop out the cores.", "uses": ["pear"]}, {"text": "Bake until soft.", "minutes": 25}], "tip": "one short tip"}. '
+      + 'Ingredients: 4 to 12. "item" in my shopping words; "amount" a number or fraction (1, 1/2, 1 1/2); "unit" one of g, kg, ml, l, tsp, tbsp, cup, pinch, '
+      + 'or empty for whole things ("2" pears); "key" the singular base word of the item (pear, maple syrup, rolled oat), used to match pantries and merge lists. '
+      + 'Steps: 3 to 10, one action each, at most 200 characters. Add "minutes" (a whole number) only to a step with a wait the cook can time '
+      + '(bake, simmer, rest, chill, set), never to active steps. Add "uses" with the keys of the ingredients a step needs, where it needs any.');
   } else if (payload.tome_id === 'nourish-academy') {
     parts.push('\nPlease teach me about this topic in a friendly, accessible way. Use simple language, helpful analogies, and practical examples. Give me key takeaways I can remember and actionable tips I can try. Suggest 2-3 follow-up questions I might want to explore. No jargon, no shame, just helpful knowledge from a friend.');
   }
