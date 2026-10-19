@@ -121,8 +121,8 @@
           "label": "The drawers",
           "type": "interactive",
           "overlay": "add-ins",
-          "yaw": 0.0,
-          "pitch": -4.56,
+          "yaw": 4,
+          "pitch": 2.5,
           "distance": 2.27,
           "visible": true
         },
@@ -166,8 +166,8 @@
           "label": "The flasks",
           "type": "interactive",
           "overlay": "superpower",
-          "yaw": 32.82,
-          "pitch": -13.6,
+          "yaw": 35.5,
+          "pitch": -14.5,
           "distance": 1.77,
           "visible": true
         },
