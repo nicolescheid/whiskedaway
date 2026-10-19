@@ -1508,10 +1508,16 @@ const CLASH_NOTE = { vegetarian: 'not vegetarian', vegan: 'not vegan', 'gluten-f
 const hasOwn = () => world.atoms.some(x => x.room === homeOf(state.room));
 const isAway = a => hasOwn() && a.room !== homeOf(state.room);
 const awayOut = () => state.cards.some(c => atomsById[c.atom] && isAway(atomsById[c.atom]));
+// An idea's headline ingredient: its first key ingredient that isn't a base most recipes share (chia seeds, milk, butter…)
+const BASES = new Set(['chia seed', 'chia', 'oat milk', 'milk', 'water', 'olive oil', 'butter', 'salt', 'black pepper', 'honey', 'maple syrup', 'greek yoghurt', 'yoghurt', 'egg']);
+const headline = a => (a.key_ingredients || []).map(i => i.toLowerCase().replace(/ies$/, 'y').replace(/([^s])s$/, '$1')).find(i => !BASES.has(i)) || null;
 function serve({ atom, why, fromKeep }, mode) {
   const a = atomsById[atom];
   if (!a || state.served.includes(atom) || book.has(atom)) return;
   if (isAway(a) && awayOut() && !state.awayLift?.[homeOf(state.room)]) return;   // not served, so it can come another time
+  // Two ideas out at once never share a headline ingredient (QA pass 5: asparagus toast beside asparagus and eggs)
+  const head = headline(a);
+  if (head && state.cards.some(c => atomsById[c.atom] && headline(atomsById[c.atom]) === head)) return;
   state.served.push(atom);
   servedBy[atom] = mode;
   countAtom('atom_served', atom);
