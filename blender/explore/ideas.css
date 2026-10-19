@@ -488,3 +488,4 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ck-offer p { margin: 0 0 8px; font-size: 18px !important; }
 .ck-offer button { margin: 0 6px 6px 0; }
 .ck-offer .dots { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
+.ck-step p.ck-quiet { margin-top: 14px; font: italic 18px/1.4 'Crimson Pro', Georgia, serif; font-size: 18px !important; color: var(--ink-soft); }

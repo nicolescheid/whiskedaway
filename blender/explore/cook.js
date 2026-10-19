@@ -50,8 +50,7 @@ export function needsOf(rec, full) {
 }
 
 export function createCook({ written, sound, track, say, lines = {}, beforeOpen, onList, isKept, writer }) {
-  const L = { offer: "Want it in full, with timers? I'll write it out.", write: 'Write it out', short: 'Just the short version',
-              writing: "Gemma's writing it out…", failed: "My pen's run dry. The short version's here, and you can try again.", dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
+  const L = { writing: "Gemma's writing it out…", failed: "I couldn't write this one out just now, so here's the short version.", dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
               late: 'Your {what} finished {n} min ago.', done: 'Enjoy it.', need: "You'll need", ...lines };
   const root = document.createElement('div');
   root.id = 'cook';
@@ -95,24 +94,13 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     const st = steps[at - 1];
     const step = $('.ck-step');
     if (at === 0) {
-      // No write-out yet: Gemma offers one, for the amounts and the timers (the short version stays one tap away)
-      const inflight = writing || writer?.busyFor === rec.id;           // a write-out already on its way (from the book page)
-      const offer = !hasFull && writer && (inflight || (!declined && writer.left > 0));
+      // Gemma's write-out on its way (cook mode started it, or joined the book page's), or one quiet line if it couldn't be
+      const inflight = !hasFull && writer?.busyFor === rec.id;
       step.innerHTML = `<h3>${esc(L.need)}</h3><ul class="ck-needs">${needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
-        + (offer ? (inflight ? `<div class="ck-offer"><p>${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
-          : `<div class="ck-offer"><p>${esc(failedWrite ? L.failed : L.offer)}</p><p><button class="bk-cook ck-write">${esc(L.write)}</button>
-             <button class="bk-outline ck-short">${esc(L.short)}</button></p></div>`) : '')
+        + (inflight ? `<div class="ck-offer"><p>${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
+          : !hasFull && failedWrite ? `<p class="ck-quiet">${esc(L.failed)}</p>` : '')
         + (onList && isKept?.(rec.id) ? `<p><button class="bk-outline ck-list">What do I need?</button></p>` : '');
       step.querySelector('.ck-list')?.addEventListener('click', () => { close(); onList(); });
-      step.querySelector('.ck-short')?.addEventListener('click', () => { declined = true; draw(); });
-      step.querySelector('.ck-write')?.addEventListener('click', async () => {
-        writing = true; failedWrite = false; draw();
-        const full = await writer.writeNow(rec);
-        writing = false;
-        if (root.hidden || !rec) return;
-        if (full) load(rec); else failedWrite = true;      // the full recipe, with its timers, from step 0
-        draw();
-      });
       step.classList.remove('long');
     } else {
       const last = at === n;
@@ -264,7 +252,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
   }
 
   // ---------- the recipe's steps and "You'll need": its write-out if there is one, else the short version
-  let hasFull = false, declined = false, writing = false, failedWrite = false;
+  let hasFull = false, failedWrite = false;
   function load(r) {
     const full = written?.(r.id) || r.full || null;
     hasFull = !!full;
@@ -278,8 +266,13 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     beforeOpen?.();
     opener = document.activeElement;
     rec = r;
-    declined = false; failedWrite = false;
+    failedWrite = false;
     load(r);
+    // "Cook this" just works: no write-out yet, so Gemma starts one (or joins the one on its way); it lands via refresh()
+    if (!hasFull && writer && writer.busyFor !== r.id) {
+      if (writer.left > 0 && !writer.busy) writer.writeNow(r);
+      else failedWrite = true;                          // 3 a visit used, or busy on another: the short version and its fallback timer
+    }
     at = Math.min(saved()[r.id] ?? 0, steps.length);
     wake();                                                       // in the tap, as the mobile lead asked
     root.hidden = false;
@@ -315,6 +308,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     if (root.hidden || !rec || rec.id !== id) return;
     const keep = at;
     load(rec);
+    failedWrite = !hasFull;                             // it didn't come: say so once, quietly, on step 0
     at = Math.min(keep, steps.length);
     draw();
   }

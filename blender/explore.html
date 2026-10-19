@@ -1624,7 +1624,7 @@ const writer = createWriteOut({
   }),
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
-  onLanded: rec => cook.refresh(rec.id),              // cook mode open on this recipe picks up the write-out, keeping its step
+  onLanded: rec => { cook.refresh(rec.id); bookView.refresh(); },              // cook mode open on this recipe picks up the write-out, keeping its step
 });
 // Cook mode (explore/cook.js, cook-mode-ux.md §1): one step at a time over everything, with timers
 const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: LINES.cook,
