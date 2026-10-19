@@ -207,25 +207,35 @@ def checkin_props(oak, tread_oak, brass, brass_worn, berry_linen, paint):
     curtain("apron", ax, -0.05, 1.77, 0.34, 0.72, mat("apron_linen", srgb("#d9cdb4"), rough=0.95), pleats=3, amp=0.012, seed=8)
     box("apron_strap", (ax, -0.045, 1.83), (0.02, 0.01, 0.12), mat("apron_tie", srgb("#8b4d5c"), rough=0.9), bevel=0.002)
 
-    # The shopping: two paper bags just inside the front door, the produce showing
+    # The shopping: two open paper bags just inside the front door, the produce showing over the rolled tops
     kraft = mat("kraft_paper", srgb("#b48a58"), rough=0.92)
+    kraft_in = mat("kraft_paper_inside", srgb("#8a6640"), rough=0.95)
     bags = []
     for i, (bx, by, rot, h) in enumerate(((1.30, FRONT + 0.17, 8, 0.34), (1.40, FRONT + 0.46, -14, 0.3))):
-        b = box(f"grocery_bag_{i}", (bx, by, h / 2), (0.24, 0.15, h), kraft, bevel=0.006)
-        b.rotation_euler = (0, 0, math.radians(rot))
-        bags.append(b)
-        cuff = box(f"grocery_bag_cuff_{i}", (bx, by, h - 0.02), (0.245, 0.155, 0.04), kraft, bevel=0.004)
-        cuff.rotation_euler = (0, 0, math.radians(rot))
-    model("lemon", (1.26, FRONT + 0.15, 0.35), rot_z=30)
-    model("yellow_onion", (1.33, FRONT + 0.2, 0.33), rot_z=80)
-    model("food_apple_01", (1.36, FRONT + 0.45, 0.29), rot_z=10)
-    model("food_apple_01", (1.43, FRONT + 0.48, 0.28), rot_z=140)
-    bread = cyl("grocery_loaf", (1.22, FRONT + 0.17, 0.38), 0.035, 0.32, mat("loaf_crust", srgb("#b47a3c"), rough=0.75),
-                verts=16, bevel=0.03, rot=(math.radians(-20), math.radians(15), 0))
+        w, d, t = 0.24, 0.15, 0.004
+        parts = [box_span(f"bag_{i}_floor", -w / 2, w / 2, -d / 2, d / 2, 0, 0.006, kraft, bevel=0)]
+        for nm, a0, a1, b0, b1 in (("front", -w / 2, w / 2, -d / 2, -d / 2 + t), ("back", -w / 2, w / 2, d / 2 - t, d / 2),
+                                   ("left", -w / 2, -w / 2 + t, -d / 2, d / 2), ("right", w / 2 - t, w / 2, -d / 2, d / 2)):
+            parts.append(box_span(f"bag_{i}_{nm}", a0, a1, b0, b1, 0, h, kraft, bevel=0.002))
+        parts.append(box_span(f"bag_{i}_inside", -w / 2 + t, w / 2 - t, -d / 2 + t, d / 2 - t, 0.006, h - 0.07, kraft_in, bevel=0))
+        for nm, a0, a1, b0, b1 in (("cuff_f", -w / 2 - 0.003, w / 2 + 0.003, -d / 2 - 0.004, -d / 2 + 0.002),
+                                   ("cuff_b", -w / 2 - 0.003, w / 2 + 0.003, d / 2 - 0.002, d / 2 + 0.004)):
+            parts.append(box_span(f"bag_{i}_{nm}", a0, a1, b0, b1, h - 0.035, h, kraft, bevel=0.004))   # the rolled top
+        m = Matrix.Rotation(math.radians(rot), 4, "Z")
+        m.translation = Vector((bx, by, 0))
+        bags.append(group(f"grocery_bag_{i}", m, parts))
+    # bag 0: a loaf standing out of it, a lemon and an onion at the top; bag 1: apples and the green tops of leeks
+    bread = cyl("grocery_loaf", (1.25, FRONT + 0.18, 0.36), 0.04, 0.36, mat("loaf_crust", srgb("#b47a3c"), rough=0.75),
+                verts=20, bevel=0.035, rot=(math.radians(-14), math.radians(22), 0))
+    model("lemon", (1.33, FRONT + 0.15, 0.3), rot_z=30)
+    model("yellow_onion", (1.37, FRONT + 0.2, 0.27), rot_z=80)
+    model("food_apple_01", (1.37, FRONT + 0.44, 0.23), rot_z=10)
+    model("food_apple_01", (1.45, FRONT + 0.47, 0.235), rot_z=140)
     leaves = mat("leek_green", srgb("#5f7f3c"), rough=0.6)
     for k in range(3):
-        cyl(f"grocery_greens_{k}", (1.44 + 0.02 * k, FRONT + 0.43, 0.38), 0.008, 0.18, leaves, verts=8,
-            rot=(math.radians(12 - 9 * k), math.radians(-10 + 8 * k), 0))
+        cyl(f"grocery_greens_{k}", (1.42 + 0.025 * k, FRONT + 0.44, 0.34), 0.009, 0.24, leaves, verts=8,
+            rot=(math.radians(14 - 10 * k), math.radians(-12 + 9 * k), 0))
+    bags = [o for b in bags for o in b.children]
     hotspot("groceries", "The shopping", bags + [bread], kind="pantry")
 
 
