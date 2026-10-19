@@ -125,12 +125,13 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     draw();
   }
   function cancel(t) { const i = timers.indexOf(t); if (i >= 0) timers.splice(i, 1); draw(); }
-  function stop(t) { t.stopped = true; cancel(t); }
+  function stop(t) { t.stopped = true; t.stopRing?.(); cancel(t); }
   function ring(t, late = 0) {
     t.rang = true;
     t.ringUntil = Date.now() + RING_FOR;
     t.nextRing = Date.now() + RING_EVERY;
-    (sound?.timerRing || sound?.bell)?.call(sound);
+    // sound.timerRing rings three strikes, then gently every ~10 s for 2 min, whatever the Inn's switch; it returns its stop
+    if (sound?.timerRing) t.stopRing = sound.timerRing(); else sound?.bell?.();
     try { navigator.vibrate?.([200, 100, 200]); } catch { /* not supported */ }
     track?.('timer_done');
     const w = what();
@@ -143,9 +144,11 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     for (const t of timers) {
       if (t.paused || t.stopped) continue;
       if (!t.rang && now >= t.end) { if (!document.hidden) ring(t); }   // a hidden tab rings on return (visibilitychange)
-      else if (t.rang && now < t.ringUntil && now >= t.nextRing) { t.nextRing = now + RING_EVERY; (sound?.timerRing || sound?.bell)?.call(sound); }
-      else if (!t.rang && t.end - now <= 10000 && sound?.on) sound?.timer?.({ last10: true });
+      else if (t.rang && !t.stopRing && now < t.ringUntil && now >= t.nextRing) { t.nextRing = now + RING_EVERY; sound?.bell?.(); }   // fallback re-ring
     }
+    // About once a second while a timer runs: the soft tick in its last 10 seconds (sound.js plays it only with sound on)
+    const soonest = Math.min(...timers.filter(t => !t.rang && !t.paused && !t.stopped).map(t => t.end - now));
+    if (Number.isFinite(soonest)) sound?.timer?.({ last10: soonest <= 10000 });
     if (!root.hidden) { root.querySelectorAll('.ck-timer').forEach(b => paintTimer(b, timers.find(x => x.step === +b.dataset.step), steps[+b.dataset.step - 1]?.minutes)); drawStrip(); }
   }, 1000);
   // A tab that was hidden plays no sound (iOS): a timer that ended meanwhile rings once on return, saying how long ago

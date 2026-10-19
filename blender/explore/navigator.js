@@ -34,7 +34,8 @@ const FORK_BELOW = 0.2;       // confidence below which Gemma offers a fork inst
 const WEATHER_WEIGHT = 3;     // the chosen weather is a standing mood: it holds until changed, it doesn't fade
 const TIME_WEIGHT = { time: 2.5, clock: 1.2 };   // a chosen time counts more than the device's clock
 const ENERGY_WEIGHT = 3;      // the candle the visitor picked: a standing signal like the weather
-const SEASON_WEIGHT = 2.5;    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
+const SEASON_WEIGHT = 2.5;
+const OWN_SEASON_WEIGHT = 1.2;  // the visitor's own season, not chosen: counted lightly (`own-season` in the trail)    // the season the visitor turned the wheel to (their own season isn't a choice, so it isn't counted)
 const ROOM_LEAN = 4;          // an atom from the room the visitor is in (if it fits at all): mostly that room's own, the odd one from elsewhere
 const AI_HOME = 30, AI_AWAY = 10;
 const KEEP_NOW = 3, KEEP_BEFORE = 1, KEEP_BEFORE_MAX = 10;   // keeps weigh more than touches and don't fade; older ones only nudge
@@ -61,6 +62,10 @@ export function themeWeights(trail, world, book = null) {
   if (energy) add(world.energies[energy].themes, ENERGY_WEIGHT);
   const season = currentSeason(trail, world);
   if (season) add(world.seasons[season].themes, SEASON_WEIGHT);
+  else {
+    const own = trail.find(e => e.kind === 'own-season' && world.seasons?.[e.id]);
+    if (own) add(world.seasons[own.id].themes, OWN_SEASON_WEIGHT);
+  }
   for (const k of book?.now || []) add(k.themes || [], KEEP_NOW);
   for (const k of (book?.before || []).slice(0, KEEP_BEFORE_MAX)) add(k.themes || [], KEEP_BEFORE);
   return w;
