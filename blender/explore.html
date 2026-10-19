@@ -285,6 +285,16 @@
   #front-door .fd-words .how { pointer-events: auto; display: inline-block; margin-top: 2px; padding: 12px 14px; min-height: 44px;
                                font: 600 14px 'Quicksand', system-ui, sans-serif; color: #8b4d5c; text-decoration: none; }
   #front-door .fd-words .how:hover { text-decoration: underline; }
+  /* With sound or without, chosen at the door (W2): off until the visitor says */
+  #front-door .fd-links { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 10px; }
+  #front-door .fd-sound { pointer-events: auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 14px;
+                          border: 1px solid rgba(139, 77, 92, .35); border-radius: 999px; background: rgba(252, 246, 229, .7);
+                          font: 600 14px 'Quicksand', system-ui, sans-serif; color: #8b4d5c; cursor: pointer; }
+  #front-door .fd-sound svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  #front-door .fd-sound .waves, #front-door .fd-sound[aria-pressed="true"] .hush { display: none; }
+  #front-door .fd-sound[aria-pressed="true"] .waves { display: inline; }
+  #front-door .fd-sound[aria-pressed="true"] { background: #8b4d5c; color: #f4efe4; border-color: #8b4d5c; }
+  #front-door .fd-sound:focus-visible { outline: 3px solid #8b4d5c; outline-offset: 2px; }
   #front-door .fd-words .how:focus-visible { outline: 3px solid #8b4d5c; outline-offset: 2px; border-radius: 8px; }
   @media (max-width: 560px) { #front-door .fd-words .cue-where { display: none; } #front-door .fd-first { height: calc(100vh - 32px); height: calc(100dvh - 32px); } }
   #front-door .fd-words .cue { margin: 4px 0 0; font: 500 clamp(14px, 1.6vw, 17px) 'Quicksand', system-ui, sans-serif; }
@@ -334,6 +344,7 @@
                             background: linear-gradient(to right, rgba(252, 246, 229, .92) 0%, rgba(252, 246, 229, .8) 70%, rgba(252, 246, 229, 0) 100%); }
     #front-door .fd-words .promise { display: none; }
     #front-door .fd-words .how { padding-left: 0; }
+    #front-door .fd-links { justify-content: flex-start; }
   }
   .chip.bell { padding: 3px 8px; line-height: 0; }
   .chip.bell img { width: 26px; height: 26px; transform-origin: 50% 12%; }
@@ -383,7 +394,7 @@
       <h1>WhiskedAway<span class="what"><span class="sr-only">: </span>A recipe site you explore</span></h1>
       <p class="promise">Wander Gemma's Inn, and she'll find you something to cook.</p>
       <p class="cue" id="fd-cue"><span class="cue-where">Gemma's Inn. </span>Step inside.</p>
-      <a class="how" id="fd-how" href="/#story">How it works ⌄</a>
+      <span class="fd-links"><a class="how" id="fd-how" href="/#story">How it works ⌄</a><button type="button" class="fd-sound" id="fd-sound" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg><span>Sound off</span></button></span>
     </div>
   </div>
   <div class="fd-after">

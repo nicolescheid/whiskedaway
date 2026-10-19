@@ -213,6 +213,15 @@ export function frontDoor({ active, track }) {
   // ---------- the story below the picture (homepage-story-ux.md): a link down to it, "Step inside" while reading,
   // the credits from its footer, and two counts: the story seen, and the link used
   const how = $('fd-how'), pill = $('fd-pill'), first = door.querySelector('.fd-first');
+  // With sound, chosen at the door (W2): the film then comes with its whoosh and latch, and the Inn arrives with sound on.
+  // Inside the tap, so the browser lets the sound start
+  const soundBtn = $('fd-sound');
+  const showSound = () => { soundBtn.setAttribute('aria-pressed', String(sound.on)); soundBtn.querySelector('span').textContent = sound.on ? 'Sound on' : 'Sound off'; };
+  if (soundBtn) {
+    showSound();
+    soundBtn.addEventListener('click', () => { sound.toggle(); showSound(); });
+    addEventListener('wa-sound', showSound);
+  }
   // Scrolled here rather than followed: the page's <base href="/explore/"> would turn "#story" into another page
   // ('auto' would mean the layer's CSS smooth scrolling, so a jump asks for 'instant')
   const toStory = smooth => $('story')?.scrollIntoView({ behavior: smooth && !reduced ? 'smooth' : 'instant', block: 'start' });
