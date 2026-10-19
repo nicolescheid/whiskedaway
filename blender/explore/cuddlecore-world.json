@@ -671,6 +671,8 @@
         "dairy-free",
         "nut-free"
       ],
+      "sweetener": "fruit",
+      "added_sugar": false,
       "themes": [
         "juice",
         "fresh",
@@ -711,6 +713,8 @@
         "dairy-free",
         "nut-free"
       ],
+      "sweetener": "fruit",
+      "added_sugar": false,
       "themes": [
         "juice",
         "citrus",
@@ -748,6 +752,8 @@
       "diet": [
         "vegetarian"
       ],
+      "sweetener": "fruit",
+      "added_sugar": false,
       "themes": [
         "smoothie",
         "green",
@@ -829,6 +835,8 @@
         "dairy-free",
         "nut-free"
       ],
+      "sweetener": "fruit",
+      "added_sugar": false,
       "themes": [
         "cooling",
         "no-cook",
@@ -908,6 +916,8 @@
         "gluten-free",
         "dairy-free"
       ],
+      "sweetener": "fruit",
+      "added_sugar": false,
       "themes": [
         "snack",
         "quick",
@@ -1026,6 +1036,8 @@
         "gluten-free",
         "nut-free"
       ],
+      "sweetener": "honey",
+      "added_sugar": true,
       "themes": [
         "evening",
         "calm",
@@ -1185,6 +1197,8 @@
         "gluten-free",
         "nut-free"
       ],
+      "sweetener": "honey",
+      "added_sugar": true,
       "cuisines": [
         "Kiwi classics"
       ],
