@@ -91,6 +91,9 @@ export const book = {
   },
   /** This visit's keeps (stage 3 weighs these ×3) */
   keptThisVisit() { return data.kept.filter(k => k.visit === visitId).map(k => ({ ...k })); },
+  /** "What do I need?": recipes left out, ticked items, items moved back from the pantry (list.js) */
+  get listState() { return data.list || null; },
+  set listState(v) { data.list = v; save(); },
   get hint() { return data.hint; },
   set hint(v) { data.hint = !!v; save(); },
   subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },

@@ -38,6 +38,8 @@ export const EVENTS = {
   cook_done: [],
   timer_start: [],
   timer_done: [],
+  list_open: [],                                                   // "What do I need?"
+  list_share: [],
   tell_open: ['kind', 'from'],                                     // Tell Gemma: kind pantry|map|dietary; from object|tag|menu|book|offer
   tell_set: ['kind', 'count', 'use_up'],                           // count 0|1|2-3|4+; never the values (no ingredients, cuisines, country or diets)
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3

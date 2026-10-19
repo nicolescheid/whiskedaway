@@ -24,7 +24,7 @@ export function needsOf(rec, full) {
   return (rec.key_ingredients || rec.seed?.ingredients || []).slice();
 }
 
-export function createCook({ written, sound, track, say, lines = {}, beforeOpen }) {
+export function createCook({ written, sound, track, say, lines = {}, beforeOpen, onList, isKept }) {
   const L = { dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
               late: 'Your {what} finished {n} min ago.', done: 'Enjoy it.', need: "You'll need", ...lines };
   const root = document.createElement('div');
@@ -68,7 +68,9 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen 
     const st = steps[at - 1];
     const step = $('.ck-step');
     if (at === 0) {
-      step.innerHTML = `<h3>${esc(L.need)}</h3><ul class="ck-needs">${needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+      step.innerHTML = `<h3>${esc(L.need)}</h3><ul class="ck-needs">${needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
+        + (onList && isKept?.(rec.id) ? `<p><button class="bk-outline ck-list">What do I need?</button></p>` : '');
+      step.querySelector('.ck-list')?.addEventListener('click', () => { close(); onList(); });
       step.classList.remove('long');
     } else {
       const last = at === n;
