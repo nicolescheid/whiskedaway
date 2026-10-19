@@ -67,35 +67,60 @@
     "overlay": "energy",
     "type": "energy",
     "yaw": -96.17,
-    "pitch": -19.39
+    "pitch": -19.39,
+    "flame": {
+      "yaw": -96.17,
+      "pitch": -18.33,
+      "distance": 1.96
+    }
   },
   "candle-low": {
     "label": "Low",
     "overlay": "energy",
     "type": "energy",
     "yaw": -91.86,
-    "pitch": -18.54
+    "pitch": -18.54,
+    "flame": {
+      "yaw": -91.86,
+      "pitch": -17.56,
+      "distance": 1.94
+    }
   },
   "candle-half": {
     "label": "Half",
     "overlay": "energy",
     "type": "energy",
     "yaw": -87.52,
-    "pitch": -17.73
+    "pitch": -17.73,
+    "flame": {
+      "yaw": -87.52,
+      "pitch": -16.12,
+      "distance": 1.93
+    }
   },
   "candle-three-quarters": {
     "label": "Three quarters",
     "overlay": "energy",
     "type": "energy",
     "yaw": -83.22,
-    "pitch": -16.97
+    "pitch": -16.97,
+    "flame": {
+      "yaw": -83.22,
+      "pitch": -14.71,
+      "distance": 1.93
+    }
   },
   "candle-full": {
     "label": "Full",
     "overlay": "energy",
     "type": "energy",
     "yaw": -78.99,
-    "pitch": -15.99
+    "pitch": -15.99,
+    "flame": {
+      "yaw": -78.99,
+      "pitch": -13.09,
+      "distance": 1.94
+    }
   },
   "cutting-board": {
     "label": "Chopping board",

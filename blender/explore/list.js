@@ -16,6 +16,18 @@ export function qty(a) {
   if (f) return f[1] / f[2];
   return /^\d+(\.\d+)?$/.test(s) ? +s : NaN;
 }
+/** A write-out's ingredients for another number of people (the check-in's "cooking for"): counted and measured amounts scale,
+ *  "a pinch" and words ("to taste") stay. Whole things round to a half, spoons and cups to a quarter, grams and millilitres to 5. */
+export function scaleItems(items, factor) {
+  if (!factor || Math.abs(factor - 1) < 0.01) return items;
+  return items.map(i => {
+    const n = qty(i.amount), unit = (i.unit || '').trim().toLowerCase();
+    if (Number.isNaN(n) || unit === 'pinch') return i;
+    const x = n * factor;
+    const step = !unit ? 0.5 : /^(g|ml)$/.test(unit) ? (x >= 20 ? 5 : 1) : /^(kg|l)$/.test(unit) ? 0.05 : 0.25;
+    return { ...i, amount: showQty(Math.max(step, Math.round(x / step) * step)) };
+  });
+}
 const showQty = n => (Number.isInteger(n) ? String(n) : (Math.round(n * 100) / 100).toString());
 
 /** Merge ingredient lines: [{item, amount, unit, key}] from several recipes → [{key, item, amounts: ["4", "1 cup + 200 g"]}] */
@@ -37,7 +49,7 @@ export function mergeItems(lists) {
     amount: e.parts.map(p => `${Number.isNaN(p.n) ? p.raw : showQty(p.n)}${p.unit ? ` ${p.unit}` : ''}`).join(' + ') }));
 }
 
-export function createList({ book, written, pantry, synonyms = () => ({}), track }) {
+export function createList({ book, written, pantry, synonyms = () => ({}), servings = () => null, track }) {
   const state = () => ({ off: [], ticks: [], back: [], ...(book.listState || {}) });
   const setState = s => { book.listState = s; };
   const has = (k, words) => words.some(w => k.includes(w) || w.includes(k));
@@ -52,8 +64,10 @@ export function createList({ book, written, pantry, synonyms = () => ({}), track
     const s = state(), kept = book.list();
     const on = kept.filter(k => !s.off.includes(k.id));
     const lists = on.map(k => {
-      const full = written(k.id) || k.full;
-      return full?.ingredients?.length ? full.ingredients : (k.key_ingredients || k.seed?.ingredients || []).map(item => ({ item }));
+      const full = written(k.id) || k.full, n = servings();
+      // Written for another number (2 before the check-in): scale by servings ÷ serves
+      return full?.ingredients?.length ? scaleItems(full.ingredients, n && full.serves ? n / full.serves : 1)
+        : (k.key_ingredients || k.seed?.ingredients || []).map(item => ({ item }));
     });
     const items = mergeItems(lists);
     const got = items.filter(i => inPantry(i.key) && !s.back.includes(i.key));
@@ -68,7 +82,7 @@ export function createList({ book, written, pantry, synonyms = () => ({}), track
   function render(el, rerender) {
     const { kept, s, need, got } = build();
     if (!kept.length) { el.innerHTML = `<h3 class="bk-h">What do I need?</h3><p class="small">Keep a recipe or two first, and I'll make you a list.</p>`; return; }
-    el.innerHTML = `<h3 class="bk-h">What do I need?</h3>
+    el.innerHTML = `<h3 class="bk-h">What do I need?</h3>${servings() ? `<p class="small ls-for">Amounts for ${servings()}.</p>` : ''}
       <div class="ls-from" role="group" aria-label="From">${kept.map(k => `<button data-r="${esc(k.id)}" aria-pressed="${!s.off.includes(k.id)}">${esc(k.short || k.title)}</button>`).join('')}</div>
       <ul class="ls-need">${need.map(i => `<li><label><input type="checkbox" data-k="${esc(i.key)}" ${s.ticks.includes(i.key) ? 'checked' : ''}><span>${esc(line(i))}</span></label></li>`).join('') || '<li class="small">Nothing to buy.</li>'}</ul>
       ${got.length ? `<details class="ls-got"><summary>You've got these (${got.length})</summary><p>${got.map(i => `<button data-back="${esc(i.key)}">${esc(i.item)}</button>`).join(' ')}</p></details>` : ''}

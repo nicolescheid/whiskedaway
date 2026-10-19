@@ -493,6 +493,28 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ck-offer .dots { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
 .ck-step p.ck-quiet { margin-top: 14px; font: italic 18px/1.4 'Crimson Pro', Georgia, serif; font-size: 18px !important; color: var(--ink-soft); }
 
+/* ---------- the check-in sheet (checkin-views.md V1): light your candle, then time, then "A bit more" */
+.tl-h { margin: 12px 0 2px; font: 600 15px 'Quicksand'; color: var(--ink); }
+.tl-h + .small { margin: 0 0 4px; }
+.tl-more { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 4px; }
+.tl-more summary { min-height: 44px; display: flex; align-items: center; gap: 6px; cursor: pointer; font: 600 15px 'Quicksand'; color: var(--berry); }
+.tl-more summary::after { content: '▾'; font-size: 12px; transition: transform .2s; }
+.tl-more[open] summary::after { transform: rotate(180deg); }
+.tl-candles { display: flex; justify-content: space-between; gap: 4px; margin: 6px 0 10px; }
+.tl-candles button { flex: 1 1 0; min-width: 44px; min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0;
+  padding: 4px 2px; border: 1px solid transparent; border-radius: 12px; background: none; color: var(--ink-soft); font: 500 12px/1.2 'Quicksand'; }
+.tl-candles button[aria-pressed="true"] { border-color: var(--line); background: #fff; color: var(--ink); }
+.tl-candles b { font-weight: 500; margin-top: 4px; text-align: center; }
+.tl-wick { position: relative; width: 2px; height: 8px; background: #3a2c20; }
+.tl-flame { position: absolute; left: 50%; bottom: 6px; width: 10px; height: 16px; margin-left: -5px; border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 50% 70%, #fff6d8 0 20%, #ffc56b 45%, rgba(255, 140, 50, 0) 72%); opacity: 0; transform: scale(.2); transform-origin: 50% 100%;
+  transition: opacity .25s ease-out, transform .35s cubic-bezier(.3, 1.6, .5, 1); }
+.tl-candles button[aria-pressed="true"] .tl-flame { opacity: 1; transform: scale(1); animation: tl-flicker 2.4s ease-in-out .4s infinite; }
+.tl-wax { width: 16px; border-radius: 3px 3px 2px 2px; background: linear-gradient(90deg, #efe4cf, #fbf6ea 45%, #e2d5bb); box-shadow: inset 0 -2px 0 rgba(0,0,0,.06); }
+.tl-wax-burnt-out { height: 14px; } .tl-wax-low { height: 24px; } .tl-wax-half { height: 34px; } .tl-wax-three-quarters { height: 44px; } .tl-wax-full { height: 54px; }
+.tl-candles button[aria-pressed="true"] .tl-wax { box-shadow: 0 -6px 14px rgba(255, 190, 110, .55); }
+@keyframes tl-flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(.94, 1.06) rotate(-2deg); } 60% { transform: scale(1.04, .96) rotate(2deg); } }
+@media (prefers-reduced-motion: reduce) { .tl-flame { transition: none; } .tl-candles button[aria-pressed="true"] .tl-flame { animation: none; } }
 /* ---------- the Chiapothecary's moods and Mix an experiment (chia-mix.js): the Tell Gemma sheet, one step per screen */
 .mx-moods { list-style: none; margin: 4px 0 10px; padding: 0; display: grid; gap: 6px; }
 .mx-moods button { width: 100%; min-height: 52px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 12px; text-align: left;

@@ -347,6 +347,13 @@
     #front-door .fd-links { justify-content: flex-start; }
   }
   .chip.bell { padding: 3px 8px; line-height: 0; }
+  /* The check-in offer on the chat's Line row: portrait phones only, where Line hides the chips */
+  .cw-checkin { display: none; flex: none; margin-left: 8px; min-height: 44px; padding: 8px 14px; border: 1.5px solid var(--berry);
+                border-radius: 999px; background: var(--parchment); color: var(--berry); font: 600 14px 'Quicksand', system-ui, sans-serif; cursor: pointer; }
+  @media (orientation: portrait) and (max-width: 719px) {
+    .chatwin.size-line .cw-checkin:not([hidden]) { display: inline-flex; align-items: center; pointer-events: auto; }
+    .chatwin.size-line.has-checkin-pill .cw-chips { display: none; }   /* the pill is the offer at Line; Short and Full keep the chips */
+  }
   .chip.bell img { width: 26px; height: 26px; transform-origin: 50% 12%; }
   .chip.bell.ring img { animation: ring .9s ease-in-out; }
   /* The speaker beside the bell: crossed out while the Inn is quiet, which it is until the visitor says */
@@ -665,6 +672,7 @@ import { createCook } from './explore/cook.js';
 import { createChiaMix, chiaData } from './explore/chia-mix.js';
 import { createSweetSheets, sweetData, swapLines, sweetSteer, sweetTold, sweetTags } from './explore/sweet-spells.js';
 import { createList } from './explore/list.js';
+import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine } from './explore/checkin.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 
 const params = new URLSearchParams(location.search);
@@ -1407,9 +1415,10 @@ function chatLine(who, text) {
 // Chips are data ({ label, do: [action, ...args] }), so the last question's answers are kept with the visit and come
 // back after a reload (J9)
 const CHIP_ACTS = {
+  checkin: () => { endCheckinOffer(); tell.open('checkin', 'foyer'); },   // the check-in sheet (the Ideas build's)
   choose: cluster => record({ kind: 'choose', cluster }),
   tell: () => tell.openMenu('offer'),                   // "Want to tell me what's in your cupboard…?" [Tell me]
-  later: () => {},                                      // [Not now]: the offer is over for the visit
+  later: () => endCheckinOffer(),                                      // [Not now]: the offer is over for the visit
   weather: id => chooseWeather(id),
   barometer: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); },
   confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); introduce(); },
@@ -1506,7 +1515,8 @@ function steer() {
     served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
     about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS,
-             why: T.why, cuisineLabel },
+             why: { ...CW.why, ...T.why }, cuisineLabel,
+             timeLimit: TIME_LIMIT[visit.get('time')] || null, timeWords: timeWords(CW, visit.get('time')), confidence: visit.get('confidence') },
   };
 }
 // The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
@@ -1635,6 +1645,7 @@ const writer = createWriteOut({
     sweetness: sweet.data.howSweet.options[visit.get('sweetness')] || null,
     sweeteners: [].concat(visit.get('sweeteners') || []).map(x => sweet.data.sweetenWith.options[x] || x),
     occasion: rec.room === 'sweet-spells' ? sweet.data.occasions.options[visit.dish('sweet-spells', 'occasion')]?.label || null : null,
+    servings: servingsNumber(visit.get('servings')), confidence: visit.get('confidence') || null, time_available: TIME_LIMIT[visit.get('time')] || null,
   }),
   onWritten: rec => record({ kind: 'recipe', atom: rec.id }),
   onChange: () => bookView.refresh(),
@@ -1644,7 +1655,8 @@ const writer = createWriteOut({
 const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: LINES.cook,
   isKept: id => book.has(id), onList: () => { track('list_open'); bookView.open('list', { from: 'cook' }); } });
 // "What do I need?" (explore/list.js): one shopping list from the book, the pantry set aside
-const shopList = createList({ book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS, track });
+const shopList = createList({ book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
+  servings: () => servingsNumber(visit.get('servings')), track });
 const bookView = createBookView({
   onCook: (rec, from) => cook.open(rec, from),
   list: shopList,
@@ -1705,12 +1717,28 @@ const chiaActions = [
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {};
+const CW = checkinWords(T);
+// Each answer's sound, whichever door (sound.js: the same family for every object that sets one answer)
+const answerSound = (key, value, prev = null) => (value ? sound.answer(key, { change: key === 'energy' && !!prev, count: servingsNumber(value) || 1 })
+  : sound.unanswer(key));                              // the check-in's words (checkin.js; gemma-lines.json tell.checkin)
+// The one setter for the check-in's answers, whichever door they come through (the desk's sheet, a tag): the same key, the same
+// tag, the same line from Gemma (checkin-views.md: one home per answer, many doors to it). `quiet` when the sheet says one line for all.
+function setAnswer(key, value, { from = 'tag', quiet = false } = {}) {
+  if (visit.get(key) === (value ?? null)) return false;
+  visit.set(key, value ?? null);
+  track('tell_set', { kind: key, from });               // single-choice: never a count (analytics-events.js ANSWER_KINDS)
+  if (!quiet) answerSound(key, value);                   // the sheet plays its sounds in the tap
+  if (!quiet && value) { say(capFirst(ackLine(CW, key, value) || ''), [], true); holdLine(); }
+  scheduleNavigate();                                    // the next idea leans on it
+  return true;
+}
 const TL = {
   offer: T.offer || "Want to tell me what's in your cupboard, or anything to avoid?", offerYes: T.offerYes || 'Tell me', offerNo: T.offerNo || 'Not now',
   forgot: T.forgot || 'Forgotten.', nothingAnywhere: T.nothingAnywhere || "I can't find anything on my shelves that fits all of that.",
   roomNone: T.roomNone || "Nothing in here fits {diet}, I'm afraid. {room} has a few.",
 };
-const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary' };
+// A world object with "tool": "checkin" (the foyer desk) opens the check-in; "pantry" (the groceries by the door too) the pantry
+const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary', checkin: 'checkin' };
 // The Map's starting country: the connection's (from /local-weather), else the browser's language region (PM, option b)
 const mapDefault = () => (state.connCountry && countryLabel(state.connCountry) ? state.connCountry : countryFromLanguage());
 // Words that mean the same in the kitchen (tell-data.json groups): each word maps to the rest of its group
@@ -1721,11 +1749,27 @@ const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
 const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free', 'low-fodmap': 'low-FODMAP' };
 const capFirst = t => t.replace(/^./, c => c.toUpperCase());
 // Her one line on Done, naming two things at most, never the list (tell-gemma-ux §4); {two} {many} {c} {d} {country}
+// The check-in's Done: each answer through its own door's setter, quietly, then one line from Gemma (the answer's own line when
+// only one changed, else her thanks)
+function checkedIn({ after, changed, from, forgot }) {
+  if (forgot) return say(TL.forgot, [], true);
+  for (const k of changed) {
+    if (k === 'energy') { if (after.energy) chooseEnergy(after.energy, { quiet: true, from }); else visit.forget('energy'); }
+    else if (k === 'weather') chooseWeather(after.weather, { quiet: true });
+    else setAnswer(k, after[k], { from, quiet: true });
+  }
+  const one = changed.length === 1 && after[changed[0]] ? changed[0] : null;
+  const line = !one ? CW.ack.checkin : one === 'energy' ? world.energies?.[after.energy]?.moment : one === 'weather' ? world.weathers[after.weather]?.moment
+    : ackLine(CW, one, after[one]);
+  if (line) { say(capFirst(line), [], true); holdLine(); }
+  scheduleNavigate();
+}
 function acknowledge(kind, { after, forgot }) {
   const A = T.ack || {};
   if (forgot) return say(TL.forgot, [], true);
   let line = '';
   if (kind === 'pantry') {
+    if (after.items.length) sound.answer('pantry');      // the paper bag
     const xs = after.items, two = listOf(xs.slice(0, 2)), many = `${xs[0]}, ${xs[1]} and a few more`;
     line = after.useUp ? (A.pantryUseUp || '{two} first, then.').replace('{two}', two)
       : xs.length >= 3 ? (A.pantryMany || '{many}. Noted.').replace('{many}', many) : (A.pantry || "{two}. I'll work with those.").replace('{two}', two);
@@ -1784,12 +1828,24 @@ function emptyRoomLine() {
 const tell = createTell({
   visit, lines: LINES.tell, track, defaultCountry: mapDefault,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
-  onDone: acknowledge,
+  onDone: (k, r) => (k === 'checkin' ? checkedIn(r) : acknowledge(k, r)),
   openEnergy: () => tagsUI.openEnergy(),
+  checkin: {
+    energies: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
+    weathers: () => Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: w.label })),
+    weather: () => state.weather || null,
+    onTap: (k, v, prev) => k !== 'weather' && answerSound(k, v, prev),
+    // Done with the weather still on the local guess: the guess was right (analytics; once a visit, like the old "That's right")
+    onDone: after => {
+      if (state.weatherFrom !== 'local' || after.weather !== state.weather || state.guessKept) return;
+      state.guessKept = true;
+      track('weather_guess', { weather: state.weather, outcome: 'kept' });
+    },
+  },
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 });
-const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id) }, tell, chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`,
-  extra: sweetTags(sweet.data, (k, src) => sweet.open(k, src)) });
+const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
+  chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(sweet.data, (k, src) => sweet.open(k, src)) });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
 // the book's "This visit" page and the hallway notice board, once something's been kept
@@ -1871,8 +1927,9 @@ const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TO
                dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
                cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
-               country: v => v && `Shopping words for ${countryLabel(v) || v}.`, ...sweetTold(sweet.data) };
-const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', sweetness: 'sweet', sweeteners: 'sweet' };
+               country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
+               time: v => toldLine(CW, 'time', v), servings: v => toldLine(CW, 'servings', v), confidence: v => toldLine(CW, 'confidence', v), ...sweetTold(sweet.data) };
+const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet' };
 const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 function renderTold() {
   const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
@@ -1885,7 +1942,8 @@ function renderTold() {
 visit.subscribe(({ part, key, value }) => {
   renderTold();
   if (part === 'all' || key === 'energy') showCandle();               // forgetting the energy puts the candle out
-  if (part === 'about' && key === 'energy' && !value) scheduleNavigate();
+  if (part === 'about' && ['energy', 'time', 'servings', 'confidence'].includes(key) && !value) scheduleNavigate();
+  if ((part === 'about' && key === 'servings') || part === 'all') bookView.refresh();   // the shopping list's amounts
   if ((part === 'about' && key === 'dietary') || part === 'all') {
     const gone = state.cards.filter(c => atomsById[c.atom] && dietClash(atomsById[c.atom]));
     gone.forEach(c => ideas.remove(c.atom));
@@ -1977,14 +2035,14 @@ function openWeather() {
   $('weather').classList.add('open');
   $('dial').querySelector('.on')?.focus();
 }
-function chooseWeather(id) {
+function chooseWeather(id, { quiet = false } = {}) {
   if (!world.weathers[id]) return;
   $('dial').querySelectorAll('button').forEach(b => { const on = b.dataset.w === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   if (id === state.weather) return introduce();
   state.weather = id;
   state.weatherFrom = 'visitor';
   showWeather(id);
-  say(world.weathers[id].moment, [], true);
+  if (!quiet) say(world.weathers[id].moment, [], true);
   record({ kind: 'weather', id });
   track('weather_change', { room: state.room, weather: id });
   introduce();
@@ -2064,46 +2122,93 @@ $('season-ok').onclick = () => $('seasondlg').classList.remove('open');
 addEventListener('keydown', e => { if (e.key === 'Escape') $('seasondlg').classList.remove('open'); });
 
 // ---------- energy candles: pick the one that matches how much you've got in you today
-// A warm glow drawn over the render marks the chosen candle (it's a standing signal, like the weather)
-const candleGlow = (() => {
+// The candles are rendered unlit (the kitchen's five and the foyer desk's five). The chosen one is lit here:
+// a flame drawn at its wick, sized for its real distance, with a warm glow behind it. It's a standing signal, like the weather.
+const spriteFrom = (draw, additive) => {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
-  const g = c.getContext('2d');
-  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-  grad.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
-  grad.addColorStop(0.4, 'rgba(255, 176, 90, 0.28)');
-  grad.addColorStop(1, 'rgba(255, 150, 60, 0)');
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 256, 256);
-  g.strokeStyle = 'rgba(255, 220, 160, 0.7)';                       // a soft ring around the candle
-  g.lineWidth = 5;
-  g.beginPath(); g.ellipse(128, 128, 70, 104, 0, 0, Math.PI * 2); g.stroke();
+  draw(c.getContext('2d'));
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false,
-                                                             blending: THREE.AdditiveBlending }));
-  sprite.scale.set(0.95, 1.4, 1);                                   // about 5 x 8 degrees at 10 units
-  sprite.renderOrder = 10;
+                                                             blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
   sprite.visible = false;
   scene.add(sprite);
   return sprite;
-})();
+};
+const candleGlow = spriteFrom(g => {
+  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
+  grad.addColorStop(0.4, 'rgba(255, 176, 90, 0.22)');
+  grad.addColorStop(1, 'rgba(255, 150, 60, 0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+}, true);
+candleGlow.renderOrder = 10;
+const candleFlame = spriteFrom(g => {
+  // a teardrop: round at the base, drawn up to a point; hot white-yellow core, orange edge, a blue foot
+  g.translate(128, 150);
+  const body = new Path2D();
+  body.moveTo(0, -128); body.bezierCurveTo(46, -48, 58, 30, 0, 74); body.bezierCurveTo(-58, 30, -46, -48, 0, -128);
+  const edge = g.createRadialGradient(0, 30, 4, 0, 10, 120);
+  edge.addColorStop(0, 'rgba(255, 252, 235, 1)');
+  edge.addColorStop(0.35, 'rgba(255, 220, 120, 0.95)');
+  edge.addColorStop(0.75, 'rgba(255, 140, 40, 0.7)');
+  edge.addColorStop(1, 'rgba(230, 90, 20, 0)');
+  g.fillStyle = edge;
+  g.fill(body);
+  const foot = g.createRadialGradient(0, 62, 0, 0, 62, 24);
+  foot.addColorStop(0, 'rgba(90, 120, 255, 0.55)');
+  foot.addColorStop(1, 'rgba(90, 120, 255, 0)');
+  g.fillStyle = foot;
+  g.fillRect(-30, 38, 60, 48);
+}, true);
+candleFlame.renderOrder = 11;
 const candleSpot = id => Object.keys(world.objects).find(k => world.objects[k].type === 'energy' && world.objects[k].energy === id);
+/** Where the chosen candle's flame goes in this room: a kitchen candle's own flame point, or the foyer desk's */
+function flamePoint(id) {
+  const key = candleSpot(id);
+  return (key && spots[key]?.flame) || spots['checkin-desk']?.flames?.[id] || null;
+}
+let flicker = null;
+function placeFlame(f, k = 1) {
+  const near = 10 / Math.max(f.distance || 2.5, 0.4);          // the sphere sits at 10 units: scale real metres to it
+  const small = visit.get('energy') === 'burnt-out' ? 0.55 : 1;    // a guttering stub
+  candleFlame.scale.set(0.024 * near * small * (2 - k), 0.05 * near * small * k, 1);
+  candleFlame.position.copy(dir(f.yaw, f.pitch).multiplyScalar(10));
+  candleGlow.scale.set(0.3 * near * small, 0.36 * near * small, 1);
+  candleGlow.position.copy(candleFlame.position);
+  candleFlame.material.opacity = 0.85 + 0.15 * k;
+}
 function showCandle() {
-  const key = visit.get('energy') && candleSpot(visit.get('energy'));
-  const s = key && spots[key];
-  candleGlow.visible = !!s;
-  if (s) candleGlow.position.copy(dir(s.yaw, s.pitch).multiplyScalar(10));
+  const id = visit.get('energy');
+  const key = id && candleSpot(id);
+  const f = id && flamePoint(id);
+  const s = !f && key && spots[key];                                // no flame point (an old render): glow on the candle
+  candleFlame.visible = !!f;
+  candleGlow.visible = !!(f || s);
+  clearInterval(flicker);
+  if (f) {
+    placeFlame(f);
+    // a slow, small flicker while a flame shows (about 11 frames a second, nothing when the tab is hidden)
+    flicker = setInterval(() => { if (!document.hidden) { placeFlame(f, 0.93 + Math.random() * 0.12); render(); } }, 90);
+  } else if (s) {
+    candleGlow.scale.set(0.95, 1.4, 1);
+    candleGlow.position.copy(dir(s.yaw, s.pitch).multiplyScalar(10));
+  }
   for (const h of hotspots) h.el.classList.toggle('chosen', !!key && h.id === key);
   render();
 }
-function chooseEnergy(id) {
+function chooseEnergy(id, { quiet = false, from = null } = {}) {
   const e = world.energies?.[id];
   if (!e || id === visit.get('energy')) return;
+  const prev = visit.get('energy');
   visit.set('energy', id);
-  track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
+  if (!quiet) answerSound('energy', id, prev);
+  if (from) track('tell_set', { kind: 'energy', from });   // the check-in's candle; in Cuddlecore the candle is a touch
+  else track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
   showCandle();
-  say(e.moment, [], true);
+  if (!quiet) say(e.moment, [], true);
   record({ kind: 'energy', id });
 }
 
@@ -2121,8 +2226,53 @@ function confirmGuess(also) {
   chatLine('gemma', GUESSED[state.weather]);
   setChips([{ label: "That's right", do: ['confirm'] }, ...also]);
 }
+// In through the front door, the first stop is the check-in desk: Gemma offers it, and the weather confirm is one of
+// its rows (checkin-views.md). Walking past is fine
+const OPENER = () => Object.assign({ line: 'Hello, love. Want to check in? It helps me pick for you.', yes: 'Check in', no: 'Later' },
+  LINES.checkin?.opener);   // the content editor's words (gemma-lines.json checkin.opener)
+// On a portrait phone the chat sits at Line, which hides the chips, so the offer is a small pill on that row
+// (checkin-ux.md §3). It goes once the sheet is opened or Later is chosen, and doesn't come back that visit
+function checkinPill() {
+  const row = document.querySelector('#chatwin .cw-line');
+  if (!row) return;
+  let pill = row.querySelector('.cw-checkin');
+  if (!pill) {
+    pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'cw-checkin';
+    pill.onclick = e => { e.stopPropagation(); CHIP_ACTS.checkin(); };   // not the row's own tap, which opens the chat
+    row.appendChild(pill);
+  }
+  pill.textContent = OPENER().yes;
+  pill.hidden = !state.checkinPill;
+  $('chatwin').classList.toggle('has-checkin-pill', !!state.checkinPill);
+  if (state.checkinPill) chatUI.setAsking(false);   // the offer never raises the chat (it would cover the desk)
+}
+// After the film's hand-over (facing down the hall), make sure the desk shows (checkin-ux.md §5): a portrait phone turns
+// to the notice board and the desk; a wider screen that doesn't quite reach the desk turns a little, so the hall and
+// the whole desk both show. Screens that already see it don't move
+const PHONE_FOYER_VIEW = { yaw: 52, pitch: -16 }, WIDE_FOYER_YAW = 20;
+function faceDesk() {
+  const d = spots['checkin-desk'];
+  if (!d) return;
+  if (innerWidth < innerHeight) return lookTo(PHONE_FOYER_VIEW.yaw, PHONE_FOYER_VIEW.pitch);
+  const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) * 180 / Math.PI;   // half the view, across
+  if (Math.abs(((d.yaw - look.yaw + 540) % 360) - 180) > half - 4) lookTo(WIDE_FOYER_YAW, look.pitch);
+}
 function arrive() {
   if (state.asked || state.trail.length) return;
+  if (state.room === 'hall-entrance') {
+    state.asked = true;
+    store.save(state);
+    chatLine('gemma', OPENER().line);
+    setChips([{ label: OPENER().yes, do: ['checkin'] }, { label: OPENER().no, do: ['later'] }]);
+    state.checkinPill = true;
+    store.save(state);
+    checkinPill();
+    chatUI.setAsking(false);                           // keep the chat at Line: raised to Short it would cover the desk
+    setTimeout(faceDesk, reduceMotion() ? 0 : 1100);   // after the film's hand-over has settled
+    return;
+  }
   const guessed = state.weatherFrom === 'local' && GUESSED[state.weather];
   if (state.room === 'cuddlecore' && guessed) {
     state.asked = true;
@@ -2167,7 +2317,14 @@ function settle(fromFov) {
   dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
-window.__explore = { state, visit, book, ideas, chatUI, bookView, settle, showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+function endCheckinOffer() {
+  if (state.chips?.some(c => c.do?.[0] === 'checkin')) setChips([]);   // the offer's chips go with it (the pill path)
+  if (!state.checkinPill) return;
+  state.checkinPill = false;
+  store.save(state);
+  checkinPill();
+}
+window.__explore = { state, visit, lines: LINES, book, ideas, chatUI, bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();
@@ -2180,7 +2337,8 @@ ideas.render();
 renderTheme();
 renderNotes();
 renderChat();
-if (state.chips?.length) setChips(state.chips);   // the last question's answers, if it's still open (J9)
+if (state.chips?.length) setChips(state.chips);
+checkinPill();                                     // a reload keeps the check-in offer if it's still open   // the last question's answers, if it's still open (J9)
 soundLabel();
 if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);
