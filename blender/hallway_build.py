@@ -173,6 +173,7 @@ def checkin_props(oak, tread_oak, brass, brass_worn, berry_linen, paint):
         flames[key] = [round(cx, 3), ty, round(base + h + 0.022, 3)]    # where the page draws the flame when lit
     hotspot("checkin-desk", "The check-in desk", stand, kind="checkin")
     HOTSPOTS["checkin-desk"]["flames"] = flames
+    HOTSPOTS["checkin-desk"]["center"] = [round(tray_x, 3), ty, round(ctop + 0.1, 3)]   # on the candles, not the riser below them
 
     # An hourglass: two glass bulbs between turned wooden ends, sand mostly run through
     hx, hy = x0 + 0.72, -0.17
