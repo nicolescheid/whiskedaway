@@ -262,5 +262,16 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   });
   addEventListener('resize', () => { if (!root.hidden) root.className = `tell ${mode()} mx-${kind}`; });
 
-  return { open, close, data: D, get isOpen() { return !root.hidden; } };
+  /** A drawer tapped (chia.fromDrawers: drawer id → a flavour or topping id): that becomes the Mix's choice, as the fridge's milk
+   *  is its base, so "Mix an experiment" opens with it in. Returns { step, label } for Gemma's line, or null for a plain drawer. */
+  function drawer(id) {
+    const v = D.fromDrawers?.[id];
+    const step = v && (D.flavours?.[v] ? 'flavour' : D.toppings?.[v] ? 'topping' : null);
+    if (!step) return null;
+    save(step, v);
+    sound?.mix?.(step);
+    return { step, label: labelOf(D, step, v) };
+  }
+
+  return { open, close, drawer, data: D, get isOpen() { return !root.hidden; } };
 }
