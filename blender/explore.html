@@ -347,6 +347,10 @@
     #front-door .fd-links { justify-content: flex-start; }
   }
   .chip.bell { padding: 3px 8px; line-height: 0; }
+  /* The check-in offer on the chat's Line row: portrait phones only, where Line hides the chips */
+  .cw-checkin { display: none; flex: none; margin-left: 8px; min-height: 44px; padding: 8px 14px; border: 1.5px solid var(--berry);
+                border-radius: 999px; background: var(--parchment); color: var(--berry); font: 600 14px 'Quicksand', system-ui, sans-serif; cursor: pointer; }
+  @media (orientation: portrait) and (max-width: 719px) { .chatwin.size-line .cw-checkin:not([hidden]) { display: inline-flex; align-items: center; pointer-events: auto; } }
   .chip.bell img { width: 26px; height: 26px; transform-origin: 50% 12%; }
   .chip.bell.ring img { animation: ring .9s ease-in-out; }
   /* The speaker beside the bell: crossed out while the Inn is quiet, which it is until the visitor says */
@@ -1401,10 +1405,10 @@ function chatLine(who, text) {
 // back after a reload (J9)
 const CHIP_ACTS = {
   // The check-in sheet (the Ideas build's). Until it exists, the Tell Gemma menu stands in
-  checkin: () => (typeof tell.openCheckin === 'function' ? tell.openCheckin('foyer') : tell.openMenu('foyer')),
+  checkin: () => { endCheckinOffer(); typeof tell.openCheckin === 'function' ? tell.openCheckin('foyer') : tell.openMenu('foyer'); },
   choose: cluster => record({ kind: 'choose', cluster }),
   tell: () => tell.openMenu('offer'),                   // "Want to tell me what's in your cupboard…?" [Tell me]
-  later: () => {},                                      // [Not now]: the offer is over for the visit
+  later: () => endCheckinOffer(),                                      // [Not now]: the offer is over for the visit
   weather: id => chooseWeather(id),
   barometer: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); },
   confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); introduce(); },
@@ -2062,7 +2066,25 @@ function confirmGuess(also) {
 }
 // In through the front door, the first stop is the check-in desk: Gemma offers it, and the weather confirm is one of
 // its rows (checkin-views.md). Walking past is fine
-const CHECKIN_LINE = "Hello, love. Check in at the desk if you like, and I'll know what to cook for you.";
+const OPENER = () => Object.assign({ line: 'Hello, love. Want to check in? It helps me pick for you.', yes: 'Check in', no: 'Later' },
+  LINES.checkin?.opener);   // the content editor's words (gemma-lines.json checkin.opener)
+// On a portrait phone the chat sits at Line, which hides the chips, so the offer is a small pill on that row
+// (checkin-ux.md §3). It goes once the sheet is opened or Later is chosen, and doesn't come back that visit
+function checkinPill() {
+  const row = document.querySelector('#chatwin .cw-line');
+  if (!row) return;
+  let pill = row.querySelector('.cw-checkin');
+  if (!pill) {
+    pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'cw-checkin';
+    pill.onclick = e => { e.stopPropagation(); CHIP_ACTS.checkin(); };   // not the row's own tap, which opens the chat
+    row.appendChild(pill);
+  }
+  pill.textContent = OPENER().yes;
+  pill.hidden = !state.checkinPill;
+  if (state.checkinPill) chatUI.setAsking(false);   // the offer never raises the chat (it would cover the desk)
+}
 // On a portrait phone the arrival view (down the hall) misses the desk, so after the film's hand-over the view turns
 // to show the notice board and the desk together (checkin-ux.md §5, measured by the mobile lead). Wider screens
 // already see the desk, so nothing moves
@@ -2076,8 +2098,11 @@ function arrive() {
   if (state.room === 'hall-entrance') {
     state.asked = true;
     store.save(state);
-    chatLine('gemma', CHECKIN_LINE);
-    setChips([{ label: 'Check in', do: ['checkin'] }, { label: 'Later', do: ['later'] }]);
+    chatLine('gemma', OPENER().line);
+    setChips([{ label: OPENER().yes, do: ['checkin'] }, { label: OPENER().no, do: ['later'] }]);
+    state.checkinPill = true;
+    store.save(state);
+    checkinPill();
     chatUI.setAsking(false);                           // keep the chat at Line: raised to Short it would cover the desk
     setTimeout(faceDesk, reduceMotion() ? 0 : 1100);   // after the film's hand-over has settled
     return;
@@ -2126,7 +2151,13 @@ function settle(fromFov) {
   dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
 }
 
-window.__explore = { state, visit, book, ideas, chatUI, bookView, settle, showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+function endCheckinOffer() {
+  if (!state.checkinPill) return;
+  state.checkinPill = false;
+  store.save(state);
+  checkinPill();
+}
+window.__explore = { state, visit, lines: LINES, book, ideas, chatUI, bookView, settle, showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
 
 setRoomText();
 buildHotspots();
@@ -2139,7 +2170,8 @@ ideas.render();
 renderTheme();
 renderNotes();
 renderChat();
-if (state.chips?.length) setChips(state.chips);   // the last question's answers, if it's still open (J9)
+if (state.chips?.length) setChips(state.chips);
+checkinPill();                                     // a reload keeps the check-in offer if it's still open   // the last question's answers, if it's still open (J9)
 soundLabel();
 if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);

@@ -79,6 +79,8 @@ export function frontDoor({ active, track }) {
     // First visit: one line, then Gemma's check-in offer in the chat (one opener, not three: checkin-views.md).
     // The bell brings back the full welcome and help
     $('welcome-line').hidden = help;
+    const line = window.__explore?.lines?.checkin?.opener?.welcome;   // the content editor's words, when loaded
+    if (line) $('welcome-line').textContent = line;
     $('welcome-intro').hidden = !help;
     $('welcome-ok').textContent = help ? 'Back to the Inn' : 'Come in';
     card.classList.add('open');
