@@ -1204,6 +1204,12 @@ function touch(id) {
     const now = sound.music(id);
     if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
     say(!sound.on ? obj.moment_quiet || obj.moment : now ? obj.moment : obj.moment_stop || obj.moment, [], true);
+  } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
+    // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
+    const got = chia.drawer(id);
+    const add = got ? (chia.data.lines.drawerAdded || "{x}'s in your Mix, if you make one.").replace('{x}', got.label) : '';
+    say([obj.moment, add].filter(Boolean).join(' '), [], true);
+    if (got) holdLine();                                      // her reading waits, so this line is the one you see
   } else if (obj.type === 'ambient' && id === 'notice-board') {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
