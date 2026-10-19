@@ -515,7 +515,6 @@
 
 <div class="bar">
   <p class="room-title" id="room-title">Cuddlecore</p>   <!-- not a heading: the page has one h1, on the front door -->
-  <span class="mode" id="mode"></span>
   <a class="chip" id="btn-inn" href="/?door=1">Front door</a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
   <button class="chip" id="btn-book" aria-haspopup="dialog" aria-expanded="false"><span class="long">Gemma's recipe book</span><span class="short">Book</span><span class="badge" hidden></span></button>
@@ -811,7 +810,6 @@ const navTrail = () => {
   const trail = state.trail.filter(e => e.kind !== 'energy');
   return [...(trail.some(e => e.kind === 'time') ? [] : [{ kind: 'clock', id: deviceTime() }]), ...trail, ...told];
 };
-$('mode').textContent = AI ? 'AI navigator' : 'Local navigator';
 
 // ---------- season: a good guess from where the visitor seems to be, never a lock (docs/inn-floorplan.html)
 // North of the equator March to May is spring; south of it, September to November. Only the guess is used, in the page.
@@ -1314,7 +1312,8 @@ async function navigate() {
     r = { ...r, serve: r.mode === 'ai' ? r.serve.filter(s => !state.served.includes(s.atom) && !book.has(s.atom)).slice(0, 1) : [] };
   }
   state.result = r;
-  $('mode').textContent = r.mode === 'ai' ? 'AI navigator' : (AI ? 'Local navigator (AI unavailable)' : 'Local navigator');
+  // No builder words in view (brainstorm #6): if the AI can't help, Gemma says so once a visit, softly, in her own voice
+  if (AI && r.mode !== 'ai' && !state.aloneSaid) { state.aloneSaid = true; setTimeout(() => chatLine('gemma', LINES.alone || "I'm reading your wander on my own for a bit."), 1200); }
   applyReveal(r.reveal);
   const gemma = r.gemma;                                // her reading has no lead now (content/no-lead), so nothing to strip
   // A keep, set-aside or undo line stays up for 3 s before her next one (UX T1), unless a newer step comes along

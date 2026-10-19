@@ -183,8 +183,6 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
   .chatwin.size-full .cw-grip { margin-right: 10px; }
   .chatwin.size-full .cw-body { display: flex; flex-direction: column; min-height: 0; flex: 1; }
   .chatwin.size-full .cw-log { flex: 1 1 auto; min-height: 0; max-height: none; }
-  /* Turnstile's box sits above Gemma, never over her chips or a highlight's buttons */
-  body > div[role="status"][style*="2147483000"] { bottom: calc(var(--chat-h, 140px) + 12px) !important; }
 }
 
 /* ---------- phones on their side (design to ~724x340 usable) */
@@ -235,7 +233,6 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
   .chatwin.size-short .cw-chips { flex-wrap: nowrap; overflow-x: auto; touch-action: pan-x; scrollbar-width: none; }
   .chatwin.size-short .cw-chips button { flex: none; }
   .chatwin.size-full { z-index: 22; }
-  body > div[role="status"][style*="2147483000"] { bottom: auto !important; top: calc(var(--bar-h, 46px) + 8px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .idea .ic { animation: none; }
