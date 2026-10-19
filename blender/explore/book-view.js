@@ -12,7 +12,7 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });   // "19 Oct"
 
-export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook }) {
+export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook, list }) {
   const root = document.createElement('div');
   root.id = 'book';
   root.className = 'book';
@@ -105,6 +105,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     return `<h3 class="bk-h">Contents</h3>
       ${rooms.length > 1 ? `<div class="bk-filter" role="group" aria-label="Show recipes from"><button data-f="" aria-pressed="${!filter}">All</button>${rooms.map(r => `<button data-f="${esc(r)}" aria-pressed="${filter === r}" style="--ring:${RIBBONS[r].colour}"><i></i>${esc(RIBBONS[r].name)}</button>`).join('')}</div>` : ''}
       <ul class="bk-list">${shown.map(k => `<li><button data-open="${esc(k.id)}" style="--ring:${RIBBONS[k.room]?.colour || 'var(--berry)'}"><i></i><span>${esc(k.title)}</span><small>${esc(RIBBONS[k.room]?.name || '')} · ${esc(day(k.kept))}</small></button></li>`).join('')}</ul>
+      ${list ? '<p><button class="bk-cook bk-list">What do I need?</button></p>' : ''}
       <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">Every recipe you've kept, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.</span></p>`;
   }
   function theme() {
@@ -118,14 +119,18 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     const desk = isDesk();
     root.classList.toggle('desk', desk);
     const s = seq();
-    if (!loose && !s.includes(at)) at = 'contents';
+    if (!loose && !s.includes(at) && at !== 'list') at = 'contents';
     const page = loose ? loose.id : at;
     const kept = page !== 'visit' && page !== 'contents' ? book.get(page) : null;
     const rec = kept || (loose && loose.id === page ? loose : null);
     theme();
     stash.appendChild(visitPage);
     left.replaceChildren(); right.replaceChildren();
-    if (!rec) {
+    if (page === 'list' && list) {                                  // "What do I need?" (list.js)
+      list.render(left, () => draw());
+      right.innerHTML = desk ? contentsPage() : '';
+      right.hidden = !desk;
+    } else if (!rec) {
       if (desk) { left.appendChild(visitPage); right.innerHTML = contentsPage(); }
       else if (page === 'visit') left.appendChild(visitPage);
       else left.innerHTML = contentsPage();
@@ -163,6 +168,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     root.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { onRead?.(b.dataset.open); go(b.dataset.open); });
     root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; draw(); root.querySelector(`[data-f="${filter || ''}"]`)?.focus(); });
     root.querySelectorAll('.bk-clear, .bk-clear2').forEach(b => b.onclick = clearBook);
+    root.querySelector('.bk-list')?.addEventListener('click', () => { track?.('list_open'); go('list'); });
   }
   function go(page) {
     loose = null;
@@ -216,7 +222,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     opener = document.activeElement;
     loose = loosePage && !book.has(loosePage.id) ? loosePage : null;
     at = loosePage ? loosePage.id : page;
-    if (!loose && !seq().includes(at)) at = book.has(at) ? at : 'visit';
+    if (!loose && !seq().includes(at) && at !== 'list') at = book.has(at) ? at : 'visit';
     const was = isOpen();
     root.hidden = false;
     root.classList.add('open');
