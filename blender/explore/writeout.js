@@ -33,11 +33,11 @@ export function cleanRecipe(r) {
 
 export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange, onLanded }) {
   const L = {
-    button: lines.button || 'Write it out in full',
-    remaining: lines.remaining || 'I can write out {n} more this visit.',
-    remainingOne: lines.remaining_one || 'I can write out one more this visit.',
+    button: lines.button || 'Get the full recipe',
+    remaining: lines.remaining || 'Gemma writes it for you (3 a visit, {n} left).',
+    remainingOne: lines.remaining_one || 'Gemma writes it for you (3 a visit, one left).',
     writing: lines.writing || 'Gemma is writing…',
-    atCap: lines.at_cap || "That's three I've written out this visit. The short version's above.",
+    atCap: lines.at_cap || "That's three recipes I've written this visit. The short version's above.",
     failed: lines.failed || "My pen's run dry. The short version's above. Try again in a bit.",
     diet: lines.diet_question || 'Anything I should avoid?',
   };
@@ -54,7 +54,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
       <h4>How${f.time ? ` <span class="small">${esc(f.time)}</span>` : ''}</h4>
       <ol class="bk-steps">${f.steps.map(x => `<li>${esc(typeof x === 'string' ? x : x.text)}</li>`).join('')}</ol>
       ${f.tip ? `<p class="bk-tip"><b>Gemma's tip:</b> ${esc(f.tip)}</p>` : ''}
-      <p class="small">Written out by Gemma for this visit${book.has(f.id) ? ', and kept in your book' : ''}.</p>`;
+      <p class="small">Written by Gemma for this visit${book.has(f.id) ? ', and kept in your book' : ''}.</p>`;
   }
 
   /** Fill a page's write-out slot. `seedEl` holds the short version, which a written recipe replaces. */

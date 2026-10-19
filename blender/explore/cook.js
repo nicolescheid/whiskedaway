@@ -52,7 +52,7 @@ export function needsOf(rec, full) {
 }
 
 export function createCook({ written, sound, track, say, lines = {}, beforeOpen, onList, isKept, writer }) {
-  const L = { writing: "Gemma's writing it out…", failed: "I couldn't write this one out just now, so here's the short version.", dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
+  const L = { writing: "Gemma's writing the recipe…", failed: "I couldn't write this one just now, so here's the short version.", dim: 'Your phone may dim. Tap the screen to keep it awake.', first: "I'll ring the bell when it's done.", ready: 'Your {what} is ready.',
               late: 'Your {what} finished {n} min ago.', done: 'Enjoy it.', need: "You'll need", ...lines };
   const root = document.createElement('div');
   root.id = 'cook';

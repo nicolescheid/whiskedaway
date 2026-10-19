@@ -96,7 +96,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
       <h4>How</h4><p class="bk-method">${esc(r.method_short || r.body)}</p>
       ${r.seed?.time ? `<p class="small">${esc(r.seed.time)}</p>` : ''}</div>
       <div class="bk-write"></div>
-      ${onCook ? '<p><button class="bk-cook">Cook this</button></p>' : ''}
+      ${onCook ? '<p><button class="bk-cook">Cook this, step by step</button></p>' : ''}
       ${(actions?.(r) || []).map((a, i) => `<p><button class="bk-outline bk-act" data-act-i="${i}">${esc(a.label)}</button></p>`).join('')}
       ${extra?.(r) || ''}`;   // extra(rec): a room's own lines under the buttons (escaped HTML), e.g. Sweet Spells' swap the sugar
   }

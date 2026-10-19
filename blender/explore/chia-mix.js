@@ -33,9 +33,9 @@ const DEFAULTS = {
   lines: {
     moodTitle: 'Pick a mood', mixTitle: 'Mix an experiment', names: { mood: 'Mood', base: 'Base', flavour: 'Flavour', topping: 'On top' },
     steps: { mood: 'What mood is it?', base: 'What shall we set it in?', flavour: 'And the flavour?', topping: 'Something on top?' },
-    swapYes: 'Swap to {x}', swapNo: 'Keep mine', swapLine: 'Would you try {x} instead of {y}? {reason}', back: '‹ Back', next: 'Next ›', skip: 'Skip', write: 'Write it out',
-    cap: 'That uses one of your 3 write-outs this visit.', capNone: "I've written three out this visit, so that's my pen done. Your choices are kept.",
-    writing: "Gemma's writing it out…", failed: "My pen's run dry. Your choices are kept, so try again in a bit.",
+    swapYes: 'Swap to {x}', swapNo: 'Keep mine', swapLine: 'Would you try {x} instead of {y}? {reason}', back: '‹ Back', next: 'Next ›', skip: 'Skip', write: 'Get my recipe',
+    cap: 'Gemma writes it for you (3 a visit).', capNone: "I've written three this visit, so that's my pen done. Your choices are kept.",
+    writing: "Gemma's writing your recipe…", failed: "My pen's run dry. Your choices are kept, so try again in a bit.",
     summary: 'Your jar', moodAck: "{x}. I'll lean that way.", written: "Here's your jar. Keep it if you like it.",
     breakfast: 'Ready by breakfast?', breakfastLine: "Set it tonight and it'll be ready by 7.", jars: 'Make 4 jars', jarsLine: "Four jars, then. I've scaled your list.",
   },

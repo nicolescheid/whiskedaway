@@ -11,8 +11,8 @@
     "_when": "Speak on the 1st keep of the visit, the 3rd, then every 4th (7th, 11th...). Otherwise stay quiet: the animation and the live region are enough.",
     "first_ever": "That's in your book now. It's up at the top, and it stays on this device.",
     "first_this_visit": [
-      "In the book it goes.",
-      "Kept. It's in your book."
+      "Saved to your book.",
+      "Kept. It's saved in your book."
     ],
     "third": [
       "Three in the book. I'm starting to see what you like.",
@@ -48,11 +48,11 @@
   "room_empty": "That's everything I've got in here. Try next door.",
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",
   "write_out": {
-    "button": "Write it out in full",
-    "remaining": "I can write out {n} more this visit.",
-    "remaining_one": "I can write out one more this visit.",
+    "button": "Get the full recipe",
+    "remaining": "Gemma writes it for you (3 a visit, {n} left).",
+    "remaining_one": "Gemma writes it for you (3 a visit, one left).",
     "writing": "Gemma is writing…",
-    "at_cap": "That's three I've written out this visit. The short version's above.",
+    "at_cap": "That's three recipes I've written this visit. The short version's above.",
     "failed": "My pen's run dry. The short version's above. Try again in a bit.",
     "diet_question": "Anything I should avoid?"
   },
@@ -73,7 +73,7 @@
       "title": "What have you got to use?",
       "placeholder": "eggs, spinach, leftover rice",
       "useUp": "Use these up first",
-      "privacy": "Only used for Gemma's ideas and the recipes she writes out for you."
+      "privacy": "Only used for Gemma's ideas and the recipes she writes for you."
     },
     "map": {
       "title": "Where shall we take it?",
@@ -83,9 +83,9 @@
     "dietary": {
       "title": "Anything I should avoid?",
       "other": "Something else?",
-      "otherNote": "I'll pass that on when I write a recipe out. I can't check my cards for it.",
+      "otherNote": "I'll pass that on when I write your recipe. I can't check my cards for it.",
       "fodmapLabel": "Low-FODMAP",
-      "fodmapNote": "I'll pass it on when I write a recipe out. I only leave out cards I've checked."
+      "fodmapNote": "I'll pass it on when I write your recipe. I only leave out cards I've checked."
     },
     "ack": {
       "pantry": "{two}. I'll work with those.",
@@ -94,7 +94,7 @@
       "map": "{c} it is. I'll lean that way.",
       "country": "Shopping words for {country}, then.",
       "dietary": "{d}. I'll keep to that.",
-      "dietaryOther": "Noted. I'll pass it on when I write a recipe out."
+      "dietaryOther": "Noted. I'll pass it on when I write your recipe."
     },
     "entry": {
       "dietary": "I'll keep to {d} in here too.",
@@ -677,7 +677,7 @@
       "moodTitle": "Pick a mood",
       "moodHelper": "Each one is a set of ingredients. What it does for you is your call.",
       "mixTitle": "Mix an experiment",
-      "mixIntro": "Four choices, then I'll write it out.",
+      "mixIntro": "Four choices, then I'll write up the recipe.",
       "prefill": "I've started with what you picked from the drawers and the fridge.",
       "steps": {
         "mood": "First, a mood",
@@ -691,9 +691,9 @@
       "swapNo": "Keep mine",
       "swapped": "Swapped. I think you'll like it.",
       "kept": "Fair enough. Yours to choose.",
-      "write": "Write it out",
-      "cap": "That uses one of your three write-outs this visit ({n} left).",
-      "capNone": "That's three written out this visit. The jar's short version is still yours.",
+      "write": "Get my recipe",
+      "cap": "Gemma writes it for you (3 a visit, {n} left).",
+      "capNone": "That's three recipes written this visit. The jar's short version is still yours.",
       "written": "Here's your jar.",
       "moodAck": "{m}. I'll lean that way.",
       "breakfast": "Ready by breakfast?",

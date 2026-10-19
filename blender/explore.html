@@ -436,7 +436,7 @@
     <p>As you wander, Gemma's Ideas rise as small bubbles. Tap one for a closer look: what it is, why she chose it, how
       long it takes. Keep the ones you like, or set one aside, and she'll learn from both. What you keep goes into your
       recipe book, with its ingredients and a short method. The book stays on your device until you clear it.
-      Gemma can also write out a recipe in full, up to three a visit.</p>
+      Gemma can also write a full recipe for you, up to three a visit.</p>
 
     <h2>Your weather, your time, your season</h2>
     <p>The Inn opens in your own weather, at your own time of day, in your own season.</p>
@@ -470,7 +470,7 @@
       forgotten when you close the tab, apart from small notes so she doesn't repeat herself. To
       choose ideas, the Inn sends your wander to our server: what you touched and changed, never who you are. Our
       server asks Claude, Anthropic's AI model, to pick an idea. It doesn't store your wander, and Anthropic handles it
-      under its own data policy. When you ask Gemma to write a recipe out in full, that card and what you've told her this
+      under its own data policy. When you ask Gemma for the full recipe, that card and what you've told her this
       visit, such as dietary needs or what's in your pantry, go to Claude the same way, and our server keeps none of it. The Inn counts visits anonymously, without cookies, and never who. If your browser asks not to be tracked,
       nothing is counted. Your recipe book stays on your device until you clear it.</p>
 
@@ -1780,8 +1780,8 @@ function acknowledge(kind, { after, forgot }) {
   } else if (kind === 'dietary') {
     const xs = after.dietary.filter(d => d !== 'low-fodmap').map(d => DIET_WORD[d] || d);
     // every need is named, so none seems dropped (QA pass 4); low-FODMAP isn't kept to (no cards checked yet), only passed on
-    const fodmap = after.dietary.includes('low-fodmap') ? `${T.dietary?.fodmapLabel || 'Low-FODMAP'}. ${T.dietary?.fodmapNote || "I'll pass it on when I write a recipe out. I only leave out cards I've checked."}` : '';
-    line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : fodmap || (A.dietaryOther || "Noted. I'll pass it on when I write a recipe out.");
+    const fodmap = after.dietary.includes('low-fodmap') ? `${T.dietary?.fodmapLabel || 'Low-FODMAP'}. ${T.dietary?.fodmapNote || "I'll pass it on when I write your recipe. I only leave out cards I've checked."}` : '';
+    line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : fodmap || (A.dietaryOther || "Noted. I'll pass it on when I write your recipe.");
   }
   say(capFirst(line), [], true);
   holdLine();
@@ -1965,7 +1965,7 @@ function renderNotes() {
       || 'Not passed yet. Gemma checks quietly the first time you wander.';
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', keep: 'Kept', recipe: 'Had written out', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
+  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', keep: 'Kept', recipe: 'Got the full recipe for', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
   $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e =>
     `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (world.objects[e.id]?.ref || label(e.id)) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
 }
