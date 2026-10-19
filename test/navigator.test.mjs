@@ -80,3 +80,21 @@ test('an empty wander serves nothing and names nothing', () => {
   assert.equal(r.serve.length, 0);
   assert.equal(r.cluster, undefined);
 });
+
+// Sweet Spells (rooms-views.md, Stage B): cravings lean the room's own atoms; "no added sugar" is a penalty, never a filter
+test('a craving leans Sweet Spells towards it', () => {
+  const trail = [{ kind: 'touch', id: 'spell-books' }];
+  const top = opts => localNavigate(trail, world, { room: 'sweet-spells', ...opts }).serve.map(s => world.atoms.find(a => a.id === s.atom));
+  const cold = top({ cravingThemes: ['chilled'], cravingRoom: 'sweet-spells' });
+  assert.ok(cold[0]?.themes.includes('chilled'), cold.map(a => a.id).join(', '));
+  assert.ok(!top({})[0]?.themes.includes('chilled'));
+});
+test('no added sugar lowers sugary atoms but leaves them in', () => {
+  const trail = [{ kind: 'touch', id: 'spell-books' }, { kind: 'touch', id: 'lectern' }];
+  const none = localNavigate(trail, world, { room: 'sweet-spells', noAddedSugar: true }).serve.map(s => world.atoms.find(a => a.id === s.atom));
+  assert.ok(none.length > 0);
+  assert.ok(none.some(a => !a.added_sugar), none.map(a => a.id).join(', '));
+  // With every unsweetened atom already out, the sugary ones still come
+  const served = world.atoms.filter(a => a.room === 'sweet-spells' && !a.added_sugar).map(a => a.id);
+  assert.ok(localNavigate(trail, world, { room: 'sweet-spells', noAddedSugar: true, served }).serve.length > 0);
+});

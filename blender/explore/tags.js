@@ -10,7 +10,7 @@ import { SERVINGS, checkinWords } from './checkin.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you', lines = {} }) {
+export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you', lines = {}, extra = {} }) {
   const W = checkinWords(lines);
   // The check-in's answers (checkin.js): a small picker like energy's, and the same setter as the desk's sheet (choose.answer)
   const answer = (k, icon, name, ids) => ({ icon, name, title: W.rows[k], word: v => (W[k][v] || '').toLowerCase(),
@@ -26,7 +26,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     // Dietary needs: the cookbook shelf's sheet, or the recipe page's "Anything I should avoid?". "Something else" shows as +1
     dietary: {
       icon: '🌱', name: 'Dietary needs', title: 'Anything I should avoid?', multi: true, sheet: 'dietary',
-      word: v => [].concat(v || []).map(d => DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d).join(', ') + (visit.get('dietaryOther') ? ' +1' : ''),
+      word: v => [].concat(v || []).map(d => (d === 'low-fodmap' ? 'low-FODMAP' : DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d)).join(', ') + (visit.get('dietaryOther') ? ' +1' : ''),
       options: () => DIETS.map(([id, label]) => ({ id, label })),
       pick: id => { const now = [].concat(visit.get('dietary') || []); const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id]; visit.set('dietary', next.length ? next : null); },
     },
@@ -40,6 +40,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     time: answer('time', '⏳', 'Time', Object.keys(W.time)),
     servings: { ...answer('servings', '🍽', 'Cooking for', SERVINGS), word: v => (v === '1' || v === 'crowd' ? W.servings[v] : `for ${W.servings[v] || v}`).toLowerCase() },
     confidence: answer('confidence', '🧑‍🍳', 'Confidence', Object.keys(W.confidence)),
+    ...extra,                     // a room's own about-you answers, each with open() for its sheet (Sweet Spells' how sweet)
   };
   el.setAttribute('role', 'list');
   el.setAttribute('aria-label', "What you've told Gemma");
@@ -60,6 +61,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     el.querySelectorAll('.tag[data-k]').forEach(b => b.onclick = e => {
       e.stopPropagation();
       const K = KINDS[b.dataset.k];
+      if (K.open) return K.open();
       if (K.sheet && tell) return tell.open(K.sheet, 'tag');
       openPick(b.dataset.k, b);
     });

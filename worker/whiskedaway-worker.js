@@ -792,9 +792,27 @@ function buildUserMessage(payload) {
       cuddlecore: 'From Cuddlecore: quick comfort. Keep it to one pan or pot and about 20 minutes, with few steps and little washing up.',
       flourish: 'From Flourish: a proper meal from whole foods. A bit more prep is fine, and it should be a complete, satisfying plate.',
       'sweet-spells': 'From Sweet Spells: a sweet thing. Suit it to the time of day given (a sweet breakfast in the morning, a pudding in the evening).',
-      chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time.',
+      chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time. '
+        + 'Moods, not medicine: you may name what is in the jar (fibre, protein, vitamin C, caffeine in matcha) as plain facts, but never say what it does '
+        + 'for energy, focus, mood, skin, gut, sleep or health.',
     };
     if (ROOM_RULES[payload.room]) parts.push(ROOM_RULES[payload.room]);
+    // Mix an experiment (rooms-views.md): the visitor's own mood, base, flavour and topping; keep to them
+    const mix = payload.mix || {};
+    const mixed = [['Mood', mix.mood, 40], ['What the mood is made of', mix.inside, 120], ['Base', mix.base, 40], ['Flavour', mix.flavour, 40], ['Topping', mix.topping, 40]]
+      .filter(([, v]) => v).map(([k, v, n]) => `${k}: ${txt(v, n).replace(/\.$/, '')}`);
+    if (mixed.length) parts.push(`Their own mix, to keep to: ${mixed.join('; ')}.`);
+    // Sweet Spells (rooms-views.md, Stage B): how sweet and what with (Inn-wide), and what it's for
+    const SWEETNESS = {
+      'The full treat': 'How sweet: the full treat. Sweeten it as the recipe usually would.',
+      'A bit less sugar': 'How sweet: a bit less sugar. Use noticeably less added sugar than usual, and say so in a few words.',
+      'No added sugar': 'How sweet: no added sugar. Use no sugar, honey, syrup or other added sweetener; let fruit (or dates, if they allow) do the sweetening, and say it will be less sweet.',
+    };
+    if (SWEETNESS[payload.sweetness]) parts.push(SWEETNESS[payload.sweetness]);
+    if (list(payload.sweeteners, 6).length) parts.push(`Sweeten with: ${list(payload.sweeteners, 6).join(', ')} (only these; if you swap from the recipe's usual, say how much in plain kitchen terms, never a made-up ratio)`);
+    if (payload.occasion) parts.push(`What it's for: ${txt(payload.occasion, 40)} (suit the look and the size to it)`);
+    // Low-FODMAP depends on portions: avoid the common high-FODMAP ingredients, and say portions matter (content editor)
+    if ((payload.dietary_restrictions || []).includes('low-fodmap')) parts.push('Low-FODMAP: leave out common high-FODMAP ingredients (onion, garlic, wheat, honey, apple, pear, mango, agave, inulin, large amounts of dairy) and add one short line that portions matter for low-FODMAP. Never claim it treats or helps a condition.');
     // The foyer check-in (checkin-views.md): skill, time and how many, when the visitor has said
     const CONFIDENCE = {
       starting: 'Cooking confidence: just starting out. Name every tool, explain any cooking term in a few words (until it just wobbles), and keep to one thing at a time.',
@@ -871,6 +889,8 @@ You receive the visitor's trail for this visit only: objects they touched, objec
 A "weather" event is the visitor turning the barometer to change the weather outside the window (objects of type "weather" describe each one). It's a deliberate choice of mood that holds until they change it again: weigh it strongly and keep honouring it as they wander. Sunny or hot weather leans to light, fresh, cooling food; storms and rain lean to warm, hearty, slow food. Never reveal a weather object.
 
 Time of day works the same way. A "time" event is the visitor pushing the kitchen clock to a time of day (a deliberate choice: weigh it like the weather); a "clock" event is just their device's own time of day (observed, not chosen: weigh it lightly). Objects of type "time" describe each one. Mornings lean to breakfast and gentle starts, midday to light food, evenings to a proper meal, late night to gentle, low-effort things. If you mention a "clock" time in a why, phrase it as context ("and it's late where you are"), not as something they did. Never reveal a time object.
+
+A "mood" event is the visitor choosing a mood for a chia jar in the Chiapothecary (morning-spark, deep-focus, calm, cultured, bright or by-flavour). It's a standing choice like the weather: lean towards atoms whose themes fit it. Moods are ingredients and feelings, never health effects: don't say what a jar does for the body.
 
 An "energy" event is the visitor picking one of five candles to say how much energy they have today: burnt out, low, half, three-quarters or full (objects of type "energy" describe each one). It's a deliberate choice that holds until they pick another, like the weather. It's the strongest guide to effort: each energy object has a spoon_bias, and the lower it is, the more you should favour atoms with fewer spoons. For burnt out or low, serve only 0-spoon atoms (a 1-spoon atom at most, if nothing else fits); for full, hands-on cooking is welcome. In a why, say it plainly ("Because you picked the burnt-out candle"). Never reveal an energy object.
 A "season" event is the visitor turning the Conservatory's seasons wheel to spring, summer, autumn or winter (objects of type "season" describe each one). It's a deliberate choice that holds until they turn it again, like the weather: spring and summer lean fresh, green and cooling, autumn and winter warm and hearty. Never reveal a season object.

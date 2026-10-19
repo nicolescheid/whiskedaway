@@ -83,7 +83,9 @@
     "dietary": {
       "title": "Anything I should avoid?",
       "other": "Something else?",
-      "otherNote": "I'll pass that on when I write a recipe out. I can't check my cards for it."
+      "otherNote": "I'll pass that on when I write a recipe out. I can't check my cards for it.",
+      "fodmapLabel": "Low-FODMAP",
+      "fodmapNote": "I'll pass it on when I write a recipe out. I only leave out cards I've checked."
     },
     "ack": {
       "pantry": "{two}. I'll work with those.",
@@ -450,6 +452,385 @@
       "label": "The groceries",
       "ref": "the grocery bags",
       "moment": "What did you bring in? Tell me and I'll cook around it."
+    }
+  },
+  "chia": {
+    "_about": "The Chiapothecary's moods and Mix an experiment (rooms-views.md, stage A), keyed as the Ideas build reads them (rooms-chia). Moods, not medicine: each says what's in it, never what it does. Swap lines are food facts only; first match wins, one at a time, never blocking. Every line under 100 characters ({x} {m} {n} filled by the page).",
+    "moods": {
+      "morning-spark": {
+        "label": "Morning spark",
+        "inIt": "Matcha, citrus and a spoon of peanut butter.",
+        "themes": [
+          "energy",
+          "energising"
+        ],
+        "suggest": {
+          "flavour": "matcha",
+          "topping": "kiwifruit"
+        }
+      },
+      "deep-focus": {
+        "label": "Deep focus",
+        "inIt": "Walnuts, blueberries and a little cacao.",
+        "themes": [
+          "focus"
+        ],
+        "suggest": {
+          "flavour": "cocoa",
+          "topping": "walnuts"
+        }
+      },
+      "calm": {
+        "label": "Calm",
+        "inIt": "Chamomile, vanilla and warm spice.",
+        "themes": [
+          "calming",
+          "restorative"
+        ],
+        "suggest": {
+          "flavour": "chamomile"
+        }
+      },
+      "cultured": {
+        "label": "Cultured",
+        "inIt": "Kefir or yoghurt, with kiwifruit and oats.",
+        "themes": [
+          "cultured"
+        ],
+        "suggest": {
+          "base": "kefir",
+          "topping": "kiwifruit"
+        }
+      },
+      "bright": {
+        "label": "Bright",
+        "inIt": "Kiwifruit, oranges and berries.",
+        "themes": [
+          "skin",
+          "vitamins"
+        ],
+        "suggest": {
+          "topping": "kiwifruit"
+        }
+      },
+      "by-flavour": {
+        "label": "By flavour",
+        "inIt": "Just whatever tastes good to you.",
+        "themes": [],
+        "suggest": {}
+      }
+    },
+    "bases": {
+      "milk": "Milk",
+      "oat": "Oat milk",
+      "coconut": "Coconut milk",
+      "almond": "Almond milk",
+      "soy": "Soy milk",
+      "kefir": "Kefir",
+      "yoghurt": "Yoghurt"
+    },
+    "flavours": {
+      "vanilla": "Vanilla",
+      "cocoa": "Cocoa",
+      "matcha": "Matcha",
+      "chai": "Chai spice",
+      "chamomile": "Chamomile",
+      "lemon": "Lemon",
+      "mango": "Mango"
+    },
+    "toppings": {
+      "berries": "Berries",
+      "kiwifruit": "Kiwifruit",
+      "passionfruit": "Passionfruit",
+      "walnuts": "Walnuts",
+      "toasted-coconut": "Toasted coconut",
+      "cacao-nibs": "Cacao nibs",
+      "granola": "Granola",
+      "goji": "Goji berries"
+    },
+    "fromDrawers": {
+      "drawer-coconut-flakes": "toasted-coconut",
+      "drawer-cacao-nibs": "cacao-nibs",
+      "drawer-goji-berries": "goji",
+      "drawer-matcha": "matcha"
+    },
+    "swaps": [
+      {
+        "when": {
+          "mood": "cultured",
+          "base": "almond"
+        },
+        "swap": {
+          "step": "base",
+          "to": "kefir"
+        },
+        "line": "Kefir is what makes it cultured. Would you try kefir instead?"
+      },
+      {
+        "when": {
+          "mood": "cultured",
+          "base": "oat"
+        },
+        "swap": {
+          "step": "base",
+          "to": "kefir"
+        },
+        "line": "Kefir is what makes it cultured. Would you try kefir instead?"
+      },
+      {
+        "when": {
+          "base": "milk",
+          "flavour": "lemon"
+        },
+        "swap": {
+          "step": "base",
+          "to": "coconut"
+        },
+        "line": "Lemon can split milk overnight. Coconut milk stays smooth. Would you try coconut milk instead?"
+      },
+      {
+        "when": {
+          "base": "soy",
+          "flavour": "lemon"
+        },
+        "swap": {
+          "step": "base",
+          "to": "oat"
+        },
+        "line": "Lemon can curdle soy milk overnight. Oat milk stays smooth. Would you try oat milk instead?"
+      },
+      {
+        "when": {
+          "base": "kefir",
+          "flavour": "matcha"
+        },
+        "swap": {
+          "step": "flavour",
+          "to": "vanilla"
+        },
+        "line": "Kefir is already tangy, and matcha adds bitterness. Would you try vanilla instead?"
+      },
+      {
+        "when": {
+          "mood": "calm",
+          "flavour": "matcha"
+        },
+        "swap": {
+          "step": "flavour",
+          "to": "chamomile"
+        },
+        "line": "Matcha has caffeine. Chamomile is part of what Calm is made of. Would you try chamomile instead?"
+      },
+      {
+        "when": {
+          "mood": "calm",
+          "topping": "cacao-nibs"
+        },
+        "swap": {
+          "step": "topping",
+          "to": "toasted-coconut"
+        },
+        "line": "Cacao nibs have a little caffeine. Would you try toasted coconut instead?"
+      },
+      {
+        "when": {
+          "mood": "morning-spark",
+          "flavour": "chamomile"
+        },
+        "swap": {
+          "step": "flavour",
+          "to": "matcha"
+        },
+        "line": "Matcha is the one with caffeine, and Morning spark is built around it. Would you try matcha instead?"
+      },
+      {
+        "when": {
+          "mood": "deep-focus",
+          "topping": "granola"
+        },
+        "swap": {
+          "step": "topping",
+          "to": "walnuts"
+        },
+        "line": "Walnuts are part of what Deep focus is made of. Would you try walnuts instead?"
+      },
+      {
+        "when": {
+          "mood": "bright",
+          "topping": "cacao-nibs"
+        },
+        "swap": {
+          "step": "topping",
+          "to": "kiwifruit"
+        },
+        "line": "Kiwifruit is part of what Bright is made of. Would you try kiwifruit instead?"
+      },
+      {
+        "when": {
+          "topping": "granola"
+        },
+        "swap": null,
+        "line": "Granola goes soft overnight, so add it just before you eat."
+      }
+    ],
+    "lines": {
+      "moodTitle": "Pick a mood",
+      "moodHelper": "Each one is a set of ingredients. What it does for you is your call.",
+      "mixTitle": "Mix an experiment",
+      "mixIntro": "Four choices, then I'll write it out.",
+      "prefill": "I've started with what you picked from the drawers and the fridge.",
+      "steps": {
+        "mood": "First, a mood",
+        "base": "What shall we set it in?",
+        "flavour": "And the flavour?",
+        "topping": "Something on top?"
+      },
+      "next": "Next",
+      "back": "Back",
+      "swapYes": "Swap to {x}",
+      "swapNo": "Keep mine",
+      "swapped": "Swapped. I think you'll like it.",
+      "kept": "Fair enough. Yours to choose.",
+      "write": "Write it out",
+      "cap": "That uses one of your three write-outs this visit ({n} left).",
+      "capNone": "That's three written out this visit. The jar's short version is still yours.",
+      "written": "Here's your jar.",
+      "moodAck": "{m}. I'll lean that way.",
+      "breakfast": "Ready by breakfast?",
+      "breakfastLine": "Set it tonight and it's ready by morning.",
+      "jars": "Make 4 jars",
+      "jarsLine": "Four jars, one batch. That's most of the week sorted."
+    }
+  },
+  "sweet": {
+    "_about": "Sweet Spells (rooms-views.md, stage B). How sweet and sweeteners are Inn-wide answers (the Chiapothecary uses them too). Atoms carry `sweetener` (sugar, honey, maple, agave, dates, fruit) and `added_sugar` (true for honey, maple, sugar, agave, chocolate or granola; false for fruit and dates, assuming plain peanut butter and unsweetened milks). Every line under 100 characters.",
+    "howSweet": {
+      "title": "How sweet?",
+      "options": {
+        "full": "The full treat",
+        "less": "A bit less sugar",
+        "none": "No added sugar"
+      }
+    },
+    "sweetenWith": {
+      "title": "Sweeten with…",
+      "helper": "Only if you'd like less sugar. Pick any.",
+      "options": {
+        "sugar": "Sugar",
+        "honey": "Honey",
+        "maple": "Maple syrup",
+        "agave": "Agave",
+        "dates": "Dates or fruit",
+        "sweeteners": "Sweeteners are fine"
+      }
+    },
+    "cravings": {
+      "title": "What are you craving?",
+      "helper": "Pick any.",
+      "options": {
+        "chocolate": "Chocolate",
+        "fruity": "Fruit",
+        "creamy": "Something creamy",
+        "crunchy": "Something crunchy",
+        "warming": "Something warm",
+        "chilled": "Something cold"
+      }
+    },
+    "occasions": {
+      "title": "What's it for?",
+      "helper": "I'll suggest how many and how long, unless you've already told me.",
+      "options": {
+        "now": {
+          "label": "A treat now",
+          "line": "Something for right now, then.",
+          "servings": 1,
+          "time": 15
+        },
+        "tea": {
+          "label": "Afternoon tea",
+          "line": "Afternoon tea. Something to share with a cuppa.",
+          "servings": 4,
+          "time": 60
+        },
+        "dinner": {
+          "label": "A dinner party",
+          "line": "A dinner party. A pudding for six, I'd say.",
+          "servings": 6,
+          "time": 60
+        },
+        "celebration": {
+          "label": "A celebration",
+          "line": "A celebration. Let's make it look the part.",
+          "servings": 8,
+          "time": null
+        }
+      },
+      "suggest": "{n} of you, then?"
+    },
+    "ack": {
+      "howSweet": {
+        "full": "The full treat it is.",
+        "less": "A bit less sugar. I'll go gently.",
+        "none": "No added sugar. Fruit can do the work."
+      },
+      "sweetener": "{s} it is.",
+      "cravings": "{c}. Noted."
+    },
+    "swap": {
+      "_when": "On Sweet Spells recipe pages, when the visitor's sweetener differs from the recipe's. Checked kitchen guidance, not invented ratios.",
+      "title": "Swap the sugar",
+      "rules": [
+        {
+          "from": "sugar",
+          "to": "maple",
+          "line": "Use about ¾ as much maple syrup, and a little less of any other liquid."
+        },
+        {
+          "from": "sugar",
+          "to": "honey",
+          "line": "Use about ¾ as much honey and a little less liquid. It browns faster, so bake a bit cooler."
+        },
+        {
+          "from": "sugar",
+          "to": "agave",
+          "line": "Use about ⅔ as much agave, and a little less of any other liquid."
+        },
+        {
+          "from": "sugar",
+          "to": "dates",
+          "line": "Blend soft dates to a paste, about the same amount as the sugar. Best in puddings, not crisp bakes."
+        },
+        {
+          "from": "honey",
+          "to": "maple",
+          "line": "Swap one for one. Maple is a little thinner and not quite as sweet."
+        },
+        {
+          "from": "maple",
+          "to": "honey",
+          "line": "Swap one for one. Honey is a little sweeter, so a touch less is fine."
+        },
+        {
+          "from": "honey",
+          "to": "agave",
+          "line": "Swap one for one. Agave is runnier, so drizzle it rather than spoon it."
+        },
+        {
+          "from": "maple",
+          "to": "agave",
+          "line": "Swap one for one. Agave is a little sweeter."
+        },
+        {
+          "from": "*",
+          "to": "sweeteners",
+          "line": "Follow the packet. Sweeteners vary a lot in strength, and some don't brown or bake like sugar."
+        },
+        {
+          "from": "*",
+          "to": "none",
+          "line": "Leave it out and let ripe fruit do the work. It will be less sweet."
+        }
+      ]
     }
   }
 }

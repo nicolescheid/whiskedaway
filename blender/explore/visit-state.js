@@ -4,7 +4,7 @@
  *
  * Two parts:
  *   ABOUT YOU, Inn-wide:   energy, feeling, dietary[], pantry[], location, cuisines[]  (only energy is in use so far)
- *   FOR THIS DISH, per room: e.g. { 'sweet-spells': { flavour, occasion }, chiapothecary: { milk, addins, superpower },
+ *   FOR THIS DISH, per room: e.g. { 'sweet-spells': { flavour, occasion }, chiapothecary: { mood, base, flavour, topping },
  *                             flourish: { goal } }
  *
  * Tab only: sessionStorage ('wa-visit'), gone when the tab closes, cleared by the notebook's "Forget this visit".
