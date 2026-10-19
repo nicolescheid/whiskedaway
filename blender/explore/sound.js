@@ -96,10 +96,18 @@ function gong(t, f = 196, gain = 0.07) {
   note(f, t, { gain, decay: 2.6, partials: [[0.5, 0.35], [1, 1], [1.19, 0.3], [1.5, 0.2], [2, 0.45], [2.74, 0.12]] });
 }
 
-function play(fn) {
-  if (!on) return;
+function play(fn, always = false) {
+  if (!on && !always) return;
   try { if (audio()) fn(ctx.currentTime + 0.01); } catch { /* no audio available: the Inn still works */ }
 }
+
+// ---------- cook-mode timers (cook-mode-ux.md §5). The visitor tapped Start, so a finished timer rings
+// even with the Inn's sound off. The caller keeps time by timestamps; these only make the sounds.
+let ringing = null;                              // the re-ring interval while a finished timer waits to be tapped
+function strikes(t, gain) {                      // the timer's ring: the bell's brass, struck three times quickly
+  for (let i = 0; i < 3; i++) note(1568, t + i * 0.16, { gain, decay: 0.9, partials: [[1, 1], [2, 0.35], [3, 0.12]] });
+}
+function stopRinging() { clearInterval(ringing); ringing = null; }
 
 let lastShimmer = -Infinity;
 
@@ -400,7 +408,7 @@ function startMusic(id) {
 
 // A hidden tab goes quiet (and stops using the battery), and picks up again when you come back
 if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => {
-  if (!ctx || !on) return;
+  if (!ctx || (!on && !ringing)) return;
   document.hidden ? ctx.suspend() : ctx.resume();
 });
 export const sound = {
@@ -432,6 +440,22 @@ export const sound = {
     play(t => {
       for (const at of [0, 0.2]) note(1318.5, t + at, { gain: 0.09, decay: 1.2, partials: [[1, 1], [2, 0.4], [3, 0.15]] });
     });
+  },
+
+  // Cook mode: call in the Start tap, so the browser lets the timer ring later (even with sound off)
+  unlock() { try { audio(); } catch { /* no audio: the berry pulse still shows */ } },
+
+  // Cook mode, about once a second while a timer runs: a soft tick in its last 10 seconds, only if sound is on
+  timer({ last10 = false } = {}) { if (last10) play(t => noise(t, { len: 0.02, freq: 2200, q: 4, gain: 0.12 })); },
+
+  // Cook mode: a timer has finished. Three strikes now, then gently every ~10 s for up to 2 minutes.
+  // Returns a stop for when the visitor taps it. A second finished timer starts the ring again.
+  timerRing() {
+    stopRinging();
+    play(t => strikes(t, 0.13), true);
+    let n = 0;
+    ringing = setInterval(() => { if (++n > 12) return stopRinging(); play(t => strikes(t, 0.07), true); }, 10000);
+    return stopRinging;
   },
 
   // A dial clicking round one notch: a tiny filtered noise burst
