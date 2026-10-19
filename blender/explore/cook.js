@@ -222,6 +222,8 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     wake();                                                       // in the tap, as the mobile lead asked
     root.hidden = false;
     root.className = `cook${big() ? ' big' : ''}`;
+    // The book makes every other child of body inert while it's open, this layer included: lift that, or nothing in here responds (QA pass 5)
+    root.inert = false; delete root.dataset.bookInert;
     for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.cookInert = '1'; }
     if (!pushed) { history.pushState({ ...(history.state || {}), cook: true }, ''); pushed = true; }
     draw();
