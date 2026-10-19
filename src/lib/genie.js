@@ -41,11 +41,15 @@ async function solveChallenge() {
   box.setAttribute('role', 'status');
   const note = document.createElement('p');
   const slot = document.createElement('div');
+  // Turnstile's normal widget is 300x65; its compact one 150x140. In the chat on a phone the normal one is far shorter,
+  // so the card may run a little wider than Gemma's bubble (over the ideas column, only while it shows) to fit it
+  const wide = innerWidth - 32 >= 318;
   if (chat) {
     box.className = 'cw-check';
-    box.style.cssText = 'display:none;flex-direction:column;align-items:flex-start;gap:6px;margin:0 0 6px;padding:8px 10px;border-radius:10px 10px 10px 2px;'
-      + 'background:#fff;border:1px solid rgba(139,77,92,.25);box-shadow:0 6px 18px rgba(0,0,0,.2);pointer-events:auto;box-sizing:border-box;max-width:100%;';
-    note.style.cssText = "margin:0;font:16px/1.4 'Crimson Pro',Georgia,serif;color:#2c2416;";
+    box.style.cssText = 'display:none;flex-direction:column;align-items:flex-start;gap:4px;margin:0 0 4px;padding:6px 8px;border-radius:10px 10px 10px 2px;'
+      + 'background:#fff;border:1px solid rgba(139,77,92,.25);box-shadow:0 6px 18px rgba(0,0,0,.2);pointer-events:auto;box-sizing:border-box;'
+      + (wide ? 'width:318px;max-width:calc(100vw - 32px);position:relative;z-index:1;' : 'max-width:100%;');
+    note.style.cssText = "margin:0;font:15px/1.35 'Crimson Pro',Georgia,serif;color:#2c2416;";
     note.textContent = 'One quick check that you’re a person, then I’ll carry on.';
     chat.insertBefore(box, chat.querySelector('.cw-body'));
   } else {
@@ -67,7 +71,7 @@ async function solveChallenge() {
         action: ACTION,
         appearance: 'interaction-only',   // invisible unless the visitor needs to tick a box
         theme: 'light',
-        size: innerWidth < 420 ? 'compact' : 'normal',   // the normal widget is 300 px wide: too wide for a 360 px phone
+        size: (chat ? wide : innerWidth >= 420) ? 'normal' : 'compact',   // normal is 300x65, compact 150x140
         'before-interactive-callback': () => showWhenInside(box),
         'after-interactive-callback': () => { box.style.display = 'none'; },
         callback: token => { clearTimeout(timer); resolve(token); },
