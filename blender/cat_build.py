@@ -1,7 +1,8 @@
 """Erwina, the Inn cat: a round grey Scottish fold, modelled from scratch (no third-party base), rigged for the few
 movements the Inn gives her (blink, ear twitch, head turn, tail flick), with a curled sleeping pose and her box.
 
-  blender -b -P blender/cat_build.py -- --export            -> blender/out/erwina.glb
+  blender -b -P blender/cat_build.py -- --export X.glb      -> X.glb (about 450 KB), then for the page:
+  npx -y @gltf-transform/cli@4.1.1 meshopt X.glb blender/explore/assets/erwina.glb --level medium   (about 150 KB)
   blender -b -P blender/cat_build.py -- --stills DIR        -> turntable stills for the look check
   blender -b -P blender/cat_build.py -- --comp DIR --pano P -> a quick comp on the Conservatory staging (8K pano P)
 
@@ -50,8 +51,8 @@ def clear():
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
 
-def ellipsoid(name, c, r, rot=(0, 0, 0)):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=40, ring_count=24, radius=1, location=c)
+def ellipsoid(name, c, r, rot=(0, 0, 0), seg=40):
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=seg, ring_count=max(6, seg * 3 // 5), radius=1, location=c)
     o = bpy.context.object
     o.name = name
     o.scale = r
@@ -86,11 +87,12 @@ def fuse(name, parts, voxel=0.0028, smooth=10, faces=3000):
     return o
 
 
-def decimate(o, faces):
-    n = len(o.data.polygons)
-    if n > faces:
+def decimate(o, tris):
+    """Thin a mesh to about `tris` triangles (the remesh gives quads: two triangles each)."""
+    n = sum(len(p.vertices) - 2 for p in o.data.polygons)
+    if n > tris:
         d = o.modifiers.new("dec", "DECIMATE")
-        d.ratio = faces / n
+        d.ratio = tris / n
         bpy.ops.object.select_all(action="DESELECT")
         o.select_set(True)
         bpy.context.view_layer.objects.active = o
@@ -151,7 +153,7 @@ def set_mat(o, m):
     o.data.materials.append(m)
 
 
-def tube(name, pts, r0, r1, ring=14, steps=60, tip=0.12):
+def tube(name, pts, r0, r1, ring=10, steps=40, tip=0.12):
     """A swept tube through pts (Catmull-Rom), radius r0 -> r1, the last `tip` of it rounding off. Returns (obj, ts)
     where ts[i] is how far along the tube vertex i is (0 base .. 1 tip), for the tail's weights."""
     def cr(p0, p1, p2, p3, t):
@@ -206,7 +208,7 @@ def curve_line(name, pts, width, mat_):
     cu = bpy.data.curves.new(name, "CURVE")
     cu.dimensions = "3D"
     cu.bevel_depth = width
-    cu.bevel_resolution = 2
+    cu.bevel_resolution = 1
     sp = cu.splines.new("POLY")
     sp.points.add(len(pts) - 1)
     for p, q in zip(sp.points, pts):
@@ -233,7 +235,7 @@ def arc(c, w, h, n=9, depth=0.0, down=True):
 
 def ear(name, base, side):
     """A folded ear: a small rounded flap laid forward and down over the skull, the way a fold's ears sit like a cap."""
-    bpy.ops.mesh.primitive_cone_add(vertices=20, radius1=0.034, radius2=0.006, depth=0.044, location=(0, 0, 0.02))
+    bpy.ops.mesh.primitive_cone_add(vertices=14, radius1=0.034, radius2=0.006, depth=0.044, location=(0, 0, 0.02))
     o = bpy.context.object
     o.name = name
     o.scale = (1.0, 0.42, 1.0)
@@ -299,7 +301,7 @@ def build_sitting():
         ellipsoid("b_foot_l", (-0.086, -0.022, 0.015), (0.028, 0.05, 0.015)),
         ellipsoid("b_foot_r", (0.086, -0.022, 0.015), (0.028, 0.05, 0.015)),
     ])
-    decimate(body, 2600)
+    decimate(body, 2400)
     paint(body, body_col)
     set_mat(body, fur_mat())
 
@@ -311,7 +313,7 @@ def build_sitting():
         ellipsoid("h_pad_r", (0.013, -0.117, 0.212), (0.019, 0.017, 0.016)),
         ellipsoid("h_chin", (0, -0.106, 0.196), (0.019, 0.015, 0.012)),
     ], voxel=0.0022)
-    decimate(head, 3200)
+    decimate(head, 3000)
     paint(head, head_col)
     set_mat(head, fur_mat())
 
@@ -324,15 +326,15 @@ def build_sitting():
 
     eyes = {}
     for side, s in (("L", -1), ("R", 1)):
-        e = ellipsoid(f"Erwina_eye_{side}", (s * 0.034, -0.111, 0.246), (0.0195, 0.011, 0.0205))
+        e = ellipsoid(f"Erwina_eye_{side}", (s * 0.034, -0.111, 0.246), (0.0195, 0.011, 0.0205), seg=18)
         apply_all(e)
         bpy.ops.object.shade_smooth()
         set_mat(e, flat_mat("eye_amber", srgb("#d9a441"), rough=0.15, coat=1.0))
-        pu = ellipsoid(f"Erwina_pupil_{side}", (s * 0.034, -0.1185, 0.2465), (0.0098, 0.0045, 0.0145))
+        pu = ellipsoid(f"Erwina_pupil_{side}", (s * 0.034, -0.1185, 0.2465), (0.0098, 0.0045, 0.0145), seg=12)
         apply_all(pu)
         bpy.ops.object.shade_smooth()
         set_mat(pu, flat_mat("eye_pupil", srgb("#14110f"), rough=0.1, coat=1.0))
-        gl = ellipsoid(f"Erwina_glint_{side}", (s * 0.034 - 0.006, -0.1225, 0.2535), (0.0042, 0.0018, 0.0042))
+        gl = ellipsoid(f"Erwina_glint_{side}", (s * 0.034 - 0.006, -0.1225, 0.2535), (0.0042, 0.0018, 0.0042), seg=8)
         apply_all(gl)
         set_mat(gl, flat_mat("eye_glint", (1, 1, 1), rough=0.1, emit=1.5))
         bpy.ops.object.select_all(action="DESELECT")
@@ -343,7 +345,7 @@ def build_sitting():
         eyes[side] = bpy.context.object
     parts["eye_L"], parts["eye_R"] = eyes["L"], eyes["R"]
 
-    nose = ellipsoid("Erwina_nose", (0, -0.1325, 0.2255), (0.0085, 0.0055, 0.006))
+    nose = ellipsoid("Erwina_nose", (0, -0.1325, 0.2255), (0.0085, 0.0055, 0.006), seg=12)
     apply_all(nose)
     bpy.ops.object.shade_smooth()
     set_mat(nose, flat_mat("nose", PINK, rough=0.35))
@@ -439,7 +441,7 @@ def build_curled():
         ellipsoid("c_haunch", (0.06, 0.045, 0.075), (0.075, 0.075, 0.068)),
         ellipsoid("c_paws", (-0.055, -0.1, 0.03), (0.05, 0.03, 0.022)),
     ])
-    decimate(body, 2200)
+    decimate(body, 1800)
     paint(body, lambda p: body_col((p[0] * 0.8, p[1], p[2] * 1.6)))
     set_mat(body, fur_mat())
     hc = Vector((-0.07, -0.085, 0.095))
@@ -450,7 +452,7 @@ def build_curled():
         ellipsoid("ch_pad_l", hc + Vector((-0.012, -0.068, -0.032)), (0.018, 0.016, 0.015)),
         ellipsoid("ch_pad_r", hc + Vector((0.012, -0.068, -0.032)), (0.018, 0.016, 0.015)),
     ], voxel=0.0022)
-    decimate(head, 2800)
+    decimate(head, 2400)
     paint(head, lambda p: head_col(p, centre=tuple(hc)))
     set_mat(head, fur_mat())
     ink = flat_mat("ink", INK, rough=0.6)
@@ -462,7 +464,7 @@ def build_curled():
         paint(e, lambda p: mix(GREY, STRIPE, 0.25))
         set_mat(e, fur_mat())
         pieces.append(e)
-    nose = ellipsoid("Curled_nose", (hc.x, hc.y - 0.0855, hc.z - 0.019), (0.008, 0.005, 0.0055))
+    nose = ellipsoid("Curled_nose", (hc.x, hc.y - 0.0855, hc.z - 0.019), (0.008, 0.005, 0.0055), seg=12)
     apply_all(nose)
     set_mat(nose, flat_mat("nose", PINK, rough=0.35))
     pieces.append(nose)
@@ -685,7 +687,8 @@ def export(path):
     build_curled()
     build_box()
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_apply=True, export_animations=False,
-                              export_skins=True, export_vertex_color="MATERIAL", export_yup=True)
+                              export_skins=True, export_vertex_color="MATERIAL", export_yup=True,
+                              export_texcoords=False)
 
 
 if "--stills" in ARGS:
