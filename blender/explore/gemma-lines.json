@@ -841,5 +841,34 @@
         }
       ]
     }
+  },
+  "erwina": {
+    "_about": "Erwina, the Inn cat (cat build). Gemma says at most two of these a visit, in any room, so none names furniture, weather or a time of day. Each list rotates without repeating. Every line is under 100 characters. 'seen' plays when she appears, 'box' when there's only the box, 'trace' when her spot shows only a trace, 'tap' when the visitor taps her (after which she's gone). The notebook lines are whole trail lines.",
+    "seen": [
+      "Was that Erwina? She does that.",
+      "That's Erwina. She's only there while you're looking.",
+      "Erwina keeps her own hours, and I don't ask.",
+      "There she is. Don't stare, or she'll go.",
+      "Erwina's about. I'd say hello, but she'd only leave."
+    ],
+    "box": [
+      "Is she in there? I never check.",
+      "That box. She might be in it. She might not.",
+      "I don't lift the lid. It's more polite to wonder."
+    ],
+    "trace": [
+      "Still warm. She was just here.",
+      "Hairs. Erwina's been and gone.",
+      "Something's been sat in. Erwina, I'd say."
+    ],
+    "tap": [
+      "She lets you see her once. Twice is pushing it.",
+      "And off she goes. She does that too.",
+      "That's all you get. She's particular."
+    ],
+    "notebook": {
+      "seen": "You saw Erwina",
+      "maybe": "You think you saw Erwina"
+    }
   }
 }
