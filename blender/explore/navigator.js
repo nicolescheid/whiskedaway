@@ -243,16 +243,16 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
       const kept = keptReason(a, book);
       const cuisine = !hits.length && !kept && (about.cuisines || []).find(c => cuisineHit(a, [c]));
       const W = about.why || {};                                   // gemma-lines.json tell.why: "you've got {a} to use", "you chose {a} on the map"
-      const fillWhy = (t, a) => t.replace(/^you've/, "'ve").replace(/^you\s+/, '').replace(/\{[apc]\}/, a);   // "Because you" comes first
+      const fillWhy = (t, a) => t.replace(/^you've/, "'ve").replace(/^you're/, "'re").replace(/^you\s+/, '').replace(/\{[apc]\}/, a);   // "Because you" comes first
       // A short time is a reason when the idea fits inside it ("Because you've got about 15 minutes")
       const quick = !hits.length && !kept && !cuisine && about.timeLimit && about.timeLimit <= 30 && a.time <= about.timeLimit && about.timeWords;
       const first = [...(hits.length ? [fillWhy(W.pantry || "you've got {p} to use", listJoin(hits.slice(0, 2)))] : []), ...(kept ? [kept] : []),
                      ...(cuisine ? [fillWhy(W.cuisine || 'you chose {c} on the map', about.cuisineLabel?.(cuisine) || cuisine)] : []),
-                     ...(quick ? [fillWhy(W.time || "you've got {t}", about.timeWords).replace('{t}', about.timeWords)] : [])];
+                     ...(quick ? [/^you/.test(about.timeWords) ? fillWhy(about.timeWords, '') : fillWhy(W.time || "you've got {t}", about.timeWords).replace('{t}', about.timeWords)] : [])];
       const { why, context } = reasonsFor(a.themes, trail, world, a.spoons, first.slice(0, 2));
       const parts = shareVerbs(why.slice(0, 2));
       const text = (parts.length ? `Because you ${listJoin(parts)}${context && parts.length < 2 ? `, and ${context}` : ''}.`
-        : context ? `Because ${context}.` : `Because it fits ${top.label}.`).replace("Because you 've", "Because you've");
+        : context ? `Because ${context}.` : `Because it fits ${top.label}.`).replace("Because you 've", "Because you've").replace("Because you 're", "Because you're");
       return { atom: a.id, why: text, fromKeep: !!kept && why.slice(0, 2).includes(kept) };
     });
 

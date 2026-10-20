@@ -538,3 +538,42 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .tell.mx-mix .tl-foot { justify-content: space-between; }
 .tell.mx-mood .tl-foot, .tell.mx-mix .tl-foot { display: flex; }
 .tell.mx-mood .tl-foot { justify-content: flex-end; }
+
+/* ---------- the check-in card's string and dial (checkin-controls.js) */
+.tl-forget[hidden] { display: none; }
+.tell[data-kind="checkin"] .tl-foot { justify-content: flex-end; }
+.ck-ctl { margin: 4px 0 8px; }
+.ck-track { display: block; touch-action: none; cursor: pointer; border-radius: 14px; user-select: none; -webkit-user-select: none; outline-offset: 2px; }
+.ck-track:focus-visible { outline: 3px solid var(--berry); }
+.ck-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ck-string .ck-track { min-height: 52px; max-width: 340px; }
+.ck-mark { fill: var(--line); }
+.ck-mark.on { fill: var(--berry); }
+.ck-thread { stroke: #b88a4a; stroke-width: 3; stroke-linecap: round; transition: d .18s ease-out; }
+.ck-ball-body { fill: #d6a35c; stroke: #a8783a; stroke-width: 2; transition: r .18s ease-out; }
+.ck-ball-wind { stroke: #a8783a; stroke-width: 1.6; stroke-linecap: round; opacity: .75; }
+.ck-bead { transition: transform .18s ease-out; }
+.ck-bead-body { fill: var(--parchment); stroke: var(--berry); stroke-width: 2.5; }
+.ck-bead-arrow { stroke: var(--berry); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ck-string.answered .ck-bead-body { fill: var(--berry); }
+.ck-string.answered .ck-bead-arrow { stroke: var(--parchment); }
+.ck-string:not(.answered) .ck-bead-body { stroke-dasharray: 4 3; }
+.ck-track.drag .ck-bead, .ck-track.drag .ck-thread, .ck-track.drag .ck-ball-body { transition: none; }
+.ck-knobrow { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.ck-end { flex: 1 1 0; font: 600 13px/1.25 'Quicksand'; color: var(--ink-soft); }
+.ck-end-l { text-align: right; } .ck-end-r { text-align: left; }
+.ck-knob { flex: none; width: 120px; height: 120px; }
+.ck-knob-body { fill: #e4d3b4; stroke: #a8783a; stroke-width: 2.5; }
+.ck-knob-face { fill: #f3e8d0; stroke: #c9b48a; stroke-width: 1.5; }
+.ck-needle { transition: transform .22s cubic-bezier(.3, 1.4, .5, 1); }
+.ck-needle-line { stroke: var(--ink-soft); stroke-width: 3; stroke-linecap: round; }
+.ck-needle-tip { fill: var(--ink-soft); }
+.ck-dial.answered .ck-needle-line { stroke: var(--berry); } .ck-dial.answered .ck-needle-tip { fill: var(--berry); }
+.ck-dial:not(.answered) .ck-needle { opacity: .45; }
+.ck-track.drag .ck-needle { transition: none; }
+.ck-readout { min-height: 22px; margin-top: 2px; text-align: center; font: 600 15px 'Quicksand'; color: var(--berry); }
+.ck-string .ck-readout { text-align: left; }
+.ck-hint { margin: 0; text-align: center; } .ck-string .ck-hint { text-align: left; }
+.ck-ctl:not(.answered) .ck-readout { font-weight: 500; font-size: 14px; color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) { .ck-thread, .ck-ball-body, .ck-bead, .ck-needle { transition: none; } }
+@media (max-width: 400px) { .ck-end { font-size: 12px; } .ck-knob { width: 108px; height: 108px; } }

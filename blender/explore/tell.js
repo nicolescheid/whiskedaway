@@ -7,6 +7,7 @@
 
 import { DIETS } from './writeout.js';
 import { SERVINGS, checkinWords } from './checkin.js';
+import { patienceString, confidenceDial } from './checkin-controls.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -148,7 +149,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   // The check-in (checkin-views.md V1): your candle and how long you've got first, then "A bit more" (cooking for, confidence, the
   // weather). Every row can be skipped, and tapping a chosen answer again unchooses it. Gemma says one line on Done.
   function drawCheckin() {
-    const d = draft, more = !!(d.servings || d.confidence);
+    const d = draft;
     const chips = (k, ids, label) => `<div class="tl-chips tl-pick" role="group" aria-label="${esc(W.rows[k])}">${ids.map(id =>
       `<button data-a="${k}" data-v="${esc(id)}" aria-pressed="${d[k] === id}">${esc(label(id))}</button>`).join('')}</div>`;
     const energies = checkin.energies?.() || [], weathers = checkin.weathers?.() || [];
@@ -156,12 +157,16 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
       ${energies.length ? `<h3 class="tl-h">${esc(W.rows.energy)}</h3>${W.energyHelper ? `<p class="small">${esc(W.energyHelper)}</p>` : ''}
         <div class="tl-candles" role="group" aria-label="${esc(W.rows.energy)}">${energies.map(e =>
           `<button data-a="energy" data-v="${esc(e.id)}" aria-pressed="${d.energy === e.id}" aria-label="${esc(e.label)}"><span class="tl-wick" aria-hidden="true"><i class="tl-flame"></i></span><span class="tl-wax tl-wax-${esc(e.id)}" aria-hidden="true"></span><b>${esc(e.label)}</b></button>`).join('')}</div>` : ''}
-      <h3 class="tl-h">${esc(W.rows.time)}</h3>${chips('time', Object.keys(W.time), id => W.time[id])}
-      <details class="tl-more" ${more ? 'open' : ''}><summary>${esc(W.more)}</summary>
-        <h3 class="tl-h">${esc(W.rows.servings)}</h3>${chips('servings', SERVINGS, id => W.servings[id])}
-        <h3 class="tl-h">${esc(W.rows.confidence)}</h3><p class="small">${esc(W.confidenceHelper)}</p>${chips('confidence', Object.keys(W.confidence), id => W.confidence[id])}
-        ${weathers.length ? `<h3 class="tl-h">${esc(W.rows.weather)}</h3>${chips('weather', weathers.map(w => w.id), id => weathers.find(w => w.id === id).label)}` : ''}
-      </details>`;
+      <h3 class="tl-h">${esc(W.rows.time)}</h3>${W.timeHelper ? `<p class="small">${esc(W.timeHelper)}</p>` : ''}<div class="ck-slot" data-ck="time"></div>
+      <h3 class="tl-h">${esc(W.rows.servings)}</h3>${chips('servings', SERVINGS, id => W.servings[id])}
+      <h3 class="tl-h">${esc(W.rows.confidence)}</h3>${W.confidenceHelper ? `<p class="small">${esc(W.confidenceHelper)}</p>` : ''}<div class="ck-slot" data-ck="confidence"></div>
+      ${weathers.length ? `<h3 class="tl-h">${esc(W.rows.weather)}</h3>${chips('weather', weathers.map(w => w.id), id => weathers.find(w => w.id === id).label)}` : ''}`;
+    // The two hand-made controls (checkin-controls.js): they set the same draft keys as the chips did
+    const ids = k => Object.keys(W[k]), lab = k => ids(k).map(id => W[k][id]);
+    const mount = (k, make, extra) => body.querySelector(`[data-ck="${k}"]`).replaceWith(make({ ids: ids(k), labels: W[k], value: d[k] || null, name: W[k + 'Aria'] || W.rows[k],
+      unset: 'Not answered', hint: W[k + 'Hint'], ...extra, onChange: v => { const prev = d[k]; d[k] = v; if (prev !== v) checkin.onTap?.(k, v, prev); } }));
+    mount('time', patienceString);
+    mount('confidence', confidenceDial, { ends: [W.confidence[ids('confidence')[0]], W.confidence[ids('confidence').at(-1)]] });
     body.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
       const k = b.dataset.a, v = b.dataset.v, prev = d[k];
       d[k] = d[k] === v && k !== 'weather' ? null : v;           // tap again to unchoose (the weather always has one)
@@ -192,6 +197,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     draft = k === 'menu' ? null : JSON.parse(JSON.stringify(current(k)));
     $('#tell-title').textContent = k === 'menu' ? L.menu.title : L[k].title;
     root.dataset.kind = k;
+    $('.tl-forget').hidden = k === 'checkin';                // forgetting stays in the notebook
     root.classList.toggle('menu', k === 'menu');
     const was = !root.hidden;
     root.hidden = false;
