@@ -485,6 +485,38 @@ if (typeof document !== 'undefined') document.addEventListener('visibilitychange
   if (!ctx || (!on && !ringing)) return;
   document.hidden ? ctx.suspend() : ctx.resume();
 });
+// Erwina, the Inn cat: a soft meow and a purr, both well under Gemma's level. Synthesised, like everything here.
+let purrOut = null;
+function meow(t) {
+  const f0 = rnd(430, 480), o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(f0, t);                           // the pitch rises, then falls away: "mrrp-ow"
+  o.frequency.linearRampToValueAtTime(f0 * 1.55, t + 0.2);
+  o.frequency.linearRampToValueAtTime(f0 * 1.05, t + 0.55);
+  const vib = ctx.createOscillator(), vg = ctx.createGain();
+  vib.frequency.value = 6; vg.gain.value = 7;
+  vib.connect(vg).connect(o.frequency);
+  lp.type = 'lowpass'; lp.Q.value = 2.5;                       // the mouth: opens, then closes
+  lp.frequency.setValueAtTime(700, t); lp.frequency.linearRampToValueAtTime(1900, t + 0.2); lp.frequency.linearRampToValueAtTime(800, t + 0.55);
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.012, t + 0.07); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+  o.connect(lp).connect(g).connect(master);
+  o.start(t); vib.start(t); o.stop(t + 0.65); vib.stop(t + 0.65);
+}
+function purr(t) {
+  const out = ctx.createGain(), src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), am = ctx.createGain();
+  const lfo = ctx.createOscillator(), lg = ctx.createGain();
+  src.buffer = noiseBuffer(); src.loop = true;
+  bp.type = 'lowpass'; bp.frequency.value = 230; bp.Q.value = 0.7;
+  am.gain.value = 0.012;                                       // the rumble's own level, pulsed by the LFO below
+  lfo.frequency.value = 24; lg.gain.value = 0.011;
+  lfo.connect(lg).connect(am.gain);
+  out.gain.setValueAtTime(0.0001, t); out.gain.linearRampToValueAtTime(1, t + 0.8);
+  out.gain.setValueAtTime(1, t + 2.2); out.gain.exponentialRampToValueAtTime(0.0001, t + 3.4);
+  src.connect(bp).connect(am).connect(out).connect(master);
+  src.start(t); lfo.start(t); src.stop(t + 3.5); lfo.stop(t + 3.5);
+  purrOut = out;
+}
+
 export const sound = {
   get on() { return on; },
 
@@ -554,6 +586,17 @@ export const sound = {
 
   // A dial clicking round one notch: a tiny filtered noise burst
   tick() { play(t => noise(t)); },
+
+  // Erwina: 'meow' (as she appears) or 'purr' (settled, a few seconds on); 'stop' cuts a purr short. Only with sound on.
+  erwina(kind) {
+    if (kind === 'meow') play(t => meow(t));
+    else if (kind === 'purr') play(t => purr(t));
+    else if (kind === 'stop' && purrOut && ctx) {
+      purrOut.gain.cancelScheduledValues(ctx.currentTime);
+      purrOut.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.12);
+      purrOut = null;
+    }
+  },
 
   // Through a door
   door() { play(t => latch(t)); },

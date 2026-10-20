@@ -28,6 +28,7 @@ export const EVENTS = {
   notebook_open: ['room'],
   visit_forget: [],
   leave_to_inn: ['room', 'step'],         // "Front door": back out to the picture
+  erwina_seen: [],                        // Erwina collapsed into view: counts sightings, never where or when
   // Ideas and the recipe book (recipe-book-ux.md v4 §10). No recipe text, no diet answers
   atom_highlight: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],   // an idea's bubble opened into its highlight
   atom_capture: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'method', 'book_size'],   // kept; method: button, swipe or book
