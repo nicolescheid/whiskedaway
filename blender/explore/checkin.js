@@ -12,12 +12,16 @@ export const servingsNumber = v => (v === 'crowd' ? 8 : Number(v) >= 1 ? Math.ro
 
 const DEFAULTS = {
   title: 'Check in', helper: 'Tell me a little, or skip any of it. You can change it later.', more: 'A bit more',
-  rows: { energy: 'Light your candle', time: 'How long have you got?', servings: "Who's eating?", confidence: 'How at home are you in a kitchen?',
+  rows: { energy: 'Light your candle', time: "When it comes to cooking today, how's your patience?", servings: "Who's eating?", confidence: 'How do you feel in the kitchen?',
           weather: "What's it like out?" },
   energyHelper: '',
-  time: { quick: 'About 15 minutes', half: 'About half an hour', hour: 'An hour or so', any: 'No rush' },
+  time: { quick: "I'm short on patience", half: 'A little patience', hour: 'Plenty of patience', any: "I've got all the time in the world" },
+  // not answered, the line under the control, and the words at either end of the dial
+  unset: { time: 'Not answered. Pull the string to answer.', confidence: 'Not answered. Turn the dial to answer.' },
+  hint: { time: 'Pull the string out.', confidence: 'Turn the dial.' },
+  ends: { time: ['', ''], confidence: ["I'm a cautious cook", "I'm a confident chef"] },
   servings: { 1: 'Just me', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', crowd: 'A crowd' },
-  confidence: { starting: 'Just starting out', happy: 'Happy enough', confident: 'Confident' },
+  confidence: { starting: "I'm a cautious cook", happy: 'I know my way around', confident: "I'm a confident chef" },
   confidenceHelper: 'Energy is today. This is how at home you are cooking.',
   ack: { checkin: "Thanks, love. I'll keep all that in mind.", time: "{t}. I'll keep it to that.", servings: "Cooking for {n}. I'll scale things.",
          servingsOne: "Just you, then. I'll keep it small.", confidence: '{c}. Noted.' },
@@ -30,7 +34,7 @@ const DEFAULTS = {
 export function checkinWords(lines = {}) {
   const c = lines.checkin || {};
   const out = { ...DEFAULTS, ...c };
-  for (const k of ['rows', 'time', 'servings', 'confidence', 'ack', 'told', 'why']) out[k] = { ...DEFAULTS[k], ...(c[k] || {}) };
+  for (const k of ['rows', 'time', 'servings', 'confidence', 'ack', 'told', 'why', 'unset', 'hint', 'ends']) out[k] = { ...DEFAULTS[k], ...(c[k] || {}) };
   return out;
 }
 
