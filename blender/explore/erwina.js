@@ -83,11 +83,13 @@ export function createErwina(o) {
   }
 
   // ---------- loading (lazy, and only when a spot is possible here)
+  let tries = 0;
   function load() {
     if (gltf || loading || !allowed) return loading;
     loading = (async () => {
+      const bust = tries ? `?retry=${tries}` : '';            // a failed import is remembered by the browser: a retry needs a new address
       const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
-        import(`${CDN}loaders/GLTFLoader.js`), import(`${CDN}libs/meshopt_decoder.module.js`)]);
+        import(`${CDN}loaders/GLTFLoader.js${bust}`), import(`${CDN}libs/meshopt_decoder.module.js${bust}`)]);
       const loader = new GLTFLoader();
       loader.setMeshoptDecoder(MeshoptDecoder);
       gltf = await loader.loadAsync('explore/assets/erwina.glb');
@@ -103,8 +105,12 @@ export function createErwina(o) {
           mat.sheenColor = new THREE.Color(0x9ea4ae);
         }
       });
-      place();
-    })().catch(() => { loading = null; });
+    })().then(() => { place(); }).catch(e => {
+      // a failed fetch (the CDN, a flaky connection) or a failed first placement: say so, and try again a few times
+      console.warn('Erwina:', e?.message || e);
+      loading = null;
+      if (++tries < 4) setTimeout(() => { if (!active && possible()) update(); }, tries * 3000);
+    });
     return loading;
   }
 
@@ -491,13 +497,15 @@ export function createErwina(o) {
     if (active && mem.spots[active.id] === 'there' && (left || !possible())) { mem.spots[active.id] = 'gone'; save(); }
     if (force && here && (left || !active)) { delete mem.spots[here]; save(); }    // testing: every arrival re-arms her
     if (!possible() && !mem.spots[here]) return clear();
-    const idle = window.requestIdleCallback || (f => setTimeout(f, 200));
-    if (gltf) place(); else idle(() => load());
+    // not requestIdleCallback alone: a hidden or busy page can starve it, and she'd never arm on a first load
+    if (gltf) place(); else { let ran = false; const go = () => { if (!ran) { ran = true; load(); } }; (window.requestIdleCallback || setTimeout)(go, { timeout: 800 }); setTimeout(go, 1200); }
   }
+  /** Arm her if a spot is possible here and she isn't yet (a first load, a page coming to the front). */
+  function ensure() { if (allowed && !active && possible()) update(); }
 
   /** The notebook's lines about her, oldest first, with their times. */
   const notes = () => mem.notes;
-  const api = { update, tick, lightFrom, notes, get visible() { return !!active?.cat.visible; } };
+  const api = { update, ensure, tick, lightFrom, notes, get visible() { return !!active?.cat.visible; } };
   if (force) window.__erwina = { api, active: () => active, probe, key, mem, look: o.look, camera, render };   // testing only (?erwina=)
   return api;
 }

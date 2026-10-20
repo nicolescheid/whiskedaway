@@ -971,6 +971,9 @@ async function showWeather(w, { fade = true } = {}) {
   }
 }
 const firstView = showWeather(state.weather, { fade: false });
+firstView.then(() => erwina?.ensure());                // the cat: armed on a first load or reload too, once the first view is up
+addEventListener('pageshow', () => erwina?.ensure());
+document.addEventListener('visibilitychange', () => { if (!document.hidden) erwina?.ensure(); });
 window.__door?.innShown(firstView);
 // The browser's toolbar colour: the door's paper while it's up, then parchment by day and the night blue after dark
 function setThemeColor() {
