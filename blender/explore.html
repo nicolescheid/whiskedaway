@@ -646,6 +646,7 @@
   </div>
 </div>
 
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
 <script type="module">
 // The front door, the welcome and the bell (blender/explore/front-door.js)
 import { track } from '../src/lib/analytics.js';
@@ -676,6 +677,7 @@ import { createSweetSheets, sweetData, swapLines, sweetSteer, sweetTold, sweetTa
 import { createList } from './explore/list.js';
 import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine, servingsWords } from './explore/checkin.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
+import { createErwina } from './explore/erwina.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -946,9 +948,11 @@ function crossFade(tex) {
 }
 
 /** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
+let erwina = null;                                   // the Inn cat (explore/erwina.js), made once the room is set up
 async function showWeather(w, { fade = true } = {}) {
   const night = isNight(), R = room(), at = state.room, season = seasonNow();
   sound.ambience(at, w, { night, season, time: timeNow() });                     // the room's quiet bed follows the weather
+  erwina?.update();                                  // the cat: is a spot possible here, in this weather, at this time?
   const stale = () => w !== state.weather || night !== isNight() || at !== state.room || season !== seasonNow();
   let shown = w;                                     // a room without this weather's render falls back to rain
   let preview = night && !R.dayOnly && !R.noNight ? await loadTex(R.pano(w, true, false)) : null;
@@ -959,6 +963,7 @@ async function showWeather(w, { fade = true } = {}) {
   $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
   setThemeColor();
   stage.className = stage.className.replace(/\s*wx-\S+/g, '') + (R.dayOnly || shown !== w ? ` wx-${w}` : '');
+  if (preview) erwina?.lightFrom(preview);          // she's lit from the pano on screen
   if (preview) fade && sphere.material.map ? crossFade(preview) : (showTex(preview), render());
   if (useFull) {
     const full = await loadTex(fullUrl(R.pano(shown, haveNight, true)));
@@ -990,6 +995,24 @@ const dir = (yaw, pitch) => {
 };
 const look = { yaw: 0, pitch: -6 };
 createTilt({ stage, look, render });                       // phones: an opt-in chip, the room follows the phone
+// Erwina, the Inn cat: there only once you look (explore/erwina.js). Her lines are content's (gemma-lines.json `erwina`),
+// with stand-ins until they're written. Nothing about her reaches the navigator.
+const ERWINA_LINES = {
+  seen: ['Was that Erwina? She does that.', "That's Erwina. She's only there while you're looking."],
+  box: ['Is she in there? I never check.', 'That box. She might be in it. She might not.'],
+  trace: ['Still warm. She was just here.', "Hairs. Erwina's been and gone."],
+  tap: ['She lets you see her once. Twice is pushing it.', 'And off she goes. She does that too.'],
+};
+const erwinaNote = sure => LINES.erwina?.notebook?.[sure ? 'seen' : 'maybe'] || (sure ? 'You saw Erwina' : 'You think you saw Erwina');
+erwina = createErwina({
+  THREE, scene, camera, stage, render, ROOMS, dir, look, saveData, panoTier, sound, track,
+  room: () => state.room, weather: () => state.weather, isNight,
+  pick: kind => pickLine(`erwina.${kind}`, LINES.erwina?.[kind]?.length ? LINES.erwina[kind] : ERWINA_LINES[kind]),
+  say: t => say(t, [], true),
+  notes: () => renderNotes(),
+});
+if (sphere.material.map) erwina.lightFrom(sphere.material.map);
+erwina.update();
 
 // ---------- the clocks: hands drawn live in true perspective, one set per room view
 // room metres -> viewer space, for a camera standing at eye
@@ -1182,6 +1205,7 @@ function record(e) {
   if (e.kind !== 'room' && e.kind !== 'dial') scheduleNavigate();   // walking about isn't a mood
 }
 setInterval(() => {
+  erwina?.tick({ still: !drag && !document.hidden && performance.now() - lastMove >= 1000 });   // the cat looks for a still second
   if (!hasLooked || drag || document.hidden || performance.now() - lastMove < 2000) return;
   const centre = dir(look.yaw, look.pitch);
   for (const h of hotspots) {
@@ -2004,8 +2028,11 @@ function renderNotes() {
   $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
   $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
   const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', keep: 'Kept', recipe: 'Got the full recipe for', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
-  $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e =>
-    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (world.objects[e.id]?.ref || label(e.id)) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>`).join('');
+  // Sightings of Erwina sit among the trail by time, as plain lines (they're kept by erwina.js, not in the trail)
+  const cat = (erwina?.notes() || []).map(n => ({ t: n.t, html: `<li>${esc(erwinaNote(n.sure))}</li>` }));
+  $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e => ({ t: e.t || 0, html:
+    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (world.objects[e.id]?.ref || label(e.id)) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>` })).concat(cat)
+    .sort((a, b) => b.t - a.t).slice(0, 25).map(i => i.html).join('');
 }
 function togglePanel(id, btn) {
   const p = $(id), open = !p.classList.contains('open');
