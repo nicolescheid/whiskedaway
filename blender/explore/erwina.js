@@ -29,7 +29,7 @@ const SPOTS = {
     // the lane oil lamp (glasshouse_build.oil_lamps) stands between her and the camera
     occluders: [{ cyl: [1.47, 2.55, 0.8, 0.05, 0.03] }, { cyl: [1.47, 2.55, 0.83, 0.022, 0.04] },
                 { cyl: [1.47, 2.55, 0.87, 0.045, 0.1] }, { cyl: [1.47, 2.55, 0.97, 0.012, 0.25] }],
-    trace: 'hairs', shadow: true,
+    trace: 'hairs', hair: 0xd9dce2, size: 0.5, shadow: true,     // the staging is close to the camera: a smaller tuft
     // the sun in these renders (glasshouse_build SUN_AZ): from the garden, a little lane-ward, high. She's backlit by it.
     sun: { az: -35, el: 45, color: 0xffe0b0, k: s => ({ fair: 2.6, 'very-dry': 2.8, change: 1.6 })[s.weather] || 0 },
   },
@@ -38,13 +38,13 @@ const SPOTS = {
     when: s => ['rain', 'stormy'].includes(s.weather),                                  // curled up above the warm range
     // the hood's lower box (flourish_build: hood_low) hides the ledge she lies on
     occluders: [{ box: [0, 0.62, 3.17, 4.5, 1.98, 2.12] }],
-    trace: 'falling', shadow: false,
+    trace: 'hairs', hair: 0x7a7a7f, lift: 0.85, shadow: false,    // grey on the hood's white top; a tuft and a pressed patch where she lay
   },
   hallway: {
     rooms: ['hall-middle', 'hall-entrance'], camYaw: 0, at: [0.02, 7.7, 0.6], turn: 0, pose: 'sit',
     when: s => s.night,                                                                  // the sea-window sill at night
     occluders: [],
-    trace: 'hairs', shadow: true,
+    trace: 'hairs', hair: 0xdfe2e8, shadow: true,
     sun: { at: [-0.86, 7.25, 2.15], color: 0xffc58a, k: s => (s.night ? 1.8 : 0) },    // the wall lamp by the window
     basket: [0.6, 7.47, 0.24],                     // the lidded basket under the window (hallway_build): her box here
   },
@@ -64,6 +64,7 @@ export function createErwina(o) {
   let gltf = null, loading = null;
   let active = null;               // { id, def, group, cat, box, trace, sit, curled, pos, occ }
   let anim = null;                 // the idle loop while she's on screen
+  let purr = 0, purring = false;   // the rare purr, a few seconds into a sighting
   const probe = new THREE.LightProbe();
   const key = new THREE.DirectionalLight(0xffffff, 0);
   probe.layers.enableAll();
@@ -183,32 +184,42 @@ export function createErwina(o) {
     c.width = c.height = 64;
     const g = c.getContext('2d');
     const r = g.createRadialGradient(32, 32, 2, 32, 32, 31);
-    r.addColorStop(0, 'rgba(0,0,0,1)'); r.addColorStop(0.55, 'rgba(0,0,0,0.55)'); r.addColorStop(1, 'rgba(0,0,0,0)');
+    r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.55, 'rgba(255,255,255,0.55)'); r.addColorStop(1, 'rgba(255,255,255,0)');   // tinted by the material
     g.fillStyle = r; g.fillRect(0, 0, 64, 64);
     const t = new THREE.CanvasTexture(c);
     return t;
   })();
-  function blob(w, d, opacity) {
+  function blob(w, d, opacity, color = 0x000000) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d),
-      new THREE.MeshBasicMaterial({ map: blobTex, color: 0x000000, transparent: true, opacity, depthWrite: false }));
+      new THREE.MeshBasicMaterial({ map: blobTex, color, transparent: true, opacity, depthWrite: false }));
     m.rotation.x = -Math.PI / 2;
     m.position.y = 0.003;
     m.renderOrder = 3;
     return m;
   }
-  function hairs() {
+  /**
+   * What she leaves: a soft patch of pressed fur and a good tuft of long hairs, some lifting off the surface so they
+   * catch the light. Sized to be seen on a phone (375 px wide) from the middle of the room, in the spot's own hair
+   * colour (light on the dark sill, grey on the white hood). The same tuft every time.
+   */
+  function hairs(color, curled, lift = 0.34, size = 1) {
     const g = new THREE.Group();
-    const mat = new THREE.MeshBasicMaterial({ color: 0xa9adb5, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide });
-    // a small tuft where she sat: enough to catch the eye from across the room, not enough to look like a mess
-    const seeds = [[-0.04, 0.02, 0.4], [0.01, -0.03, -0.6], [0.05, 0.01, 1.2], [-0.01, 0.04, 2.1], [0.03, -0.01, -1.4],
-                   [-0.02, -0.01, 0.9], [0.0, 0.015, -0.2], [0.02, 0.03, 1.7]];
-    for (const [x, z, a] of seeds) {
-      const h = new THREE.Mesh(new THREE.PlaneGeometry(0.004, 0.05), mat);
-      h.rotation.set(-Math.PI / 2, 0, a);
-      h.position.set(x, 0.004, z);
+    const spread = (curled ? 0.11 : 0.12) * size;      // on the hood the top is narrow: keep it all over the box, not hanging past its edge
+    const patch = blob(spread * 2.6, spread * 2.1, 0.4, color);
+    patch.position.y = 0.002;
+    g.add(patch);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide });
+    let r = 7;                                                   // a small fixed-seed generator
+    const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
+    for (let n = 0; n < 34; n++) {
+      const len = (0.07 + rnd() * 0.09) * (curled ? 1.7 : 1) * size, a = rnd() * Math.PI * 2, rad = Math.sqrt(rnd()) * spread;
+      const h = new THREE.Mesh(new THREE.PlaneGeometry(0.009 * Math.max(0.7, size), len), mat);
+      h.rotation.set(-Math.PI / 2 + (rnd() < lift ? 0.6 + rnd() * 0.6 : rnd() * 0.15), 0, rnd() * Math.PI);   // most or a third of them lift, by spot
+      h.position.set(Math.cos(a) * rad * 1.2, 0.006 + rnd() * 0.01, Math.sin(a) * rad * 0.9);
       h.renderOrder = 3;
       g.add(h);
     }
+    if (curled) g.position.x = -0.1;
     return g;
   }
   function occluder(def, s) {
@@ -254,7 +265,7 @@ export function createErwina(o) {
     group.add(box);
     const shadow = def.shadow ? blob(def.pose === 'curled' ? 0.42 : 0.34, def.pose === 'curled' ? 0.36 : 0.32, 0.5) : null;
     if (shadow) { shadow.visible = false; group.add(shadow); }
-    const trace = def.trace === 'hairs' ? hairs() : null;
+    const trace = def.trace === 'hairs' ? hairs(def.hair, def.pose === 'curled', def.lift, def.size) : null;
     if (trace) { trace.visible = false; group.add(trace); }
     const occ = def.occluders.map(s => occluder(def, s));
     // in the hallway the basket is her box: two eyes in the gap under its lid, there for a blink
@@ -322,6 +333,13 @@ export function createErwina(o) {
     a.faded = true;
     // a page without animation frames (a background tab, some previews) would leave her faded out: finish by timer
     if (fadeIn) setTimeout(() => { if (active === a && a.cat.visible) { setOpacity(a.cat, 1); render(); } }, 700);
+    if (st === 'there' && a.def.pose !== 'curled' && (force || Math.random() < 0.25)) {   // now and then, a purr once she's settled
+      purr = setTimeout(() => {
+        if (active !== a || mem.spots[a.id] !== 'there') return;
+        purring = true;
+        o.sound?.erwina?.('purr');
+      }, 4500);
+    }
     const bones = {};
     a.cat.traverse(n => { if (n.isBone) bones[n.name] = n; });
     const rest = {};
@@ -365,7 +383,12 @@ export function createErwina(o) {
     };
     anim = requestAnimationFrame(step);
   }
-  function stopAnim() { if (anim) cancelAnimationFrame(anim); anim = null; }
+  function stopAnim() {
+    if (anim) cancelAnimationFrame(anim);
+    anim = null;
+    clearTimeout(purr);
+    if (purring) { purring = false; o.sound?.erwina?.('stop'); }
+  }
   function setOpacity(obj, k) {
     obj.traverse(m => {
       if (!m.isMesh) return;
@@ -386,7 +409,7 @@ export function createErwina(o) {
     show(out);
     render();
     if (out === 'there') {
-      o.sound?.erwina?.('meow');
+      if (!reduce() && (force || Math.random() < 0.3)) o.sound?.erwina?.('meow');     // rare, and only with sound on (the hook checks)
       o.track?.('erwina_seen');
       note(true);
       line('seen');
@@ -410,6 +433,14 @@ export function createErwina(o) {
     save();
     o.notes?.();
   }
+  /** Is a view direction hidden under the chat panel (when it's open at Full)? Then it isn't being looked at. */
+  function covered(dirv) {
+    const r = o.chatCover?.();
+    if (!r) return false;
+    const v = dirv.clone().multiplyScalar(5).project(camera);
+    const x = (v.x + 1) / 2 * innerWidth, y = (1 - v.y) / 2 * innerHeight;
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  }
   /** Every linger tick (300 ms): has the visitor looked at her spot, or has it left the frame? */
   function tick({ still }) {
     const a = active;
@@ -422,7 +453,7 @@ export function createErwina(o) {
       const centre = o.dir(o.look.yaw, o.look.pitch).normalize();
       // her middle, not her feet: aim a little above the spot
       const mid = toView(a.def, [a.def.at[0], a.def.at[1], a.def.at[2] + 0.12]).normalize();
-      if (still && THREE.MathUtils.radToDeg(centre.angleTo(mid)) < SEE_DEG) observe();
+      if (still && THREE.MathUtils.radToDeg(centre.angleTo(mid)) < SEE_DEG && !covered(mid)) observe();
       return;
     }
     if ((st === 'there' || (st === 'box' && a.glints)) && !inFrame && performance.now() - a.seenAt > 500) {

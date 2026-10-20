@@ -1001,7 +1001,7 @@ const ERWINA_LINES = {
   seen: ['Was that Erwina? She does that.', "That's Erwina. She's only there while you're looking."],
   box: ['Is she in there? I never check.', 'That box. She might be in it. She might not.'],
   trace: ['Still warm. She was just here.', "Hairs. Erwina's been and gone."],
-  tap: ['She lets you see her once. Twice is pushing it.', 'And off she goes. She does that too.'],
+  tap: ["Gone. She doesn't stay for questions.", 'And off she goes. She does that too.'],
 };
 const erwinaNote = sure => LINES.erwina?.notebook?.[sure ? 'seen' : 'maybe'] || (sure ? 'You saw Erwina' : 'You think you saw Erwina');
 erwina = createErwina({
@@ -1010,6 +1010,7 @@ erwina = createErwina({
   pick: kind => pickLine(`erwina.${kind}`, LINES.erwina?.[kind]?.length ? LINES.erwina[kind] : ERWINA_LINES[kind]),
   say: t => say(t, [], true),
   notes: () => renderNotes(),
+  chatCover: () => document.body.dataset.chat === 'full' ? $('chatwin').getBoundingClientRect() : null,   // under the open chat she isn't being looked at
 });
 if (sphere.material.map) erwina.lightFrom(sphere.material.map);
 erwina.update();
