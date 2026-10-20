@@ -12,7 +12,8 @@
 #   --build F      build script in blender/ (required)
 #   --jobs J       jobs separated by ';', each the arguments after `--` for the build (required)
 #   --out D        where the renders go (default: blender/out)
-#   --gpu G        GPU type from `runpodctl gpu list` (default: NVIDIA GeForce RTX 4090)
+#   --gpu G        one GPU type from `runpodctl gpu list`; without it, the ranked list below is tried in order
+#                  and the first one in stock is used (the pod's GPU is logged)
 #   --cloud C      SECURE or COMMUNITY (default: SECURE; Community 4090s often have CUDA that won't start)
 #   --max-min N    give up and delete the pod after N minutes (default: 120)
 #   --image I      container image (default: the whiskedaway-render image built from cloud/Dockerfile)
@@ -26,8 +27,11 @@ set -euo pipefail
 RPC="${RUNPODCTL:-$HOME/tools/runpodctl/runpodctl.exe}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BRANCH="$(git -C "$ROOT" branch --show-current)"
+# Secure GPUs to try, best first, when --gpu isn't given. Never Community 4090s (their CUDA won't start).
+# Rough 8K day view: 4090 2.5 min, A40 10 min (US$0.59/hr); the others are untested here, so check the first frame.
+GPUS=("NVIDIA GeForce RTX 4090" "NVIDIA L40S" "NVIDIA A40" "NVIDIA RTX A6000" "NVIDIA RTX A5000")
 IMAGE="ghcr.io/nicolescheid/whiskedaway-render:5.1.0"   # Blender + assets baked in (cloud/Dockerfile)
-CAPS="compute,utility,graphics" BUILD="" JOBS="" OUT="$ROOT/blender/out" GPU="NVIDIA GeForce RTX 4090" CLOUD="SECURE" MAX_MIN=120
+CAPS="compute,utility,graphics" BUILD="" JOBS="" OUT="$ROOT/blender/out" GPU="" CLOUD="SECURE" MAX_MIN=120
 while [ $# -gt 0 ]; do
   case "$1" in
     --branch) BRANCH="$2"; shift 2 ;;
@@ -43,6 +47,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$BUILD" ] && [ -n "$JOBS" ] || { sed -n '2,22p' "$0"; exit 2; }
+[ -n "$GPU" ] && GPUS=("$GPU")
 [ -f "$ROOT/blender/$BUILD" ] || { echo "no such build script: blender/$BUILD" >&2; exit 2; }
 
 # The pod renders what's on GitHub, so refuse if this branch has unpushed commits
@@ -79,19 +84,21 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT TERM HUP   # so Ctrl-C and kill still delete the pod
 
-# Starts a pod; Community machines come and go, so "no resources" is worth a few more tries
+# Starts a pod on the first GPU type in GPUS that has stock; if none does, waits and sweeps the list again
 create_pod() {
   for attempt in 1 2 3 4 5 6 7 8; do
-    POD_JSON=$("$RPC" pod create --name "whiskedaway-render" --image "$IMAGE" --gpu-id "$GPU" --cloud-type "$CLOUD"       --container-disk-in-gb 20 --ports "8000/http" --env "$ENV" --docker-args "$START" 2>&1 || true)
-    POD=$(echo "$POD_JSON" | json id 2>/dev/null || true)
-    [ -n "$POD" ] && break
-    echo "no $GPU free yet (try $attempt): $(echo "$POD_JSON" | head -c 160)"
+    for GPU in "${GPUS[@]}"; do
+      POD_JSON=$("$RPC" pod create --name "whiskedaway-render" --image "$IMAGE" --gpu-id "$GPU" --cloud-type "$CLOUD"       --container-disk-in-gb 20 --ports "8000/http" --env "$ENV" --docker-args "$START" 2>&1 || true)
+      POD=$(echo "$POD_JSON" | json id 2>/dev/null || true)
+      [ -n "$POD" ] && break 2
+      echo "no $GPU free (sweep $attempt): $(echo "$POD_JSON" | head -c 120)"
+    done
     sleep 30
   done
   [ -n "$POD" ] || { echo "couldn't create the pod: $POD_JSON" >&2; exit 1; }
   COST=$(echo "$POD_JSON" | json costPerHr)
   T0=$(date +%s)
-  echo "pod $POD (\$${COST:-?}/hr)"
+  echo "pod $POD on a $CLOUD $GPU (\$${COST:-?}/hr)"
 }
 
 # Shows the pod's log until it says what happened: sets RESULT to send, probe, nogpu or fails
@@ -118,7 +125,7 @@ watch_pod() {
   done
 }
 
-echo "starting a $CLOUD $GPU pod to render $BUILD from $BRANCH ($IMAGE)"
+echo "starting a $CLOUD pod (${GPUS[*]}) to render $BUILD from $BRANCH ($IMAGE)"
 for machine in 1 2 3 4; do
   create_pod
   watch_pod

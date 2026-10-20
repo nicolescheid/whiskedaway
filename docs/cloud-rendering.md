@@ -16,7 +16,9 @@ render.sh refuses if your branch differs from it):
   `--jobs "--weather=fair;--weather=fair --night"`.
 - `--jobs probe` only checks that Blender can see the GPU. It costs about US$0.02.
 - Renders land in `blender/out` (change it with `--out DIR`). Only files the render wrote come back.
-- `--gpu "NVIDIA A40"` picks another GPU type (names from `runpodctl gpu list`). `--cloud COMMUNITY`
+- Without `--gpu`, render.sh tries Secure GPUs in this order and uses the first with stock: RTX 4090, L40S,
+  A40, RTX A6000, RTX A5000 (the list is `GPUS` at the top of the script). It logs which one the pod got.
+  `--gpu "NVIDIA A40"` forces one type (names from `runpodctl gpu list`). `--cloud COMMUNITY`
   uses Community Cloud, which is cheaper but see below.
 - For a batch, run several render.sh at once in separate shells, one view or a few per pod.
 
@@ -92,8 +94,10 @@ so `receive X` on the laptop always failed. The pod now logs the code send print
   There's now a peak-GPU-use check after each job.
 - Pods sent back every image in blender/out, including the committed ones, not just the new render.
 
-**5. "No instances available".** This happens when a GPU type is sold out. render.sh retries 8 times,
-30 seconds apart. If 4090s stay sold out, use another type with `--gpu`.
+**5. "No instances available".** This happens when a GPU type is sold out. render.sh tries each GPU in
+its ranked list, then waits 30 seconds and sweeps again, up to 8 sweeps. On 20 Oct 2026 the 4090s were sold
+out for over an hour and an A40 did the job: an 8K day view took about 10 min (US$0.10), against about
+2.5 min on a 4090. Slower GPUs cost about the same per view but take longer, so check the first frame.
 
 ## Other GPU types
 
@@ -101,7 +105,7 @@ Secure Cloud prices on 2026-10-18 (`runpodctl gpu list` shows current ones and s
 
 | GPU | US$/hr | Notes |
 |---|---|---|
-| RTX 4090 | 0.89 | the default; tested, ~4 min per 8K hallway pano |
+| RTX 4090 | 0.89 | first in the list; tested, ~4 min per 8K hallway pano |
 | A40 | 0.59 | 48 GB, Ampere with RT cores (OptiX); usually well stocked; probe result below |
 | RTX A5000 | 0.27 | 24 GB, Ampere; cheap but slower, often low stock |
 | RTX 5090 | 1.19 | faster than a 4090; Blackwell, untested |
