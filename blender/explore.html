@@ -1330,14 +1330,21 @@ function scheduleNavigate() {
   clearTimeout(navTimer);
   navTimer = setTimeout(navigate, AI ? 700 : 350);
 }
+const AI_MAX_CALLS = 10, AI_EVERY = 30000, AI_MIN_GAP = 10000;
 async function navigate() {
   const seq = ++navSeq;
   const opts = { ...steer(), dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
+  // The AI reads the wander at most once on entering a room or every 30 s (never closer than 10 s), and ten times a visit;
+  // between those the local reading answers (it costs nothing), so a busy wander doesn't call the model on every touch
+  const now = Date.now(), roomNow = homeOf(state.room);
+  const useAI = !!AI && (state.aiCalls || 0) < AI_MAX_CALLS && now - (state.aiAt || 0) >= AI_MIN_GAP
+    && (state.aiRoom !== roomNow || now - (state.aiAt || 0) >= AI_EVERY);
+  if (useAI) { state.aiCalls = (state.aiCalls || 0) + 1; state.aiAt = now; state.aiRoom = roomNow; }
   // One new idea per step (two to start), so they come at the pace of the wander
   const putOut = res => res.serve.filter(s => !state.served.includes(s.atom) && !book.has(s.atom)).slice(0, state.cards.length ? 1 : 2).forEach(s => serve(s, res.mode));
-  if (AI) {
+  if (useAI) {
     // Hybrid: the room responds at once with the local reading (glow and new ideas), and Gemma
     // "types" while the AI reads the wander (the visitor pass and the model call can take many seconds).
     // Her line comes from the AI, which may also add one piece of its own; if it fails, she says the local line.
@@ -1356,7 +1363,7 @@ async function navigate() {
   }
   state.result = r;
   // No builder words in view (brainstorm #6): if the AI can't help, Gemma says so once a visit, softly, in her own voice
-  if (AI && r.mode !== 'ai' && !state.aloneSaid) { state.aloneSaid = true; setTimeout(() => chatLine('gemma', LINES.alone || "I'm reading your wander on my own for a bit."), 1200); }
+  if (useAI && r.mode !== 'ai' && !state.aloneSaid) { state.aloneSaid = true; setTimeout(() => chatLine('gemma', LINES.alone || "I'm reading your wander on my own for a bit."), 1200); }
   applyReveal(r.reveal);
   const gemma = r.gemma;                                // her reading has no lead now (content/no-lead), so nothing to strip
   // A keep, set-aside or undo line stays up for 3 s before her next one (UX T1), unless a newer step comes along
@@ -1379,7 +1386,7 @@ async function navigate() {
   };
   const wait = lineHeldUntil - Date.now();
   wait > 0 ? setTimeout(speak, wait) : speak();
-  if (AI) r.serve.forEach(s => serve(s, r.mode)); else putOut(r);
+  if (useAI) r.serve.forEach(s => serve(s, r.mode)); else putOut(r);
   store.save(state);
   renderNotes();
 }

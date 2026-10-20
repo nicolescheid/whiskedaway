@@ -621,7 +621,8 @@ async function handleRecipe(request, env) {
           model: 'claude-sonnet-5',
           max_tokens: 2048,
           thinking: { type: 'disabled' },
-          system: payload.tome_id === 'inn-idea' ? INN_CONSTITUTION : WHISKEDAWAY_CONSTITUTION,   // the Inn writes under its own card
+          // the Inn writes under its own card; the constitution is the same every time, so it's cached (the visit's details follow it)
+          system: [{ type: 'text', text: payload.tome_id === 'inn-idea' ? INN_CONSTITUTION : WHISKEDAWAY_CONSTITUTION, cache_control: { type: 'ephemeral' } }],
           messages: [
             { role: 'user', content: userMessage }
           ]
@@ -982,6 +983,8 @@ async function handleNavigate(request, env) {
       additionalProperties: false,
     };
 
+    // Only the system prompt is cached: the shortlists the page sends (touched objects first, atoms ranked by the trail) change
+    // on every call, so a cache marker on them would only add the write surcharge
     const userMessage = JSON.stringify({
       room: p.room, clusters, objects, atoms, trail,
       already_served: (p.already_served || []).slice(0, 60),
@@ -992,20 +995,22 @@ async function handleNavigate(request, env) {
       },
     });
 
+    const model = env.NAVIGATOR_MODEL || 'claude-opus-5-5', haiku = /haiku/.test(model);
     const res = await fetch(ANTHROPIC_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'server-side-fallback-2026-07-01',
+        ...(haiku ? {} : { 'anthropic-beta': 'server-side-fallback-2026-07-01' }),
       },
       body: JSON.stringify({
-        model: env.NAVIGATOR_MODEL || 'claude-opus-5-5',
-        max_tokens: 4000,
-        fallbacks: 'default',
+        model,
+        // The answer is a small JSON object (about 300-500 tokens, 700 at its fullest); Haiku runs without thinking, so all of it is answer
+        max_tokens: haiku ? 1000 : 3000,
+        ...(haiku ? { thinking: { type: 'disabled' } } : { fallbacks: 'default' }),   // Haiku has no server-side fallback
         output_config: { effort: 'low', format: { type: 'json_schema', schema } },
-        system: NAVIGATOR_SYSTEM,
+        system: [{ type: 'text', text: NAVIGATOR_SYSTEM, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: userMessage }],
       }),
     });
@@ -1014,6 +1019,7 @@ async function handleNavigate(request, env) {
       return json({ error: `navigator upstream ${res.status}` }, 502);
     }
     const data = await res.json();
+    console.log('navigator usage', model, JSON.stringify(data.usage || {}));   // cache_read_input_tokens shows whether the caching works
     if (data.stop_reason === 'refusal' || data.stop_reason === 'max_tokens') {
       return json({ error: `navigator stopped: ${data.stop_reason}` }, 502);
     }
