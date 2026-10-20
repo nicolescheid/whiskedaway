@@ -945,6 +945,29 @@ Decide:
 
 Prefer fewer, better choices. Serving nothing is fine when nothing fits.`;
 
+// The answer's shape is fixed: the schema is part of what Anthropic caches ahead of the system prompt, so ids in it (enums that
+// change with the room and the trail) would change the cached prefix on every call. The ids are checked below instead
+const NAVIGATOR_SCHEMA = {
+  type: 'object',
+  properties: {
+    hypothesis: { type: 'string' },
+    cluster: { type: 'string' },
+    confidence: { type: 'number' },
+    gemma_line: { type: 'string' },
+    fork: { type: 'array', items: { type: 'string' } },
+    reveal: { type: 'array', items: {
+      type: 'object',
+      properties: { object_id: { type: 'string' }, reason: { type: 'string' } },
+      required: ['object_id', 'reason'], additionalProperties: false } },
+    serve: { type: 'array', items: {
+      type: 'object',
+      properties: { atom_id: { type: 'string' }, why: { type: 'string' } },
+      required: ['atom_id', 'why'], additionalProperties: false } },
+  },
+  required: ['hypothesis', 'cluster', 'confidence', 'gemma_line', 'fork', 'reveal', 'serve'],
+  additionalProperties: false,
+};
+
 async function handleNavigate(request, env) {
   const json = (body, status = 200) => new Response(JSON.stringify(body), {
     status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -962,30 +985,9 @@ async function handleNavigate(request, env) {
     const atomIds = atoms.map(a => String(a.id));
     const clusterIds = clusters.map(c => String(c.id));
 
-    const schema = {
-      type: 'object',
-      properties: {
-        hypothesis: { type: 'string' },
-        cluster: { type: 'string', enum: clusterIds },
-        confidence: { type: 'number' },
-        gemma_line: { type: 'string' },
-        fork: { type: 'array', items: { type: 'string', enum: clusterIds } },
-        reveal: { type: 'array', items: {
-          type: 'object',
-          properties: { object_id: { type: 'string', enum: objectIds }, reason: { type: 'string' } },
-          required: ['object_id', 'reason'], additionalProperties: false } },
-        serve: { type: 'array', items: {
-          type: 'object',
-          properties: { atom_id: { type: 'string', enum: atomIds }, why: { type: 'string' } },
-          required: ['atom_id', 'why'], additionalProperties: false } },
-      },
-      required: ['hypothesis', 'cluster', 'confidence', 'gemma_line', 'fork', 'reveal', 'serve'],
-      additionalProperties: false,
-    };
-
     // Only the system prompt is cached: the shortlists the page sends (touched objects first, atoms ranked by the trail) change
     // on every call, so a cache marker on them would only add the write surcharge
-    const userMessage = JSON.stringify({
+    const userMessage = 'Use only ids that appear in these lists (cluster ids for cluster and fork, object ids for reveal, atom ids for serve).\n' + JSON.stringify({
       room: p.room, clusters, objects, atoms, trail,
       already_served: (p.already_served || []).slice(0, 60),
       set_aside: (p.dismissed || []).slice(0, 60),
@@ -1009,7 +1011,7 @@ async function handleNavigate(request, env) {
         // The answer is a small JSON object (about 300-500 tokens, 700 at its fullest); Haiku runs without thinking, so all of it is answer
         max_tokens: haiku ? 1000 : 3000,
         ...(haiku ? { thinking: { type: 'disabled' } } : { fallbacks: 'default' }),   // Haiku has no server-side fallback
-        output_config: { effort: 'low', format: { type: 'json_schema', schema } },
+        output_config: { effort: 'low', format: { type: 'json_schema', schema: NAVIGATOR_SCHEMA } },
         system: [{ type: 'text', text: NAVIGATOR_SYSTEM, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: userMessage }],
       }),
@@ -1026,7 +1028,8 @@ async function handleNavigate(request, env) {
     const text = data.content.find(c => c.type === 'text');
     const out = JSON.parse(text.text);
 
-    // Belt and braces: keep only known IDs, cap the counts.
+    // The ids are checked here (the schema doesn't list them): keep only known IDs, cap the counts.
+    if (!clusterIds.includes(out.cluster)) out.cluster = clusterIds[0];
     out.fork = (out.fork || []).filter(id => clusterIds.includes(id)).slice(0, 2);
     out.reveal = (out.reveal || []).filter(r => objectIds.includes(r.object_id)).slice(0, 2);
     out.serve = (out.serve || []).filter(s => atomIds.includes(s.atom_id)).slice(0, 2);
