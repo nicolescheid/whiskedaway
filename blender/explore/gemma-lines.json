@@ -66,7 +66,7 @@
       "dietary": "Dietary needs",
       "none": "not yet",
       "confidence": "Cooking confidence",
-      "time": "Time",
+      "time": "Patience",
       "servings": "Cooking for"
     },
     "pantry": {
@@ -388,16 +388,16 @@
       "more": "A bit more",
       "rows": {
         "energy": "How's your energy today?",
-        "time": "How long have you got?",
+        "time": "When it comes to cooking today, how's your patience?",
         "servings": "How many are you cooking for?",
         "confidence": "How do you feel in the kitchen?",
         "weather": "Is this your weather?"
       },
       "time": {
-        "quick": "About 15 minutes",
-        "half": "About half an hour",
-        "hour": "About an hour",
-        "any": "No rush"
+        "quick": "I'm short on patience",
+        "half": "I can give it a bit",
+        "hour": "I've got a good while",
+        "any": "I've got all the time in the world"
       },
       "servings": {
         "1": "Just me",
@@ -409,9 +409,9 @@
         "crowd": "A crowd"
       },
       "confidence": {
-        "starting": "Just starting out",
-        "happy": "Happy enough",
-        "confident": "Confident"
+        "starting": "I'm a cautious cook",
+        "happy": "I'm happy enough",
+        "confident": "I'm a confident chef"
       },
       "confidenceHelper": "This is about skill. Your candle is about today.",
       "ack": {
@@ -430,9 +430,35 @@
       },
       "ask": {
         "_when": "Gemma's one gentle ask per visit, for one missing answer, only when it would change her picks.",
-        "time": "How long have you got? It changes what I'd pick.",
+        "time": "How's your patience today? It changes what I'd pick.",
         "servings": "How many are you cooking for? I'll scale the recipe.",
         "confidence": "How do you feel in the kitchen? I'll pitch the recipe to suit."
+      },
+      "timeHelper": "Pull the string. It tells me how much time to plan for.",
+      "timeHint": "Pull the string to answer.",
+      "timeAria": "Patience for cooking today. Pull the string through four stops, from short on patience to all the time in the world.",
+      "confidenceHint": "Turn the dial to answer.",
+      "confidenceAria": "Cooking confidence. Turn the dial through three positions, from a cautious cook to a confident chef.",
+      "toldBy": {
+        "time": {
+          "quick": "You're short on patience.",
+          "half": "You can give it a bit.",
+          "hour": "You've got a good while.",
+          "any": "You've got all the time in the world."
+        },
+        "confidence": {
+          "starting": "You're a cautious cook.",
+          "happy": "You're happy enough in the kitchen.",
+          "confident": "You're a confident chef."
+        }
+      },
+      "whyBy": {
+        "time": {
+          "quick": "you're short on patience",
+          "half": "you can give it a bit",
+          "hour": "you've got a good while",
+          "any": "you've got all the time in the world"
+        }
       }
     }
   },
