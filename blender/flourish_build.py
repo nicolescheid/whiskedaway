@@ -203,8 +203,11 @@ def tube(name, ctrl, radius, material, segs=24, n=40, open_end=False, petals=0, 
     return o
 
 
-def leaf(name, base, direction, length, width, material, crinkle=0.012, curl=0.3, seed=0, nx=8, ny=14):
-    """A leaf (kale, beet top, herb) as a bent, crinkled strip, from base along direction."""
+def leaf(name, base, direction, length, width, material, crinkle=0.012, curl=0.3, seed=0, nx=8, ny=14,
+         frill=0.0, frill_waves=0, lobes=0, lobe_amp=0.0, rib=None, blunt=False):
+    """A leaf (kale, beet top, herb) as a bent, crinkled strip, from base along direction.
+    frill: a tight ruffle along the edges (curly kale); lobes: a scalloped outline (parsley); rib: a midrib material;
+    blunt: a rounded tip instead of a point."""
     rnd = random.Random(seed)
     d = Vector(direction).normalized()
     side = d.cross(Vector((0, 0, 1)))
@@ -213,24 +216,319 @@ def leaf(name, base, direction, length, width, material, crinkle=0.012, curl=0.3
     side.normalize()
     up = side.cross(d).normalized()
     ph = rnd.uniform(0, 6)
-    verts, faces = [], []
+    verts, faces, axis = [], [], []
     for j in range(ny):
         t = j / (ny - 1)
         w = width * math.sin(math.pi * min(1, t * 1.05)) ** 0.7
+        if blunt:
+            w = width * max(0.0, 1 - abs(2 * t - 1) ** 2.5) ** 0.5 * (0.4 + 0.6 * min(1, 3 * t))
+        if lobes:
+            w *= 1 - lobe_amp * (1 - abs(math.sin(lobes * math.pi * t)))
         for i in range(nx):
             s = i / (nx - 1) * 2 - 1
             bend = curl * t * t * length                    # droops toward the tip
             ripple = crinkle * math.sin(9 * s + ph) * math.sin(13 * t + ph) * (0.3 + abs(s))
             cup = 0.25 * w * s * s
-            p = Vector(base) + d * (t * length) + side * (s * w / 2) - up * bend + up * (ripple + cup)
+            ruff = bunch = 0.0
+            if frill:
+                e = abs(s) ** 2.2 * min(1, 4 * t)
+                ruff = frill * e * (math.sin(2 * math.pi * frill_waves * t + ph + 2.5 * s)
+                                    + 0.5 * math.sin(2 * math.pi * 2.3 * frill_waves * t + 2 * ph - 4 * s)
+                                    + 0.3 * math.sin(2 * math.pi * 4.1 * frill_waves * t + 3 * ph + 7 * s))
+                # the edge also bunches along the leaf, so the curls fold over rather than stand up as teeth
+                bunch = 0.8 * frill * e * math.cos(2 * math.pi * frill_waves * t + ph + 2.5 * s)
+            p = Vector(base) + d * (t * length + bunch) + side * (s * w / 2) - up * bend + up * (ripple + cup + ruff)
             verts.append(tuple(p))
+            if i == nx // 2:
+                axis.append(p + up * 0.0015)
     for j in range(ny - 1):
         for i in range(nx - 1):
             a = j * nx + i
             faces.append((a, a + 1, a + nx + 1, a + nx))
     o = mesh_obj(name, verts, faces, material)
     o.modifiers.new("thick", "SOLIDIFY").thickness = 0.0015
+    if rib:
+        tube(f"{name}_rib", axis[:int(len(axis) * 0.85)], lambda u: 0.0032 * (1 - 0.8 * u), rib, segs=8, n=ny)
     return o
+
+
+def aged_brass_mat(name):
+    """Old brass: yellower than copper, dulled unevenly, tarnished brown in the hollows."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    p = nt.nodes["Principled BSDF"]
+    p.inputs["Metallic"].default_value = 1.0
+    nz = nt.nodes.new("ShaderNodeTexNoise")
+    nz.inputs["Scale"].default_value = 7
+    nz.inputs["Detail"].default_value = 6
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = srgb("#8a6a3c")
+    ramp.color_ramp.elements[1].color = srgb("#b8975c")
+    nt.links.new(nz.outputs["Fac"], ramp.inputs["Fac"])
+    ao = nt.nodes.new("ShaderNodeAmbientOcclusion")
+    ao.inputs["Distance"].default_value = 0.06
+    mix = nt.nodes.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    mix.inputs[7].default_value = srgb("#4a3820")              # tarnish
+    nt.links.new(ramp.outputs["Color"], mix.inputs[6])
+    inv = nt.nodes.new("ShaderNodeMath")
+    inv.operation = "SUBTRACT"
+    inv.inputs[0].default_value = 1.0
+    nt.links.new(ao.outputs["AO"], inv.inputs[1])
+    nt.links.new(inv.outputs[0], mix.inputs["Factor"])
+    nt.links.new(mix.outputs[2], p.inputs["Base Color"])
+    rr = nt.nodes.new("ShaderNodeMapRange")
+    rr.inputs["To Min"].default_value = 0.3
+    rr.inputs["To Max"].default_value = 0.55
+    nt.links.new(nz.outputs["Fac"], rr.inputs["Value"])
+    nt.links.new(rr.outputs["Result"], p.inputs["Roughness"])
+    return m
+
+
+def smoothstep(a, b, x):
+    t = max(0.0, min(1.0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+
+
+def boule(name, loc, R=0.135, H=0.1, seed=3):
+    """A round country loaf, built as real geometry: a domed crust with a cross scored and opened on top,
+    crackled all over, floured on the crown. Colours and flour go into mesh attributes for the material."""
+    from mathutils import noise
+    noise.seed_set(seed)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=256, ring_count=128, radius=1, location=loc)
+    o = bpy.context.active_object
+    o.name = name
+    me = o.data
+    cols, flours = [], []
+    turn = math.radians(20)
+    deep, gold, pale, crumb = Vector(srgb("#6e3612")[:3]), Vector(srgb("#b06a2a")[:3]), Vector(srgb("#d2a066")[:3]), \
+        Vector(srgb("#e2bf8a")[:3])
+    for v in me.vertices:
+        x, y, z = v.co.normalized()
+        top = smoothstep(0.25, 0.75, z)
+        # rounded dome, the base flattened where it sat in the banneton
+        zt = H * z if z > 0 else max(H * 0.3 * z, -0.022)
+        side = 1 + 0.06 * math.sin(math.pi * max(0.0, z))       # a little oven spring round the waist
+        p = Vector((x * R * side, y * R * side * 0.95, zt))
+        u, w = x * math.cos(turn) - y * math.sin(turn), x * math.sin(turn) + y * math.cos(turn)
+        g = max(math.exp(-(u / 0.1) ** 2), math.exp(-(w / 0.1) ** 2)) * top          # the open scores
+        ear = max(math.exp(-((abs(u) - 0.17) / 0.06) ** 2), math.exp(-((abs(w) - 0.17) / 0.06) ** 2)) * top * (1 - g)
+        dists, _pts = noise.voronoi(p * 34, distance_metric="DISTANCE")
+        crack = 1 - smoothstep(0.0, 0.1, dists[1] - dists[0])
+        lump = noise.fractal(p * 16, 0.6, 2.0, 4)
+        disp = -0.022 * g + 0.009 * ear - 0.0009 * crack * smoothstep(0.0, 0.5, z) * (1 - g) + 0.004 * lump
+        v.co = p + Vector((x, y, z * 1.4)).normalized() * disp
+        # colour: deep at the crown and on the ears, golden down the sides, pale crumb in the scores, pale base
+        c = gold.lerp(deep, min(1.0, 0.75 * top + 0.6 * ear + 0.25 * lump))
+        c = c.lerp(pale, crack * 0.18 * top)
+        c = c.lerp(crumb, smoothstep(0.35, 0.8, g))
+        c = c.lerp(pale, smoothstep(-0.1, -0.5, z))
+        cols.append((*c, 1.0))
+        dust = smoothstep(0.0, 0.45, noise.noise(p * 18) + 0.3 * noise.noise(p * 70))
+        flours.append(dust * smoothstep(0.05, 0.6, z) * (1 - 0.7 * g))
+    ca = me.color_attributes.new("crust_col", "FLOAT_COLOR", "POINT")
+    fa = me.attributes.new("flour", "FLOAT", "POINT")
+    for i, c in enumerate(cols):
+        ca.data[i].color = c
+        fa.data[i].value = flours[i]
+    bpy.ops.object.shade_smooth()
+    o.modifiers.new("smooth", "SUBSURF").levels = 1
+
+    m = bpy.data.materials.new(f"{name}_crust")
+    m.use_nodes = True
+    nt = m.node_tree
+    p_ = nt.nodes["Principled BSDF"]
+    a_col = nt.nodes.new("ShaderNodeAttribute")
+    a_col.attribute_name = "crust_col"
+    a_fl = nt.nodes.new("ShaderNodeAttribute")
+    a_fl.attribute_name = "flour"
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    vor = nt.nodes.new("ShaderNodeTexVoronoi")                 # fine crackle the mesh is too coarse for
+    vor.feature = "DISTANCE_TO_EDGE"
+    vor.inputs["Scale"].default_value = 150
+    vor.inputs["Randomness"].default_value = 1.0
+    warp = nt.nodes.new("ShaderNodeTexNoise")
+    warp.inputs["Scale"].default_value = 40
+    wmix = nt.nodes.new("ShaderNodeVectorMath")
+    wmix.operation = "MULTIPLY_ADD"
+    wmix.inputs[1].default_value = (0.006, 0.006, 0.006)
+    nt.links.new(tc.outputs["Object"], warp.inputs["Vector"])
+    nt.links.new(warp.outputs["Color"], wmix.inputs[0])
+    nt.links.new(tc.outputs["Object"], wmix.inputs[2])
+    nt.links.new(wmix.outputs[0], vor.inputs["Vector"])
+    pore = nt.nodes.new("ShaderNodeTexNoise")
+    pore.inputs["Scale"].default_value = 420
+    pore.inputs["Detail"].default_value = 4
+    nt.links.new(tc.outputs["Object"], pore.inputs["Vector"])
+    fine = nt.nodes.new("ShaderNodeMapRange")
+    fine.inputs["From Max"].default_value = 0.06
+    nt.links.new(vor.outputs["Distance"], fine.inputs["Value"])
+    crackle = nt.nodes.new("ShaderNodeMix")                    # paler in the fine cracks
+    crackle.data_type = "RGBA"
+    crackle.inputs[7].default_value = srgb("#d9ad72")
+    inv = nt.nodes.new("ShaderNodeMath")
+    inv.operation = "SUBTRACT"
+    inv.inputs[0].default_value = 1.0
+    nt.links.new(fine.outputs["Result"], inv.inputs[1])
+    k = nt.nodes.new("ShaderNodeMath")
+    k.operation = "MULTIPLY"
+    k.inputs[1].default_value = 0.16
+    nt.links.new(inv.outputs[0], k.inputs[0])
+    nt.links.new(k.outputs[0], crackle.inputs["Factor"])
+    nt.links.new(a_col.outputs["Color"], crackle.inputs[6])
+    dusted = nt.nodes.new("ShaderNodeMix")
+    dusted.data_type = "RGBA"
+    dusted.inputs[7].default_value = srgb("#f1ebdf")
+    fl = nt.nodes.new("ShaderNodeMath")                        # flour sits patchy, never solid
+    fl.operation = "MULTIPLY"
+    nt.links.new(a_fl.outputs["Fac"], fl.inputs[0])
+    nt.links.new(pore.outputs["Fac"], fl.inputs[1])
+    fl2 = nt.nodes.new("ShaderNodeMath")
+    fl2.operation = "MULTIPLY"
+    fl2.use_clamp = True
+    fl2.inputs[1].default_value = 1.8
+    nt.links.new(fl.outputs[0], fl2.inputs[0])
+    nt.links.new(fl2.outputs[0], dusted.inputs["Factor"])
+    nt.links.new(crackle.outputs[2], dusted.inputs[6])
+    nt.links.new(dusted.outputs[2], p_.inputs["Base Color"])
+    rough = nt.nodes.new("ShaderNodeMapRange")
+    rough.inputs["To Min"].default_value = 0.55
+    rough.inputs["To Max"].default_value = 0.95
+    nt.links.new(fl2.outputs[0], rough.inputs["Value"])
+    nt.links.new(rough.outputs["Result"], p_.inputs["Roughness"])
+    b1 = nt.nodes.new("ShaderNodeBump")
+    b1.inputs["Strength"].default_value = 0.2
+    b1.inputs["Distance"].default_value = 0.002
+    nt.links.new(fine.outputs["Result"], b1.inputs["Height"])
+    b2 = nt.nodes.new("ShaderNodeBump")
+    b2.inputs["Strength"].default_value = 0.25
+    b2.inputs["Distance"].default_value = 0.0005
+    nt.links.new(pore.outputs["Fac"], b2.inputs["Height"])
+    nt.links.new(b1.outputs["Normal"], b2.inputs["Normal"])
+    nt.links.new(b2.outputs["Normal"], p_.inputs["Normal"])
+    me.materials.append(m)
+    return o
+
+
+# Dry goods for the dresser jars: (shape, size x/y/z in metres) per kind; the thin axis is z, laid against the glass
+GRAINS = {
+    "barley":    ("bead", (0.0055, 0.0038, 0.0032)),
+    "lentil":    ("disc", (0.0042, 0.0042, 0.0017)),
+    "chickpea":  ("lumpy", (0.0085, 0.008, 0.0078)),
+    "hazelnut":  ("point", (0.014, 0.0125, 0.0125)),
+    "pumpkin":   ("point", (0.015, 0.0085, 0.0028)),
+    "split_pea": ("disc", (0.006, 0.006, 0.0028)),
+    "almond":    ("point", (0.022, 0.013, 0.0075)),
+    "rice":      ("bead", (0.0065, 0.0022, 0.002)),
+    "walnut":    ("lumpy", (0.024, 0.02, 0.012)),
+}
+
+
+def grain_piece(kind, colour):
+    """One grain, seed or nut at the origin, hidden; the jar fills instance it."""
+    shape, (sx, sy, sz) = GRAINS[kind]
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=14, ring_count=8, radius=1)
+    o = bpy.context.active_object
+    o.name = f"grain_{kind}"
+    from mathutils import noise
+    for v in o.data.vertices:
+        x, y, z = v.co
+        if shape == "point":                       # almonds, seeds, hazelnuts: taper to a tip
+            k = 1 - 0.45 * max(0.0, x)
+            y, z = y * k, z * k
+        elif shape == "disc":
+            z *= 0.7 + 0.3 * abs(z)
+        elif shape == "lumpy":
+            n = 1 + 0.18 * noise.noise(Vector((x, y, z)) * 2.5)
+            x, y, z = x * n, y * n, z * n
+        v.co = (x * sx / 2, y * sy / 2, z * sz / 2)
+    bpy.ops.object.shade_smooth()
+    m = bpy.data.materials.new(f"grain_{kind}")
+    m.use_nodes = True
+    nt = m.node_tree
+    p = nt.nodes["Principled BSDF"]
+    p.inputs["Roughness"].default_value = 0.55 if kind in ("lentil", "split_pea", "pumpkin") else 0.7
+    info = nt.nodes.new("ShaderNodeObjectInfo")
+    ramp = nt.nodes.new("ShaderNodeValToRGB")
+    base = srgb(colour)
+    ramp.color_ramp.elements[0].color = tuple(c * 0.7 for c in base[:3]) + (1,)
+    ramp.color_ramp.elements[1].color = tuple(min(1.0, c * 1.12) for c in base[:3]) + (1,)
+    nt.links.new(info.outputs["Random"], ramp.inputs["Fac"])
+    nt.links.new(ramp.outputs["Color"], p.inputs["Base Color"])
+    nz = nt.nodes.new("ShaderNodeTexNoise")
+    nz.inputs["Scale"].default_value = 900 if kind in ("walnut", "almond", "hazelnut") else 300
+    b = nt.nodes.new("ShaderNodeBump")
+    b.inputs["Strength"].default_value = 0.5 if kind in ("walnut", "almond", "hazelnut") else 0.15
+    nt.links.new(nz.outputs["Fac"], b.inputs["Height"])
+    nt.links.new(b.outputs["Normal"], p.inputs["Normal"])
+    o.data.materials.append(m)
+    o.hide_render = True
+    o.hide_viewport = True
+    return o
+
+
+def grain_scatter(target, piece, spacing, seed):
+    """Geometry nodes: cover target's surface with piece, packed, each lying against the surface, turned at random."""
+    ng = bpy.data.node_groups.new(f"{target.name}_grains", "GeometryNodeTree")
+    ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+    ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    N = ng.nodes
+    gi, go = N.new("NodeGroupInput"), N.new("NodeGroupOutput")
+    dist = N.new("GeometryNodeDistributePointsOnFaces")
+    dist.distribute_method = "POISSON"
+    dist.inputs["Distance Min"].default_value = spacing
+    dist.inputs["Density Max"].default_value = 3.0 / spacing ** 2
+    dist.inputs["Seed"].default_value = seed
+    info = N.new("GeometryNodeObjectInfo")
+    info.inputs["Object"].default_value = piece
+    rnd_rot = N.new("FunctionNodeRandomValue")
+    rnd_rot.data_type = "FLOAT_VECTOR"
+    vin = [s for s in rnd_rot.inputs if s.type == "VECTOR"]
+    vin[0].default_value = (-0.5, -0.5, 0.0)
+    vin[1].default_value = (0.5, 0.5, 2 * math.pi)
+    rnd_rot.inputs["Seed"].default_value = seed + 1
+    e2r = N.new("FunctionNodeEulerToRotation")
+    rot = N.new("FunctionNodeRotateRotation")
+    rot.rotation_space = "LOCAL"
+    rnd_s = N.new("FunctionNodeRandomValue")
+    rnd_s.data_type = "FLOAT"
+    fin = [s for s in rnd_s.inputs if s.type == "VALUE" and s.name in ("Min", "Max")]
+    fin[0].default_value, fin[1].default_value = 0.8, 1.15
+    rnd_s.inputs["Seed"].default_value = seed + 2
+    inst = N.new("GeometryNodeInstanceOnPoints")
+    join = N.new("GeometryNodeJoinGeometry")
+    L = ng.links.new
+    L(gi.outputs[0], dist.inputs["Mesh"])
+    L(dist.outputs["Points"], inst.inputs["Points"])
+    L(info.outputs["Geometry"], inst.inputs["Instance"])
+    L(next(s for s in rnd_rot.outputs if s.type == "VECTOR"), e2r.inputs[0])
+    L(dist.outputs["Rotation"], rot.inputs["Rotation"])
+    L(e2r.outputs[0], rot.inputs["Rotate By"])
+    L(rot.outputs[0], inst.inputs["Rotation"])
+    L(next(s for s in rnd_s.outputs if s.type == "VALUE"), inst.inputs["Scale"])
+    L(gi.outputs[0], join.inputs[0])
+    L(inst.outputs["Instances"], join.inputs[0])
+    L(join.outputs[0], go.inputs[0])
+    target.modifiers.new("grains", "NODES").node_group = ng
+    return target
+
+
+def grain_jar(name, x, y, z, r, h, kind, colour, glass, lid_mat, seed):
+    """A thin-walled storage jar, three-quarters full of a dry good packed against the glass, a mounded top."""
+    jar = lathe(name, [(r * 0.94, 0.0), (r, 0.006), (r, h - 0.024), (r * 0.94, h - 0.01), (r * 0.9, h - 0.004), (r * 0.9, h)],
+                glass, (x, y, z), segs=64, thick=0.003)
+    jar.modifiers["thick"].offset = -1
+    _shape, size = GRAINS[kind]
+    piece = grain_piece(kind, colour)
+    rc = r - 0.004 - 0.5 * size[2] - 0.2 * size[0]
+    fh = h * 0.68
+    core_mat = mat(f"{name}_gaps", tuple(c * 0.35 for c in srgb(colour)[:3]) + (1,), rough=0.9)
+    core = lathe(f"{name}_fill", [(rc, 0.006), (rc, fh), (rc * 0.75, fh + 0.008), (rc * 0.35, fh + 0.014), (0.0, fh + 0.016)],
+                 core_mat, (x, y, z), segs=48)
+    grain_scatter(core, piece, max(0.002, 0.8 * min(size[0], size[1])), seed)
+    lid = cyl(f"{name}_lid", (x, y, z + h + 0.01), r * 0.95, 0.022, lid_mat)
+    return [jar, core, lid]
 
 
 def color_noise_mat(name, dark, light, rough=0.6, scale=40, bump=0.3, sss=0.0):
@@ -336,12 +634,11 @@ def build():
     ink = mat("ink", srgb("#2c2416"), rough=0.6)
     flame = mat("flame", (1, 0.6, 0.25, 1), emission=(1.0, 0.55, 0.2, 1), strength=30)
     bulb = mat("bulb", (1, 0.85, 0.6, 1), emission=(1.0, 0.72, 0.42, 1), strength=18 if WX["lamps"] else 0.0)
-    crust = color_noise_mat("crust", "#5e3014", "#b8793c", rough=0.7, scale=18, bump=0.8)
     flour = mat("flour", srgb("#eee8dc"), rough=0.95)
     egg_mats = [mat(f"egg_{i}", srgb(c), rough=0.5) for i, c in enumerate(("#b67e55", "#a86f48", "#c29169", "#9c6640"))]
     oats = color_noise_mat("oats", "#7f6038", "#c2a26c", rough=0.85, scale=140, bump=1.0)
     soil = color_noise_mat("soil", "#2c2416", "#514331", rough=0.95, scale=60, bump=0.5)
-    kale = color_noise_mat("kale", "#1f3520", "#3f5e35", rough=0.55, scale=30, bump=0.4, sss=0.1)
+    kale = color_noise_mat("kale", "#24382a", "#4d6a4a", rough=0.5, scale=30, bump=0.4, sss=0.0)   # blue-green
     greens = color_noise_mat("greens", "#3f6b2a", "#6f9a3c", rough=0.5, scale=25, bump=0.2, sss=0.15)
     carrot = color_noise_mat("carrot", "#b9541c", "#d9772e", rough=0.6, scale=50, bump=0.3, sss=0.2)
     beet = color_noise_mat("beetroot", "#3e0f1c", "#6e1f2e", rough=0.55, scale=40, bump=0.3)
@@ -485,15 +782,30 @@ def build():
     lx = -0.075                                    # the leaf sits in the middle of the wall, as in the hallway build
     door_parts = [box_span("hall_leaf", lx - lt / 2, lx + lt / 2, hy0, hy0 + lw, 0.012, 0.012 + lh, door_oak, bevel=0.004)]
     fx = lx + lt / 2
-    for py in (0.235, lw - 0.235):
-        for pz0, pz1 in ((0.2, 0.95), (1.12, 1.95)):
-            door_parts.append(box_span(f"hall_panel_{py}_{pz0}", fx, fx + 0.006, hy0 + py - 0.14, hy0 + py + 0.14,
-                                       pz0 + 0.02, pz1 - 0.02, door_oak, bevel=0.008))
-            for nm, a0, a1, b0, b1 in (("l", py - 0.17, py - 0.145, pz0, pz1), ("r", py + 0.145, py + 0.17, pz0, pz1),
-                                       ("b", py - 0.17, py + 0.17, pz0, pz0 + 0.025), ("t", py - 0.17, py + 0.17, pz1 - 0.025, pz1)):
-                door_parts.append(box_span(f"hall_mould_{py}_{pz0}_{nm}", fx, fx + 0.014, hy0 + a0, hy0 + a1, b0, b1,
-                                           door_dark, bevel=0.005))
-    door_parts.append(cyl("hall_knob", (fx + 0.035, hy0 + lw - 0.07, 1.0), 0.028, 0.05, brass_worn, rot=(0, math.radians(90), 0)))
+    # Stiles and rails stand 24 mm proud of the panels; a moulding steps down inside each opening to a raised field
+    sx_, pw_ = 0.024, 0.17
+    cols_ = [(py - pw_, py + pw_) for py in (0.235, lw - 0.235)]
+    rows_ = [(0.2, 0.95), (1.12, 1.95)]
+    door_parts.append(box_span("hall_stile_l", fx, fx + sx_, hy0, hy0 + cols_[0][0], 0.012, 0.012 + lh, door_oak, bevel=0.004))
+    door_parts.append(box_span("hall_muntin", fx, fx + sx_, hy0 + cols_[0][1], hy0 + cols_[1][0], 0.012, 0.012 + lh, door_oak, bevel=0.004))
+    door_parts.append(box_span("hall_stile_r", fx, fx + sx_, hy0 + cols_[1][1], hy0 + lw, 0.012, 0.012 + lh, door_oak, bevel=0.004))
+    for nm, z0, z1 in (("bottom", 0.012, rows_[0][0]), ("lock", rows_[0][1], rows_[1][0]), ("top", rows_[1][1], 0.012 + lh)):
+        for c0, c1 in cols_:
+            door_parts.append(box_span(f"hall_rail_{nm}_{c0:.2f}", fx, fx + sx_, hy0 + c0 - 0.004, hy0 + c1 + 0.004, z0, z1,
+                                       door_oak, bevel=0.004))
+    for c0, c1 in cols_:
+        for pz0, pz1 in rows_:
+            tag = f"{c0:.2f}_{pz0}"
+            mw = 0.018                              # the moulding: 16 mm proud, bevelled down into the opening
+            for nm, a0, a1, b0, b1 in (("l", c0, c0 + mw, pz0, pz1), ("r", c1 - mw, c1, pz0, pz1),
+                                       ("b", c0, c1, pz0, pz0 + mw), ("t", c0, c1, pz1 - mw, pz1)):
+                door_parts.append(box_span(f"hall_mould_{tag}_{nm}", fx, fx + 0.016, hy0 + a0, hy0 + a1, b0, b1,
+                                           door_dark, bevel=0.007))
+            # the fielded panel: a flat margin at the leaf face, then a raised field with wide bevelled edges
+            door_parts.append(box_span(f"hall_field_{tag}", fx, fx + 0.011, hy0 + c0 + 0.055, hy0 + c1 - 0.055,
+                                       pz0 + 0.055, pz1 - 0.055, door_oak, bevel=0.01))
+    door_parts.append(cyl("hall_knob", (fx + sx_ + 0.03, hy0 + lw - 0.07, 1.0), 0.028, 0.05, brass_worn, rot=(0, math.radians(90), 0)))
+    door_parts.append(cyl("hall_rose", (fx + sx_ + 0.004, hy0 + lw - 0.07, 1.0), 0.03, 0.008, brass_worn, rot=(0, math.radians(90), 0)))
     for name, y0, y1, z0, z1 in (("a", HD_Y - HD_W / 2 - 0.08, HD_Y - HD_W / 2, 0, HD_H + 0.08),
                                  ("b", HD_Y + HD_W / 2, HD_Y + HD_W / 2 + 0.08, 0, HD_H + 0.08),
                                  ("t", HD_Y - HD_W / 2 - 0.08, HD_Y + HD_W / 2 + 0.08, HD_H, HD_H + 0.09)):
@@ -727,19 +1039,16 @@ def build():
                        lambda u: 0.007, m_, segs=10, n=12)
         stock += [j, handle_]
     # two lower shelves: jars of grains, pulses, nuts and seeds
-    fills = [("#d8c9a3", 1.68), ("#c8642a", 1.68), ("#e3cf9a", 1.68), ("#6e4a2b", 1.68), ("#7a8a3e", 1.68),
-             ("#d9b13a", 1.3), ("#b07a4a", 1.3), ("#e8dcc0", 1.3), ("#4a3326", 1.3), ("#9a6b3a", 1.3)]
+    fills = [("barley", "#d8c9a3", 1.68), ("lentil", "#c8642a", 1.68), ("chickpea", "#e3cf9a", 1.68), ("hazelnut", "#8a5a32", 1.68),
+             ("pumpkin", "#6f8a3e", 1.68), ("split_pea", "#d9b13a", 1.3), ("almond", "#b07a4a", 1.3), ("rice", "#ece2c8", 1.3),
+             ("lentil", "#4d4a3a", 1.3), ("walnut", "#a8794a", 1.3)]
     xs = {1.68: [dx0 + 0.48, dx0 + 0.72, dx0 + 0.96, dx0 + 1.32, dx0 + 1.56], 1.3: [dx0 + 0.2, dx0 + 0.44, dx0 + 0.86, dx0 + 1.1, dx0 + 1.5]}
     count = {1.68: 0, 1.3: 0}
-    for i, (colour, z) in enumerate(fills):
+    for i, (kind, colour, z) in enumerate(fills):
         x = xs[z][count[z]]
         count[z] += 1
         r, h = (0.06, 0.2) if i % 3 else (0.065, 0.24)
-        stock.append(cyl(f"jar_{i}", (x, 0.14, z + h / 2 + 0.002), r, h, glass, bevel=0.01))
-        f = color_noise_mat(f"fill_{i}", colour, colour, rough=0.9, scale=120, bump=0.8)
-        next(n for n in f.node_tree.nodes if n.type == "VALTORGB").color_ramp.elements[0].color = tuple(c * 0.6 for c in srgb(colour)[:3]) + (1,)
-        cyl(f"jar_fill_{i}", (x, 0.14, z + h * 0.37), r * 0.9, h * 0.7, f, bevel=0)
-        cyl(f"jar_lid_{i}", (x, 0.14, z + h + 0.012), r * 0.88, 0.022, honey if i % 2 else chrome)
+        stock += grain_jar(f"jar_{i}", x, 0.14, z + 0.002, r, h, kind, colour, glass, honey if i % 2 else chrome, seed=300 + i)
     for k in range(3):
         stock.append(cyl(f"green_bowl_{k}", (dx1 - 0.35, 0.14, 1.3 + 0.025 + k * 0.042), 0.1 - k * 0.012, 0.042, green_glaze, bevel=0.01))
     # on the worktop: the oil lamp (lit after dark and in grey weather), a crock of spoons, a bread crock
@@ -763,6 +1072,7 @@ def build():
 
     # Phonograph on its side table: walnut case, black record, brass horn, a winding crank
     px, py = 0.9, 0.32
+    old_brass = aged_brass_mat("aged_brass")          # the horn read as copper in plain brass
     st = model("side_table_01", (px, py, 0), rot_z=0)
     st.scale = (1.15, 1.15, 1.37)
     bpy.context.view_layer.update()
@@ -775,7 +1085,7 @@ def build():
     for sx in (-1, 1):
         for sy in (-1, 1):
             ph.append(sphere(f"ph_foot_{sx}{sy}", (sx * 0.19, sy * 0.17, 0.012), 0.016, walnut, scale=(1, 1, 0.8)))
-    plate = cyl("ph_badge", (0, 0.183, 0.12), 0.045, 0.004, brass_worn, rot=(math.radians(90), 0, 0))
+    plate = cyl("ph_badge", (0, 0.183, 0.12), 0.045, 0.004, old_brass, rot=(math.radians(90), 0, 0))
     plate.scale = (1, 0.6, 1)
     ph.append(plate)
     ph.append(cyl("ph_platter", (0.0, 0.02, 0.212), 0.15, 0.012, iron, bevel=0.002))
@@ -783,17 +1093,17 @@ def build():
     ph.append(cyl("ph_label", (0.0, 0.02, 0.2225), 0.042, 0.001, label_mat, bevel=0))
     ph.append(cyl("ph_spindle", (0.0, 0.02, 0.23), 0.004, 0.02, chrome, verts=12, bevel=0))
     # tone arm: from a post at the back right, round to the soundbox resting on the record
-    ph.append(cyl("ph_post", (0.15, -0.13, 0.24), 0.018, 0.07, brass, bevel=0.003))
-    ph.append(tube("ph_arm", [(0.15, -0.13, 0.27), (0.12, -0.02, 0.27), (0.08, 0.06, 0.26)], lambda u: 0.012 - 0.004 * u, brass, segs=14, n=12))
-    ph.append(cyl("ph_soundbox", (0.07, 0.07, 0.25), 0.03, 0.014, brass_worn, rot=(0, math.radians(90), 0)))
+    ph.append(cyl("ph_post", (0.15, -0.13, 0.24), 0.018, 0.07, old_brass, bevel=0.003))
+    ph.append(tube("ph_arm", [(0.15, -0.13, 0.27), (0.12, -0.02, 0.27), (0.08, 0.06, 0.26)], lambda u: 0.012 - 0.004 * u, old_brass, segs=14, n=12))
+    ph.append(cyl("ph_soundbox", (0.07, 0.07, 0.25), 0.03, 0.014, old_brass, rot=(0, math.radians(90), 0)))
     # horn: up from the post, bending forward into a scalloped bell
     horn = tube("ph_horn", [(0.15, -0.13, 0.27), (0.15, -0.16, 0.38), (0.1, -0.1, 0.5), (0.0, 0.02, 0.6), (-0.05, 0.14, 0.68)],
-                lambda u: 0.016 + 0.015 * u + 0.19 * u ** 4.5, brass, segs=48, n=70, open_end=True, petals=8, petal_amp=0.07)
+                lambda u: 0.016 + 0.015 * u + 0.19 * u ** 4.5, old_brass, segs=48, n=70, open_end=True, petals=8, petal_amp=0.07)
     ph.append(horn)
     # crank on the right side
-    ph.append(cyl("ph_crank_boss", (0.205, 0.0, 0.12), 0.025, 0.012, brass, rot=(0, math.radians(90), 0)))
-    ph.append(cyl("ph_crank_shaft", (0.25, 0.0, 0.12), 0.006, 0.08, brass, verts=12, rot=(0, math.radians(90), 0)))
-    ph.append(box_span("ph_crank_arm", 0.285, 0.295, -0.005, 0.005, 0.12, 0.22, brass))
+    ph.append(cyl("ph_crank_boss", (0.205, 0.0, 0.12), 0.025, 0.012, old_brass, rot=(0, math.radians(90), 0)))
+    ph.append(cyl("ph_crank_shaft", (0.25, 0.0, 0.12), 0.006, 0.08, old_brass, verts=12, rot=(0, math.radians(90), 0)))
+    ph.append(box_span("ph_crank_arm", 0.285, 0.295, -0.005, 0.005, 0.12, 0.22, old_brass))
     ph.append(cyl("ph_crank_grip", (0.32, 0.0, 0.215), 0.012, 0.06, walnut, rot=(0, math.radians(90), 0)))
     phono = group("phonograph", Matrix.Translation((px, py, ttop)) @ Matrix.Rotation(math.radians(-yaw), 4, "Z"), ph)
     hotspot("fl-phonograph", "The phonograph", meshes_of(phono), kind="interactive")
@@ -833,28 +1143,46 @@ def build():
     hotspot("fl-eggs", "The eggs", eggs, kind="ambient")
     # loaf on a board with a bread knife, flour on the board
     board = model("wooden_cutting_board", (cx + 0.05, cy - 0.15, z_on), rot_z=8, scale=1.05)
-    loaf = sphere("loaf", (cx + 0.05, cy - 0.15, z_on + 0.06), 0.14, crust, scale=(1, 0.88, 0.55))
-    bumpy(loaf, strength=0.022, size=0.12, subsurf=2)
+    bpy.context.view_layer.update()
+    board_top = max((o.matrix_world @ Vector(c)).z for o in meshes_of(board) for c in o.bound_box)
+    loaf = boule("loaf", (cx + 0.05, cy - 0.15, board_top + 0.02), R=0.13, H=0.1)
+    loaf.rotation_euler = (0, 0, math.radians(8))
     box("knife_blade", (cx + 0.12, cy - 0.27, z_on + 0.045), (0.2, 0.025, 0.002), chrome, bevel=0.001).rotation_euler = (0, 0, math.radians(-6))
     box("knife_handle", (cx - 0.02, cy - 0.26, z_on + 0.048), (0.11, 0.022, 0.016), walnut, bevel=0.005).rotation_euler = (0, 0, math.radians(-6))
-    for k in range(12):
-        sphere(f"flour_{k}", (cx + rnd.uniform(-0.15, 0.25), cy - 0.15 + rnd.uniform(-0.12, 0.12), z_on + 0.042), 0.008, flour,
-               scale=(rnd.uniform(1, 3), rnd.uniform(1, 2), 0.15))
+    for k in range(260):                            # a dusting of flour round the loaf, finer toward the edges
+        a, r = rnd.uniform(0, 6.28), 0.13 + 0.12 * rnd.random() ** 1.5
+        sphere(f"flour_{k}", (cx + 0.05 + r * math.cos(a), cy - 0.15 + 0.8 * r * math.sin(a), board_top + 0.0005),
+               rnd.uniform(0.0006, 0.0018) * (1.3 - r * 2), flour, scale=(rnd.uniform(1, 2.2), rnd.uniform(1, 1.6), 0.12))
     # wooden bowl of kale, greens and herbs just picked
     gb_at = (cx - 0.35, cy + 0.2)
     gbowl = lathe("greens_bowl", [(0.0, 0.0), (0.07, 0.0), (0.12, 0.04), (0.14, 0.09), (0.145, 0.1)], green_glaze,
                   (*gb_at, z_on), thick=0.006)
     gs = [gbowl]
-    for i in range(20):                             # curly kale: short, frilly, flopping over the rim
-        a = i * 2.39996
-        d_ = Vector((math.cos(a) * 0.45, math.sin(a) * 0.45, 1.0))
-        gs.append(leaf(f"bowl_kale_{i}", (gb_at[0] + 0.05 * math.cos(a), gb_at[1] + 0.05 * math.sin(a), z_on + 0.05), d_,
-                       rnd.uniform(0.17, 0.25), rnd.uniform(0.09, 0.13), kale, crinkle=0.024, curl=0.7, seed=100 + i,
-                       nx=12, ny=18))
-    for i in range(10):
+    kale_rib = mat("kale_rib", srgb("#a9b98f"), rough=0.5)
+    for i in range(36):                             # curly kale: broad, round-ended, tightly frilled, mounded and flopping over the rim
+        a = i * 2.39996 + rnd.uniform(-0.3, 0.3)
+        inner = i < 12
+        r0 = rnd.uniform(0.0, 0.04) if inner else rnd.uniform(0.04, 0.09)
+        out = rnd.uniform(0.2, 0.6) if inner else rnd.uniform(0.7, 1.3)
+        gs.append(leaf(f"bowl_kale_{i}", (gb_at[0] + r0 * math.cos(a), gb_at[1] + r0 * math.sin(a), z_on + rnd.uniform(0.05, 0.08)),
+                       (math.cos(a) * out, math.sin(a) * out, 1.0), rnd.uniform(0.08, 0.11) if inner else rnd.uniform(0.1, 0.13),
+                       rnd.uniform(0.08, 0.11), kale, crinkle=0.01, curl=rnd.uniform(0.3, 0.6) if inner else rnd.uniform(0.6, 0.9),
+                       seed=100 + i, nx=18, ny=60, frill=0.011, frill_waves=rnd.uniform(9, 12), rib=kale_rib, blunt=True))
+    parsley = color_noise_mat("parsley", "#3a7424", "#5c9a32", rough=0.42, scale=30, bump=0.15)
+    stalk = mat("parsley_stalk", srgb("#6f9a45"), rough=0.5)
+    for i in range(12):                             # flat-leaf parsley: thin stalks, each with three-lobed leaflets
         a = rnd.uniform(0, 6.28)
-        gs.append(leaf(f"bowl_herb_{i}", (gb_at[0] + 0.08 * math.cos(a), gb_at[1] + 0.08 * math.sin(a), z_on + 0.05),
-                       (math.cos(a), math.sin(a), 0.7), 0.12, 0.03, greens, crinkle=0.004, curl=0.6, seed=200 + i))
+        r0 = rnd.uniform(0.03, 0.08)
+        s0 = Vector((gb_at[0] + r0 * math.cos(a), gb_at[1] + r0 * math.sin(a), z_on + 0.06))
+        d0 = Vector((math.cos(a) * rnd.uniform(0.4, 0.9), math.sin(a) * rnd.uniform(0.4, 0.9), 1.0)).normalized()
+        L0 = rnd.uniform(0.08, 0.12)
+        tip = s0 + d0 * L0 + Vector((0, 0, -0.015))
+        gs.append(tube(f"parsley_stalk_{i}", [s0, s0 + d0 * L0 * 0.55, tip], lambda u: 0.0016 - 0.0006 * u, stalk, segs=8, n=10))
+        for k, turn in enumerate((-0.9, 0.0, 0.9)):     # a leaflet at the tip and one either side
+            dl = (d0 + Vector((-d0.y, d0.x, 0)) * turn).normalized()
+            dl.z -= 0.25
+            gs.append(leaf(f"parsley_{i}_{k}", tip, dl, rnd.uniform(0.032, 0.042), rnd.uniform(0.028, 0.036), parsley,
+                           crinkle=0.002, curl=0.35, seed=200 + i * 3 + k, nx=10, ny=16, lobes=3, lobe_amp=0.35))
     hotspot("fl-greens", "The greens", gs, kind="ambient")
     # bowl of oats and seeds, a few spilled
     ob_at = (cx + 0.5, cy - 0.05)
