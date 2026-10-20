@@ -546,7 +546,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ck-track { display: block; touch-action: none; cursor: pointer; border-radius: 14px; user-select: none; -webkit-user-select: none; outline-offset: 2px; }
 .ck-track:focus-visible { outline: 3px solid var(--berry); }
 .ck-svg { display: block; width: 100%; height: auto; overflow: visible; }
-.ck-string .ck-track { min-height: 74px; max-width: 340px; }
+.ck-string .ck-track { min-height: 52px; max-width: 340px; }
 .ck-mark { fill: var(--line); }
 .ck-mark.on { fill: var(--berry); }
 .ck-thread { stroke: #b88a4a; stroke-width: 3; stroke-linecap: round; transition: d .18s ease-out; }
@@ -574,6 +574,6 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ck-readout { min-height: 22px; margin-top: 2px; text-align: center; font: 600 15px 'Quicksand'; color: var(--berry); }
 .ck-string .ck-readout { text-align: left; }
 .ck-hint { margin: 0; text-align: center; } .ck-string .ck-hint { text-align: left; }
-.ck-ctl.answered .ck-hint { visibility: hidden; }
+.ck-ctl:not(.answered) .ck-readout { font-weight: 500; font-size: 14px; color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) { .ck-thread, .ck-ball-body, .ck-bead, .ck-needle { transition: none; } }
 @media (max-width: 400px) { .ck-end { font-size: 12px; } .ck-knob { width: 108px; height: 108px; } }

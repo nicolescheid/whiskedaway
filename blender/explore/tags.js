@@ -13,7 +13,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you', lines = {}, extra = {} }) {
   const W = checkinWords(lines);
   // The check-in's answers (checkin.js): a small picker like energy's, and the same setter as the desk's sheet (choose.answer)
-  const answer = (k, icon, name, ids) => ({ icon, name, title: W.rows[k], word: v => (W[k][v] || '').toLowerCase(),
+  const answer = (k, icon, name, ids) => ({ icon, name, title: W.rows[k], word: v => (W[k][v] || '').toLowerCase().replace(/^i'/, "I'"),
     options: () => ids.map(id => ({ id, label: W[k][id] })), pick: id => choose.answer(k, id) });
   // Each kind: its icon, its words for a value, the picker's options and how a pick is made
   const KINDS = {

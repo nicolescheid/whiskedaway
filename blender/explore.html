@@ -675,7 +675,7 @@ import { createCook } from './explore/cook.js';
 import { createChiaMix, chiaData } from './explore/chia-mix.js';
 import { createSweetSheets, sweetData, swapLines, sweetSteer, sweetTold, sweetTags } from './explore/sweet-spells.js';
 import { createList } from './explore/list.js';
-import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine, servingsWords } from './explore/checkin.js';
+import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine, servingsWords, heardWords } from './explore/checkin.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 import { createErwina } from './explore/erwina.js';
 
@@ -1818,8 +1818,8 @@ function checkedIn({ after, changed, from, forgot }) {
   }
   const one = changed.length === 1 && after[changed[0]] ? changed[0] : null;
   // Several answers: name two of them (QA 6/7), servings, then time, then confidence; the candle and weather say their own
-  const PHRASE = { servings: v => (v === '1' ? 'just you' : `cooking for ${servingsWords(CW, v)}`), time: v => timeWords(CW, v),
-                   confidence: v => String(CW.confidence?.[v] || '').toLowerCase() };
+  const PHRASE = { servings: v => heardWords(CW, 'servings', v), time: v => heardWords(CW, 'time', v) || timeWords(CW, v),
+                   confidence: v => heardWords(CW, 'confidence', v) || String(CW.confidence?.[v] || '').toLowerCase() };
   const two = ['servings', 'time', 'confidence'].filter(k => changed.includes(k) && after[k]).map(k => PHRASE[k](after[k])).filter(Boolean).slice(0, 2);
   const named = two.length === 2 ? (CW.ack.checkinTwo || "{a}, and {b}. I'll keep all that in mind.").replace('{a}', two[0]).replace('{b}', two[1]) : '';
   const line = !one ? named || CW.ack.checkin : one === 'energy' ? world.energies?.[after.energy]?.moment : one === 'weather' ? world.weathers[after.weather]?.moment

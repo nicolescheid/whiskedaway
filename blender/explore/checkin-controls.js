@@ -20,13 +20,13 @@ function svg(tag, attrs = {}, parent) {
  * Nothing pulled = not answered.
  */
 export function patienceString({ ids, labels, value = null, name, unset, hint, onChange }) {
-  const W = 300, H = 74, X0 = 46, X1 = 276, Y = 40;       // track from the ball's edge to the far end
+  const W = 300, H = 52, X0 = 46, X1 = 276, Y = 26;       // track from the ball's edge to the far end
   const xOf = i => (i < 0 ? X0 : X0 + (X1 - X0) * ((i + 1) / ids.length));   // stops at 1/4 ... 4/4 of the track; the start is "nothing pulled"
   const root = document.createElement('div');
   root.className = 'ck-ctl ck-string';
   root.innerHTML = `<div class="ck-track" role="slider" tabindex="0" aria-label="${name}" aria-orientation="horizontal"
       aria-valuemin="0" aria-valuemax="${ids.length}" aria-valuenow="0" aria-valuetext="${unset}"></div>
-    <div class="ck-readout" aria-hidden="true"></div>${hint ? `<p class="ck-hint small">${hint}</p>` : ''}`;
+    <div class="ck-readout" aria-hidden="true"></div>`;
   const track = root.querySelector('.ck-track'), readout = root.querySelector('.ck-readout');
   const s = svg('svg', { viewBox: `0 0 ${W} ${H}`, class: 'ck-svg', 'aria-hidden': 'true', focusable: 'false' }, track);
   // stop marks
@@ -52,7 +52,7 @@ export function patienceString({ ids, labels, value = null, name, unset, hint, o
     const text = i < 0 ? unset : labels[ids[i]];
     track.setAttribute('aria-valuenow', String(i + 1));
     track.setAttribute('aria-valuetext', text);
-    readout.textContent = i < 0 ? '' : text;
+    readout.textContent = i < 0 ? (hint || '') : text;
     root.classList.toggle('answered', i >= 0);
   };
   const apply = i => {
@@ -71,7 +71,7 @@ export function patienceString({ ids, labels, value = null, name, unset, hint, o
   };
   let dragging = false;
   track.addEventListener('pointerdown', e => {
-    dragging = true; track.setPointerCapture(e.pointerId); track.classList.add('drag'); track.focus({ preventScroll: true });
+    dragging = true; track.setPointerCapture(e.pointerId); track.classList.add('drag');
     apply(fromX(e.clientX));
   });
   track.addEventListener('pointermove', e => { if (dragging) apply(fromX(e.clientX)); });
@@ -100,7 +100,7 @@ export function confidenceDial({ ids, labels, value = null, name, unset, hint, o
       <div class="ck-track ck-knob" role="slider" tabindex="0" aria-label="${name}" aria-orientation="horizontal"
         aria-valuemin="0" aria-valuemax="${ids.length}" aria-valuenow="0" aria-valuetext="${unset}"></div>
       <span class="ck-end ck-end-r" aria-hidden="true">${ends?.[1] || ''}</span></div>
-    <div class="ck-readout" aria-hidden="true"></div>${hint ? `<p class="ck-hint small">${hint}</p>` : ''}`;
+    <div class="ck-readout" aria-hidden="true"></div>`;
   const track = root.querySelector('.ck-track'), readout = root.querySelector('.ck-readout');
   const S = 120, C = 60, R = 38;
   const s = svg('svg', { viewBox: `0 0 ${S} ${S}`, class: 'ck-svg', 'aria-hidden': 'true', focusable: 'false' }, track);
@@ -121,7 +121,7 @@ export function confidenceDial({ ids, labels, value = null, name, unset, hint, o
     const text = i < 0 ? unset : labels[ids[i]];
     track.setAttribute('aria-valuenow', String(i + 1));
     track.setAttribute('aria-valuetext', text);
-    readout.textContent = i < 0 ? '' : text;
+    readout.textContent = i < 0 ? (hint || '') : text;
     root.classList.toggle('answered', i >= 0);
   };
   const apply = i => {
@@ -143,7 +143,7 @@ export function confidenceDial({ ids, labels, value = null, name, unset, hint, o
   };
   let dragging = false;
   track.addEventListener('pointerdown', e => {
-    dragging = true; track.setPointerCapture(e.pointerId); track.classList.add('drag'); track.focus({ preventScroll: true });
+    dragging = true; track.setPointerCapture(e.pointerId); track.classList.add('drag');
     const k = fromPoint(e.clientX, e.clientY);
     if (k !== undefined) apply(k);
     else apply(idxOf(value) < 0 ? 0 : (idxOf(value) + 1) % ids.length);   // a tap on the knob's face turns it to the next mark
