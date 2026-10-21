@@ -11,8 +11,7 @@
   "objects": {
     "fl-table": { "label": "Lay the Table", "ref": "the breakfast table", "type": "submit", "tool": "generate", "always_visible": true,
                   "themes": ["nourishing", "breakfast", "eggs", "meal", "whole-food"],
-                  "tool_title": "Lay the Table",
-                  "tool_text": "I can't lay the table with a full recipe yet. Soon. Keep looking around and I'll leave you ideas." },
+                  "tool_title": "Lay the Table" },
     "fl-eggs": { "label": "The eggs", "ref": "the bowl of eggs", "type": "ambient", "themes": ["eggs", "protein", "breakfast"],
                  "moment": "From the farm up the road. The hens are laying well this week.", "moments": ["Brown eggs, mostly. The hens don't take requests.", "I keep them out of the fridge. Hard to say why."] },
     "fl-greens": { "label": "The greens", "ref": "the bowl of greens", "type": "ambient", "themes": ["green", "garden", "fresh", "nourishing"],

@@ -15,8 +15,7 @@
   },
   "objects": {
     "pudding-jars": { "label": "Mix an experiment", "ref": "the pudding jars on the counter", "type": "submit", "tool": "generate", "tool_title": "Mix an experiment",
-                      "themes": ["breakfast", "no-cook", "hands-on", "routine", "overnight"],
-                      "tool_text": "I can't mix you a full experiment yet. Soon. Keep looking around and I'll leave you ideas." },
+                      "themes": ["breakfast", "no-cook", "hands-on", "routine", "overnight"] },
     "drawers": { "label": "Pick your add-ins", "map": "The drawers", "ref": "the wall of drawers", "type": "interactive", "tool": "add-ins",
                  "themes": ["fruity", "crunchy", "spiced", "learning", "vitamins"] },
     "fridge": { "label": "Choose a milk", "map": "The fridge", "ref": "the display fridge", "type": "interactive", "tool": "milk",
