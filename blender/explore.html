@@ -1734,14 +1734,29 @@ async function recipeFetch(p) {
   let timer;
   try { await Promise.race([getPass(), new Promise((_, no) => { timer = setTimeout(() => no(new Error('timeout: no visitor pass')), PASS_WAIT); })]); }
   finally { clearTimeout(timer); }
-  return genieFetch('/recipe', p, { signal: AbortSignal.timeout(45000) });
+  return genieFetch(p.rewrite ? '/rewrite' : '/recipe', p, { signal: AbortSignal.timeout(45000) });   // a re-write has its own route and limit
+}
+// Measurements (recipe-tools): the visitor's choice for this visit, else from the Map's country (the US measures in cups)
+const unitsNow = () => visit.get('units') || ((visit.get('country') || mapDefault()) === 'US' ? 'cups' : 'metric');
+// Swaps on a written recipe's ingredient: the swap table (gemma-lines.json swaps.table, content's), matched on the ingredient's
+// key or a word of its name; sweeteners also offer Sweet Spells' "Sweeten with" list (the sugar-swap table), never free text
+const SWEETENER_KEYS = { sugar: 'sugar', 'caster sugar': 'sugar', 'brown sugar': 'sugar', honey: 'honey', 'maple syrup': 'maple', agave: 'agave', 'agave syrup': 'agave' };
+function swapsFor(ing) {
+  const table = LINES.swaps?.table || {}, key = String(ing.key || '').toLowerCase(), name = String(ing.item || '').toLowerCase();
+  const hit = table[key] ? key : Object.keys(table).filter(k => !k.startsWith('_')).find(k => new RegExp(`\\b${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?\\b`).test(name));
+  const xs = [...(hit ? table[hit] : [])];
+  const sw = SWEETENER_KEYS[key] || SWEETENER_KEYS[hit];
+  if (sw) for (const [id, label] of Object.entries(sweet.data.sweetenWith.options)) if (id !== sw && id !== 'sweeteners' && !xs.includes(label)) xs.push(label);
+  return xs.filter(x => x.toLowerCase() !== name).slice(0, 6);
 }
 const writer = createWriteOut({
   book, visit, lines: LINES.write_out, track, bucket: n => (n >= 2 ? '2-3' : String(n)),
   // window.__recipeFetch is a test seam (scripted checks without the Worker); the site always uses the genie
   fetchRecipe: payload => (window.__recipeFetch || recipeFetch)(payload),
+  fetchRewrite: payload => (window.__recipeFetch || recipeFetch)(payload),      // the seam sees payload.rewrite
+  units: unitsNow, setUnits: u => visit.set('units', u), swapsFor,
   payloadFor: rec => ({
-    tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room,
+    tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room, units: unitsNow(),
     idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
             method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why }, mix: rec.mix,   // mix: the Chiapothecary's own jar (labels)
     energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,

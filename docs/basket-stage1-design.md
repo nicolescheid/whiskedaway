@@ -65,3 +65,15 @@ Placeholder keys under `basket` in gemma-lines.json (listed in the report); the 
   "Shopping list" (book.shopping_list) in the book's Contents, cook mode and the list's heading.
 - New keys: book.{title, chip_long, chip_short, loose_title, how_title, how[3], to_basket, first_use_title, first_use, got_it,
   shopping_list}; basket.{add_one, add_many, read_less, leaflet_need, leaflet_how, close}; write_out.{more_diets, diet_labels.*}.
+
+## Recipe tools: measurements, swaps, re-writes (22 Oct)
+- Measurements: write_out.units_* ; the visit's `units` (metric | cups | both), default from the Map's country (US → cups,
+  else metric). Checkout: "In metric. Change" beside the diet line. A written recipe stores `units` and says "Written in …
+  Change"; choosing another offers "Re-write it in …".
+- Swaps: on a written recipe, an ingredient with swaps is a button; its swaps come from gemma-lines.json `swaps.table`
+  (key = the ingredient's base word, also matched as a word in its name; up to 6 short swaps), and sugar/honey/maple/agave
+  also get Sweet Spells' "Sweeten with" list. Picking one re-writes the recipe with it; the page keeps the old one until the
+  new one lands; a failure shows write_out.rewrite_failed and isn't counted.
+- Cost rule (PM 4): re-writes don't use the 3 a day; 5 a day per device (localStorage `wa-rewrites`), the visitor pass as
+  ever, and the Worker's /rewrite route with its own REWRITE_LIMIT (3 a minute per visitor). A true daily cap on the server
+  would need storage (KV or D1), which the Worker doesn't have yet. Event: recipe_rewrite {kind: swap|units, outcome, remaining}.

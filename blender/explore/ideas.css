@@ -631,3 +631,15 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-firstuse h4 { margin: 0 0 4px; }
 .bk-firstuse p { margin: 0 0 4px; font: 14px/1.45 'Quicksand'; }
 .bk-firstuse .bk-gotit { min-height: 44px; }
+
+/* Recipe tools (writeout.js): tap an ingredient for its swaps; measurements line. Phone first: 44 px targets */
+.bk-ingbtn { background: none; border: 0; padding: 4px 0; min-height: 44px; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  text-decoration: underline dotted rgba(139, 77, 92, .5); text-underline-offset: 3px; }
+.bk-ingbtn[aria-expanded="true"] { color: var(--berry); }
+.bk-swaps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 2px 0 8px; }
+.bk-swaps p { flex-basis: 100%; margin: 0; }
+.bk-swaps [data-swap] { min-height: 44px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 500 13px 'Quicksand'; }
+.bk-swaps .link, .bk-unitsline .link { min-height: 44px; padding: 0 6px; }
+.bk-unitsline { margin: 2px 0 4px; }
+.bk-units button[data-units] { min-height: 44px; }
+.bk-swaphint { margin: 0 0 2px; }

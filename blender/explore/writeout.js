@@ -33,6 +33,22 @@ function spend() {
   try { localStorage.setItem(ALLOW, JSON.stringify(allowMem)); } catch { /* blocked: memory only */ }
 }
 
+// Re-writes (recipe-tools, PM 4's cost rule): a swap or other measurements on a recipe already written. They don't use the 3 a
+// day; they have their own 5 a day on this device (localStorage `wa-rewrites`), and the Worker's /rewrite its own rate limit
+const REW = 'wa-rewrites';
+export const REWRITE_CAP = 5;
+let rewMem = { day: today(), n: 0 };
+function rewritesToday() {
+  try { const a = JSON.parse(localStorage.getItem(REW) || 'null'); if (a) rewMem = a; } catch { /* blocked: memory */ }
+  return rewMem.day === today() ? Number(rewMem.n) || 0 : 0;
+}
+function spendRewrite() {
+  rewMem = { day: today(), n: rewritesToday() + 1 };
+  try { localStorage.setItem(REW, JSON.stringify(rewMem)); } catch { /* blocked: memory only */ }
+}
+// Measurements (Nicole, 22 Oct): what the write-out uses; labels from write_out.units_labels
+export const UNITS = [['metric', 'Metric (grams, ml)'], ['cups', 'Cups and spoons'], ['both', 'Both']];
+
 /** "Save as PDF / print": the recipe alone on a print-only sheet (the print stylesheet hides the rest), then the browser's print */
 export function printRecipe(rec, f) {
   let sheet = document.getElementById('print-sheet');
@@ -70,7 +86,9 @@ export function cleanRecipe(r) {
            ingredients, steps, tip: s(r.tip, 240) };
 }
 
-export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange, onLanded, onAllowanceReached }) {
+export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewrite, payloadFor, track, bucket, onWritten, onDiet, onChange, onLanded, onAllowanceReached,
+                                 units = () => 'metric', setUnits, swapsFor = () => [] }) {
+  // units(): the visitor's measurements (set, or from the Map's country); swapsFor(ingredient): the swap table's options for it
   const L = {
     button: lines.button || 'Get the full recipe',
     remaining: lines.remaining || 'Gemma writes it for you (3 free a day, {n} left today).',
@@ -83,7 +101,25 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     change: lines.change_diets || 'Change',
     failed: lines.failed || "My pen's run dry. The short version's above. Try again in a bit.",
     diet: lines.diet_question || 'Anything I should avoid?',
+    unitsLine: lines.units_line || 'In {u}.',
+    unitsWritten: lines.units_written || 'Written in {u}.',
+    unitsUnknown: lines.units_unknown || 'Measurements:',
+    unitsQuestion: lines.units_question || 'How do you measure?',
+    unitsRewrite: lines.units_rewrite || 'Re-write it in {u}',
+    rewritesLeft: lines.rewrites_left || "Re-writes don't use your 3 a day ({n} left today).",
+    rewritesNone: lines.rewrites_none || "That's my five re-writes for today. I'll do more tomorrow.",
+    rewriting: lines.rewriting || 'Gemma is re-writing it…',
+    rewriteFailed: lines.rewrite_failed || "That one didn't take. Here's the recipe as it was. Try again in a bit.",
+    swapHint: lines.swap_hint || 'Tap an ingredient to swap it.',
+    swapTitle: lines.swap_title || 'Swap {item} for:',
+    swapCancel: lines.swap_cancel || 'Cancel',
   };
+  const ulabel = id => lines.units_labels?.[id] || UNITS.find(([x]) => x === id)?.[1] || id;
+  const uword = id => ulabel(id).replace(/\s*\(.*\)$/, '').toLowerCase();   // "metric", "cups and spoons", "both" in a sentence
+  let rewriting = null, rwFailed = null;              // the recipe being re-written; the one whose last re-write failed
+  let swapAt = null, unitsOpen = null;                // { id, i } the ingredient whose swaps show; the recipe whose units show
+  const rwLeft = () => Math.max(0, REWRITE_CAP - rewritesToday());
+  const redraw = (el, rec, seedEl) => (onChange ? onChange() : render(el, rec, seedEl));
   let busy = null;                                    // the atom being written, while it's being written
   let failed = null;                                  // the atom whose last try failed (her line shows until the next try)
   let openDiet = false;                               // the visitor opened "Anything to avoid? ›" on this page
@@ -117,8 +153,28 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
   const written = id => book.get(id)?.full || mem.recipes[id] || null;
 
   function fullHtml(f) {
-    return `<h4>You'll need${f.serves ? ` <span class="small">(serves ${f.serves})</span>` : ''}</h4>
-      <ul class="bk-ing">${f.ingredients.map(i => `<li>${i.amount ? `<b>${esc(i.amount)}${i.unit ? ` ${esc(i.unit)}` : ''}</b> ` : ''}${esc(i.item)}</li>`).join('')}</ul>
+    const busyHere = rewriting === f.id, canRw = rwLeft() > 0 && !busyHere;
+    const ing = (i, n) => {
+      const text = `${i.amount ? `<b>${esc(i.amount)}${i.unit ? ` ${esc(i.unit)}` : ''}</b> ` : ''}${esc(i.item)}`;
+      const swaps = swapsFor(i);
+      if (!swaps.length || busyHere) return `<li>${text}</li>`;
+      const open = swapAt?.id === f.id && swapAt.i === n;
+      return `<li><button class="bk-ingbtn" data-ing="${n}" aria-expanded="${open}">${text}</button>${open ? `<div class="bk-swaps" role="group" aria-label="${esc(L.swapTitle.replace('{item}', i.item))}">
+        <p class="small">${esc(L.swapTitle.replace('{item}', i.item))}</p>${canRw ? swaps.map(x => `<button data-swap="${esc(x)}">${esc(x)}</button>`).join('') : `<p class="small">${esc(L.rewritesNone)}</p>`}
+        <button class="link bk-swapcancel">${esc(L.swapCancel)}</button>${canRw ? `<p class="small">${esc(L.rewritesLeft.replace('{n}', rwLeft()))}</p>` : ''}</div>` : ''}</li>`;
+    };
+    const hasSwaps = !busyHere && f.ingredients.some(i => swapsFor(i).length);
+    const uOpen = unitsOpen === f.id && !busyHere;
+    return `${busyHere ? `<p class="bk-writing" role="status">${esc(L.rewriting)} <span class="dots" aria-hidden="true">• • •</span></p>` : ''}
+      ${rwFailed === f.id ? `<p class="bk-failed" role="status">${esc(L.rewriteFailed)}</p>` : ''}
+      <h4>You'll need${f.serves ? ` <span class="small">(serves ${f.serves})</span>` : ''}</h4>
+      <p class="small bk-unitsline">${esc(f.units ? L.unitsWritten.replace('{u}', uword(f.units)) : L.unitsUnknown)}
+        ${busyHere ? '' : `<button class="link bk-unitschange" aria-expanded="${uOpen}">${esc(L.change)}</button>`}</p>
+      ${uOpen ? `<div class="bk-diet bk-units" role="group" aria-label="${esc(L.unitsQuestion)}">${UNITS.map(([id]) => `<button data-units="${id}" aria-pressed="${units() === id}">${esc(ulabel(id))}</button>`).join('')}
+        ${units() !== f.units ? (canRw ? `<p><button class="bk-outline bk-unitsrw">${esc(L.unitsRewrite.replace('{u}', uword(units())))}</button></p><p class="small">${esc(L.rewritesLeft.replace('{n}', rwLeft()))}</p>`
+          : `<p class="small">${esc(L.rewritesNone)}</p>`) : ''}</div>` : ''}
+      ${hasSwaps ? `<p class="small bk-swaphint">${esc(L.swapHint)}</p>` : ''}
+      <ul class="bk-ing">${f.ingredients.map(ing).join('')}</ul>
       <h4>How${f.time ? ` <span class="small">${esc(f.time)}</span>` : ''}</h4>
       <ol class="bk-steps">${f.steps.map(x => `<li>${esc(typeof x === 'string' ? x : x.text)}</li>`).join('')}</ol>
       ${f.tip ? `<p class="bk-tip"><b>Gemma's tip:</b> ${esc(f.tip)}</p>` : ''}
@@ -132,6 +188,24 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     if (f) {
       seedEl.innerHTML = fullHtml({ ...f, id: rec.id }); el.innerHTML = '';
       seedEl.querySelector('.bk-print').onclick = () => { track?.('recipe_print'); printRecipe(rec, f); };
+      const again = (focus) => { redraw(el, rec, seedEl); if (focus) seedEl.isConnected ? seedEl.querySelector(focus)?.focus() : document.querySelector(`.bk-seed ${focus}`)?.focus(); };
+      seedEl.querySelectorAll('[data-ing]').forEach(b => b.onclick = () => {
+        const i = +b.dataset.ing, open = swapAt?.id === rec.id && swapAt.i === i;
+        swapAt = open ? null : { id: rec.id, i }; unitsOpen = null;
+        again(open ? `[data-ing="${i}"]` : `[data-ing="${i}"] + .bk-swaps button`);
+      });
+      seedEl.querySelector('.bk-swapcancel')?.addEventListener('click', () => { const i = swapAt?.i; swapAt = null; again(`[data-ing="${i}"]`); });
+      seedEl.querySelectorAll('[data-swap]').forEach(b => b.onclick = () => {
+        const from = f.ingredients[swapAt.i]?.item;
+        rewriteNow(rec, { swap: { from, to: b.dataset.swap } }, 'swap').then(() => redraw(el, rec, seedEl));
+        redraw(el, rec, seedEl);
+      });
+      seedEl.querySelector('.bk-unitschange')?.addEventListener('click', () => { unitsOpen = unitsOpen === rec.id ? null : rec.id; swapAt = null; again('[data-units]'); });
+      seedEl.querySelectorAll('[data-units]').forEach(b => b.onclick = () => { setUnits?.(b.dataset.units); again(`[data-units="${b.dataset.units}"]`); });
+      seedEl.querySelector('.bk-unitsrw')?.addEventListener('click', () => {
+        rewriteNow(rec, { units: units() }, 'units').then(() => redraw(el, rec, seedEl));
+        redraw(el, rec, seedEl);
+      });
       return;
     }
     if (busy === rec.id) {
@@ -168,8 +242,9 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     mem.dietAsked = true; save();
     track?.('recipe_full_asked', { atom: rec.id, room: rec.room });
     let reason = null, recipe = null;
+    const payload = payloadFor(rec);
     try {
-      const res = await fetchRecipe(payloadFor(rec));
+      const res = await fetchRecipe(payload);
       if (!res.ok) reason = res.status === 429 ? 'rate_limited' : res.status === 403 ? 'bot_check' : 'error';
       else recipe = cleanRecipe(await res.json());
       if (!reason && !recipe) reason = 'error';
@@ -179,6 +254,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     busy = null;
     if (recipe) {
       spend();
+      recipe.units = payload.units || null;               // so its page can say how it's measured, and offer a re-write
       mem.recipes[rec.id] = recipe;
       save();
       if (book.has(rec.id)) book.setFull(rec.id, recipe);
@@ -191,6 +267,44 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     }
     onLanded?.(rec);                                    // whoever's showing this recipe (cook mode) can update
     return recipe;
+  }
+
+  /** A re-write of a recipe she's written: a swap ({ swap: { from, to } }) or other measurements ({ units }). Not one of the 3 a
+   *  day; 5 a day of their own. The page keeps the recipe as it was until the new one lands; a failure leaves it and isn't counted */
+  async function rewriteNow(rec, change, kind) {
+    const was = written(rec.id);
+    if (!was || rewriting || !rwLeft() || !fetchRewrite) return null;
+    rewriting = rec.id; rwFailed = null;
+    const payload = { ...payloadFor(rec), units: change.units || was.units || units(), rewrite: { recipe: was, swap: change.swap || null } };
+    let recipe = null;
+    try {
+      const res = await fetchRewrite(payload);
+      if (res.ok) recipe = cleanRecipe(await res.json());
+    } catch { /* timeout, the pass, the network: the failed line */ }
+    rewriting = null;
+    if (recipe) {
+      spendRewrite();
+      recipe.units = payload.units;
+      mem.recipes[rec.id] = recipe; save();
+      if (book.has(rec.id)) book.setFull(rec.id, recipe);
+      swapAt = null; unitsOpen = null;
+    } else rwFailed = rec.id;
+    track?.('recipe_rewrite', { kind, outcome: recipe ? 'ok' : 'failed', remaining: String(rwLeft()) });
+    onLanded?.(rec);
+    return recipe;
+  }
+
+  /** The checkout's measurements: "In metric. Change", the choice opening pre-filled (like the diet line) */
+  let unitsAskOpen = false;
+  function unitsAsk(el) {
+    if (!unitsAskOpen) {
+      el.innerHTML = `<p class="small bk-unitsline">${esc(L.unitsLine.replace('{u}', uword(units())))} <button class="link bk-unitschange">${esc(L.change)}</button></p>`;
+      el.querySelector('.bk-unitschange').onclick = () => { unitsAskOpen = true; unitsAsk(el); el.querySelector('[aria-pressed="true"]')?.focus(); };
+      return;
+    }
+    el.innerHTML = `<div class="bk-diet bk-units" role="group" aria-label="${esc(L.unitsQuestion)}"><p class="small">${esc(L.unitsQuestion)}</p>
+      ${UNITS.map(([id]) => `<button data-units="${id}" aria-pressed="${units() === id}">${esc(ulabel(id))}</button>`).join('')}</div>`;
+    el.querySelectorAll('[data-units]').forEach(b => b.onclick = () => { setUnits?.(b.dataset.units); unitsAsk(el); el.querySelector(`[data-units="${b.dataset.units}"]`)?.focus(); });
   }
 
   /** The checkout's diet question. Needs already set (the Inn's objects, Tell Gemma, an earlier answer) show as one line with
@@ -209,7 +323,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     el.innerHTML = dietGroup(diet);
     bindDiet(el, () => dietAsk(el));
   }
-  const dietAskReset = () => { askOpen = false; };
+  const dietAskReset = () => { askOpen = false; unitsAskOpen = false; };
 
-  return { render, written, writeNow, dietAsk, dietAskReset, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
+  return { render, written, writeNow, rewriteNow, dietAsk, unitsAsk, dietAskReset, get rewritesLeft() { return rwLeft(); }, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
 }

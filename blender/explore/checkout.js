@@ -55,13 +55,14 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
         ${reading.has(x.id) ? leaflet(x) : ''}</li>`;
     };
     el.innerHTML = `<p class="bs-allow"><b>${esc(allowanceLine())}</b></p>
-      ${items.length ? `${left() ? `<p class="small">${esc(L.intro)}</p>` : ''}<div class="bs-diet"></div><ul class="bs-list">${items.map(row).join('')}</ul>
+      ${items.length ? `${left() ? `<p class="small">${esc(L.intro)}</p>` : ''}<div class="bs-diet"></div><div class="bs-units"></div><ul class="bs-list">${items.map(row).join('')}</ul>
         ${left() && n >= left() && !running ? `<p class="small">${esc(L.full)}</p>` : ''}
         ${left() ? `<p><button class="tl-done bs-write" ${!n || running ? 'disabled' : ''}>${esc(n > 1 ? L.write.replace('{n}', n) : L.writeOne)}</button></p>` : ''}`
         : `<p class="small">${esc(L.empty)}</p>`}
       ${done.length ? `<h4>${esc(L.written)}</h4><ul class="bs-done">${done.map(d => `<li>✓ <button class="link" data-book="${esc(d.id)}">${esc(d.title)}</button></li>`).join('')}</ul>` : ''}
       <p><button class="bk-outline bs-book">${esc(L.openBook)}</button></p>`;
     if (!running) writer.dietAsk(el.querySelector('.bs-diet') || document.createElement('div'));
+    if (!running && el.querySelector('.bs-units')) writer.unitsAsk(el.querySelector('.bs-units'));
     el.querySelectorAll('[data-tick]').forEach(b => b.onchange = () => {
       if (b.checked) ticked.add(b.dataset.tick); else ticked.delete(b.dataset.tick);
       status.delete(b.dataset.tick);
