@@ -1236,7 +1236,7 @@ function touch(id) {
     // Something that plays (the music box). With the sound off, the speaker by the bell glows to say where it is
     const now = sound.music(id);
     if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
-    say(!sound.on ? obj.moment_quiet || obj.moment : now ? obj.moment : obj.moment_stop || obj.moment, [], true);
+    say(!sound.on ? obj.moment_quiet || obj.moment : now ? momentOf(id, obj) : obj.moment_stop || obj.moment, [], true);   // playing: its `moments` rotate too
   } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
     // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
     const got = chia.drawer(id);

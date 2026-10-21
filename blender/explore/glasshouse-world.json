@@ -22,7 +22,7 @@
     "plant-mint": { "label": "Peppermint", "ref": "the peppermint", "type": "ambient", "themes": ["fresh", "cooling", "tea", "green"],
                     "moment": "Peppermint. It lives in its own pot, or it takes over everything." },
     "plant-balm": { "label": "Lemon balm", "ref": "the lemon balm", "type": "ambient", "themes": ["calm", "tea", "fresh", "citrus"],
-                    "moment": "Lemon balm. Crush a leaf and it smells of lemon sherbet." },
+                    "moment": "Lemon balm. Crush a leaf and it smells of lemon sherbet.", "moments": ["The bees find it before I do. I leave them a corner of it.", "A few leaves in a jug of cold water is all I do with it."] },
     "plant-basil": { "label": "Holy basil", "ref": "the holy basil", "type": "ambient", "themes": ["tea", "calm", "warming"],
                      "moment": "Holy basil, tulsi. Peppery, a bit like cloves. Lovely as a tea." },
     "plant-chamomile": { "label": "Chamomile", "ref": "the chamomile", "type": "ambient", "themes": ["calm", "tea", "evening", "rest"],
