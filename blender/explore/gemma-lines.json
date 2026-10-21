@@ -438,7 +438,8 @@
     "objects": {
       "pantry-cabinet": "Tell me what's in the cupboard, and I'll cook around it.",
       "locale-map": "Pick a few places to cook from, and where you do your shopping.",
-      "dietary-shelf": "Tell me what to steer clear of, and I'll keep to it."
+      "dietary-shelf": "Tell me what to steer clear of, and I'll keep to it.",
+      "symptom-jars": "Tell me how you're feeling today, and I'll cook to suit."
     },
     "_objects": "Gemma's line when the visitor touches the object, as its sheet opens (optional).",
     "checkin": {
@@ -788,7 +789,8 @@
       "breakfastLineDay": "Set it now and it'll be ready by 7 tomorrow morning.",
       "jars": "Make 4 jars",
       "jarsLine": "Four jars, one batch. That's most of the week sorted.",
-      "jarsChanged": "Four jars, so I've made it four, not {n}. I've scaled your list."
+      "jarsChanged": "Four jars, so I've made it four, not {n}. I've scaled your list.",
+      "seedAdded": "{x} is in."
     }
   },
   "sweet": {
@@ -1012,5 +1014,39 @@
   "dial": {
     "_when": "Tapping a dial entry with no door behind it (Nourish Academy, Cravings Decoded). {label} is filled in.",
     "closed": "{label} is only engraved on the dial. There is no door behind it."
+  },
+  "cast": {
+    "_about": "Centrepiece write-outs (spell table, Cuddlecore pot, Flourish table). writing: while she writes (5-15 s). done: as the page opens. atCap: the 3 write-outs a visit are used, the idea card opens. failed: write-out didn't work, the card opens.",
+    "spell": {
+      "writing": "Chocolate bowl, whisk, a bit of nerve. Give me a moment.",
+      "done": "There. Ready when you are.",
+      "atCap": "That's three spells cast this visit. Here's an idea to look at instead.",
+      "failed": "The spell fizzled. Here's an idea to look at instead."
+    },
+    "pot": {
+      "writing": "Pot's on. Let me write this one out properly.",
+      "done": "Written out. Ready when you are.",
+      "atCap": "That's three written out this visit. Here's an idea from the pot instead.",
+      "failed": "The pot's gone quiet on me. Here's an idea instead."
+    },
+    "table": {
+      "writing": "Laying the table. Let me write it all down.",
+      "done": "The table's laid. Ready when you are.",
+      "atCap": "That's three tables laid this visit. Here's an idea to look at instead.",
+      "failed": "I couldn't lay that one out. Here's an idea instead."
+    }
+  },
+  "starChart": {
+    "_about": "Said before a surprise sweet idea from the star chart. {idea} is its title.",
+    "fortunes": [
+      "The stars say {idea}.",
+      "The chart points at {idea}.",
+      "I read the chart. {idea}, it says.",
+      "The chart has a plan for you: {idea}.",
+      "Stars lined up. {idea}.",
+      "Some read tea leaves. I read this: {idea}.",
+      "The chart's been right before. {idea}.",
+      "Hold still. The chart says {idea}."
+    ]
   }
 }

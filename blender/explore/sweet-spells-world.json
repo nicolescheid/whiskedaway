@@ -12,8 +12,7 @@
   },
   "objects": {
     "spell-table": { "label": "Cast a spell", "ref": "the spell table", "type": "submit", "tool": "generate", "tool_title": "Cast a spell",
-                     "themes": ["treat", "sweet", "hands-on", "baking"],
-                     "tool_text": "The spell table can't cast a whole recipe yet. Soon. Keep looking around for a treat or two." },
+                     "themes": ["treat", "sweet", "hands-on", "baking"] },
     "spell-books": { "label": "Cravings", "map": "The spell books", "ref": "the spell books", "type": "interactive", "tool": "flavour",
                      "themes": ["learning", "why", "treat"] },
     "lectern": { "label": "The occasion", "map": "The open book", "ref": "the open book on the lectern", "type": "interactive", "tool": "occasion",
