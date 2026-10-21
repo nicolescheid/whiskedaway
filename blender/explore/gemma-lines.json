@@ -952,5 +952,57 @@
       "seen": "You saw Erwina",
       "maybe": "You think you saw Erwina"
     }
+  },
+  "innNotes": {
+    "_about": "Inn notes (brainstorm-1 D4): a short story pinned to an object that already exists. Touching the object the first time adds the note to a section at the back of the book. Keys under `notes` are object ids (the object's `moment` line still plays); each is 60 to 80 words in Gemma's voice, with no claims about food or health. The lines below are Gemma's chat lines and the section's own words, each under 100 characters.",
+    "title": "Inn notes",
+    "intro": "Little stories from around the Inn. Touch the right thing and I'll add one here.",
+    "empty": "Nothing here yet. Some things in the Inn have a story, if you ask.",
+    "count": "{n} of {total} found",
+    "added": "That one has a story. I've put it at the back of your book.",
+    "addedFirst": "That one has a story. I've started a section at the back of your book.",
+    "again": "You've got that one already. It's at the back of your book.",
+    "notes": {
+      "plant-fennel": {
+        "title": "Nan's fennel seeds",
+        "text": "My nan kept a little tin of fennel seeds by the back door. After a big Sunday dinner she'd shake a few into her palm and hand some round, and nobody was allowed to ask why. I didn't, and I still don't know the whole story. I grow the plant in her honour and I keep the seeds in a tin by my back door. It doesn't have to make sense. It's hers."
+      },
+      "lane-window": {
+        "title": "The bakery over the road",
+        "text": "The bakery opposite has been there longer than the Inn. We're friendly rivals. Their loaves are better, and I say so quietly. When one of us runs short of tins or flour, a child gets sent across the lane with a note. We'd both deny it. Their oven starts before mine, so the lane smells of bread before I've lit the range, and I've never once complained about that."
+      },
+      "star-chart": {
+        "title": "The Great Whisk",
+        "text": "Every kitchen has its own sky. Ours has the Great Whisk, which is easy to find, the Sieve, which is faint, and the Ladle, which half the guests mistake for a saucepan. A cook drew this chart long before me, and I've only added one star, in the corner, for a loaf that came out perfectly once. It's the small one. Please don't tell the bakery."
+      },
+      "cellar-door": {
+        "title": "The cellar door",
+        "text": "I keep the key on a string round the hook beside it, and the door is stiff anyway. I'm told the cellar is lovely: cool, quiet, full of jars somebody put away carefully. I haven't been down in years. Every time I mean to, the kettle goes, or someone arrives, or the soup needs me. I'll get to it. I always say I will, and the door waits."
+      },
+      "songbird": {
+        "title": "The songbird",
+        "text": "A tūī used to sit on the line outside the old workshop and whistle the same few notes, over and over, until they were stuck in everyone's head. The clockmaker wound them into this little bird. She sings when you wind her, and she has never once sung it the same way twice, which the clockmaker said was impossible and then stopped saying. I think the tūī would be pleased."
+      },
+      "music-box": {
+        "title": "The music box",
+        "text": "She came in a parcel with no note, years ago, and I've never found out who sent her. Her dancer turns when the lid lifts, and she has three tunes. On wet days she plays the slow one, once it's dark she plays the lullaby, and the rest of the time it's the little twinkling one. I've never set the order. She seems to read the room."
+      },
+      "oil-lamp": {
+        "title": "The oil lamp",
+        "text": "I trim the wick myself, with my own scissors, and I don't let anyone else touch it. It burns a steady yellow and smells faintly of warm brass. I read by it, and I check the pantry list by it, and a few times I've fallen asleep by it with a book on my chest. It's the oldest thing in the Inn that still does exactly what it was made to do."
+      },
+      "wind-chime": {
+        "title": "The wind chime",
+        "text": "It rings when someone opens the garden door, which is mostly me, going out to pick something for supper. Sometimes it rings on its own, and I like to think it's just the draught. Guests ask if it's a signal. It is, of a sort: it means there's fresh basil about to arrive in the kitchen, and that somebody should put the pot on."
+      },
+      "fl-phonograph": {
+        "title": "The phonograph",
+        "text": "I wind the handle and it plays whatever's on the turntable: Grieg, Vivaldi or Dvořák. There are only three records, and I've never bought a fourth. The needle is the only thing in the Inn I replace regularly, because I can't stand a crackle. The box it sits on used to hold flour. It picks the record by the hour, and I let it."
+      },
+      "passionflower": {
+        "title": "The passionflower",
+        "text": "It's been trying to lift the roof off for years. Every spring I cut it back, and every summer it climbs the frame again and pushes at a pane, as if it knows something about the sky I don't. The flowers last a day, and the fruit comes if I leave it alone. I've given up arguing. The glasshouse is half its, now."
+      }
+    }
   }
 }
