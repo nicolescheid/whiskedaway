@@ -74,13 +74,15 @@
     "print": "Save as PDF / print",
     "more_diets": "More options ›",
     "diet_labels": {
-      "_about": "PLACEHOLDERS: labels for \"More options\" under the diet question (checkout and a recipe page). The ids are what the write-out gets; hindu-no-beef reads as Hindu here (PM 4 read Nicole's \"Hindi\" as Hindu). Halal, kosher and Hindu only go to the write-out; keto and low carb leave out only cards content marks carb_checked (none yet).",
+      "_about": "PLACEHOLDERS: labels for \"More options\" under the diet question (checkout and a recipe page). The ids are what the write-out gets; hindu-no-beef reads as Hindu here (PM 4 read Nicole's \"Hindi\" as Hindu). All five go to the write-out, and shape the ideas only on cards content has judged: atom.diet_checked lists the needs judged, atom.diet the ones met (none judged yet). keeping ({d} = their needs) + change_diets: checkout when needs are already set.",
       "halal": "Halal",
       "kosher": "Kosher",
       "hindu-no-beef": "Hindu (no beef)",
       "keto": "Keto",
       "low-carb": "Low carb"
-    }
+    },
+    "keeping": "I'll keep to {d}.",
+    "change_diets": "Change"
   },
   "tell": {
     "_about": "Tell Gemma V1, keyed as tell.js and explore.html read them (tell-gemma/v1). {two} = the first two things, joined; {many} = 'A, b and a few more'; {c} = cuisines; {d} = diets; {p} = pantry words; {diet} and {room} as named. Every line stays under 100 characters.",

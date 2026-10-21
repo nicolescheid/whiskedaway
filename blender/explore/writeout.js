@@ -10,8 +10,10 @@ export const DIETS = [['vegetarian', 'Vegetarian'], ['vegan', 'Vegan'], ['gluten
 // "More options" (Nicole, 22 Oct): passed to the write-out like the others; labels from write_out.diet_labels. The id is what
 // the Worker reads, so Hindu is sent as "hindu-no-beef"
 export const MORE_DIETS = [['halal', 'Halal'], ['kosher', 'Kosher'], ['hindu-no-beef', 'Hindu (no beef)'], ['keto', 'Keto'], ['low-carb', 'Low carb']];
-export const WRITE_ONLY = ['halal', 'kosher', 'hindu-no-beef'];   // no card can promise these: the write-out keeps to them
-export const CARB_DIETS = ['keto', 'low-carb'];                   // cards filtered only once content marks them carb_checked
+export const WRITE_ONLY = ['halal', 'kosher', 'hindu-no-beef'];   // religious needs: cards rarely say, so mostly the write-out keeps to them
+export const CARB_DIETS = ['keto', 'low-carb'];
+// The More options never filter a card on a guess: only cards content has judged for that need (atom.diet_checked lists the
+// needs judged; atom.diet the ones it meets) are left out or kept (explore.html dietClash)
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function load() { try { return JSON.parse(sessionStorage.getItem(KEY) || 'null') || { recipes: {} }; } catch { return { recipes: {} }; } }
@@ -77,6 +79,8 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     atCap: lines.at_cap || "That's my three written out for today. The short version's above, and I'll write more tomorrow.",
     print: lines.print || 'Save as PDF / print',
     more: lines.more_diets || 'More options ›',
+    keeping: lines.keeping || "I'll keep to {d}.",
+    change: lines.change_diets || 'Change',
     failed: lines.failed || "My pen's run dry. The short version's above. Try again in a bit.",
     diet: lines.diet_question || 'Anything I should avoid?',
   };
@@ -189,11 +193,18 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     return recipe;
   }
 
-  /** The checkout's diet question: shown when the checkout opens if it hasn't been answered this visit, and it stays while
-   *  the visitor chooses (dietAskReset() as the checkout opens) */
+  /** The checkout's diet question. Needs already set (the Inn's objects, Tell Gemma, an earlier answer) show as one line with
+   *  Change, which opens the buttons pre-filled; none set and never asked this visit: the question, as on a page. Once open it
+   *  stays while the visitor chooses (dietAskReset() as the checkout opens) */
   function dietAsk(el) {
     const diet = [].concat(visit.get('dietary') || []);
-    if (!askOpen && (diet.length || mem.dietAsked)) { el.innerHTML = ''; return; }
+    if (!askOpen && diet.length) {
+      const words = diet.map(id => label([...DIETS, ...MORE_DIETS].find(([x]) => x === id) || [id, id]));
+      el.innerHTML = `<p class="small bk-dietset">${esc(L.keeping.replace('{d}', words.join(', ')))} <button class="link bk-dietchange">${esc(L.change)}</button></p>`;
+      el.querySelector('.bk-dietchange').onclick = () => { askOpen = true; dietAsk(el); el.querySelector('[data-diet]')?.focus(); };
+      return;
+    }
+    if (!askOpen && mem.dietAsked) { el.innerHTML = ''; return; }
     askOpen = true;
     el.innerHTML = dietGroup(diet);
     bindDiet(el, () => dietAsk(el));

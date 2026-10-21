@@ -58,8 +58,9 @@ Placeholder keys under `basket` in gemma-lines.json (listed in the report); the 
 - Explainers: an empty book shows how it works (3 steps + Open my basket); a book opened with recipes shows a short
   first-use note once per device (wa-book introSeen), gone on Got it or close.
 - Diet "More options": halal, kosher, hindu-no-beef (labelled Hindu), keto, low-carb. Sent to the write-out as ids (the
-  Worker passes dietary_restrictions through unchanged: no API deploy). Halal, kosher, Hindu never filter cards; keto and
-  low carb filter only cards with carb_checked (none yet), like low-FODMAP's fodmap_checked.
+  Worker passes dietary_restrictions through unchanged: no API deploy). They shape the ideas only on cards content has judged
+  for that need (atom.diet_checked: needs judged; atom.diet: needs met), like low-FODMAP and fodmap_checked. Checkout: needs
+  already set show as "I'll keep to {d}. Change" (write_out.keeping, change_diets), Change opens the buttons pre-filled.
 - Renames: "Add recipe to my book" / "Add {n} recipes to my book" (basket.add_one/add_many, replacing write_one/write_button);
   "Shopping list" (book.shopping_list) in the book's Contents, cook mode and the list's heading.
 - New keys: book.{title, chip_long, chip_short, loose_title, how_title, how[3], to_basket, first_use_title, first_use, got_it,

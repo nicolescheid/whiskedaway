@@ -1606,11 +1606,12 @@ function steer() {
 }
 // The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
 // Low-FODMAP is a hard filter only on atoms checked against a source (`fodmap_checked`; none yet): it goes into write-outs as an avoid
-// Halal, kosher and Hindu (no beef) only go to the write-out: no card can promise them. Keto and low carb, like low-FODMAP,
-// leave out only cards content has checked (carb_checked; none yet)
+// The More options (halal, kosher, Hindu, keto, low carb), like low-FODMAP, shape the ideas only where content has judged a card
+// for that need (atom.diet_checked; fodmap_checked for low-FODMAP): those that don't meet it are left out. Unjudged cards stay,
+// and the need always goes to the write-out. Until cards are judged they're never named as a filter (PASS_ONLY)
 const PASS_ONLY = new Set(['low-fodmap', ...WRITE_ONLY, ...CARB_DIETS]);
-const dietClash = a => [].concat(visit.get('dietary') || []).find(d => !WRITE_ONLY.includes(d)
-  && (d !== 'low-fodmap' || a.fodmap_checked) && (!CARB_DIETS.includes(d) || a.carb_checked) && !(a.diet || []).includes(d)) || null;
+const judged = (a, d) => (d === 'low-fodmap' ? !!a.fodmap_checked : !PASS_ONLY.has(d) || (a.diet_checked || []).includes(d));
+const dietClash = a => [].concat(visit.get('dietary') || []).find(d => judged(a, d) && !(a.diet || []).includes(d)) || null;
 const CLASH_NOTE = { vegetarian: 'not vegetarian', vegan: 'not vegan', 'gluten-free': 'has gluten', 'dairy-free': 'has dairy', 'nut-free': 'has nuts' };
 
 // At most one of the ideas out is from another room (PM on T4); the hallway and glasshouse have none of their own
