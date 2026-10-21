@@ -148,6 +148,9 @@
   .spot:hover .name, .spot:focus-visible .name, .spot.is-tool .name, .spot.revealed .name { opacity: 1; transform: none; }
   .spot.is-tool .dot { background: var(--berry); }
   .spot.submit .name { background: var(--berry); color: var(--parchment); }
+  .spot.casting .dot { animation: spot-cast 1.2s ease-in-out infinite; }   /* a centrepiece while Gemma writes (B1) */
+  @keyframes spot-cast { 50% { box-shadow: 0 0 0 8px rgba(244, 239, 228, .35), 0 0 18px 6px rgba(255, 214, 140, .55); } }
+  @media (prefers-reduced-motion: reduce) { .spot.casting .dot { animation: none; box-shadow: 0 0 14px 4px rgba(255, 214, 140, .55); } }
   .spot.ambient .dot { width: 9px; height: 9px; }
   .spot.revealed .dot { background: var(--amber-glow); width: 14px; height: 14px; animation: glow 1.8s ease-in-out infinite; }
   .spot.revealed .name { border-color: var(--amber); }
@@ -1244,9 +1247,11 @@ function touch(id) {
   } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
     // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
     const got = chia.drawer(id);
-    const add = got ? (chia.data.lines.drawerAdded || "{x}'s in your Mix, if you make one.").replace('{x}', got.label) : '';
+    const add = got ? ((got.step === 'seed' && chia.data.lines.seedAdded) || chia.data.lines.drawerAdded || "{x}'s in your Mix, if you make one.").replace('{x}', got.label) : '';
     say([obj.moment, add].filter(Boolean).join(' '), [], true);
     if (got) holdLine();                                      // her reading waits, so this line is the one you see
+  } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
+    fortune(obj);                                             // a fortune, then a surprise sweet idea's card
   } else if (obj.type === 'ambient' && id === 'notice-board') {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
@@ -1277,9 +1282,9 @@ function touch(id) {
   } else if (CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
     CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
   } else if (obj.type === 'submit' && obj.tool === 'generate' && CAST_ROOMS[homeOf(state.room)]) {
-    cast();                                                   // the spell table, the pot, Lay the Table: this room's best idea, written out
+    cast(id);                                                 // the spell table, the pot, Lay the Table: this room's best idea, written out
   } else if (obj.type === 'submit') {
-    openTool(obj.tool_title || 'Find Comfort', obj.tool_text || "The pot can't cook you a full recipe yet. Soon. For now, keep looking around and I'll leave ideas out for you.");
+    openTool(obj.tool_title || obj.label, obj.tool_text || "I can't open this one for you yet.");
   } else if (TELL_TOOLS[obj.tool]) {
     // The pantry, the map and the cookbooks (Tell Gemma V1): her line, then the sheet
     // Cuddlecore's "How you're feeling" jars open the check-in (a stand-in line until content writes tell.objects['symptom-jars'])
@@ -1775,50 +1780,70 @@ const SWEET_TOOLS = { 'level-up': () => sweet.open('sweet'), flavour: () => swee
 // out this room's best idea for the visitor (writeout.js, one of the 3 a visit) and open it in the book, with Cook this.
 // Written already: it opens free. At the cap or if the writing fails: an honest line and the idea's card instead.
 const CAST_ROOMS = { 'sweet-spells': 'spell', cuddlecore: 'pot', flourish: 'table' };
-const CAST_LINES = {
-  busy: "Hold on, I'm still writing the last one.", nothing: 'Nothing new for you in here just now. Have a look in your book.',
-  atCap: "That's my three written out for this visit. Here's the idea, short and sweet.",
-  failed: "That one didn't take. Here's the idea, short and sweet. Try again in a bit.",
-  writing: 'Let me write it out for you.', done: "It's written out in your book, ready to cook.",
+const CAST_LINES = {                                          // stand-ins: gemma-lines.json cast.{spell,pot,table} has the real ones
+  busy: "Hold on, I'm still writing the last one.",
+  atCap: "That's my three written out for this visit. Here's an idea to look at instead.",
+  failed: "That one didn't take. Here's an idea to look at instead.",
+  writing: 'Let me write it out for you.', done: 'Written out. Ready when you are.',
 };
 let casting = false;
-/** This room's best idea for the visitor: the navigator's top pick among the room's own ideas, never one kept, set aside or
- *  clashing with a dietary need; with nothing to read yet, an idea of the room's already out, else its first */
+// This room's recipe ideas the visitor could still be offered: not set aside, not clashing with a dietary need
+const roomIdeas = () => world.atoms.filter(a => a.room === homeOf(state.room) && a.kind === 'recipe idea'
+  && !state.dismissed.includes(a.id) && !dietClash(a));
+/** This room's best idea for the visitor (PM 4): the best not kept and not yet written; else the best kept one not yet written;
+ *  else the best already written (it opens free). Best = the navigator's top pick, or with nothing to read yet, one already out. */
 function bestHere() {
-  const here = homeOf(state.room);
-  const skip = new Set([...book.ids(), ...state.dismissed, ...world.atoms.filter(a => dietClash(a)).map(a => a.id)]);
-  const pool = world.atoms.filter(a => a.room === here && !skip.has(a.id));
-  if (!pool.length) return null;
-  const top = localNavigate(navTrail(), { ...world, atoms: pool }, { ...steer(), served: [], dismissed: state.dismissed, room: here }).serve[0];
-  if (top) return top;
-  return { atom: state.cards.map(c => c.atom).find(id => pool.some(a => a.id === id)) || pool[0].id, why: '' };
+  const all = roomIdeas(), unwritten = all.filter(a => !writer.written(a.id));
+  for (const pool of [unwritten.filter(a => !book.has(a.id)), unwritten.filter(a => book.has(a.id)), all]) {
+    if (!pool.length) continue;
+    const top = localNavigate(navTrail(), { ...world, atoms: pool }, { ...steer(), served: [], dismissed: state.dismissed, room: homeOf(state.room) }).serve[0];
+    return top || { atom: state.cards.map(c => c.atom).find(id => pool.some(a => a.id === id)) || pool[0].id, why: '' };
+  }
+  return null;
 }
-async function cast() {
+// An idea's page in the book: its own page if kept, else a loose page (Keep, Cook this, the write-out)
+const ideaPage = (rec, from) => (book.has(rec.id) ? bookView.open(rec.id, { from }) : bookView.open(null, { from, loosePage: rec }));
+/** An idea's card on the tray, opened (or its page in the book, if the tray won't take it: kept, or a headline already out) */
+function ideaCard(rec, why, from) {
+  if (!book.has(rec.id) && !state.cards.some(c => c.atom === rec.id)) serve({ atom: rec.id, why }, 'local');
+  if (state.cards.some(c => c.atom === rec.id)) ideas.open(rec.id); else ideaPage(rec, from);
+}
+async function cast(id) {
   const kind = CAST_ROOMS[homeOf(state.room)], C = LINES.cast || {};
   const line = k => C[kind]?.[k] || C[k] || CAST_LINES[k];
   if (casting) return say(line('busy'), [], true);
   const best = bestHere();
-  if (!best) return say(line('nothing'), [], true);
-  const rec = snapshot(atomsById[best.atom], best.why);
-  const page = () => bookView.open(null, { from: 'cast', loosePage: rec });   // a loose page: Keep, Cook this, the write-out
-  // Not written: the idea's own card (or its book page, if the tray won't take it)
-  const card = () => {
-    if (!state.cards.some(c => c.atom === rec.id)) serve({ atom: rec.id, why: best.why }, 'local');
-    if (state.cards.some(c => c.atom === rec.id)) ideas.open(rec.id); else page();
-  };
-  if (writer.written(rec.id)) { page(); return say(line('done'), [], true); }
-  if (!writer.left) { say(line('atCap'), [], true); holdLine(); return card(); }
+  if (!best) return say(line('atCap'), [], true);
+  const a = atomsById[best.atom], rec = book.get(a.id) || snapshot(a, best.why);
+  if (writer.written(rec.id)) { ideaPage(rec, 'cast'); return say(line('done'), [], true); }
+  if (!writer.left) { say(line('atCap'), [], true); holdLine(); return ideaCard(rec, best.why, 'cast'); }
   casting = true;
+  const glow = hotspots.find(h => h.id === id)?.el;          // the object glows while she writes
+  glow?.classList.add('casting');
   say(line('writing'), [], true);
   holdLine();
   thinking(true);
-  const full = await writer.writeNow(rec);
+  const full = await writer.writeNow(rec);                    // waits for the visitor pass too; a failure doesn't count
   thinking(false);
+  glow?.classList.remove('casting');
   casting = false;
-  if (!full) { say(line('failed'), [], true); holdLine(); return card(); }
-  page();
+  if (!full) { say(line('failed'), [], true); holdLine(); return ideaCard(rec, best.why, 'cast'); }
+  ideaPage(rec, 'cast');
   say(line('done'), [], true);
   holdLine();
+}
+// ---------- The star chart reads your fortune (Nicole, from the brainstorm): a fortune naming a surprise sweet idea from the room,
+// then that idea's card. starChart.fortunes in gemma-lines.json; {idea} is the idea's title
+function fortune(obj) {
+  const pool = roomIdeas().filter(a => !book.has(a.id)), fresh = pool.filter(a => !state.cards.some(c => c.atom === a.id));
+  const from = fresh.length ? fresh : pool, a = from[Math.floor(Math.random() * from.length)];
+  const t = a && pickLine('fortune', LINES.starChart?.fortunes || [], { idea: '\u0001' });
+  if (!t) return say(momentOf('star-chart', obj), [], true);
+  // The title starts a sentence as it's written, and mid-sentence in lower case (not a name: "Anzac biscuits")
+  const title = /(^|[.!?]\s+)\u0001/.test(t) || /^(Anzac|Kiwi|Mānuka)\b/.test(a.title) ? a.title : a.title[0].toLowerCase() + a.title.slice(1);
+  say(t.replace('\u0001', title), [], true);
+  holdLine();
+  ideaCard(snapshot(a, ''), '', 'star_chart');
 }
 // The swap-the-sugar lines on a Sweet Spells recipe page, when the visitor's sweetener differs from the recipe's (read from the
 // atom: a page's snapshot doesn't carry sweetener or added_sugar)
