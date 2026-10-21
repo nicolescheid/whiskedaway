@@ -2,7 +2,7 @@
 // This worker proxies requests to Claude with Gemma's personality
 
 // The analytics allow-list, shared with the browser (docs/analytics-plan.md)
-import { cleanEvent } from '../src/lib/analytics-events.js';
+import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -1213,6 +1213,21 @@ async function handleMeasure(request, env, ctx) {
   let body;
   try { body = JSON.parse(text); } catch { return done(); }
 
+  // A visit that couldn't get a pass says so (no visit ID, no pass): written to the log only, never to Google, so
+  // the loss can be counted. Look for measure:"pass" in the Worker's logs. Same Origin check, per-IP limit.
+  if (body && typeof body.ping === 'object' && body.ping) {
+    const state = ['slow', 'failed', 'lost'].includes(body.ping.state) ? body.ping.state : null;
+    const origin = request.headers.get('Origin') || '';
+    if (state && allowedOrigins(env).includes(origin)
+        && await underLimit(env.IP_LIMIT, `mping:${request.headers.get('CF-Connecting-IP') || 'unknown'}`)) {
+      const small = v => (typeof v === 'string' && /^[a-z0-9_]{1,40}$/i.test(v) ? v : null);
+      console.log(JSON.stringify({ measure: 'pass', state, why: small(body.ping.why), queued: small(body.ping.queued),
+        surface: ['explore', 'archive'].includes(body.surface) ? body.surface : 'inn', device: body.device === 'mobile' ? 'mobile' : 'desktop',
+        country: /^[A-Z]{2}$/.test(request.cf?.country || '') ? request.cf.country : null }));
+    }
+    return done();
+  }
+
   // Same bot guard as the paid routes: an allowed Origin and a visitor pass
   const origin = request.headers.get('Origin') || '';
   const pass = await verifyPass(env, typeof body.pass === 'string' ? body.pass : null);
@@ -1231,10 +1246,13 @@ async function handleMeasure(request, env, ctx) {
   const device = body.device === 'mobile' ? 'mobile' : 'desktop';
   const country = /^[A-Z]{2}$/.test(request.cf?.country || '') ? request.cf.country : null;
 
+  // Where the visit came from (a coarse bucket, sent with the visit's first batch): GA4 reads source, medium and campaign
+  // from the events of the session's start, since a server-side event carries no referrer of its own
+  const source = sourceParams(body.src);
   const events = (Array.isArray(body.events) ? body.events : []).slice(0, 25).map(e => {
     const clean = cleanEvent(e?.name, e?.params);
     if (!clean) return null;
-    Object.assign(clean.params, {
+    Object.assign(clean.params, source, {
       session_id: String(session),
       engagement_time_msec: Math.max(1, Math.min(60000, Math.round(Number(e.ms) || 1))),
       surface, device,

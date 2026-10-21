@@ -1390,7 +1390,8 @@ async function navigate() {
     if (seq !== navSeq) return;                            // a newer event superseded this one
     thinking(false);
     if (r.fallback) track('nav_fallback', { reason: /timeout|abort/i.test(r.fallback) ? 'timeout' : /429/.test(r.fallback) ? 'rate_limited'
-                                                    : /403/.test(r.fallback) ? 'bot_check' : 'error' });
+                                                    : /403/.test(r.fallback) ? 'bot_check' : /navigate 5[0-9][0-9]/.test(r.fallback) ? 'upstream'   // the Worker or the model failed
+                                                    : /navigate 4[0-9][0-9]/.test(r.fallback) ? 'rejected' : /fetch|network|load failed/i.test(r.fallback) ? 'network' : 'error' });
     r = { ...r, serve: r.mode === 'ai' ? r.serve.filter(s => !state.served.includes(s.atom) && !book.has(s.atom)).slice(0, 1) : [] };
   }
   state.result = r;
@@ -1604,7 +1605,6 @@ function serve({ atom, why, fromKeep }, mode) {
   if (head && state.cards.some(c => atomsById[c.atom] && headline(atomsById[c.atom]) === head)) return;
   state.served.push(atom);
   servedBy[atom] = mode;
-  countAtom('atom_served', atom);
   ideas.add({ atom, why }, ideaSource());
   // An idea that came from a keep says so, unless Gemma has just spoken about that keep (one line per event)
   if (fromKeep && state.trail.at(-1)?.kind === 'keep' && !state.keepSpoke && LINES.idea?.from_keep) say(pickLine('fromKeep', LINES.idea.from_keep), [], true);
@@ -1659,6 +1659,8 @@ const ideas = createIdeas({
   wantHint: () => !book.hint,
   onHint: () => { book.hint = true; say(LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
   onHighlight: c => countAtom('atom_highlight', c.atom),
+  onShown: c => countAtom('atom_served', c.atom),       // in view for a moment, once each (not when the navigator picks it)
+  canShow: () => $('front-door').hidden,
   onRead: c => {
     const a = atomsById[c.atom];
     record({ kind: 'open', atom: c.atom });

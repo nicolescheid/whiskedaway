@@ -23,7 +23,8 @@ export const EVENTS = {
   atom_served: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],
   atom_open: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'from'],     // from: highlight ("Read ›") or book
   atom_dismiss: ['atom', 'atom_kind', 'nav_mode', 'room', 'method', 'undone'],     // sent when the 5 s undo closes; undone: yes or no
-  nav_fallback: ['reason'],
+  pass_ready: ['load_ms'],                 // the visitor pass arrived (bucketed seconds since the page loaded); visits that never get one send nothing, see docs/analytics-plan.md
+  nav_fallback: ['reason'],                // reason: timeout, rate_limited, bot_check, upstream (the Worker answered 5xx), rejected (4xx), network, error
   map_open: ['room'],
   notebook_open: ['room'],
   visit_forget: [],
@@ -46,6 +47,7 @@ export const EVENTS = {
   tell_open: ['kind', 'from'],          // Tell Gemma: kind pantry|map|dietary|confidence|time|servings|energy|sweetness|sweetener|craving|occasion|mood|mix; from object|tag|menu|book|offer|foyer
   tell_set: ['kind', 'count', 'use_up', 'from'],   // count 0|1|2-3|4+ (pantry, map, dietary, sweetener, craving); never the values (see ANSWER_KINDS). Dietary values (FODMAP included) never leave the page
   mix_swap: ['outcome'],                 // the Chiapothecary: Gemma suggested a swap; outcome accepted or declined. Never the ingredients
+  recipe_full_asked: ['atom', 'room'],                             // the "full recipe" button (or cook mode) asked Gemma to write one out
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3
   recipe_full_failed: ['atom', 'room', 'reason'],                  // reason: timeout, bot_check, rate_limited, error
 
@@ -81,6 +83,35 @@ export function cleanEvent(name, params = {}) {
   }
   if (name === 'tell_set' && ANSWER_KINDS.has(out.kind)) { delete out.count; delete out.use_up; }
   return { name, params: out };
+}
+
+// Where a visit came from, as a coarse bucket (never the referrer itself), plus the link's own utm_source and
+// utm_campaign when it has them. Sent once per visit, with its first events; the Worker checks it again.
+const BUCKET_MEDIUM = { linkedin: 'social', google: 'organic', bing: 'organic', other: 'referral', direct: '(none)' };
+const utm = v => { v = String(v ?? '').trim().toLowerCase(); return VALUE.test(v) ? v : null; };
+
+/** The page's side: { bucket, utm_source?, utm_campaign? } from document.referrer, location.search and our own hostname. */
+export function visitSource(referrer, search, ownHost) {
+  let host = '';
+  try { host = new URL(referrer).hostname.toLowerCase(); } catch { /* no referrer */ }
+  const own = host === ownHost || host.endsWith(`.${ownHost}`);
+  const bucket = !host || own ? 'direct'
+    : /(^|\.)(linkedin\.com|lnkd\.in)$|^com\.linkedin\./.test(host) ? 'linkedin'      // the app sends android-app://com.linkedin.android
+    : /(^|\.)google\.[a-z.]+$|^com\.google\./.test(host) ? 'google'
+    : /(^|\.)bing\.com$/.test(host) ? 'bing' : 'other';
+  const q = new URLSearchParams(search), out = { bucket };
+  if (utm(q.get('utm_source'))) out.utm_source = utm(q.get('utm_source'));
+  if (utm(q.get('utm_campaign'))) out.utm_campaign = utm(q.get('utm_campaign'));
+  return out;
+}
+
+/** The Worker's side: GA4 event parameters (source, medium, campaign) from whatever the page sent, or null. */
+export function sourceParams(src) {
+  if (!src || typeof src !== 'object' || !Object.hasOwn(BUCKET_MEDIUM, src.bucket)) return null;
+  const u = utm(src.utm_source);
+  const source = u || (src.bucket === 'direct' ? '(direct)' : src.bucket);
+  const medium = u ? (u === 'linkedin' ? 'social' : 'campaign') : BUCKET_MEDIUM[src.bucket];
+  return { source, medium, ...(utm(src.utm_campaign) ? { campaign: utm(src.utm_campaign) } : {}) };
 }
 
 /** Steps so far in the visit, in buckets, so "after how many steps" never becomes a timeline. */

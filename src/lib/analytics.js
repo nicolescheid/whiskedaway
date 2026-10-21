@@ -15,8 +15,8 @@
  * can both use it.
  */
 
-import { cleanEvent } from './analytics-events.js';
-import { getPass, GENIE_URL } from './genie.js';
+import { cleanEvent, visitSource } from './analytics-events.js';
+import { getPass, peekPass, GENIE_URL } from './genie.js';
 
 // Cloudflare Web Analytics site token for whiskedaway.com. Public, like the Turnstile sitekey.
 const CF_BEACON_TOKEN = '9fad3ffefb1e4efb83f6e604457c3edf';
@@ -54,7 +54,8 @@ let lastAt = performance.now();
 let lastPass = null;
 let lastPassAt = 0;
 // A pass lasts 30 minutes. An older copy would be quietly dropped by the Worker, so treat it as none
-const currentPass = () => (Date.now() - lastPassAt < 28 * 60 * 1000 ? lastPass : null);
+// (a pass the Inn already fetched for the navigator counts too: it sits in sessionStorage, so no waiting)
+const currentPass = () => (Date.now() - lastPassAt < 28 * 60 * 1000 ? lastPass : null) || peekPass();
 
 /** Count one thing that happened. Unknown events and parameters are dropped. */
 export function track(name, params = {}) {
@@ -73,9 +74,44 @@ export function track(name, params = {}) {
   timer = queue.length >= 10 ? (flush(), null) : setTimeout(flush, 4000);
 }
 
-const payload = (events, pass) => JSON.stringify({ pass, visit, session, surface, device, debug, events });
+// Where the visit came from: a coarse bucket, not the referrer. Goes with the first batch that is actually sent
+let src = visitSource(document.referrer, location.search, 'whiskedaway.com');
+const payload = (events, pass) => {
+  const first = src;
+  src = null;
+  return JSON.stringify({ pass, visit, session, surface, device, debug, ...(first ? { src: first } : {}), events });
+};
 
 // text/plain keeps it a simple request: no CORS preflight, and sendBeacon can send it too
+// Counting only works with a visitor pass. To see how many visits never get one, the page sends a tiny pass-less note
+// (no visit ID, nothing else) that the Worker only writes to its log, never to Google: 'slow' (no pass after 8 s),
+// 'failed' (the check gave up, with its code) or 'lost' (the tab was hidden with events still waiting and no pass)
+const noted = {};
+function note(state, extra = {}) {
+  if (noted[state]) return;
+  noted[state] = true;
+  try { navigator.sendBeacon(ENDPOINT, new Blob([JSON.stringify({ ping: { state, ...extra }, surface, device })], { type: 'text/plain' })); } catch { /* ignore */ }
+}
+// Ask for the pass soon after the page loads, not when the first batch is due: a visitor who stays 10 s at the door
+// should already have one. (The Inn asks too, once its first room is up; they share one request.)
+if (enabled) {
+  const t0 = performance.now();
+  setTimeout(async () => {
+    const slow = setTimeout(() => note('slow'), 8000);
+    const p = await getPass().catch(() => null);
+    clearTimeout(slow);
+    if (p) {
+      lastPass = p; lastPassAt = Date.now();
+      const s = (performance.now() - t0) / 1000;
+      track('pass_ready', { load_ms: s < 2 ? 'under-2s' : s < 5 ? '2-5s' : s < 10 ? '5-10s' : 'over-10s' });
+    } else {
+      let why = '';
+      try { why = sessionStorage.getItem('wa-genie-error') || ''; } catch { /* ignore */ }
+      note('failed', { why: /^[a-z0-9_]{1,40}$/i.test(why) ? why : 'unknown' });
+    }
+  }, 1000);
+}
+
 let sending = false;
 async function flush() {
   clearTimeout(timer);
@@ -101,7 +137,7 @@ async function flush() {
 if (enabled) {
   addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden' || !queue.length) return;
-    if (!currentPass() && !debug) return;          // no fresh pass: keep the events, in case the visitor comes back
+    if (!currentPass() && !debug) { note('lost', { queued: String(Math.min(queue.length, 25)) }); return; }   // no fresh pass: keep the events, in case the visitor comes back
     clearTimeout(timer);
     navigator.sendBeacon(ENDPOINT, new Blob([payload(queue.splice(0, 25), currentPass())], { type: 'text/plain' }));
   });
