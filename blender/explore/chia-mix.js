@@ -35,7 +35,7 @@ const DEFAULTS = {
     moodTitle: 'Pick a mood', mixTitle: 'Mix an experiment', names: { mood: 'Mood', base: 'Base', flavour: 'Flavour', topping: 'On top', seed: 'Chia' },
     steps: { mood: 'What mood is it?', base: 'What shall we set it in?', flavour: 'And the flavour?', topping: 'Something on top?' },
     swapYes: 'Swap to {x}', swapNo: 'Keep mine', swapLine: 'Would you try {x} instead of {y}? {reason}', back: '‹ Back', next: 'Next ›', skip: 'Skip', write: 'Get my recipe',
-    cap: 'Gemma writes it for you (3 a visit).', capNone: "I've written three this visit, so that's my pen done. Your choices are kept.",
+    cap: 'Gemma writes it for you (3 free a day, {n} left today).', capNone: "I've written three today, so that's my pen done. Your choices are kept.",
     writing: "Gemma's writing your recipe…", failed: "My pen's run dry. Your choices are kept, so try again in a bit.",
     summary: 'Your jar', moodAck: "{x}. I'll lean that way.", written: "Here's your jar. Keep it if you like it.",
     breakfast: 'Ready by breakfast?', breakfastLine: "Set it tonight and it'll be ready by 7.", jars: 'Make 4 jars', jarsLine: "Four jars, then. I've scaled your list.",
@@ -212,7 +212,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     writing = true; failed = false; draw();
     track?.('tell_set', { kind: 'mix', from });
     onStart?.(rec);                                           // the page knows the jar before the write-out lands (its notebook line)
-    const full = await writer.writeNow(rec);
+    const full = await writer.writeNow(rec, 'mix');
     writing = false;
     if (!full) { failed = true; return draw(); }
     sound?.mix?.('done');

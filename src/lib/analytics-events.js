@@ -35,7 +35,7 @@ export const EVENTS = {
   atom_highlight: ['atom', 'atom_kind', 'nav_mode', 'room', 'step'],   // an idea's bubble opened into its highlight
   atom_capture: ['atom', 'atom_kind', 'nav_mode', 'room', 'step', 'method', 'book_size'],   // kept; method: button, swipe or book
   chat_size: ['panel_size', 'method'],                             // panel_size: line, short, full; method: drag, tap, button, auto
-  book_open: ['from', 'book_size'],                                // from: chip, card, notice_board
+  book_open: ['from', 'book_size'],                                // from: chip, card, notice_board, basket, cast, mix
   book_clear: ['book_size'],
   // Cook mode and the shopping list (cook-mode-ux.md §4). Counts only: no recipe names, no ingredients, no list items
   cook_open: ['from'],                    // from: book, or loose (a recipe not in the book)
@@ -50,6 +50,12 @@ export const EVENTS = {
   recipe_full_asked: ['atom', 'room'],                             // the "full recipe" button (or cook mode) asked Gemma to write one out
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3
   recipe_full_failed: ['atom', 'room', 'reason'],                  // reason: timeout, bot_check, rate_limited, error
+  recipe_print: [],                                                // "Save as PDF / print" on a written recipe
+  // The recipe basket (Stage 1, docs/basket-stage1-design.md): do visitors use up their 3 free write-outs a day?
+  basket_add: ['from', 'basket_size'],                             // from: button, swipe, book, cast, star_chart
+  checkout_open: ['from', 'basket_size', 'remaining'],             // from: chip, tab, cast, star_chart; remaining: today's write-outs left
+  checkout_written: ['count', 'failed', 'remaining'],              // one checkout's "Write out": how many written, how many failed
+  allowance_reached: ['from'],                                     // a write took today's left to 0; from: checkout, book, mix, cook
 
   // The front door at / (docs/front-door-spec.md)
   door_view: [],

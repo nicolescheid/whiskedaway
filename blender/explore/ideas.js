@@ -200,7 +200,7 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
     hl.setAttribute('aria-labelledby', 'idea-hl-title');
     hl.style.setProperty('--ring', RIBBONS[a.room]?.colour || 'var(--berry)');
     // The ✕ comes last in the DOM, so the Tab order is Read, Not this, Keep, ✕ (it's drawn in the corner)
-    hl.innerHTML = `<div class="stamp s-keep" aria-hidden="true">♥ Into the book</div><div class="stamp s-no" aria-hidden="true">Not today ⟲</div>
+    hl.innerHTML = `<div class="stamp s-keep" aria-hidden="true">♥ Into the basket</div><div class="stamp s-no" aria-hidden="true">Not today ⟲</div>
       <div class="meta">${metaLine(a, a.room !== here?.())}</div>
       <h4 id="idea-hl-title"><button class="read" data-act="read">${esc(a.title)}</button></h4>
       <p class="hook">${esc(a.hook || a.body)}</p>

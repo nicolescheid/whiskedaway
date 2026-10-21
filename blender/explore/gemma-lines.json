@@ -49,12 +49,13 @@
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",
   "write_out": {
     "button": "Get the full recipe",
-    "remaining": "Gemma writes it for you (3 a visit, {n} left).",
-    "remaining_one": "Gemma writes it for you (3 a visit, one left).",
+    "remaining": "Gemma writes it for you (3 free a day, {n} left today).",
+    "remaining_one": "Gemma writes it for you (3 free a day, one left today).",
     "writing": "Gemma is writing…",
-    "at_cap": "That's three recipes I've written this visit. The short version's above.",
+    "at_cap": "That's my three written out for today. The short version's above, and I'll write more tomorrow.",
     "failed": "My pen's run dry. The short version's above. Try again in a bit.",
-    "diet_question": "Anything I should avoid?"
+    "diet_question": "Anything I should avoid?",
+    "print": "Save as PDF / print"
   },
   "tell": {
     "_about": "Tell Gemma V1, keyed as tell.js and explore.html read them (tell-gemma/v1). {two} = the first two things, joined; {many} = 'A, b and a few more'; {c} = cuisines; {d} = diets; {p} = pantry words; {diet} and {room} as named. Every line stays under 100 characters.",
@@ -782,8 +783,8 @@
       "swapped": "Swapped. I think you'll like it.",
       "kept": "Fair enough. Yours to choose.",
       "write": "Get my recipe",
-      "cap": "Gemma writes it for you (3 a visit, {n} left).",
-      "capNone": "That's three recipes written this visit. The jar's short version is still yours.",
+      "cap": "Gemma writes it for you (3 free a day, {n} left today).",
+      "capNone": "That's my three recipes for today. The jar's short version is still yours.",
       "written": "Here's your jar.",
       "moodAck": "{m}. I'll lean that way.",
       "breakfast": "Ready by breakfast?",
@@ -1018,24 +1019,27 @@
     "closed": "{label} is only engraved on the dial. There is no door behind it."
   },
   "cast": {
-    "_about": "Centrepiece write-outs (spell table, Cuddlecore pot, Flourish table). writing: while she writes (5-15 s). done: as the page opens. atCap: the 3 write-outs a visit are used, the idea card opens. failed: write-out didn't work, the card opens.",
+    "_about": "Centrepiece write-outs (spell table, Cuddlecore pot, Flourish table). Stage 1 (basket): the touch puts the room's idea in the basket and opens checkout with it ticked. added: said then. writing: while she writes after the visitor taps Write (5-15 s). done: as it lands in the book. atCap: today's 3 are used, the leaflet waits in the basket (PLACEHOLDER). failed: didn't work, it stays in the basket (PLACEHOLDER).",
     "spell": {
       "writing": "Chocolate bowl, whisk, a bit of nerve. Give me a moment.",
       "done": "There. Ready when you are.",
-      "atCap": "That's three spells cast this visit. Here's an idea to look at instead.",
-      "failed": "The spell fizzled. Here's an idea to look at instead."
+      "atCap": "That's my three for today. It's in your basket for tomorrow.",
+      "failed": "That one didn't take. It's still in your basket.",
+      "added": "It's in your basket. Tick it and I'll write it out."
     },
     "pot": {
       "writing": "Pot's on. Let me write this one out properly.",
       "done": "Written out. Ready when you are.",
-      "atCap": "That's three written out this visit. Here's an idea from the pot instead.",
-      "failed": "The pot's gone quiet on me. Here's an idea instead."
+      "atCap": "That's my three for today. It's in your basket for tomorrow.",
+      "failed": "That one didn't take. It's still in your basket.",
+      "added": "It's in your basket. Tick it and I'll write it out."
     },
     "table": {
       "writing": "Laying the table. Let me write it all down.",
       "done": "The table's laid. Ready when you are.",
-      "atCap": "That's three tables laid this visit. Here's an idea to look at instead.",
-      "failed": "I couldn't lay that one out. Here's an idea instead."
+      "atCap": "That's my three for today. It's in your basket for tomorrow.",
+      "failed": "That one didn't take. It's still in your basket.",
+      "added": "It's in your basket. Tick it and I'll write it out."
     },
     "busy": "Still writing that one. Give me a moment.",
     "nothing": "I've nothing to write out yet. Have a look around and tell me what you like."
@@ -1052,5 +1056,48 @@
       "The chart's been right before. {idea}.",
       "Hold still. The chart says {idea}."
     ]
+  },
+  "basket": {
+    "_about": "PLACEHOLDERS for content editor (3). The recipe basket (Stage 1, docs/basket-stage1-design.md): ♥ Keep puts a leaflet in the basket; checkout (the book's Basket page) has Gemma write ticked ones out in full into the book, 3 free a day per device. {n} = how many.",
+    "chip_long": "Your basket",
+    "chip_short": "Basket",
+    "tab": "Basket",
+    "title": "Your basket",
+    "intro": "Tick the ones you'd like me to write out in full. They go into your book for good.",
+    "empty": "Nothing in your basket yet. When an idea catches your eye, tap ♥ Keep and its leaflet comes in here.",
+    "free": "{n} free today",
+    "free_one": "One free today",
+    "none": "That's my three for today. Your leaflets wait here, and I'll write more tomorrow.",
+    "pick_full": "That's as many as I can write today.",
+    "write_button": "Write out {n}",
+    "write_one": "Write it out",
+    "writing": "Writing…",
+    "written": "Written into your book",
+    "failed": "That one didn't take. It's still in your basket. Try again in a bit.",
+    "open_book": "Open my book",
+    "read": "Read ›",
+    "remove": "Take out",
+    "remove_page": "Take it out",
+    "in_basket": "In your basket",
+    "keep_button": "Put it in my basket",
+    "book_empty": "Nothing written out yet. Tick leaflets in your basket and Gemma writes them out in here.",
+    "keep": {
+      "_when": "As keep._when: the 1st keep of the visit, the 3rd, then every 4th. Now the keep goes into the basket.",
+      "first_ever": "That's in your basket. It's up at the top, and it stays on this device.",
+      "first_this_visit": [
+        "In the basket it goes.",
+        "Kept. It's in your basket."
+      ],
+      "third": [
+        "Three in the basket. I'm starting to see what you like.",
+        "Three kept. I'd say you're after {cluster_label}."
+      ],
+      "later": [
+        "Kept.",
+        "Good one.",
+        "That's in.",
+        "In it goes."
+      ]
+    }
   }
 }

@@ -1,16 +1,48 @@
 // "Write it out in full" (recipe-book-ux.md v4 §8, stage 4): on a recipe's page in the book, Gemma writes the seed recipe out
 // with quantities, steps and a tip, through the genie Worker's recipe route (tome inn-idea). The seed recipe is always
-// there and free; writing costs one of 3 a visit. Re-opening one she wrote is free: it's kept in the book for a kept recipe,
-// and in this tab's sessionStorage for one that isn't. A failure doesn't count against the cap.
+// there and free; writing costs one of 3 a day on this device (the basket's allowance, docs/basket-stage1-design.md: localStorage
+// `wa-allowance`, shared by checkout, this button, the Mix and cook mode). Re-opening one she wrote is free: it's kept in the
+// book, and in this tab's sessionStorage. A failure doesn't count against the cap.
 
 const KEY = 'wa-written';
 export const WRITE_CAP = 3;
 export const DIETS = [['vegetarian', 'Vegetarian'], ['vegan', 'Vegan'], ['gluten-free', 'Gluten-free'], ['dairy-free', 'Dairy-free'], ['nut-free', 'Nut-free'], ['low-fodmap', 'Low-FODMAP']];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-function load() { try { return JSON.parse(sessionStorage.getItem(KEY) || 'null') || { n: 0, recipes: {} }; } catch { return { n: 0, recipes: {} }; } }
+function load() { try { return JSON.parse(sessionStorage.getItem(KEY) || 'null') || { recipes: {} }; } catch { return { recipes: {} }; } }
 let mem = load();
 const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(mem)); } catch { /* storage blocked: memory only */ } };
+
+// Today's allowance: { day: 'YYYY-MM-DD' (the device's own date), n }. Read every time, so another tab's write counts too
+const ALLOW = 'wa-allowance';
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+let allowMem = { day: today(), n: 0 };
+function usedToday() {
+  try { const a = JSON.parse(localStorage.getItem(ALLOW) || 'null'); if (a) allowMem = a; } catch { /* blocked: memory */ }
+  return allowMem.day === today() ? Number(allowMem.n) || 0 : 0;
+}
+function spend() {
+  allowMem = { day: today(), n: usedToday() + 1 };
+  try { localStorage.setItem(ALLOW, JSON.stringify(allowMem)); } catch { /* blocked: memory only */ }
+}
+
+/** "Save as PDF / print": the recipe alone on a print-only sheet (the print stylesheet hides the rest), then the browser's print */
+export function printRecipe(rec, f) {
+  let sheet = document.getElementById('print-sheet');
+  if (!sheet) { sheet = document.createElement('div'); sheet.id = 'print-sheet'; document.body.appendChild(sheet); }
+  sheet.innerHTML = `<h1>${esc(f.name || rec.title)}</h1>${rec.hook ? `<p class="ps-hook">${esc(rec.hook)}</p>` : ''}
+    <h2>You'll need${f.serves ? ` (serves ${f.serves})` : ''}</h2>
+    <ul>${f.ingredients.map(i => `<li>${i.amount ? `<b>${esc(i.amount)}${i.unit ? ` ${esc(i.unit)}` : ''}</b> ` : ''}${esc(i.item)}</li>`).join('')}</ul>
+    <h2>How${f.time ? ` (${esc(f.time)})` : ''}</h2>
+    <ol>${f.steps.map(x => `<li>${esc(typeof x === 'string' ? x : x.text)}</li>`).join('')}</ol>
+    ${f.tip ? `<p><b>Gemma's tip:</b> ${esc(f.tip)}</p>` : ''}
+    <p class="ps-foot">Written by Gemma at the WhiskedAway Inn · whiskedaway.com</p>`;
+  document.body.classList.add('print-recipe');
+  const done = () => { document.body.classList.remove('print-recipe'); removeEventListener('afterprint', done); };
+  addEventListener('afterprint', done);
+  window.print();
+  setTimeout(done, 1000);                              // browsers that print without afterprint (the dialog blocks until then anyway)
+}
 
 /** A written recipe, checked into a safe shape (or null) */
 export function cleanRecipe(r) {
@@ -31,20 +63,21 @@ export function cleanRecipe(r) {
            ingredients, steps, tip: s(r.tip, 240) };
 }
 
-export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange, onLanded }) {
+export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFor, track, bucket, onWritten, onDiet, onChange, onLanded, onAllowanceReached }) {
   const L = {
     button: lines.button || 'Get the full recipe',
-    remaining: lines.remaining || 'Gemma writes it for you (3 a visit, {n} left).',
-    remainingOne: lines.remaining_one || 'Gemma writes it for you (3 a visit, one left).',
+    remaining: lines.remaining || 'Gemma writes it for you (3 free a day, {n} left today).',
+    remainingOne: lines.remaining_one || 'Gemma writes it for you (3 free a day, one left today).',
     writing: lines.writing || 'Gemma is writing…',
-    atCap: lines.at_cap || "That's three recipes I've written this visit. The short version's above.",
+    atCap: lines.at_cap || "That's my three written out for today. The short version's above, and I'll write more tomorrow.",
+    print: lines.print || 'Save as PDF / print',
     failed: lines.failed || "My pen's run dry. The short version's above. Try again in a bit.",
     diet: lines.diet_question || 'Anything I should avoid?',
   };
   let busy = null;                                    // the atom being written, while it's being written
   let failed = null;                                  // the atom whose last try failed (her line shows until the next try)
   let openDiet = false;                               // the visitor opened "Anything to avoid? ›" on this page
-  const left = () => Math.max(0, WRITE_CAP - mem.n);
+  const left = () => Math.max(0, WRITE_CAP - usedToday());
   /** A recipe she's already written for this atom, from the book or this tab */
   const written = id => book.get(id)?.full || mem.recipes[id] || null;
 
@@ -54,13 +87,18 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
       <h4>How${f.time ? ` <span class="small">${esc(f.time)}</span>` : ''}</h4>
       <ol class="bk-steps">${f.steps.map(x => `<li>${esc(typeof x === 'string' ? x : x.text)}</li>`).join('')}</ol>
       ${f.tip ? `<p class="bk-tip"><b>Gemma's tip:</b> ${esc(f.tip)}</p>` : ''}
-      <p class="small">Written by Gemma for this visit${book.has(f.id) ? ', and kept in your book' : ''}.</p>`;
+      <p class="small">Written by Gemma${book.has(f.id) ? ', and kept in your book' : ''}.</p>
+      <p class="bk-printrow"><button class="bk-outline bk-print">${esc(L.print)}</button></p>`;
   }
 
   /** Fill a page's write-out slot. `seedEl` holds the short version, which a written recipe replaces. */
   function render(el, rec, seedEl) {
     const f = written(rec.id);
-    if (f) { seedEl.innerHTML = fullHtml({ ...f, id: rec.id }); el.innerHTML = ''; return; }
+    if (f) {
+      seedEl.innerHTML = fullHtml({ ...f, id: rec.id }); el.innerHTML = '';
+      seedEl.querySelector('.bk-print').onclick = () => { track?.('recipe_print'); printRecipe(rec, f); };
+      return;
+    }
     if (busy === rec.id) {
       el.innerHTML = `<p class="bk-writing" role="status">${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p>`;
       return;
@@ -96,7 +134,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     if (onChange) onChange(); else render(el, rec, seedEl);
   }
   /** Write one out (the page's button, or cook mode's offer): the recipe, or null if it failed. Counts against the cap. */
-  async function writeNow(rec) {
+  async function writeNow(rec, from = 'book') {
     if (busy || !left()) return null;
     busy = rec.id;
     failed = null;
@@ -113,12 +151,13 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     }
     busy = null;
     if (recipe) {
-      mem.n += 1;
+      spend();
       mem.recipes[rec.id] = recipe;
       save();
       if (book.has(rec.id)) book.setFull(rec.id, recipe);
       track?.('recipe_full', { atom: rec.id, room: rec.room, remaining: bucket(left()) });
       onWritten?.(rec, recipe);
+      if (!left()) { track?.('allowance_reached', { from }); onAllowanceReached?.(from); }
     } else {
       failed = rec.id;
       track?.('recipe_full_failed', { atom: rec.id, room: rec.room, reason });
@@ -127,5 +166,20 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     return recipe;
   }
 
-  return { render, written, writeNow, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { n: mem.n, recipes: {} }; save(); } };
+  /** The checkout's diet question: shown (in el) only until it's been asked once this visit, like a page's first ask */
+  function dietAsk(el) {
+    const diet = [].concat(visit.get('dietary') || []);
+    if (diet.length || mem.dietAsked) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="bk-diet" role="group" aria-label="${esc(L.diet)}"><p class="small">${esc(L.diet)}</p>
+      ${DIETS.map(([id, label]) => `<button data-diet="${id}" aria-pressed="false">${esc(label)}</button>`).join('')}</div>`;
+    el.querySelectorAll('[data-diet]').forEach(b => b.onclick = () => {
+      const now = [].concat(visit.get('dietary') || []), id = b.dataset.diet;
+      const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id];
+      visit.set('dietary', next.length ? next : null);
+      b.setAttribute('aria-pressed', String(next.includes(id)));
+      onDiet?.(next);
+    });
+  }
+
+  return { render, written, writeNow, dietAsk, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
 }

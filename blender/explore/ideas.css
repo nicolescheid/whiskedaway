@@ -580,3 +580,38 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ck-ctl:not(.answered) .ck-readout { font-weight: 500; font-size: 14px; color: var(--ink-soft); }
 @media (prefers-reduced-motion: reduce) { .ck-thread, .ck-ball-body, .ck-bead, .ck-needle { transition: none; } }
 @media (max-width: 400px) { .ck-end { font-size: 12px; } .ck-knob { width: 108px; height: 108px; } }
+
+/* The recipe basket's checkout (checkout.js, Stage 1): the book's Basket page. Phone first: one leaflet a row, 44 px targets */
+.bs-allow { margin: 4px 0 6px; font: 600 15px 'Quicksand'; color: var(--berry); }
+.bs-list { list-style: none; margin: 8px 0 10px; padding: 0; }
+.bs-leaf { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 6px; border-bottom: 1px solid var(--line); padding: 2px 0; }
+.bs-leaf label { display: grid; grid-template-columns: 24px 10px 1fr; column-gap: 8px; align-items: center; min-height: 48px; cursor: pointer; }
+.bs-leaf input { width: 22px; height: 22px; margin: 0; accent-color: var(--berry); }
+.bs-leaf i { width: 10px; height: 10px; border-radius: 50%; background: var(--ring); }
+.bs-leaf label span { display: flex; flex-direction: column; min-width: 0; }
+.bs-leaf b { font: 600 15px 'Quicksand'; }
+.bs-leaf small { font: 12px 'Quicksand'; color: var(--ink-soft); }
+.bs-leaf input:disabled + i + span { opacity: .55; }
+.bs-acts { display: flex; gap: 2px; }
+.bs-acts .link { min-height: 44px; min-width: 44px; padding: 0 6px; }
+.bs-st { grid-column: 1 / -1; padding: 0 0 6px 42px; font: italic 15px 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
+.bs-st .dots { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
+.bs-fail { color: #7a3e1d; }
+.bs-write:disabled { opacity: .5; }
+.bs-done { list-style: none; padding: 0; margin: 4px 0 10px; }
+.bs-done li { min-height: 44px; display: flex; align-items: center; gap: 6px; color: var(--berry); }
+.bk-printrow { margin-top: 10px; }
+@media (prefers-reduced-motion: reduce) { .bs-st .dots { animation: none; } }
+
+/* "Save as PDF / print" (writeout.js printRecipe): only the recipe's print sheet is printed */
+#print-sheet { display: none; }
+@media print {
+  body.print-recipe > *:not(#print-sheet) { display: none !important; }
+  body.print-recipe { background: #fff !important; overflow: visible !important; }
+  body.print-recipe #print-sheet { display: block; color: #000; font: 12pt/1.45 Georgia, 'Crimson Pro', serif; max-width: 17cm; margin: 0 auto; }
+  #print-sheet h1 { font: 600 22pt Georgia, serif; margin: 0 0 4pt; }
+  #print-sheet h2 { font: 600 13pt Georgia, serif; margin: 14pt 0 4pt; }
+  #print-sheet .ps-hook { font-style: italic; margin: 0 0 6pt; }
+  #print-sheet li { margin: 2pt 0; break-inside: avoid; }
+  #print-sheet .ps-foot { margin-top: 18pt; font-size: 9pt; color: #555; }
+}

@@ -279,7 +279,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     load(r);
     // "Cook this" just works: no write-out yet, so Gemma starts one (or joins the one on its way); it lands via refresh()
     if (!hasFull && writer && writer.busyFor !== r.id) {
-      if (writer.left > 0 && !writer.busy) writer.writeNow(r);
+      if (writer.left > 0 && !writer.busy) writer.writeNow(r, 'cook');
       else failedWrite = true;                          // 3 a visit used, or busy on another: the short version and its fallback timer
     }
     at = Math.min(saved()[r.id] ?? 0, steps.length);
