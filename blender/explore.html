@@ -1811,6 +1811,20 @@ function bestHere() {
   return null;
 }
 // An idea's page in the book: its own page if kept, else a loose page (Keep, Cook this, the write-out)
+// A sheet the visitor opened while she wrote (Check in, Tell Gemma, the Mix, Sweet Spells' sheets, cook mode): what the cast
+// opens waits until it's closed and its history step back has gone, or the book would cover it and leave it inert (Nicole's phone)
+const sheetOpen = () => tell.isOpen || chia.isOpen || sweet.isOpen || cook.isOpen;
+function whenFree(fn) {
+  if (!sheetOpen()) return fn();
+  const iv = setInterval(() => {
+    if (sheetOpen()) return;
+    clearInterval(iv);
+    let ran = false;
+    const go = () => { if (!ran) { ran = true; fn(); } };
+    addEventListener('popstate', () => setTimeout(go), { once: true });
+    setTimeout(go, 400);                                     // the step back may already have gone
+  }, 300);
+}
 const ideaPage = (rec, from) => (book.has(rec.id) ? bookView.open(rec.id, { from }) : bookView.open(null, { from, loosePage: rec }));
 /** An idea's card on the tray, opened (or its page in the book, if the tray won't take it: kept, or a headline already out) */
 function ideaCard(rec, why, from) {
@@ -1825,7 +1839,7 @@ async function cast(id) {
   if (!best) return say(line('nothing'), [], true);
   const a = atomsById[best.atom], rec = book.get(a.id) || snapshot(a, best.why);
   if (writer.written(rec.id)) { ideaPage(rec, 'cast'); return say(line('done'), [], true); }
-  if (!writer.left) { say(line('atCap'), [], true); holdLine(); return ideaCard(rec, best.why, 'cast'); }
+  if (!writer.left) { say(line('atCap'), [], true); holdLine(); return whenFree(() => ideaCard(rec, best.why, 'cast')); }
   casting = true;
   const glow = hotspots.find(h => h.id === id)?.el;          // the object glows while she writes
   glow?.classList.add('casting');
@@ -1836,8 +1850,8 @@ async function cast(id) {
   thinking(false);
   glow?.classList.remove('casting');
   casting = false;
-  if (!full) { say(line('failed'), [], true); holdLine(); return ideaCard(rec, best.why, 'cast'); }
-  ideaPage(rec, 'cast');
+  if (!full) { say(line('failed'), [], true); holdLine(); return whenFree(() => ideaCard(rec, best.why, 'cast')); }
+  whenFree(() => ideaPage(rec, 'cast'));
   say(line('done'), [], true);
   holdLine();
 }
