@@ -1371,6 +1371,7 @@ addEventListener('keydown', e => { if (e.key === 'Escape') $('dialdlg').classLis
 
 // ---------- navigator
 let navTimer, navSeq = 0, lineHeldUntil = 0;
+let casting = false;                                         // a centrepiece is writing (B1): her lines wait for it
 const holdLine = () => { lineHeldUntil = Date.now() + 3000; };
 function scheduleNavigate() {
   clearTimeout(navTimer);
@@ -1415,7 +1416,7 @@ async function navigate() {
   const gemma = r.gemma;                                // her reading has no lead now (content/no-lead), so nothing to strip
   // A keep, set-aside or undo line stays up for 3 s before her next one (UX T1), unless a newer step comes along
   const speak = () => {
-    if (seq !== navSeq) return;
+    if (seq !== navSeq || casting) return;                   // a cast's writing line stays until the write ends (B1 QA)
     const empty = emptyRoomLine();
     if (empty) say(empty, [], true);
     else if (state.offerTell) {
@@ -1668,7 +1669,7 @@ const ideas = createIdeas({
   state, atoms: atomsById, save: () => store.save(state), here: () => homeOf(state.room),
   avatar: () => $('cw-av'), bookChip: () => $('btn-book'),
   layout: (what, on) => { if (what === 'highlight') chatUI.hold(on); },
-  onFirst: () => { const wait = lineHeldUntil - Date.now(); if (wait > 0) setTimeout(() => say(L.ideaFirst, [], true), wait); else say(L.ideaFirst, [], true); },   // a held line (an Inn note's) is read first
+  onFirst: function first() { const wait = casting ? 500 : lineHeldUntil - Date.now(); if (wait > 0) setTimeout(first, wait); else say(L.ideaFirst, [], true); },   // a held line (an Inn note's, a cast's) is read first
   // Once per device, the first time a touch visitor opens an idea: how to swipe it
   wantHint: () => !book.hint,
   onHint: () => { book.hint = true; say(LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
@@ -1709,10 +1710,19 @@ const ideas = createIdeas({
   },
 });
 // "Write it out in full" (explore/writeout.js): the genie's recipe route, seeded by the card and the whole visit, 3 a visit
+// A write-out through the genie: the visitor pass first, given up after 20 s (the person check can hang, QA on B1), then 45 s
+// to write. Giving up throws a timeout, so writeout.js says it failed and doesn't count it
+const PASS_WAIT = 20000;
+async function recipeFetch(p) {
+  let timer;
+  try { await Promise.race([getPass(), new Promise((_, no) => { timer = setTimeout(() => no(new Error('timeout: no visitor pass')), PASS_WAIT); })]); }
+  finally { clearTimeout(timer); }
+  return genieFetch('/recipe', p, { signal: AbortSignal.timeout(45000) });
+}
 const writer = createWriteOut({
   book, visit, lines: LINES.write_out, track, bucket: n => (n >= 2 ? '2-3' : String(n)),
   // window.__recipeFetch is a test seam (scripted checks without the Worker); the site always uses the genie
-  fetchRecipe: payload => (window.__recipeFetch || (p => genieFetch('/recipe', p, { signal: AbortSignal.timeout(45000) })))(payload),
+  fetchRecipe: payload => (window.__recipeFetch || recipeFetch)(payload),
   payloadFor: rec => ({
     tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room,
     idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
@@ -1786,7 +1796,6 @@ const CAST_LINES = {                                          // stand-ins: gemm
   failed: "That one didn't take. Here's an idea to look at instead.",
   writing: 'Let me write it out for you.', done: 'Written out. Ready when you are.',
 };
-let casting = false;
 // This room's recipe ideas the visitor could still be offered: not set aside, not clashing with a dietary need
 const roomIdeas = () => world.atoms.filter(a => a.room === homeOf(state.room) && a.kind === 'recipe idea'
   && !state.dismissed.includes(a.id) && !dietClash(a));
