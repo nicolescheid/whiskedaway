@@ -404,7 +404,9 @@
         "plain flour": "all-purpose flour",
         "desiccated coconut": "shredded coconut",
         "prawn": "shrimp",
-        "tinned": "canned"
+        "tinned": "canned",
+        "bicarb soda": "baking soda",
+        "bicarb": "baking soda"
       },
       "CA": {
         "courgette": "zucchini",
@@ -422,7 +424,9 @@
         "plain flour": "all-purpose flour",
         "desiccated coconut": "shredded coconut",
         "prawn": "shrimp",
-        "tinned": "canned"
+        "tinned": "canned",
+        "bicarb soda": "baking soda",
+        "bicarb": "baking soda"
       }
     },
     "_synonyms": "word → words that mean the same; a pantry word matches an atom when it or one of these is in its key_ingredients (after singularising).",

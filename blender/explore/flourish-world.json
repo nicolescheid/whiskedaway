@@ -242,7 +242,7 @@
       "seed": { "name": "Silverbeet and feta filo pie", "why": "Silverbeet grows right through winter, and this uses a whole bunch." },
       "body": "Wilt silverbeet with onion, mix with feta and egg, and bake between buttered layers of filo until golden." },
     { "id": "whitebait-fritters", "room": "flourish", "kind": "recipe idea", "spoons": 2, "title": "Whitebait fritters",
-      "short": "Whitebait", "icon": "🐠", "ref": "the whitebait fritters",
+      "short": "Whitebait", "icon": "🍤", "ref": "the whitebait fritters",
       "hook": "Whitebait in a light egg batter, fried in small golden fritters.", "time": 20,
       "key_ingredients": ["whitebait", "eggs", "flour", "butter", "lemon"],
       "method_short": "Mix whitebait with beaten eggs and a spoonful of flour. Fry small spoonfuls in butter until golden, and finish with lemon.",

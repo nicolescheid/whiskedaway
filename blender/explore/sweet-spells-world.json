@@ -250,7 +250,7 @@
       "seed": { "name": "Anzac biscuits", "why": "Oats, coconut and golden syrup, baked until chewy. Good with a cup of tea." },
       "body": "Melt butter and golden syrup, then stir in the oats, flour, coconut and sugar with bicarb dissolved in hot water. Roll into balls, flatten and bake until golden." },
     { "id": "hokey-pokey", "room": "sweet-spells", "kind": "recipe idea", "spoons": 2, "title": "Hokey pokey",
-      "short": "Hokey pokey", "icon": "🐝", "ref": "the hokey pokey",
+      "short": "Hokey pokey", "icon": "🍭", "ref": "the hokey pokey",
       "hook": "Crunchy golden honeycomb, broken into shards.", "time": 20,
       "key_ingredients": ["caster sugar", "golden syrup", "baking soda"],
       "method_short": "Boil sugar and golden syrup to a deep gold, then whisk in baking soda off the heat. Pour into a lined tin, cool and break into pieces. Hot sugar burns, so keep little ones back.",
