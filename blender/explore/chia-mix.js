@@ -105,8 +105,9 @@ export function mixRecipe(D, d) {
   };
 }
 
-export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten }) {
-  const D = chiaData(lines), T = D.lines;
+export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten, words = t => t }) {
+  // words(text): the visitor's shopping words (shopwords.js) for what the sheet shows; the data keeps the written words
+  const D = chiaData(lines), T = D.lines, w = t => words(String(t ?? ''));
   const root = document.createElement('div');
   root.id = 'chia-mix';
   root.className = 'tell';
@@ -129,17 +130,17 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     const opts = optionsFor(D, step);
     if (step === 'mood') {
       return `<ul class="mx-moods" role="group" aria-label="${esc(T.steps.mood)}">${Object.entries(D.moods).map(([id, m]) =>
-        `<li><button data-s="mood" data-v="${esc(id)}" aria-pressed="${draft.mood === id}" aria-label="${esc(m.label)}. ${esc(m.inIt || '')}"><b>${esc(m.label)}</b><span>${esc(m.inIt || '')}</span></button></li>`).join('')}</ul>`;
+        `<li><button data-s="mood" data-v="${esc(id)}" aria-pressed="${draft.mood === id}" aria-label="${esc(w(m.label))}. ${esc(w(m.inIt))}"><b>${esc(w(m.label))}</b><span>${esc(w(m.inIt))}</span></button></li>`).join('')}</ul>`;
     }
     return `<div class="tl-chips tl-pick" role="group" aria-label="${esc(T.steps[step])}">${Object.entries(opts).map(([id, label]) =>
-      `<button data-s="${step}" data-v="${esc(id)}" aria-pressed="${draft[step] === id}">${esc(label)}</button>`).join('')}</div>`;
+      `<button data-s="${step}" data-v="${esc(id)}" aria-pressed="${draft[step] === id}">${esc(w(label))}</button>`).join('')}</div>`;
   };
   // Gemma's swap: an inline line under the choices, on whichever step it shows, never in the way of Next
   const swapHtml = () => {
     const r = swapFor(D, draft, declined);
     if (!r) return reply ? `<p class="small mx-reply" role="status">${esc(reply)}</p>` : '';
-    if (!r.swap) return `<div class="ck-offer mx-swap mx-note" role="status"><p>${esc(r.line)}</p></div>`;   // a note: nothing to choose
-    return `<div class="ck-offer mx-swap" role="status"><p>${esc(r.line)}</p><p><button class="bk-cook" data-swap="${r.i}">${esc(T.swapYes.replace('{x}', labelOf(D, r.swap.step, r.swap.to).toLowerCase()))}</button>
+    if (!r.swap) return `<div class="ck-offer mx-swap mx-note" role="status"><p>${esc(w(r.line))}</p></div>`;   // a note: nothing to choose
+    return `<div class="ck-offer mx-swap" role="status"><p>${esc(w(r.line))}</p><p><button class="bk-cook" data-swap="${r.i}">${esc(w(T.swapYes.replace('{x}', labelOf(D, r.swap.step, r.swap.to).toLowerCase())))}</button>
       <button class="bk-outline" data-keep="${r.i}">${esc(T.swapNo)}</button></p></div>`;
   };
 
@@ -158,7 +159,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     } else {
       $('#mx-title').textContent = T.mixTitle;
       const left = writer?.left ?? 0;
-      const rows = STEPS.filter(s => draft[s]).map(s => `<li><span>${esc(T.names?.[s] || s)}</span> <b>${esc(labelOf(D, s, draft[s]))}</b></li>`).join('');
+      const rows = STEPS.filter(s => draft[s]).map(s => `<li><span>${esc(T.names?.[s] || s)}</span> <b>${esc(w(labelOf(D, s, draft[s])))}</b></li>`).join('');
       body.innerHTML = `<p class="mx-dots">${[...STEPS, 'write'].map((_, i) => `<i class="${i === at ? 'on' : 'done'}"></i>`).join('')}</p>
         <h3 class="tl-h">${esc(T.summary)}</h3><ul class="mx-sum">${rows}</ul>${swapHtml()}
         ${writing ? `<div class="ck-offer"><p>${esc(T.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`

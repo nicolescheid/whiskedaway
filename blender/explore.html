@@ -1237,6 +1237,7 @@ function touch(id) {
     const now = sound.music(id);
     if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
     say(!sound.on ? obj.moment_quiet || obj.moment : now ? momentOf(id, obj) : obj.moment_stop || obj.moment, [], true);   // playing: its `moments` rotate too
+    holdLine();
   } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
     // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
     const got = chia.drawer(id);
@@ -1247,6 +1248,7 @@ function touch(id) {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
     say(momentOf(id, obj), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
+    holdLine();                         // her reading waits, so the object's line stays up long enough to read (QA 9 issue 2)
   } else if (obj.type === 'weather') {
     openWeather();
   } else if (obj.type === 'time') {
@@ -1740,6 +1742,7 @@ const bookView = createBookView({
 // Gemma's swaps, then the write-out as a loose page in the book, ready to keep or cook
 const chia = createChiaMix({
   visit, lines: LINES, writer, track, sound,
+  words: t => shopWords.text(t),                             // the Mix in the visitor's shopping words (QA 9 issue 3)
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
   say: t => { say(t, [], true); holdLine(); },
   onStart: rec => { atomsById[rec.id] = rec; },               // so the notebook, Keep and Cook this treat it like any idea
@@ -2029,8 +2032,20 @@ function renderTold() {
   $('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
     : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
   $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
-  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = () => (b.dataset.change === 'sweet' ? sweet.open('sweet', 'book') : tell.open(b.dataset.change, 'book')));
-  $('told').querySelector('[data-menu]')?.addEventListener('click', () => tell.openMenu('book'));
+  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? sweet.open('sweet', 'book') : tell.open(b.dataset.change, 'book'))));
+  $('told').querySelector('[data-menu]')?.addEventListener('click', fromBook(() => tell.openMenu('book')));
+}
+// A sheet opened from inside the book waits for the book's step back in history: otherwise that late step lands on the
+// sheet's own history entry and closes it again (QA 9 issue 1)
+function fromBook(fn) {
+  return () => {
+    if (!bookView.isOpen) return fn();
+    let ran = false;
+    const go = () => { if (!ran) { ran = true; fn(); } };
+    addEventListener('popstate', () => setTimeout(go), { once: true });
+    setTimeout(go, 400);                                     // no step back to wait for (the book had no history entry)
+    bookView.close();
+  };
 }
 visit.subscribe(({ part, key, value }) => {
   renderTold();

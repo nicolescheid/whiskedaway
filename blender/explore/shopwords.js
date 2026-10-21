@@ -6,6 +6,8 @@
 const TEXT_FIELDS = ['title', 'short', 'ref', 'hook', 'method_short', 'body'];
 const SEED_FIELDS = ['name', 'why'];
 const SKIP_AFTER = '(?!\\s+(?:seeds?|powder|ground))';          // "coriander seeds" stay coriander seeds
+// The swapped word's plural: "kūmaras" → "sweet potatoes", "prawns" → "shrimp" (QA 9 issue 4)
+const plural = w => (/(shrimp|zucchini)$/i.test(w) ? w : /(potato|tomato)$/i.test(w) ? `${w}es` : `${w}s`);
 
 /** A function that swaps one country's words into a string, or null when there's nothing to swap */
 export function swapper(words) {
@@ -13,16 +15,19 @@ export function swapper(words) {
   if (!pairs.length) return null;
   const rules = pairs.map(([from, to]) => ({
     re: new RegExp(`(?<![\\p{L}])${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(s?)(?![\\p{L}])${SKIP_AFTER}`, 'giu'), to }));
-  return text => rules.reduce((t, { re, to }) => t.replace(re, (m, s) => (m[0] !== m[0].toLowerCase() ? to[0].toUpperCase() + to.slice(1) : to) + s), String(text));
+  return text => rules.reduce((t, { re, to }) => t.replace(re, (m, s) => {
+    const w = s ? plural(to) : to;
+    return m[0] !== m[0].toLowerCase() ? w[0].toUpperCase() + w.slice(1) : w;
+  }), String(text));
 }
 
 export function createShopWords({ table = {}, atoms }) {
-  let current = null;
+  let current = null, swapNow = null;
   /** Show every atom in this country's words (a code like "US"); safe to call again whenever the country changes */
   function apply(country) {
     if (country === current) return false;
     current = country;
-    const swap = swapper(table[country]);
+    const swap = swapNow = swapper(table[country]);
     for (const a of atoms()) {
       const src = a.__written ||= {
         ...Object.fromEntries(TEXT_FIELDS.filter(k => a[k] != null).map(k => [k, a[k]])),
@@ -36,5 +41,7 @@ export function createShopWords({ table = {}, atoms }) {
     }
     return true;
   }
-  return { apply, get country() { return current; } };
+  /** Any other text (the Chiapothecary's Mix) in the same words */
+  const text = t => (swapNow ? swapNow(t) : t);
+  return { apply, text, get country() { return current; } };
 }
