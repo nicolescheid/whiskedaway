@@ -131,6 +131,9 @@ async function freshPass() {
   return pass;
 }
 
+/** The pass this tab already holds, if it's still good (no network, no waiting). */
+export const peekPass = () => cachedPass();
+
 /** A visitor pass, or null if one can't be had (the Worker then decides, per its rollout mode). */
 export async function getPass({ renew = false } = {}) {
   if (!SITEKEY) return null;

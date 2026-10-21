@@ -74,14 +74,36 @@ All events go through one function per surface, `track(name, params)`, which dro
 | `time_change` | The clock is pushed | `room`, `time_of_day` |
 | `season_change` | The glasshouse seasons wheel | `season` |
 | `dial_turn` | The hallway dial | `dial_choice` (a room ID or `star`) |
-| `atom_served` | A card appears | `atom` (content ID), `atom_kind` (`ritual`, `recipe idea`, `technique`, `ingredient story`, `why it works`), `nav_mode`, `room`, `step` |
-| `atom_open` | A card is opened | `atom`, `atom_kind`, `nav_mode`, `room`, `step` |
-| `atom_dismiss` | "Not this" | `atom`, `atom_kind`, `nav_mode`, `room` |
-| `nav_fallback` | The AI navigator failed and the local one answered | `reason` (`timeout`, `rate_limited`, `bot_check`, `error`) |
+| `atom_served` | An idea's bubble has been in view for 2 seconds (or the visitor opened it sooner), once per idea per page. Not when the navigator picks it: ideas it picks and replaces unseen, or while the front door is up, don't count. Until 21 Oct 2026 it fired at the pick, about 11 a visit | `atom` (content ID), `atom_kind` (`ritual`, `recipe idea`, `technique`, `ingredient story`, `why it works`), `nav_mode`, `room`, `step` |
+| `atom_open` | A card is opened: `from` is `highlight` ("Read ›") or `book` | `atom`, `atom_kind`, `nav_mode`, `room`, `step`, `from` |
+| `atom_highlight` | An idea's bubble is opened into its highlight | `atom`, `atom_kind`, `nav_mode`, `room`, `step` |
+| `atom_capture` | An idea is kept | `atom`, `atom_kind`, `nav_mode`, `room`, `step`, `method` (`button`, `swipe`, `book`), `book_size` |
+| `atom_dismiss` | "Not this" (sent when the 5 s undo closes) | `atom`, `atom_kind`, `nav_mode`, `room`, `method`, `undone` (`yes`, `no`) |
+| `nav_fallback` | The AI navigator failed and the local one answered | `reason`: `timeout`, `rate_limited` (429), `bot_check` (403), `upstream` (the Worker answered 5xx: the model or the Worker failed), `rejected` (other 4xx), `network` (the request never got through), `error` (anything else). Before 21 Oct 2026 `upstream`, `rejected` and `network` were all `error` |
 | `map_open`, `notebook_open` | The panels are opened | `room` |
 | `visit_forget` | "Forget this visit" | none |
 | `leave_to_inn` | "Back to the inn" or a door to / | `room`, `step` |
-| `erwina_seen` | Erwina, the Inn cat, appeared (there, not just her box or a trace) | none: no room, time or weather |
+| `erwina_seen` | Erwina, the Inn cat, appeared (there, not just her box or a trace) | none: no room, time or weather. She is only possible in the glasshouse (fair day), Flourish (rain) and the hallway (night), and only seen when the visitor holds still on her spot, so expect very few |
+
+### Ideas, the book, Tell Gemma and cook mode (explore world)
+
+Added after the first plan; counts only, never recipe text, diet answers, ingredients or list items.
+
+| Event | When | Parameters |
+|---|---|---|
+| `chat_size` | Gemma's chat panel changes size | `panel_size` (`line`, `short`, `full`), `method` (`drag`, `tap`, `button`, `auto`) |
+| `book_open` | The recipe book opens | `from` (`chip`, `card`, `notice_board`), `book_size` |
+| `book_clear` | The book is cleared | `book_size` |
+| `tell_open` | A Tell Gemma sheet opens | `kind`, `from` |
+| `tell_set` | A Tell Gemma answer is set | `kind`, `from`, and for the multi-value kinds `count` (`0`, `1`, `2-3`, `4+`) and `use_up`. Single-choice kinds (`ANSWER_KINDS` in analytics-events.js) never send a count: it would be the answer |
+| `mix_swap` | The Chiapothecary: Gemma suggested a swap | `outcome` (`accepted`, `declined`) |
+| `recipe_full_asked` | The "full recipe" button, or cook mode, asked Gemma to write a recipe out (3 a visit) | `atom`, `room` |
+| `recipe_full` | She wrote it out | `atom`, `room`, `remaining` (`0`, `1`, `2-3`) |
+| `recipe_full_failed` | She couldn't | `atom`, `room`, `reason` (`timeout`, `bot_check`, `rate_limited`, `error`) |
+| `cook_open` | Cook mode starts | `from` (`book`, or `loose` for a recipe not in the book) |
+| `cook_done` | Cook mode finished | none |
+| `timer_start`, `timer_done` | A cook-mode timer | none |
+| `list_open`, `list_share` | The shopping list opened, shared or copied | none |
 
 `step` is how many trail events the visit has had so far, bucketed `1`, `2-3`, `4-7`, `8-15`, `16+`. It answers "after how many steps" without sending a timeline.
 
@@ -92,9 +114,11 @@ Since the front door (docs/front-door-spec.md), the 360° Inn is the home page a
 | Event | When | Parameters |
 |---|---|---|
 | `door_view` | The storybook picture is shown | none |
-| `door_open` | The visitor clicks in | `film` (`full`, or `short` with reduced motion or Data Saver) |
+| `door_open` | The visitor clicks in | `film` (`full`, or `short` with reduced motion or Data Saver), `from` (`picture`, or `story`) |
 | `welcome_close` | Gemma's welcome card is closed (first visit, or after ringing the bell) | none |
 | `bell_ring` | The brass bell is rung | `room` |
+| `story_view` | The story below the picture scrolled into view | none |
+| `story_link` | "How it works" tapped | none |
 
 ### The React Inn (/archive/ since the front door; / before)
 
@@ -106,13 +130,24 @@ Since the front door (docs/front-door-spec.md), the 360° Inn is the home page a
 
 The Inn's form contents (pantry items, dietary choices, cravings) are never sent.
 
+### Where a visit came from (added 21 Oct 2026)
+
+The Worker forwards events server-side, so Google sees no referrer and every visit used to show source "(not set)". The page now works out a coarse source itself and sends it once, with the first batch of events that actually goes out:
+
+- `bucket`: `linkedin` (linkedin.com, lnkd.in, the LinkedIn app), `google`, `bing`, `other` (any other site) or `direct` (no referrer, or our own site). Computed from `document.referrer` on the page; the referrer itself, its path and its query never leave the browser.
+- `utm_source` and `utm_campaign`, if the link has them, and only if they are short IDs (the same rule as every other value). Put `?utm_source=linkedin&utm_campaign=launch` on links in posts.
+
+The Worker validates all of it again (`sourceParams` in analytics-events.js) and adds three event parameters to every event of that batch: `source`, `medium` and `campaign`. These are GA4's own names, so GA4 can read them as the session's attribution and Reports > Acquisition shows source/medium. Mapping: `linkedin` is `linkedin / social`, `google` and `bing` are `organic`, `other` is `referral`, `direct` is `(direct) / (none)`. A `utm_source` replaces the source, with medium `social` for `linkedin` and `campaign` otherwise. No new custom dimensions are needed. If that first batch fails to send, the visit has no source: a rare loss, not retried.
+
+Check after deploy: GA4 Realtime or DebugView for a visit opened with `?utm_source=test&analytics=debug`, then Acquisition after a day. Google documents session attribution for the Measurement Protocol only loosely, so confirm it shows before trusting it.
+
 ### Parameters every event gets
 
 Added in the Worker, not trusted from the page: `country` (from Cloudflare, two letters), `surface` (`explore` for the 360° Inn at / and /explore, `archive` for /archive/, and `inn` for the React Inn at / before the front door), `device` (`mobile` or `desktop`, from screen width, sent by the page).
 
 ### GA4 custom dimensions to register (event-scoped)
 
-`room`, `from_room`, `object`, `object_type`, `weather`, `time_of_day`, `season`, `dial_choice`, `atom`, `atom_kind`, `nav_mode`, `reason`, `step`, `load_ms`, `full_res`, `scene`, `outcome`, `country`, `surface`, `device`, and `film` (added with the front door). That's 21 of the 50 allowed.
+`room`, `from_room`, `object`, `object_type`, `weather`, `time_of_day`, `season`, `dial_choice`, `atom`, `atom_kind`, `nav_mode`, `reason`, `step`, `load_ms`, `full_res`, `scene`, `outcome`, `country`, `surface`, `device`, and `film` (added with the front door). Later additions, all registered: `kind`, `method`, `panel_size`, `book_size`, `from`, `count`, `remaining`, `undone`, `use_up`. `source`, `medium` and `campaign` are GA4's built-ins and need no registering. `explore_start` has carried `nav_mode` since 18 Oct.
 
 ## Deliberately not collected
 
@@ -227,3 +262,23 @@ Setup done:
 - Cloudflare Web Analytics site for whiskedaway.com (JS snippet), token in `analytics.js`.
 
 Tested locally (dist preview on 4177 against `wrangler dev` on 8797, `?analytics=debug`): every explore event and `scene_view` reached `/m` with only allow-listed parameters, the energy candle went as `object_type: energy` only, and Google's Measurement Protocol validator accepted the payload. Not tested locally: the real forward to GA4 (the secret only exists on the deployed Worker) and the visitor pass (Turnstile doesn't issue passes to localhost:4177). Both are on the post-deploy checklist.
+
+## Status (21 Oct 2026): first traffic read fixes
+
+**GA4 sees about one visit in four.** Cloudflare Web Analytics counted 139, 22 and about 6 visits on 19, 20 and 21 Oct; GA4 saw 27, 9 and 4. Cloudflare doesn't need the visitor pass, GA4 events do. A visit is lost when:
+
+1. the pass isn't ready before the visitor leaves. Turnstile was only started when the first batch was due (4 s after the first event), then waited up to 8 s. A visitor who left the front door within about 10 s sent nothing;
+2. the tab was hidden with events queued and the pass sat in sessionStorage (fetched by the Inn for the navigator) but not in analytics.js, so the last-batch beacon was skipped;
+3. Turnstile fails or is blocked (in-app browsers such as LinkedIn's are the suspect), or the visitor has DNT/GPC on or has opted out (those send nothing, on purpose).
+
+Changes: the pass is requested 1 s after load; a pass already in sessionStorage counts for the beacon; and a new `pass_ready` event (`load_ms`: seconds since load, bucketed) records how long the pass took for the visits that got one. For the visits that don't, the page sends a tiny pass-less note with no visit ID: `slow` (no pass after 8 s), `failed` (the check gave up, with its code, e.g. `turnstile_error_300030`, `turnstile_timeout`, `session_403`) or `lost` (hidden with events waiting and no pass). The Worker writes these to its log only, never to Google, as `{"measure":"pass","state":...,"device":...,"country":...}`; `wrangler.toml` now turns Worker observability on so they can be read (dashboard > Workers > whiskedaway-genie > Observability, filter `measure`). Compare the counts of `failed` and `lost` with the gap. The `/session` route already logs `session_rejected` with Turnstile's error codes. Opt-outs are unchanged: nothing, not even a note, is sent with `?count-me=off`, DNT or GPC. Until this is read, treat GA4 figures as describing the visits that stayed, and use Cloudflare for the true count of arrivals.
+
+The first traffic read (about 40 visits, 19 to 21 Oct) found tagging gaps, fixed on the `analytics-fixes` branch:
+
+- **Sources:** see "Where a visit came from". Needs the Worker deployed (`npm run deploy:api`) as well as the site.
+- **`erwina_seen`, zero events:** the call was added to the code on 20 Oct (21:02 NZ) but the event only joined the allow-list at 22:11, and the Worker is only as new as its last `deploy:api`. Both ends drop events that aren't on the list, silently. The code path is wired correctly. The spots are rare (see the table) and only 3 visits entered the glasshouse in the period, so zero may also be real. `test/analytics.test.mjs` now fails `npm run check` if any `track('...')` call names an event that isn't on the list.
+- **`atom_served`:** now means "was in view" (see the table).
+- **Write-out and cook mode:** the events already existed (`recipe_full`, `recipe_full_failed`, `cook_open`, `cook_done`) and nobody had reached them in the period (3 visits opened a card). Added the missing `recipe_full_asked`.
+- **`nav_fallback`:** `reason` is finer (see the table).
+
+**New events or parameters need two deploys:** the site (the browser copy of the list) and `npm run deploy:api` (the Worker's copy). Until both are live the event is dropped.

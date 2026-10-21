@@ -29,7 +29,7 @@ export const minutesOf = a => (a.time ? `${a.time} min` : '');
 /** "SWEET SPELLS · recipe idea · 25 min · 🥄" */
 export const metaLine = (a, room = true) => [room && RIBBONS[a.room]?.name, a.kind, minutesOf(a), spoonsOf(a)].filter(Boolean).map(esc).join(' · ');
 
-export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUndo, onRead, onHighlight, onFirst, avatar, bookChip, layout, wantHint, onHint }) {
+export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUndo, onRead, onHighlight, onShown, canShow, onFirst, avatar, bookChip, layout, wantHint, onHint }) {
   const col = document.createElement('div');
   col.className = 'ideas';
   col.id = 'ideas';
@@ -53,6 +53,26 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
   let leaving = [];                    // replaced bubbles floating away: { atom, rect }
   const say = text => { live.textContent = ''; setTimeout(() => { live.textContent = text; }, 30); };
   const entry = atom => state.cards.find(c => c.atom === atom);
+
+  // An idea counts as shown once its bubble has been in view for 2 s (or the visitor opened it): not when the navigator
+  // picks it, and not if the next idea replaces it first. Once per idea per page (analytics: atom_served)
+  const shown = new Set(), timing = new Set();
+  const markShown = c => { if (!c || shown.has(c.atom)) return; shown.add(c.atom); timing.delete(c.atom); onShown?.(c); };
+  function watchShown() {
+    if (!onShown) return;
+    for (const c of state.cards) {
+      if (shown.has(c.atom) || timing.has(c.atom)) continue;
+      timing.add(c.atom);
+      const check = () => {
+        const cur = entry(c.atom);
+        if (!cur) timing.delete(c.atom);                                  // replaced or set aside before it was seen
+        else if (shown.has(c.atom)) return;
+        else if (document.hidden || col.hidden || canShow?.() === false) setTimeout(check, 2000);   // not in front of anyone yet
+        else markShown(cur);
+      };
+      setTimeout(check, 2000);
+    }
+  }
 
   /** A new idea from the navigator. `from`: the point it rises from ({x, y}), or null for Gemma's avatar. */
   function add({ atom, why }, from = null) {
@@ -128,6 +148,7 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
     }
     if (focused) (col.querySelector(focused === '+1' ? '.idea.more' : `[data-atom="${CSS.escape(focused)}"]`) || col.querySelector('.idea') || bookChip?.())?.focus({ preventScroll: true });
     animate(before);
+    watchShown();
   }
 
   // The column's motion: new ideas rise from where they came from, the rest slide to their new places,
@@ -172,6 +193,7 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
     if (!c) return;
     const a = atoms[atom];
     const firstOpen = !c.opened;
+    markShown(c);
     c.opened = true;
     openAtom = atom;
     save();

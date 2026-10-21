@@ -101,6 +101,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     busy = rec.id;
     failed = null;
     mem.dietAsked = true; save();
+    track?.('recipe_full_asked', { atom: rec.id, room: rec.room });
     let reason = null, recipe = null;
     try {
       const res = await fetchRecipe(payloadFor(rec));
