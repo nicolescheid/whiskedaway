@@ -1058,7 +1058,7 @@
     ]
   },
   "basket": {
-    "_about": "PLACEHOLDERS for content editor (3). The recipe basket (Stage 1, docs/basket-stage1-design.md): ♥ Keep puts a leaflet in the basket; checkout (the book's Basket page) has Gemma write ticked ones out in full into the book, 3 free a day per device. {n} = how many.",
+    "_about": "PLACEHOLDERS for content editor (3). The recipe basket (Stage 1, docs/basket-stage1-design.md): ♥ Keep puts a leaflet in the basket; checkout (the book's Basket page) has Gemma write ticked ones out in full into the book, 3 free a day per device. {n} = how many. clear_note: beside Clear my book, which empties the book, the basket and the Inn notes; {notes} becomes \" and your <Inn notes title>\" once one is found. cleared: the undo bar after clearing.",
     "chip_long": "Your basket",
     "chip_short": "Basket",
     "tab": "Basket",
@@ -1098,6 +1098,8 @@
         "That's in.",
         "In it goes."
       ]
-    }
+    },
+    "clear_note": "Every recipe you've kept, your basket{notes}, on this device.",
+    "cleared": "Your book and basket are cleared."
   }
 }

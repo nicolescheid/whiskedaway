@@ -62,7 +62,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     forget.textContent = 'Forget this visit';
     forget.className = 'bk-outline';
     forget.insertAdjacentHTML('afterend', `<span class="small">The wander, my ideas and what you've told me. Not your book.</span>
-      <button class="bk-outline bk-clear2">Clear my book</button><span class="small">Every recipe you've kept, on this device.</span>`);
+      <button class="bk-outline bk-clear2">Clear my book</button><span class="small bk-clearnote"></span>`);
   }
   notes.remove();
   // Off-page, the visit page waits in a hidden stash inside the book, so its ids stay in the document for the page's renderers
@@ -129,7 +129,14 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
       <h3 class="bk-title">${esc(n.title)}</h3><p class="bk-note">${esc(n.text)}</p>
       ${desk ? '' : `<p><button class="link" data-note="">All ${esc(noteLines.title)}</button></p>`}`;
   }
-  const clearNote = () => `Every recipe you've kept${noteIds().length ? `, your ${esc(noteLines.title)}` : ''} and your basket, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.`;
+  // What "Clear my book" empties: the book, the basket and the Inn notes (PM 4: one way to clear everything). Plain text;
+  // basket.clear_note in gemma-lines.json, {notes} = " and your <Inn notes title>" when any are found
+  const clearText = () => {
+    const t = (basketLines.clear_note || "Every recipe you've kept, your basket{notes}, on this device.")
+      .replace('{notes}', noteIds().length ? ` and your ${noteLines.title}` : '');
+    return book.lasting ? t : `${t.replace(/\.$/, '')} (this one only lasts the visit: this browser won't keep it).`;
+  };
+  const clearNote = () => esc(clearText());
   function contentsPage() {
     const kept = book.list();
     if (!kept.length) return `<h3 class="bk-h">Contents</h3><p class="small">${esc(basketLines.book_empty || 'Nothing written out yet. Tick leaflets in your basket and Gemma writes them out in here.')}</p>
@@ -159,6 +166,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     const kept = page !== 'visit' && page !== 'contents' ? book.get(page) : null;
     const rec = kept || (loose && loose.id === page ? loose : null);
     theme();
+    visitPage.querySelector('.bk-clearnote')?.replaceChildren(clearText());
     stash.appendChild(visitPage);
     left.replaceChildren(); right.replaceChildren();
     if (page === 'basket') {                                        // the basket's checkout (checkout.js)
@@ -259,7 +267,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     const back = n ? book.clear() : null, backNotes = m ? innNotes.clear() : null, backBasket = b ? basket.clear() : null;
     filter = null;
     // Gemma says so (and it's counted) once the undo has gone by
-    showUndo('Your book is cleared.', () => { back?.(); backNotes?.(); backBasket?.(); draw(); }, () => onClear?.(n));
+    showUndo(basketLines.cleared || 'Your book and basket are cleared.', () => { back?.(); backNotes?.(); backBasket?.(); draw(); }, () => onClear?.(n));
     at = 'contents';
     draw();
   }
