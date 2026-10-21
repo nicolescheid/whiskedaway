@@ -9,7 +9,7 @@ It's free, there's no account, and it works on phones and computers.
 ## How it works
 
 Step through the front door, look around, and touch whatever catches your eye. Gemma reads where you go and what
-you touch, and leaves ideas that fit, each with the reason she chose it. You don't type anything. Her ideas are
+you touch, and leaves ideas that fit, each with the reason she chose it. You don't have to type anything. Her ideas are
 recipes written for the Inn rather than invented on the spot.
 Keep the ideas you like in your basket, then ask Gemma to write them out in full into My Custom Recipe Book (three free
 a day on each device). Those full recipes are written by Claude, an AI model. Visitors can choose metric or cups and
