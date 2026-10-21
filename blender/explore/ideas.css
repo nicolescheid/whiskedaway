@@ -643,3 +643,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-unitsline { margin: 2px 0 4px; }
 .bk-units button[data-units] { min-height: 44px; }
 .bk-swaphint { margin: 0 0 2px; }
+
+/* The shopping list's way back (book-view.js listBack) */
+.bk-listback { margin: -4px 0 6px; }
+.bk-listback .link { min-height: 44px; font: 600 14px 'Quicksand'; text-decoration: none; }

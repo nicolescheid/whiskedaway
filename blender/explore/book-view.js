@@ -72,6 +72,9 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
   root.appendChild(stash);
   stash.appendChild(visitPage);
 
+  // The shopping list remembers where it was opened from (Nicole's test, 22 Oct): a recipe's id, 'contents', or null (from
+  // outside the book: back leaves the book). It has its own history step, so the back gesture and Escape return there
+  let listFrom = null, listTok = null;
   let at = 'visit', loose = null, opener = null, pushed = false, filter = null, undo = null, undoTimer = null, undoSettled = null;
   // A note's page is `note:<object id>`; only notes that still have words are shown
   const noteIds = () => (innNotes && noteLines?.notes ? innNotes.list().filter(id => noteLines.notes[id]) : []);
@@ -189,8 +192,12 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
       left.innerHTML = id ? notePage(id, desk) : notesPage();
       right.innerHTML = desk ? (id ? notesPage(id) : contentsPage()) : '';
       right.hidden = !desk;
-    } else if (page === 'list' && list) {                           // "What do I need?" (list.js)
+    } else if (page === 'list' && list) {                           // the shopping list (list.js), with a way back to where it came from
       list.render(left, () => draw());
+      const backTo = listFrom && book.has(listFrom) ? (bookLines.back_to_recipe || '‹ Back to the recipe')
+        : listFrom ? (bookLines.back_to_contents || '‹ Back to Contents') : (bookLines.back_to_room || '‹ Back');
+      left.insertAdjacentHTML('afterbegin', `<p class="bk-listback"><button class="link bk-back">${esc(backTo)}</button></p>`);
+      left.querySelector('.bk-back').onclick = () => listBack();
       right.innerHTML = desk ? contentsPage() : '';
       right.hidden = !desk;
     } else if (!rec) {
@@ -245,7 +252,7 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
     root.querySelectorAll('[data-note]').forEach(b => b.onclick = () => go(b.dataset.note ? `note:${b.dataset.note}` : 'notes'));
     root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; draw(); root.querySelector(`[data-f="${filter || ''}"]`)?.focus(); });
     root.querySelectorAll('.bk-clear, .bk-clear2').forEach(b => b.onclick = clearBook);
-    root.querySelector('.bk-need')?.addEventListener('click', () => { track?.('list_open'); go('list'); });   // not .bk-list: that's Contents' own list of recipes
+    root.querySelector('.bk-need')?.addEventListener('click', () => { track?.('list_open'); enterList(loose ? 'contents' : at); });   // not .bk-list: that's Contents' own list of recipes
     root.querySelector('.bk-tobasket')?.addEventListener('click', () => onBasket?.());
     // The first-use explainer, above whatever page shows first; it goes when they say Got it or close the book
     if (introShown && !loose && book.count) {
@@ -253,7 +260,27 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
       left.querySelector('.bk-gotit').onclick = () => { introShown = false; book.introSeen = true; draw(); left.focus({ preventScroll: true }); };
     }
   }
-  function go(page) {
+  /** Open the shopping list from `from` (a page of the book, or null from outside it), with its own history step */
+  function enterList(from) {
+    listFrom = from;
+    if (!listTok && pushed) { listTok = Math.random().toString(36).slice(2, 8); history.pushState({ ...(history.state || {}), book: true, bookList: listTok }, ''); }
+    go('list', { keepList: true });
+  }
+  /** Leave the list for where it came from: its history step back does it (popstate below), or straight away if it has none */
+  function listBack() {
+    if (listTok && history.state?.bookList === listTok) return history.back();
+    leaveList();
+  }
+  function leaveList() {
+    listTok = null;
+    const to = listFrom;
+    listFrom = null;
+    if (to === null) return close();
+    go(book.has(to) || to === 'visit' ? to : 'contents');
+  }
+  function go(page, { keepList = false } = {}) {
+    // Leaving the list another way (the tabs, ‹ ›): drop its history step quietly
+    if (!keepList && at === 'list' && page !== 'list' && listTok) { const t = listTok; listTok = null; listFrom = null; if (history.state?.bookList === t) history.back(); }
     loose = null;
     at = page;
     const flip = left.closest('.bk-spread');
@@ -304,6 +331,12 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
   function open(page = 'visit', { from = 'chip', loosePage = null } = {}) {
     opener = document.activeElement;
     const was = isOpen();
+    // The list opened from a page of the open book (cook mode's, the jars') goes back to that page; from outside, out of the book
+    if (page === 'list' && !loosePage) {
+      const back = was ? (loose ? 'contents' : at) : null;
+      if (was) return enterList(back);
+      listFrom = null;
+    }
     loose = loosePage && !book.has(loosePage.id) ? loosePage : null;
     at = loosePage ? loosePage.id : page;
     if (!loose && !seq().includes(at) && at !== 'list') at = book.has(at) ? at : 'visit';
@@ -330,12 +363,17 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
     for (const el of document.body.children) if (el.dataset.bookInert) { el.inert = false; delete el.dataset.bookInert; }
     loose = null;
     if (introShown) { introShown = false; book.introSeen = true; }  // seen once is enough
-    if (pushed) { pushed = false; if (!viaBack && history.state?.book) history.back(); }
+    const steps = listTok && history.state?.bookList === listTok ? 2 : 1;   // the list's own step, then the book's
+    listTok = null; listFrom = null;
+    if (pushed) { pushed = false; if (!viaBack && history.state?.book) history.go(-steps); }
     chip.focus({ preventScroll: true });                           // where the book lives (QA P3-6)
   }
-  addEventListener('popstate', () => { if (pushed && !history.state?.book) { pushed = false; close(true); } });
+  addEventListener('popstate', () => {
+    if (pushed && !history.state?.book) { pushed = false; close(true); return; }
+    if (listTok && history.state?.bookList !== listTok && at === 'list') leaveList();   // back from the list: where it came from
+  });
   root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return close(); }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return at === 'list' && !loose ? listBack() : close(); }
     if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.target.closest('input, textarea, select')) { e.preventDefault(); turn(e.key === 'ArrowLeft' ? -1 : 1); }
     if (e.key === 'Tab') {
       const f = [...root.querySelectorAll('button, a[href], [tabindex="0"]')].filter(x => !x.disabled && x.offsetParent);

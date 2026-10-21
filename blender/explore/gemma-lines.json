@@ -59,7 +59,11 @@
     "first_use": "Recipes I've written out live here. New ones come from your basket.",
     "got_it": "Got it",
     "shopping_list": "Shopping list",
-    "_about2": "The book holds only recipes written out in full. title: the book's header. chip_long/chip_short: its chip in the bar. loose_title: header over an idea read from its card. how_title + how (3 steps): an empty book, every time. first_use_title + first_use + got_it: once per device, the first time a visitor opens a book that already has recipes. to_basket: the button under how. shopping_list: the book's Contents, cook mode and the list's heading."
+    "_about2": "The book holds only recipes written out in full. title: the book's header. chip_long/chip_short: its chip in the bar. loose_title: header over an idea read from its card. how_title + how (3 steps): an empty book, every time. first_use_title + first_use + got_it: once per device, the first time a visitor opens a book that already has recipes. to_basket: the button under how. shopping_list: the book's Contents, cook mode and the list's heading.",
+    "back_to_recipe": "‹ Back to the recipe",
+    "back_to_contents": "‹ Back to Contents",
+    "back_to_room": "‹ Back",
+    "_listback": "PLACEHOLDERS (22 Oct, Nicole's test): the link at the top of the Shopping list. back_to_recipe when it was opened from a recipe (its page, cook mode, the jars), back_to_contents from Contents, back_to_room when opened from outside the book (it closes the book). Back gesture and Escape do the same."
   },
   "room_empty": "That's everything I've got in here. Try next door.",
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",

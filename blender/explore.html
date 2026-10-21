@@ -1823,7 +1823,17 @@ const basketView = createBasketView({ basket, checkout, chip: $('btn-book'), lin
 for (const k of book.list()) if (!k.full && !writer.written(k.id)) { const { kept, visit: v, ...snap } = k; basket.add(snap); book.remove(k.id); }
 // Cook mode (explore/cook.js, cook-mode-ux.md §1): one step at a time over everything, with timers
 const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: { ...LINES.cook, shopping_list: LINES.book?.shopping_list },
-  isKept: id => book.has(id), onList: () => { track('list_open'); bookView.open('list', { from: 'cook' }); } });
+  // The list opens over the recipe cook mode was started from, once cook mode's step back in history has gone (or the
+  // list's own step would be the one popped, and back would skip it)
+  isKept: id => book.has(id), onList: (rec, stepped) => {
+    track('list_open');
+    const go = () => bookView.open('list', { from: 'cook' });
+    if (!stepped) return go();
+    let ran = false;
+    const once = () => { if (!ran) { ran = true; go(); } };
+    addEventListener('popstate', () => setTimeout(once), { once: true });
+    setTimeout(once, 400);
+  } });
 // "What do I need?" (explore/list.js): one shopping list from the book, the pantry set aside
 const shopList = createList({ title: LINES.book?.shopping_list, book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
   servings: () => servingsNumber(visit.get('servings')), track });

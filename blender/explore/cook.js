@@ -102,7 +102,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
         + (inflight ? `<div class="ck-offer"><p>${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
           : !hasFull && failedWrite ? `<p class="ck-quiet">${esc(L.failed)}</p>` : '')
         + (onList && isKept?.(rec.id) ? `<p><button class="bk-outline ck-list">${esc(lines.shopping_list || 'Shopping list')}</button></p>` : '');
-      step.querySelector('.ck-list')?.addEventListener('click', () => { close(); onList(); });
+      step.querySelector('.ck-list')?.addEventListener('click', () => { const was = pushed; close(); onList(rec, was); });
       step.classList.remove('long');
     } else {
       const last = at === n;
