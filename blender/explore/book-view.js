@@ -13,10 +13,11 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });   // "19 Oct"
 
-export function createBookView({ book, basket, checkout, basketLines = {}, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook, list, actions, extra, innNotes, noteLines }) {
+export function createBookView({ book, basket, onBasket, basketLines = {}, bookLines = {}, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook, list, actions, extra, innNotes, noteLines }) {
   // actions(rec): a room's own buttons under Cook this ([{ label, do }]), e.g. the Chiapothecary's "Ready by breakfast?"
   // innNotes, noteLines: the found notes' store (notes.js) and their words (gemma-lines.json innNotes)
-  // basket, checkout: the recipe basket (basket.js) and its checkout (checkout.js), the 'basket' page; the chip is the basket's
+  // basket, onBasket: the recipe basket (basket.js) and a way to its own sheet (basket-view.js). The book holds only recipes
+  // Gemma has written out in full (Nicole, 22 Oct: "My Custom Recipe Book"); bookLines: gemma-lines.json `book`
   const root = document.createElement('div');
   root.id = 'book';
   root.className = 'book';
@@ -28,7 +29,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     <div class="bk-box">
       <header class="bk-head">
         <button class="bk-nav bk-prev" aria-label="Previous page">‹</button>
-        <h2 id="book-title">Gemma's recipe book</h2>
+        <h2 id="book-title">${esc(bookLines.title || 'My Custom Recipe Book')}</h2>
         <span class="bk-count" aria-live="off"></span>
         <button class="bk-close" aria-label="Close the book">✕</button>
       </header>
@@ -36,7 +37,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
       <footer class="bk-foot">
         <div class="bk-keepbar"></div>
         <div class="bk-turns"><button class="bk-nav bk-prev2" aria-label="Previous page">‹ <span>prev</span></button>
-          <span class="bk-tabs"><button data-go="basket">${esc(basketLines.tab || 'Basket')}</button> · <button data-go="contents">Contents</button> · <button data-go="visit">This visit</button></span>
+          <span class="bk-tabs"><button data-go="contents">Contents</button> · <button data-go="visit">This visit</button></span>
           <span class="bk-dots" aria-hidden="true"></span>
           <button class="bk-nav bk-next" aria-label="Next page"><span>next</span> ›</button></div>
         <div class="bk-undo" hidden><span></span><button>Undo</button></div>
@@ -77,16 +78,27 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
   const seq = () => { const n = noteIds(); return ['visit', 'contents', ...book.ids(), ...(n.length ? ['notes', ...n.map(id => `note:${id}`)] : [])]; };
   const isOpen = () => !root.hidden;
 
-  // The bar's chip is the basket's (Stage 1): its count is the leaflets waiting
-  const chipName = basketLines.chip_long || 'Your basket';
+  // The book's own chip (the basket has its own, basket-view.js): its count is the recipes written out
+  const chipName = bookLines.chip_long || 'My recipe book';
   chip.querySelector('.long').textContent = chipName;
-  chip.querySelector('.short').textContent = basketLines.chip_short || 'Basket';
+  chip.querySelector('.short').textContent = bookLines.chip_short || 'Book';
   function chipCount() {
-    const n = basket.count, badge = chip.querySelector('.badge');
+    const n = book.count, badge = chip.querySelector('.badge');
     badge.textContent = n > 99 ? '99+' : String(n);
     badge.hidden = !n;
-    chip.setAttribute('aria-label', `${chipName}${n ? `, ${n} ${n === 1 ? 'leaflet' : 'leaflets'}` : ''}`);
+    chip.setAttribute('aria-label', `${chipName}${n ? `, ${n} ${n === 1 ? 'recipe' : 'recipes'}` : ''}`);
   }
+  // How the book works: shown on an empty book every time, and once (per device) the first time a visitor opens a book that
+  // already has recipes in it (they added them without ever seeing it empty)
+  const HOW = [].concat(bookLines.how || ["Tap ♥ Keep on an idea you like. Its leaflet goes in your basket.",
+    'Open your basket, tick the ones you want and tap Add recipe to my book. Gemma writes each one out in full, 3 free a day.',
+    "They live here, ready to cook step by step, with a shopping list and Save as PDF."]);
+  const howHtml = () => `<h4>${esc(bookLines.how_title || 'How your book works')}</h4><ol class="bk-how">${HOW.map(t => `<li>${esc(t)}</li>`).join('')}</ol>
+    ${onBasket ? `<p><button class="bk-outline bk-tobasket">${esc(bookLines.to_basket || 'Open my basket')}</button></p>` : ''}`;
+  let introShown = false;                                          // the first-use explainer is showing this time the book is open
+  const firstUseHtml = () => `<div class="bk-firstuse" role="note"><h4>${esc(bookLines.first_use_title || 'Your recipe book')}</h4>
+    <p>${esc(bookLines.first_use || "Every recipe Gemma writes out for you lands here, in full. Cook it step by step, make a shopping list, or save it as a PDF. New ones come from your basket.")}</p>
+    <button class="link bk-gotit">${esc(bookLines.got_it || 'Got it')}</button></div>`;
 
   // ---------- pages
   function recipeLeft(r) {
@@ -140,6 +152,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
   function contentsPage() {
     const kept = book.list();
     if (!kept.length) return `<h3 class="bk-h">Contents</h3><p class="small">${esc(basketLines.book_empty || 'Nothing written out yet. Tick leaflets in your basket and Gemma writes them out in here.')}</p>
+      <div class="bk-howbox">${howHtml()}</div>
       ${noteIds().length ? `${notesRow()}<p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">${clearNote()}</span></p>` : ''}`;
     const rooms = [...new Set(kept.map(k => k.room))].filter(r => RIBBONS[r]);
     const shown = filter ? kept.filter(k => k.room === filter) : kept;
@@ -147,7 +160,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
       ${rooms.length > 1 ? `<div class="bk-filter" role="group" aria-label="Show recipes from"><button data-f="" aria-pressed="${!filter}">All</button>${rooms.map(r => `<button data-f="${esc(r)}" aria-pressed="${filter === r}" style="--ring:${RIBBONS[r].colour}"><i></i>${esc(RIBBONS[r].name)}</button>`).join('')}</div>` : ''}
       <ul class="bk-list">${shown.map(k => `<li><button data-open="${esc(k.id)}" style="--ring:${RIBBONS[k.room]?.colour || 'var(--berry)'}"><i></i><span>${esc(k.title)}</span><small>${esc(RIBBONS[k.room]?.name || '')} · ${esc(day(k.kept))}</small></button></li>`).join('')}</ul>
       ${notesRow()}
-      ${list ? '<p><button class="bk-cook bk-need">What do I need?</button></p>' : ''}
+      ${list ? `<p><button class="bk-cook bk-need">${esc(bookLines.shopping_list || 'Shopping list')}</button></p>` : ''}
       <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">${clearNote()}</span></p>`;
   }
   function theme() {
@@ -161,7 +174,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     const desk = isDesk();
     root.classList.toggle('desk', desk);
     const s = seq();
-    if (!loose && !s.includes(at) && at !== 'list' && at !== 'basket') at = 'contents';
+    if (!loose && !s.includes(at) && at !== 'list') at = 'contents';
     const page = loose ? loose.id : at;
     const kept = page !== 'visit' && page !== 'contents' ? book.get(page) : null;
     const rec = kept || (loose && loose.id === page ? loose : null);
@@ -169,11 +182,9 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     visitPage.querySelector('.bk-clearnote')?.replaceChildren(clearText());
     stash.appendChild(visitPage);
     left.replaceChildren(); right.replaceChildren();
-    if (page === 'basket') {                                        // the basket's checkout (checkout.js)
-      checkout.render(left, () => { if (isOpen() && at === 'basket' && !loose) draw(); });
-      right.innerHTML = desk ? contentsPage() : '';
-      right.hidden = !desk;
-    } else if (page === 'notes' || page.startsWith('note:')) {            // Inn notes: on desktop the list sits beside a note, Contents beside the list
+    // An idea read from its card isn't in the book yet: its page says so in the header
+    $('#book-title').textContent = loose ? (bookLines.loose_title || 'A recipe idea') : (bookLines.title || 'My Custom Recipe Book');
+    if (page === 'notes' || page.startsWith('note:')) {            // Inn notes: on desktop the list sits beside a note, Contents beside the list
       const id = page === 'notes' ? null : page.slice(5);
       left.innerHTML = id ? notePage(id, desk) : notesPage();
       right.innerHTML = desk ? (id ? notesPage(id) : contentsPage()) : '';
@@ -203,10 +214,10 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     const inBasket = rec && !kept && basket.has(rec.id);
     kb.innerHTML = !rec ? '' : kept
       ? `<span>♥ Kept ${esc(day(kept.kept))}</span> · <button class="link" data-act="out">Take it out</button>`
-      : inBasket ? `<span>${esc(basketLines.in_basket || 'In your basket')}</span> · <button class="link" data-act="basket">${esc(basketLines.tab || 'Basket')} ›</button> · <button class="link" data-act="unbasket">${esc(basketLines.remove_page || 'Take it out')}</button>`
+      : inBasket ? `<span>${esc(basketLines.in_basket || 'In your basket')}</span>${onBasket ? ` · <button class="link" data-act="basket">${esc(basketLines.tab || 'Basket')} ›</button>` : ''} · <button class="link" data-act="unbasket">${esc(basketLines.remove_page || 'Take it out')}</button>`
       : `<button class="bk-keep" data-act="keep"><span aria-hidden="true">♥</span> ${esc(basketLines.keep_button || 'Put it in my basket')}</button>`;
     kb.querySelector('[data-act=keep]')?.addEventListener('click', () => { onKeep(rec); if (book.has(rec.id)) { loose = null; at = rec.id; } draw(); });
-    kb.querySelector('[data-act=basket]')?.addEventListener('click', () => go('basket'));
+    kb.querySelector('[data-act=basket]')?.addEventListener('click', () => onBasket?.());
     kb.querySelector('[data-act=unbasket]')?.addEventListener('click', () => {
       const removed = basket.remove(rec.id);
       showUndo(`Taken out: ${rec.title}`, () => { if (removed) basket.restore(removed); draw(); });
@@ -223,8 +234,8 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     const i = s.indexOf(page), n = desk ? s.length - 1 : s.length;   // on desktop This visit and Contents share a spread
     const pos = desk ? Math.max(0, i - 1) : i;
     const cap = desk ? 12 : 8;                                       // phones: few enough that "Contents · This visit" stays on one line at 375 px
-    $('.bk-dots').innerHTML = loose || page === 'basket' || page === 'list' ? '' : Array.from({ length: Math.min(n, cap) }, (_, k) => `<i class="${k === Math.min(pos, cap - 1) ? 'on' : ''}"></i>`).join('');
-    const off = loose || page === 'basket';                          // outside the book's order: ‹ › go to Contents
+    $('.bk-dots').innerHTML = loose || page === 'list' ? '' : Array.from({ length: Math.min(n, cap) }, (_, k) => `<i class="${k === Math.min(pos, cap - 1) ? 'on' : ''}"></i>`).join('');
+    const off = loose;                                               // outside the book's order: ‹ › go to Contents
     const atStart = !off && (desk ? i <= 1 : i <= 0), atEnd = !off && i === s.length - 1;
     root.querySelectorAll('.bk-prev, .bk-prev2').forEach(b => { b.disabled = atStart; });
     $('.bk-next').disabled = atEnd;
@@ -235,9 +246,14 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; draw(); root.querySelector(`[data-f="${filter || ''}"]`)?.focus(); });
     root.querySelectorAll('.bk-clear, .bk-clear2').forEach(b => b.onclick = clearBook);
     root.querySelector('.bk-need')?.addEventListener('click', () => { track?.('list_open'); go('list'); });   // not .bk-list: that's Contents' own list of recipes
+    root.querySelector('.bk-tobasket')?.addEventListener('click', () => onBasket?.());
+    // The first-use explainer, above whatever page shows first; it goes when they say Got it or close the book
+    if (introShown && !loose && book.count) {
+      left.insertAdjacentHTML('afterbegin', firstUseHtml());
+      left.querySelector('.bk-gotit').onclick = () => { introShown = false; book.introSeen = true; draw(); left.focus({ preventScroll: true }); };
+    }
   }
-  function go(page, { from = 'tab', tick = null } = {}) {
-    if (page === 'basket' && (at !== 'basket' || loose)) basketOpened(from, tick);
+  function go(page) {
     loose = null;
     at = page;
     const flip = left.closest('.bk-spread');
@@ -248,7 +264,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
   }
   function turn(d) {
     const s = seq(), desk = isDesk();
-    if (loose || at === 'basket') return go('contents');
+    if (loose) return go('contents');
     let i = s.indexOf(at);
     if (desk && i <= 1) i = 1;                                    // This visit + Contents are one spread
     const j = Math.max(desk ? 1 : 0, Math.min(s.length - 1, i + d));
@@ -285,14 +301,13 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
 
   // ---------- open and close
   /** Open at a page: 'visit', 'contents', a kept recipe's id, or a loose page { ...snapshot } */
-  function open(page = 'visit', { from = 'chip', loosePage = null, tick = null } = {}) {
+  function open(page = 'visit', { from = 'chip', loosePage = null } = {}) {
     opener = document.activeElement;
     const was = isOpen();
-    if (page === 'basket' && !loosePage && (!was || at !== 'basket' || loose)) basketOpened(from, tick);
-    else if (page === 'basket' && tick) checkout.opened(tick);
     loose = loosePage && !book.has(loosePage.id) ? loosePage : null;
     at = loosePage ? loosePage.id : page;
-    if (!loose && !seq().includes(at) && at !== 'list' && at !== 'basket') at = book.has(at) ? at : 'visit';
+    if (!loose && !seq().includes(at) && at !== 'list') at = book.has(at) ? at : 'visit';
+    if (!was && !loose && book.count && !book.introSeen) introShown = true;
     root.hidden = false;
     root.classList.add('open');
     chip.setAttribute('aria-expanded', 'true');
@@ -306,10 +321,6 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     }
     (loose || at !== 'visit' ? left : $('.bk-close')).focus({ preventScroll: true });
   }
-  function basketOpened(from, tick) {
-    checkout.opened(tick);
-    track?.('checkout_open', { from, basket_size: bucket(basket.count), remaining: String(checkout.left) });
-  }
   function close(viaBack = false) {
     if (!isOpen()) return;
     root.hidden = true;
@@ -318,6 +329,7 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
     chip.classList.remove('on');
     for (const el of document.body.children) if (el.dataset.bookInert) { el.inert = false; delete el.dataset.bookInert; }
     loose = null;
+    if (introShown) { introShown = false; book.introSeen = true; }  // seen once is enough
     if (pushed) { pushed = false; if (!viaBack && history.state?.book) history.back(); }
     chip.focus({ preventScroll: true });                           // where the book lives (QA P3-6)
   }
@@ -333,9 +345,9 @@ export function createBookView({ book, basket, checkout, basketLines = {}, atoms
   });
   addEventListener('resize', () => { if (isOpen()) draw(); });
   book.subscribe(() => { chipCount(); if (isOpen()) draw(); });
-  basket.subscribe(() => { chipCount(); if (isOpen()) draw(); });
+  basket.subscribe(() => { if (isOpen()) draw(); });
   innNotes?.subscribe(() => { if (isOpen()) draw(); });
-  chip.onclick = () => (isOpen() ? close() : open('basket', { from: 'chip' }));   // the basket's chip opens its checkout
+  chip.onclick = () => (isOpen() ? close() : open('contents', { from: 'chip' }));   // an empty book's Contents shows how it works
   chipCount();
 
   return { open, close, refresh: () => { chipCount(); if (isOpen()) draw(); }, get isOpen() { return isOpen(); }, visitPage };

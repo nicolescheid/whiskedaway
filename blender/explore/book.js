@@ -76,7 +76,7 @@ export const book = {
   /** Empty the book. Returns an undo function (the page offers it for 5 s). */
   clear() {
     const before = data;
-    data = { ...fresh(), everKept: before.everKept, hint: before.hint };
+    data = { ...fresh(), everKept: before.everKept, hint: before.hint, introSeen: before.introSeen };
     save();
     emit({ kind: 'clear' });
     return () => { data = before; save(); emit({ kind: 'sync' }); };
@@ -94,6 +94,9 @@ export const book = {
   /** "What do I need?": recipes left out, ticked items, items moved back from the pantry (list.js) */
   get listState() { return data.list || null; },
   set listState(v) { data.list = v; save(); },
+  /** The book's first-use explainer has been seen (book-view.js), once per device */
+  get introSeen() { return !!data.introSeen; },
+  set introSeen(v) { data.introSeen = !!v; save(); },
   get hint() { return data.hint; },
   set hint(v) { data.hint = !!v; save(); },
   subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },

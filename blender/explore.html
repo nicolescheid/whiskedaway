@@ -382,7 +382,7 @@
   @media (max-width: 560px) { .bar { flex-wrap: wrap; row-gap: 6px; column-gap: 6px; justify-content: flex-end; } .bar .room-title { flex-basis: 100%; } .bar .mode { display: none; } .bar .chip { padding: 6px 10px; font-size: 12px; } .chip.bell { padding: 2px 7px; }
     .panel { top: calc(var(--bar-h, 70px) + 8px); } }   /* the bar is two rows here: open the map and notebook below it */
   .chip .short { display: none; }
-  @media (max-width: 400px) { .chip .long { display: none; } .chip .short { display: inline; } }   /* five chips in one row at 375 */
+  @media (max-width: 400px) { .chip .long { display: none; } .chip .short { display: inline; } .bar { column-gap: 4px; } .bar .chip { padding: 6px 7px; } .chip .badge { margin-left: 4px; } }   /* six chips in one row at 375 (basket and book) */
   /* Touch screens: every chip in the bar gets a 44 px tall tap area, whatever it looks like */
   @media (pointer: coarse) { .bar .chip { position: relative; } .bar .chip::after { content: ''; position: absolute; inset: -8px -3px; } }
   @media (prefers-reduced-motion: reduce) {
@@ -541,9 +541,10 @@
 
 <div class="bar">
   <p class="room-title" id="room-title">Cuddlecore</p>   <!-- not a heading: the page has one h1, on the front door -->
-  <a class="chip" id="btn-inn" href="/?door=1">Front door</a>
+  <a class="chip" id="btn-inn" href="/?door=1"><span class="long">Front door</span><span class="short">Door</span></a>
   <button class="chip" id="btn-map" aria-expanded="false">Map</button>
-  <button class="chip" id="btn-book" aria-haspopup="dialog" aria-expanded="false"><span class="long">Gemma's recipe book</span><span class="short">Book</span><span class="badge" hidden></span></button>
+  <button class="chip" id="btn-book" aria-haspopup="dialog" aria-expanded="false"><span class="long">Your basket</span><span class="short">Basket</span><span class="badge" hidden></span></button>   <!-- the basket's (ideas fly here) -->
+  <button class="chip" id="btn-mybook" aria-haspopup="dialog" aria-expanded="false"><span class="long">My recipe book</span><span class="short">Book</span><span class="badge" hidden></span></button>
   <button class="chip bell" id="btn-bell" aria-label="Ring for Gemma: welcome and help" aria-haspopup="dialog"><img src="explore/assets/front-door/bell.webp" alt=""></button>
   <button class="chip speaker" id="btn-sound" aria-pressed="false" aria-label="Sound off. Turn the Inn's sounds on" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg></button>
 </div>
@@ -676,10 +677,11 @@ import { createTags } from './explore/tags.js';
 import { book, snapshot } from './explore/book.js';
 import { basket } from './explore/basket.js';
 import { createCheckout } from './explore/checkout.js';
+import { createBasketView } from './explore/basket-view.js';
 import { createBookView } from './explore/book-view.js';
 import { notes as innNotes } from './explore/notes.js';
 import { visitTheme, themeSentence } from './explore/theme.js';
-import { createWriteOut } from './explore/writeout.js';
+import { createWriteOut, WRITE_ONLY, CARB_DIETS } from './explore/writeout.js';
 import { createCook } from './explore/cook.js';
 import { createChiaMix, chiaData } from './explore/chia-mix.js';
 import { createSweetSheets, sweetData, swapLines, sweetSteer, sweetTold, sweetTags } from './explore/sweet-spells.js';
@@ -1604,7 +1606,11 @@ function steer() {
 }
 // The first dietary need an atom doesn't meet (atoms carry diet tags: vegetarian, vegan, gluten-free, dairy-free, nut-free)
 // Low-FODMAP is a hard filter only on atoms checked against a source (`fodmap_checked`; none yet): it goes into write-outs as an avoid
-const dietClash = a => [].concat(visit.get('dietary') || []).find(d => (d !== 'low-fodmap' || a.fodmap_checked) && !(a.diet || []).includes(d)) || null;
+// Halal, kosher and Hindu (no beef) only go to the write-out: no card can promise them. Keto and low carb, like low-FODMAP,
+// leave out only cards content has checked (carb_checked; none yet)
+const PASS_ONLY = new Set(['low-fodmap', ...WRITE_ONLY, ...CARB_DIETS]);
+const dietClash = a => [].concat(visit.get('dietary') || []).find(d => !WRITE_ONLY.includes(d)
+  && (d !== 'low-fodmap' || a.fodmap_checked) && (!CARB_DIETS.includes(d) || a.carb_checked) && !(a.diet || []).includes(d)) || null;
 const CLASH_NOTE = { vegetarian: 'not vegetarian', vegan: 'not vegan', 'gluten-free': 'has gluten', 'dairy-free': 'has dairy', 'nut-free': 'has nuts' };
 
 // At most one of the ideas out is from another room (PM on T4); the hallway and glasshouse have none of their own
@@ -1762,8 +1768,7 @@ function intoBook(rec, full) {
 let castFor = null;                                           // { atom, el, line } the centrepiece idea the checkout is holding
 const checkout = createCheckout({
   basket, writer, ribbons: RIBBONS, lines: LINES.basket, track, bucket: n => (n >= 2 ? '2-3' : String(n)),
-  onRead: rec => rec && bookView.open(null, { from: 'basket', loosePage: rec }),
-  onOpenBook: id => bookView.open(id && book.has(id) ? id : 'contents', { from: 'basket' }),
+  onOpenBook: id => basketView.closeThen(() => bookView.open(id && book.has(id) ? id : 'contents', { from: 'basket' })),
   onWriteStart: rec => {
     if (castFor?.atom !== rec.id) return;
     casting = true;
@@ -1782,21 +1787,29 @@ const checkout = createCheckout({
     castFor = null;
   },
   // The visitor closed the book while she wrote: the first one opens once nothing else is open (whenFree)
-  onBatchDone: ({ count, first }) => { if (count && first && !bookView.isOpen) whenFree(() => { if (!bookView.isOpen) bookView.open(first, { from: 'basket' }); }); },
+  onBatchDone: ({ count, first }) => {
+    const free = () => !bookView.isOpen && !basketView.isOpen;   // the basket shows its own results
+    if (count && first && free()) whenFree(() => { if (free()) bookView.open(first, { from: 'basket' }); });
+  },
 });
+// The basket's own sheet (basket-view.js): the bar's basket chip opens it; the book has its own chip
+const basketView = createBasketView({ basket, checkout, chip: $('btn-book'), lines: LINES.basket || {}, track, bucket: sizeBucket });
+// Recipes kept before the basket, never written out, become leaflets: the book holds only written recipes (Nicole, 22 Oct)
+for (const k of book.list()) if (!k.full && !writer.written(k.id)) { const { kept, visit: v, ...snap } = k; basket.add(snap); book.remove(k.id); }
 // Cook mode (explore/cook.js, cook-mode-ux.md §1): one step at a time over everything, with timers
-const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: LINES.cook,
+const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: { ...LINES.cook, shopping_list: LINES.book?.shopping_list },
   isKept: id => book.has(id), onList: () => { track('list_open'); bookView.open('list', { from: 'cook' }); } });
 // "What do I need?" (explore/list.js): one shopping list from the book, the pantry set aside
-const shopList = createList({ book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
+const shopList = createList({ title: LINES.book?.shopping_list, book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
   servings: () => servingsNumber(visit.get('servings')), track });
 const bookView = createBookView({
   onCook: (rec, from) => cook.open(rec, from),
   list: shopList,
   writeOut: (el, rec, seed) => writer.render(el, rec, seed),
   themeLine: () => themeNow().sentence, clashNote: rec => CLASH_NOTE[dietClash(rec)] || '',
-  book, basket, checkout, basketLines: LINES.basket || {},
-  atoms: atomsById, chip: $('btn-book'), notes: $('notes'), track, bucket: sizeBucket,
+  book, basket, basketLines: LINES.basket || {}, bookLines: LINES.book || {},
+  onBasket: () => fromBook(() => basketView.open({ from: 'book' }))(),
+  atoms: atomsById, chip: $('btn-mybook'), notes: $('notes'), track, bucket: sizeBucket,
   onKeep: rec => keepIdea(rec.id, rec.why, 'book'),
   onRead: id => countAtom('atom_open', id, { from: 'book' }),     // a kept recipe opened from Contents
   onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); say(L.cleared, [], true); },
@@ -1884,7 +1897,7 @@ function cast(id) {
   castFor = { atom: rec.id, el: hotspots.find(h => h.id === id)?.el, line };   // the object glows while the checkout writes it
   say(line(writer.left ? 'added' : 'atCap'), [], true);
   holdLine();
-  whenFree(() => bookView.open('basket', { from: 'cast', tick: rec.id }));
+  whenFree(() => basketView.open({ from: 'cast', tick: rec.id }));
 }
 // ---------- The star chart reads your fortune (Nicole, from the brainstorm): a fortune naming a surprise sweet idea from the room,
 // then that idea's card. starChart.fortunes in gemma-lines.json; {idea} is the idea's title
@@ -1899,7 +1912,7 @@ function fortune(obj) {
   holdLine();
   // Stage 1: the fortune's idea goes in the basket and the checkout opens with it ticked
   if (basket.add(basket.get(a.id) || snapshot(a, ''))) track('basket_add', { from: 'star_chart', basket_size: sizeBucket(basket.count) });
-  whenFree(() => bookView.open('basket', { from: 'star_chart', tick: a.id }));
+  whenFree(() => basketView.open({ from: 'star_chart', tick: a.id }));
 }
 // The swap-the-sugar lines on a Sweet Spells recipe page, when the visitor's sweetener differs from the recipe's (read from the
 // atom: a page's snapshot doesn't carry sweetener or added_sugar)
@@ -2011,7 +2024,7 @@ function acknowledge(kind, { after, forgot }) {
     line = xs.length ? (A.map || "{c} it is. I'll lean that way.").replace('{c}', listOf(xs.slice(0, 2)))
       : (A.country || 'Shopping words for {country}, then.').replace('{country}', countryLabel(after.country) || 'everywhere');
   } else if (kind === 'dietary') {
-    const xs = after.dietary.filter(d => d !== 'low-fodmap').map(d => DIET_WORD[d] || d);
+    const xs = after.dietary.filter(d => !PASS_ONLY.has(d)).map(d => DIET_WORD[d] || d);
     // every need is named, so none seems dropped (QA pass 4); low-FODMAP isn't kept to (no cards checked yet), only passed on
     const fodmap = after.dietary.includes('low-fodmap') ? `${T.dietary?.fodmapLabel || 'Low-FODMAP'}. ${T.dietary?.fodmapNote || "I'll pass it on when I write your recipe. I only leave out cards I've checked."}` : '';
     line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : fodmap || (A.dietaryOther || "Noted. I'll pass it on when I write your recipe.");
@@ -2023,7 +2036,7 @@ function acknowledge(kind, { after, forgot }) {
 // One fact on a room's first visit: dietary, then the pantry (in the kitchens that cook), then a cuisine (Inn rule 11)
 function entryFact(id) {
   const F = T.entry || {};
-  const d = [].concat(visit.get('dietary') || []).filter(x => x !== 'low-fodmap'), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
+  const d = [].concat(visit.get('dietary') || []).filter(x => !PASS_ONLY.has(x)), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
   if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', listOf(d.map(x => DIET_WORD[x] || x)));
   if (p.length && ['cuddlecore', 'flourish'].includes(id)) return (F.pantry || "I'll look for things that use your {p}.").replace('{p}', listOf(p.slice(0, 2)));
   if (c.length) return (F.cuisine || "I'll lean {c} where I can.").replace('{c}', cuisineLabel(c[0]));
@@ -2042,7 +2055,7 @@ function emptyRoomLine() {
   const home = homeOf(state.room);
   if (!hasOwn()) return null;
   if (world.atoms.some(a => a.room === home && fits(a))) return null;
-  const diet = [].concat(visit.get('dietary') || []).filter(x => x !== 'low-fodmap');   // not a filter yet (no cards checked), so never the reason
+  const diet = [].concat(visit.get('dietary') || []).filter(x => !PASS_ONLY.has(x));   // not a filter yet (no cards checked), so never the reason
   if (!world.atoms.some(fits)) {
     if (!diet.length || state.nothingSaid) return null;
     state.nothingSaid = true;

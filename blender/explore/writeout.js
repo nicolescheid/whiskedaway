@@ -7,6 +7,11 @@
 const KEY = 'wa-written';
 export const WRITE_CAP = 3;
 export const DIETS = [['vegetarian', 'Vegetarian'], ['vegan', 'Vegan'], ['gluten-free', 'Gluten-free'], ['dairy-free', 'Dairy-free'], ['nut-free', 'Nut-free'], ['low-fodmap', 'Low-FODMAP']];
+// "More options" (Nicole, 22 Oct): passed to the write-out like the others; labels from write_out.diet_labels. The id is what
+// the Worker reads, so Hindu is sent as "hindu-no-beef"
+export const MORE_DIETS = [['halal', 'Halal'], ['kosher', 'Kosher'], ['hindu-no-beef', 'Hindu (no beef)'], ['keto', 'Keto'], ['low-carb', 'Low carb']];
+export const WRITE_ONLY = ['halal', 'kosher', 'hindu-no-beef'];   // no card can promise these: the write-out keeps to them
+export const CARB_DIETS = ['keto', 'low-carb'];                   // cards filtered only once content marks them carb_checked
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function load() { try { return JSON.parse(sessionStorage.getItem(KEY) || 'null') || { recipes: {} }; } catch { return { recipes: {} }; } }
@@ -71,12 +76,38 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     writing: lines.writing || 'Gemma is writing…',
     atCap: lines.at_cap || "That's my three written out for today. The short version's above, and I'll write more tomorrow.",
     print: lines.print || 'Save as PDF / print',
+    more: lines.more_diets || 'More options ›',
     failed: lines.failed || "My pen's run dry. The short version's above. Try again in a bit.",
     diet: lines.diet_question || 'Anything I should avoid?',
   };
   let busy = null;                                    // the atom being written, while it's being written
   let failed = null;                                  // the atom whose last try failed (her line shows until the next try)
   let openDiet = false;                               // the visitor opened "Anything to avoid? ›" on this page
+  let moreDiets = false;                              // "More options" is open (stays open for the visit's page or checkout)
+  let askOpen = false;                                // the checkout's diet question is showing (it stays while they choose)
+  const label = ([id, l]) => lines.diet_labels?.[id] || l;
+  /** The diet buttons, with More options under a link (open by itself when one of them is chosen) */
+  function dietGroup(diet) {
+    const more = moreDiets || MORE_DIETS.some(([id]) => diet.includes(id));
+    const btn = d => `<button data-diet="${d[0]}" aria-pressed="${diet.includes(d[0])}">${esc(label(d))}</button>`;
+    return `<div class="bk-diet" role="group" aria-label="${esc(L.diet)}"><p class="small">${esc(L.diet)}</p>${DIETS.map(btn).join('')}
+      ${more ? MORE_DIETS.map(btn).join('') : `<button class="link bk-moredivs" aria-expanded="false">${esc(L.more)}</button>`}</div>`;
+  }
+  // An answer sets the visit's dietary needs, like the cookbook shelf, in every room
+  function bindDiet(el, redraw) {
+    el.querySelectorAll('[data-diet]').forEach(b => b.onclick = () => {
+      const now = [].concat(visit.get('dietary') || []), id = b.dataset.diet;
+      const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id];
+      visit.set('dietary', next.length ? next : null);
+      mem.dietAsked = true; save();
+      b.setAttribute('aria-pressed', String(next.includes(id)));
+      onDiet?.(next);
+    });
+    el.querySelector('.bk-moredivs')?.addEventListener('click', () => {
+      moreDiets = true; redraw();
+      el.querySelector(`[data-diet="${MORE_DIETS[0][0]}"]`)?.focus();
+    });
+  }
   const left = () => Math.max(0, WRITE_CAP - usedToday());
   /** A recipe she's already written for this atom, from the book or this tab */
   const written = id => book.get(id)?.full || mem.recipes[id] || null;
@@ -108,19 +139,11 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     const diet = [].concat(visit.get('dietary') || []);
     const ask = !diet.length && !mem.dietAsked;
     const offer = !diet.length && mem.dietAsked && !openDiet;     // asked before and not answered: a one-line way back in (UX T6)
-    el.innerHTML = `${oops}${offer ? `<p><button class="link bk-dietmore">Anything to avoid? ›</button></p>` : ''}${ask || openDiet ? `<div class="bk-diet" role="group" aria-label="${esc(L.diet)}"><p class="small">${esc(L.diet)}</p>
-        ${DIETS.map(([id, label]) => `<button data-diet="${id}" aria-pressed="${diet.includes(id)}">${esc(label)}</button>`).join('')}</div>` : ''}
+    el.innerHTML = `${oops}${offer ? `<p><button class="link bk-dietmore">Anything to avoid? ›</button></p>` : ''}${ask || openDiet ? dietGroup(diet) : ''}
       <button class="bk-writeout">${esc(L.button)}</button>
       <p class="small">${esc(left() === 1 ? L.remainingOne : L.remaining.replace('{n}', left()))}</p>`;
-    // An answer here sets the visit's dietary needs, like the cookbook shelf, in every room; it isn't asked again this visit
-    el.querySelectorAll('[data-diet]').forEach(b => b.onclick = () => {
-      const now = [].concat(visit.get('dietary') || []), id = b.dataset.diet;
-      const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id];
-      visit.set('dietary', next.length ? next : null);
-      mem.dietAsked = true; save();
-      b.setAttribute('aria-pressed', String(next.includes(id)));
-      onDiet?.(next);
-    });
+    // It isn't asked again this visit once answered; More options redraws with the question open
+    bindDiet(el, () => { openDiet = true; render(el, rec, seedEl); });
     el.querySelector('.bk-dietmore')?.addEventListener('click', () => { openDiet = true; render(el, rec, seedEl); el.querySelector('[data-diet]')?.focus(); });
     el.querySelector('.bk-writeout').onclick = () => write(rec, el, seedEl);
   }
@@ -166,20 +189,16 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, payloadFo
     return recipe;
   }
 
-  /** The checkout's diet question: shown (in el) only until it's been asked once this visit, like a page's first ask */
+  /** The checkout's diet question: shown when the checkout opens if it hasn't been answered this visit, and it stays while
+   *  the visitor chooses (dietAskReset() as the checkout opens) */
   function dietAsk(el) {
     const diet = [].concat(visit.get('dietary') || []);
-    if (diet.length || mem.dietAsked) { el.innerHTML = ''; return; }
-    el.innerHTML = `<div class="bk-diet" role="group" aria-label="${esc(L.diet)}"><p class="small">${esc(L.diet)}</p>
-      ${DIETS.map(([id, label]) => `<button data-diet="${id}" aria-pressed="false">${esc(label)}</button>`).join('')}</div>`;
-    el.querySelectorAll('[data-diet]').forEach(b => b.onclick = () => {
-      const now = [].concat(visit.get('dietary') || []), id = b.dataset.diet;
-      const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id];
-      visit.set('dietary', next.length ? next : null);
-      b.setAttribute('aria-pressed', String(next.includes(id)));
-      onDiet?.(next);
-    });
+    if (!askOpen && (diet.length || mem.dietAsked)) { el.innerHTML = ''; return; }
+    askOpen = true;
+    el.innerHTML = dietGroup(diet);
+    bindDiet(el, () => dietAsk(el));
   }
+  const dietAskReset = () => { askOpen = false; };
 
-  return { render, written, writeNow, dietAsk, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
+  return { render, written, writeNow, dietAsk, dietAskReset, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
 }

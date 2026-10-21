@@ -1,4 +1,4 @@
-// "What do I need?" (cook-mode-ux.md §2): one shopping list from the recipes in the book. Same ingredient on one line (by the
+// The shopping list, was "What do I need?" (cook-mode-ux.md §2): one shopping list from the recipes in the book. Same ingredient on one line (by the
 // write-out's `key`, else its singular name), amounts added when the units match, "1 cup + 200 g" when they don't; recipes without a
 // write-out add their key ingredients with no amount. What's in the pantry (Tell Gemma) moves to "You've got these".
 // Ticks and the recipes left out are kept in the book's storage (book.listState). Share uses the phone's share sheet, or copies.
@@ -49,7 +49,7 @@ export function mergeItems(lists) {
     amount: e.parts.map(p => `${Number.isNaN(p.n) ? p.raw : showQty(p.n)}${p.unit ? ` ${p.unit}` : ''}`).join(' + ') }));
 }
 
-export function createList({ book, written, pantry, synonyms = () => ({}), servings = () => null, track }) {
+export function createList({ title, book, written, pantry, synonyms = () => ({}), servings = () => null, track }) {
   const state = () => ({ off: [], ticks: [], back: [], ...(book.listState || {}) });
   const setState = s => { book.listState = s; };
   const has = (k, words) => words.some(w => k.includes(w) || w.includes(k));
@@ -81,8 +81,8 @@ export function createList({ book, written, pantry, synonyms = () => ({}), servi
   /** Draw the list into a book page */
   function render(el, rerender) {
     const { kept, s, need, got } = build();
-    if (!kept.length) { el.innerHTML = `<h3 class="bk-h">What do I need?</h3><p class="small">Keep a recipe or two first, and I'll make you a list.</p>`; return; }
-    el.innerHTML = `<h3 class="bk-h">What do I need?</h3>${servings() ? `<p class="small ls-for">Amounts for ${servings()}.</p>` : ''}
+    if (!kept.length) { el.innerHTML = `<h3 class="bk-h">${esc(title || 'Shopping list')}</h3><p class="small">Keep a recipe or two first, and I'll make you a list.</p>`; return; }
+    el.innerHTML = `<h3 class="bk-h">${esc(title || 'Shopping list')}</h3>${servings() ? `<p class="small ls-for">Amounts for ${servings()}.</p>` : ''}
       <div class="ls-from" role="group" aria-label="From">${kept.map(k => `<button data-r="${esc(k.id)}" aria-pressed="${!s.off.includes(k.id)}">${esc(k.short || k.title)}</button>`).join('')}</div>
       <ul class="ls-need">${need.map(i => `<li><label><input type="checkbox" data-k="${esc(i.key)}" ${s.ticks.includes(i.key) ? 'checked' : ''}><span>${esc(line(i))}</span></label></li>`).join('') || '<li class="small">Nothing to buy.</li>'}</ul>
       ${got.length ? `<details class="ls-got"><summary>You've got these (${got.length})</summary><p>${got.map(i => `<button data-back="${esc(i.key)}">${esc(i.item)}</button>`).join(' ')}</p></details>` : ''}

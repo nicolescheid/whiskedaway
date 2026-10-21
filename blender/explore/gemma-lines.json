@@ -43,7 +43,23 @@
       "kept_all": "You've kept {n}, all from {room}.",
       "kept_mostly": "You've kept {n}, mostly from {room}.",
       "kept_mixed": "You've kept {n}, from around the Inn."
-    }
+    },
+    "_basket2": "PLACEHOLDERS (Basket 2, 22 Oct) for content editor (3): the book holds only recipes written out in full. title: the book's header. chip_long/chip_short: its own chip in the bar (the basket has its own). loose_title: the header over an idea read from its card, not in the book. how_title + how (3 steps): an empty book, every time. first_use_title + first_use + got_it: once per device, the first time a visitor opens a book that already has recipes. to_basket: the button under how. shopping_list: was \"What do I need?\" (the book's Contents, cook mode, the list's heading).",
+    "title": "My Custom Recipe Book",
+    "chip_long": "My recipe book",
+    "chip_short": "Book",
+    "loose_title": "A recipe idea",
+    "how_title": "How your book works",
+    "how": [
+      "Tap ♥ Keep on an idea you like. Its leaflet goes in your basket.",
+      "Open your basket, tick the ones you want and tap Add recipe to my book. Gemma writes each one out in full, 3 free a day.",
+      "They live here, ready to cook step by step, with a shopping list and Save as PDF."
+    ],
+    "to_basket": "Open my basket",
+    "first_use_title": "Your recipe book",
+    "first_use": "Every recipe Gemma writes out for you lands here, in full. Cook it step by step, make a shopping list, or save it as a PDF. New ones come from your basket.",
+    "got_it": "Got it",
+    "shopping_list": "Shopping list"
   },
   "room_empty": "That's everything I've got in here. Try next door.",
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",
@@ -55,7 +71,16 @@
     "at_cap": "That's my three for today. The short version's above, and I'll write more tomorrow.",
     "failed": "My pen's run dry. The short version's above. Try again in a bit.",
     "diet_question": "Anything I should avoid?",
-    "print": "Save as PDF / print"
+    "print": "Save as PDF / print",
+    "more_diets": "More options ›",
+    "diet_labels": {
+      "_about": "PLACEHOLDERS: labels for \"More options\" under the diet question (checkout and a recipe page). The ids are what the write-out gets; hindu-no-beef reads as Hindu here (PM 4 read Nicole's \"Hindi\" as Hindu). Halal, kosher and Hindu only go to the write-out; keto and low carb leave out only cards content marks carb_checked (none yet).",
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "hindu-no-beef": "Hindu (no beef)",
+      "keto": "Keto",
+      "low-carb": "Low carb"
+    }
   },
   "tell": {
     "_about": "Tell Gemma V1, keyed as tell.js and explore.html read them (tell-gemma/v1). {two} = the first two things, joined; {many} = 'A, b and a few more'; {c} = cuisines; {d} = diets; {p} = pantry words; {diet} and {room} as named. Every line stays under 100 characters.",
@@ -1058,7 +1083,7 @@
     ]
   },
   "basket": {
-    "_about": "The recipe basket (Stage 1, docs/basket-stage1-design.md): ♥ Keep puts a leaflet in the basket; checkout (the book's Basket page) has Gemma write ticked ones out in full into the book, 3 free a day per device. {n} = how many. Words: basket, leaflet, write out, 3 free today.",
+    "_about": "The recipe basket (Stage 1, docs/basket-stage1-design.md): ♥ Keep puts a leaflet in the basket; checkout (the basket's own sheet, its chip \"Your basket\") has Gemma write ticked ones out in full into the book, 3 free a day per device. {n} = how many. Words: basket, leaflet, write out, 3 free today. Basket 2 (22 Oct): the basket and the book are two places with two chips. add_one/add_many replace write_one/write_button (PLACEHOLDERS). read_less closes a leaflet read in place. leaflet_need/leaflet_how head its short version. close: the ✕'s label for screen readers.",
     "chip_long": "Your basket",
     "chip_short": "Basket",
     "tab": "Basket",
@@ -1069,8 +1094,6 @@
     "free_one": "1 free today",
     "none": "That's my three for today. Your leaflets wait here, and I'll write more tomorrow.",
     "pick_full": "That's as many as I can write today.",
-    "write_button": "Write out {n}",
-    "write_one": "Write it out",
     "writing": "Writing…",
     "written": "Written into your book",
     "failed": "That one didn't take. It's still in your basket. Try again in a bit.",
@@ -1100,6 +1123,12 @@
       ]
     },
     "clear_note": "Every recipe you've kept, your basket{notes}, on this device.",
-    "cleared": "Your book and basket are cleared."
+    "cleared": "Your book and basket are cleared.",
+    "add_one": "Add recipe to my book",
+    "add_many": "Add {n} recipes to my book",
+    "read_less": "Close ‹",
+    "leaflet_need": "You'll need",
+    "leaflet_how": "How",
+    "close": "Close the basket"
   }
 }

@@ -47,3 +47,20 @@ Placeholder keys under `basket` in gemma-lines.json (listed in the report); the 
 - Worth a look, unchanged: `chia.lines.written` ("Keep it if you like it": a Mix write-out now goes into the book by itself);
   the notebook's privacy paragraph in explore.html (#notes: mentions the book, not the basket); "Clear my book" now empties
   the basket too (its note says so).
+
+## Basket 2 (Nicole's follow-ups, 22 Oct)
+- Two places, two chips: "Your basket / Basket" (basket-view.js, its own sheet with the checkout; ideas still fly to it, id
+  btn-book) and "My recipe book / Book" (btn-mybook; the book, "My Custom Recipe Book", only written-out recipes, each
+  with Cook this). On phones below 400 px the chips tighten and Front door reads "Door" so six fit one row at 375.
+  Older keeps never written out move to the basket on load. Basket → book and book → basket wait for the history step back.
+- A leaflet's Read › opens it in place in the basket (short version). An idea read from its card is a loose page headed
+  "A recipe idea".
+- Explainers: an empty book shows how it works (3 steps + Open my basket); a book opened with recipes shows a short
+  first-use note once per device (wa-book introSeen), gone on Got it or close.
+- Diet "More options": halal, kosher, hindu-no-beef (labelled Hindu), keto, low-carb. Sent to the write-out as ids (the
+  Worker passes dietary_restrictions through unchanged: no API deploy). Halal, kosher, Hindu never filter cards; keto and
+  low carb filter only cards with carb_checked (none yet), like low-FODMAP's fodmap_checked.
+- Renames: "Add recipe to my book" / "Add {n} recipes to my book" (basket.add_one/add_many, replacing write_one/write_button);
+  "Shopping list" (book.shopping_list) in the book's Contents, cook mode and the list's heading.
+- New keys: book.{title, chip_long, chip_short, loose_title, how_title, how[3], to_basket, first_use_title, first_use, got_it,
+  shopping_list}; basket.{add_one, add_many, read_less, leaflet_need, leaflet_how, close}; write_out.{more_diets, diet_labels.*}.

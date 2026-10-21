@@ -615,3 +615,19 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
   #print-sheet li { margin: 2pt 0; break-inside: avoid; }
   #print-sheet .ps-foot { margin-top: 18pt; font-size: 9pt; color: #555; }
 }
+
+/* The basket's own sheet (basket-view.js): the book's dialog look, one page. Desktop: a narrow box over the dimmed room */
+.bs-sheet .bs-page { flex: 1; min-height: 0; }
+.bs-sheet.desk .bk-box { width: min(560px, calc(100vw - 48px)); }
+.book:not(.desk).bs-sheet .bs-page { padding: 14px 18px calc(14px + env(safe-area-inset-bottom)); }
+.bs-read { grid-column: 1 / -1; padding: 0 0 10px 42px; }
+.bs-hook { margin: 0 0 4px; font: italic 15px/1.4 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
+.bk-diet .bk-moredivs { min-height: 44px; padding: 0 6px; }
+/* The book's explainers: how it works (an empty book), and the first time it's opened with recipes in */
+.bk-howbox { margin-top: 10px; }
+.bk-how { margin: 4px 0 10px; padding-left: 20px; font: 14px/1.45 'Quicksand'; }
+.bk-how li { margin: 0 0 6px; }
+.bk-firstuse { margin: 0 0 14px; padding: 10px 14px; border-radius: 10px; background: rgba(139, 77, 92, .08); border: 1px solid rgba(139, 77, 92, .25); }
+.bk-firstuse h4 { margin: 0 0 4px; }
+.bk-firstuse p { margin: 0 0 4px; font: 14px/1.45 'Quicksand'; }
+.bk-firstuse .bk-gotit { min-height: 44px; }

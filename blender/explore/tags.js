@@ -4,7 +4,7 @@
 // A tag appears only once a value is set. New keys: add a renderer to KINDS. Pantry, the map and dietary needs open their
 // Tell Gemma sheet (tell.js); energy keeps its small picker. "+ Tell me about you" always ends the row (the empty state too).
 
-import { DIETS } from './writeout.js';
+import { DIETS, MORE_DIETS } from './writeout.js';
 import { cuisineLabel } from './tell.js';
 import { SERVINGS, checkinWords } from './checkin.js';
 
@@ -26,7 +26,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     // Dietary needs: the cookbook shelf's sheet, or the recipe page's "Anything I should avoid?". "Something else" shows as +1
     dietary: {
       icon: '🌱', name: 'Dietary needs', title: 'Anything I should avoid?', multi: true, sheet: 'dietary',
-      word: v => [].concat(v || []).map(d => (d === 'low-fodmap' ? 'low-FODMAP' : DIETS.find(([id]) => id === d)?.[1].toLowerCase() || d)).join(', ') + (visit.get('dietaryOther') ? ' +1' : ''),
+      word: v => [].concat(v || []).map(d => (d === 'low-fodmap' ? 'low-FODMAP' : [...DIETS, ...MORE_DIETS].find(([id]) => id === d)?.[1].toLowerCase() || d)).join(', ') + (visit.get('dietaryOther') ? ' +1' : ''),
       options: () => DIETS.map(([id, label]) => ({ id, label })),
       pick: id => { const now = [].concat(visit.get('dietary') || []); const next = now.includes(id) ? now.filter(x => x !== id) : [...now, id]; visit.set('dietary', next.length ? next : null); },
     },
