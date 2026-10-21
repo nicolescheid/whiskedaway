@@ -29,7 +29,7 @@ const SPOTS = {
     // the lane oil lamp (glasshouse_build.oil_lamps) stands between her and the camera
     occluders: [{ cyl: [1.47, 2.55, 0.8, 0.05, 0.03] }, { cyl: [1.47, 2.55, 0.83, 0.022, 0.04] },
                 { cyl: [1.47, 2.55, 0.87, 0.045, 0.1] }, { cyl: [1.47, 2.55, 0.97, 0.012, 0.25] }],
-    trace: 'hairs', hair: 0x9a9ea6, size: 0.55, shadow: true,     // the staging is close to the camera: a smaller tuft
+    trace: 'hairs', hair: 0x6f7279, size: 0.55, tone: 1, shadow: true,     // the staging is close to the camera: a smaller tuft
     // the sun in these renders (glasshouse_build SUN_AZ): from the garden, a little lane-ward, high. She's backlit by it.
     sun: { az: -35, el: 45, color: 0xffe0b0, k: s => ({ fair: 2.6, 'very-dry': 2.8, change: 1.6 })[s.weather] || 0 },
   },
@@ -38,13 +38,37 @@ const SPOTS = {
     when: s => ['rain', 'stormy'].includes(s.weather),                                  // curled up above the warm range
     // the hood's lower box (flourish_build: hood_low) hides the ledge she lies on
     occluders: [{ box: [0, 0.62, 3.17, 4.5, 1.98, 2.12] }],
-    trace: 'hairs', hair: 0x7a7d85, lift: 0.9, shadow: false,    // grey on the hood's white top; a tuft and a pressed patch where she lay
+    trace: 'hairs', hair: 0x666970, lift: 0.9, shadow: false,    // grey on the hood's white top; a tuft and a pressed patch where she lay
+  },
+  // The armchair by the back wall of Cuddlecore (cuddlecore_build: ArmChair_01, seat at 0.46 m): warm nights when the weather turns
+  cuddlecore: {
+    rooms: ['cuddlecore'], camYaw: 0, at: [0.85, -1.56, 0.47], turn: 0, pose: 'sit', boxScale: 0.7,
+    when: s => s.night && ['stormy', 'change'].includes(s.weather),
+    occluders: [],
+    trace: 'hairs', hair: 0x655d54, size: 1.1, tone: 0.85, shadow: true,
+    sun: { at: [0.3, 0.2, 1.9], color: 0xffcf9a, k: s => (s.night ? 1.3 : 0) },        // the room's lamplight, from the middle
+  },
+  // The window seat in Sweet Spells' bay (sweet_spells_build: the seat cushion at 0.49 m), at its right end, clear of the spell table's props
+  'sweet-spells': {
+    rooms: ['sweet-spells'], camYaw: 180, at: [2.75, -0.2, 0.49], turn: 0, pose: 'sit', boxScale: 0.7,
+    when: s => !s.night && ['rain', 'change'].includes(s.weather),                       // watching the lane in the wet
+    occluders: [],
+    trace: 'hairs', hair: 0x6e6064, size: 1.1, tone: 0.85, shadow: true,
+    sun: { at: [2.2, 1.6, 2.3], color: 0xffe2bc, k: s => (s.night ? 0 : 1.5) },          // the room's light, from the middle: the bay behind her would leave her in silhouette
+  },
+  // The shop-window sill in the Chiapothecary (chiapothecary_build: sill at 0.95 m), between the jars and the plant
+  chiapothecary: {
+    rooms: ['chiapothecary'], camYaw: 0, at: [2.375, 0.17, 0.95], turn: 0, pose: 'sit', boxScale: 0.6,
+    when: s => !s.night && ['stormy', 'very-dry'].includes(s.weather),
+    occluders: [],
+    trace: 'hairs', hair: 0x6e6760, size: 1.1, tone: 0.85, shadow: true,
+    sun: { at: [2.2, 2.2, 2.4], color: 0xfff0d8, k: s => (s.night ? 0 : 1.7) },          // the room's light on her face, not the window's behind her
   },
   hallway: {
     rooms: ['hall-middle', 'hall-entrance'], camYaw: 0, at: [0.02, 7.7, 0.6], turn: 0, pose: 'sit',
     when: s => s.night,                                                                  // the sea-window sill at night
     occluders: [],
-    trace: 'hairs', hair: 0x9a9ea6, size: 1.8, shadow: true,
+    trace: 'hairs', hair: 0x77797f, size: 1.8, shadow: true,
     sun: { at: [-0.86, 7.25, 2.15], color: 0xffc58a, k: s => (s.night ? 1.8 : 0) },    // the wall lamp by the window
     basket: [0.6, 7.47, 0.24],                     // the lidded basket under the window (hallway_build): her box here
   },
@@ -116,6 +140,7 @@ export function createErwina(o) {
 
   // ---------- light from the pano on screen
   const shBasis = new Array(9);
+  let lastPx = null;               // the pano on screen at 64 x 32, for the surface her trace sits on
   /** A light probe (and a soft key light from its brightest side) from the room's equirect texture. */
   function lightFrom(tex) {
     const img = tex?.image;
@@ -127,6 +152,7 @@ export function createErwina(o) {
     try { g.drawImage(img, 0, 0, W, H); } catch { return; }
     let px;
     try { px = g.getImageData(0, 0, W, H).data; } catch { return; }
+    lastPx = px;
     const sh = new THREE.SphericalHarmonics3();
     const col = new THREE.Color();
     let total = 0;
@@ -163,6 +189,27 @@ export function createErwina(o) {
     key.userData.color = key.color.clone();
     key.userData.k = key.intensity;
     aimKey();
+    tuneTrace();
+  }
+  /**
+   * Her trace in her own grey, set against the surface it lies on: a spot with a `tone` takes the pano's brightness under
+   * it (the pano on screen, so weather and time carry over) and the fur is that fraction as bright, grey and never
+   * brighter than the surface. A fixed colour on a dim room's cushion would read as white.
+   */
+  function tuneTrace() {
+    const a = active;
+    if (!a?.trace || !a.def.tone || !lastPx) return;
+    const W = 64, H = 32, v = a.pos, len = v.length() || 1;
+    const yaw = THREE.MathUtils.radToDeg(Math.atan2(v.x, -v.z)), pitch = THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(v.y / len, -1, 1)));
+    const i0 = Math.floor(((yaw + 180) / 360) * W), j0 = Math.floor(((90 - pitch) / 180) * H);
+    let sum = 0, n = 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+      const i = (i0 + di + W) % W, j = Math.min(H - 1, Math.max(0, j0 + dj)), k = (j * W + i) * 4;
+      sum += (0.2126 * lastPx[k] + 0.7152 * lastPx[k + 1] + 0.0722 * lastPx[k + 2]) / 255;
+      n++;
+    }
+    const g = THREE.MathUtils.clamp((sum / n) * a.def.tone, 0.2, 0.7);
+    a.trace.traverse(m => m.material?.color?.setRGB(g * 1.0, g, g * 1.02, THREE.SRGBColorSpace));
   }
   /** The key light: the spot's own sun or lamp when it's on (as the renders light it), otherwise the probe's brightest side. */
   function aimKey() {
@@ -211,12 +258,12 @@ export function createErwina(o) {
   function hairs(color, curled, lift = 0.5, size = 1) {
     const g = new THREE.Group();
     const spread = (curled ? 0.11 : 0.12) * size;      // on the hood the top is narrow: keep it all over the box, not hanging past its edge
-    const wide = blob(spread * 2.6, spread * 2.2, 0.8, color);          // the pressed patch, soft at its edges
+    const wide = blob(spread * 2.4, spread * 2, 0.6, color);          // the pressed patch, soft at its edges
     wide.position.y = 0.002;
-    const core = blob(spread * 1.5, spread * 1.2, 0.55, color);
+    const core = blob(spread * 1.4, spread * 1.1, 0.4, color);
     core.position.set(0.01 * size, 0.0025, 0.005 * size);
     g.add(wide, core);
-    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: curled ? 0.9 : 0.7, depthWrite: false, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: curled ? 0.8 : 0.65, depthWrite: false, side: THREE.DoubleSide });
     let r = 7;                                                   // a small fixed-seed generator
     const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
     const one = (len, w, rad, up) => {
@@ -227,8 +274,8 @@ export function createErwina(o) {
       h.renderOrder = 3;
       g.add(h);
     };
-    for (let n = 0; n < 150; n++) one((0.016 + rnd() * 0.024) * size, 0.0026, Math.sqrt(rnd()) * spread, rnd() * 0.25);   // fine and short, lying down
-    for (let n = 0; n < (curled ? 26 : 10); n++) one((0.045 + rnd() * 0.04) * size * (curled ? 1.5 : 1), curled ? 0.007 : 0.0032, (0.4 + rnd() * 0.6) * spread, rnd() < lift ? 0.5 + rnd() * 0.5 : rnd() * 0.2);   // a few loose wisps
+    for (let n = 0; n < 110; n++) one((0.014 + rnd() * 0.018) * size, 0.0042, Math.sqrt(rnd()) * spread, rnd() * 0.25);   // fine and short, lying down
+    for (let n = 0; n < (curled ? 20 : 4); n++) one((0.026 + rnd() * 0.02) * size * (curled ? 2.2 : 1), curled ? 0.006 : 0.004, (0.4 + rnd() * 0.6) * spread, rnd() < lift ? 0.5 + rnd() * 0.5 : rnd() * 0.2);   // a few loose wisps
     if (curled) g.position.x = -0.1;
     return g;
   }
@@ -297,6 +344,7 @@ export function createErwina(o) {
     scene.add(group, ...occ);
     active = { id, def, group, cat, box, shadow, trace, occ, glints, pos, seenAt: 0 };
     aimKey();
+    tuneTrace();
     show(st);
   }
   function clear() {
