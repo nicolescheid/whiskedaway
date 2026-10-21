@@ -825,9 +825,11 @@ function buildUserMessage(payload) {
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
     const UNITS = {
-      metric: 'Measurements: metric (g, kg, ml, l; tsp and tbsp for small amounts).',
+      metric: 'Measurements: metric only, never cups. Weigh solids in g or kg (flour, sugar, chopped vegetables, leaves, grains), measure liquids in ml or l; '
+        + 'tsp and tbsp only for small amounts (under about 3 tbsp). Whole things stay counted (2 eggs, 1 onion). Put the number in "amount" and the unit in "unit".',
       cups: 'Measurements: cups and spoons (cup, tbsp, tsp); grams only where a cup makes no sense, like a block of butter or meat.',
-      both: 'Measurements: metric first with cups and spoons in brackets, written in "amount" with "unit" empty, e.g. "200 g (1 1/2 cups)" or "15 ml (1 tbsp)".',
+      both: 'Measurements: every measured ingredient in both, metric first with cups and spoons in brackets, all in "amount" with "unit" empty, '
+        + 'e.g. "200 g (1 1/2 cups)" or "15 ml (1 tbsp)". Whole things stay counted (2 eggs).',
     };
     if (UNITS[payload.units]) parts.push(UNITS[payload.units]);
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
