@@ -1036,7 +1036,9 @@
       "done": "The table's laid. Ready when you are.",
       "atCap": "That's three tables laid this visit. Here's an idea to look at instead.",
       "failed": "I couldn't lay that one out. Here's an idea instead."
-    }
+    },
+    "busy": "Still writing that one. Give me a moment.",
+    "nothing": "I've nothing to write out yet. Have a look around and tell me what you like."
   },
   "starChart": {
     "_about": "Said before a surprise sweet idea from the star chart. {idea} is its title.",
