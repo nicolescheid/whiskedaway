@@ -1280,7 +1280,9 @@ function touch(id) {
     openTool(obj.tool_title || 'Find Comfort', obj.tool_text || "The pot can't cook you a full recipe yet. Soon. For now, keep looking around and I'll leave ideas out for you.");
   } else if (TELL_TOOLS[obj.tool]) {
     // The pantry, the map and the cookbooks (Tell Gemma V1): her line, then the sheet
-    if (T.objects?.[id]) { say(T.objects[id], [], true); holdLine(); }   // her reading waits, so this line is the one you see
+    // Cuddlecore's "How you're feeling" jars open the check-in (a stand-in line until content writes tell.objects['symptom-jars'])
+    const told = T.objects?.[id] || (id === 'symptom-jars' ? "Tell me how much you've got in you today, and I'll cook to suit." : null);
+    if (told) { say(told, [], true); holdLine(); }   // her reading waits, so this line is the one you see
     tell.open(TELL_TOOLS[obj.tool], 'object');
   } else {
     openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");

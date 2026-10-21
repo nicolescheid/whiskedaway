@@ -23,6 +23,7 @@ const DEFAULTS = {
   },
   bases: { milk: 'Milk', oat: 'Oat milk', coconut: 'Coconut milk', almond: 'Almond milk', soy: 'Soy milk', yoghurt: 'Yoghurt' },
   flavours: { vanilla: 'Vanilla', cacao: 'Cacao', berry: 'Berries', mango: 'Mango', matcha: 'Matcha', cinnamon: 'Cinnamon', lemon: 'Lemon', peanut: 'Peanut butter' },
+  seeds: { black: 'Black chia', white: 'White chia' },        // set by the two chia drawers, not a step of its own
   toppings: { fruit: 'Fresh fruit', granola: 'Granola', nuts: 'Nuts and seeds', coconut: 'Coconut flakes', nibs: 'Cacao nibs', drizzle: 'A drizzle of honey' },
   swaps: [
     { when: { base: 'milk', flavour: 'lemon' }, swap: { step: 'base', to: 'coconut' }, line: 'Lemon can split dairy milk overnight. Would you consider coconut milk instead?' },
@@ -31,7 +32,7 @@ const DEFAULTS = {
     { when: { flavour: 'cacao', topping: 'nibs' }, swap: { step: 'topping', to: 'fruit' }, line: 'Cacao twice is a lot of cacao. Would you consider fresh fruit on top instead?' },
   ],
   lines: {
-    moodTitle: 'Pick a mood', mixTitle: 'Mix an experiment', names: { mood: 'Mood', base: 'Base', flavour: 'Flavour', topping: 'On top' },
+    moodTitle: 'Pick a mood', mixTitle: 'Mix an experiment', names: { mood: 'Mood', base: 'Base', flavour: 'Flavour', topping: 'On top', seed: 'Chia' },
     steps: { mood: 'What mood is it?', base: 'What shall we set it in?', flavour: 'And the flavour?', topping: 'Something on top?' },
     swapYes: 'Swap to {x}', swapNo: 'Keep mine', swapLine: 'Would you try {x} instead of {y}? {reason}', back: '‹ Back', next: 'Next ›', skip: 'Skip', write: 'Get my recipe',
     cap: 'Gemma writes it for you (3 a visit).', capNone: "I've written three this visit, so that's my pen done. Your choices are kept.",
@@ -48,7 +49,7 @@ export function chiaData(lines = {}) {
   // The reshaped block (content/chia-mix-reshape): already this module's own shape, keyed by id
   if (c.moods && !Array.isArray(c.moods.options) && !c.mix) {
     const cl = c.lines || {};
-    return { moods: c.moods, bases: c.bases || DEFAULTS.bases, flavours: c.flavours || DEFAULTS.flavours, toppings: c.toppings || DEFAULTS.toppings,
+    return { moods: c.moods, bases: c.bases || DEFAULTS.bases, flavours: c.flavours || DEFAULTS.flavours, toppings: c.toppings || DEFAULTS.toppings, seeds: c.seeds || DEFAULTS.seeds,
       fromDrawers: c.fromDrawers || {}, swaps: Array.isArray(c.swaps) ? c.swaps : DEFAULTS.swaps,
       lines: { ...L, ...cl, intro: cl.mixIntro ?? cl.intro ?? '', steps: { ...L.steps, ...(cl.steps || {}) }, names: { ...L.names, ...(cl.names || {}) } } };
   }
@@ -94,14 +95,15 @@ export function mixRecipe(D, d) {
   const mood = d.mood && d.mood !== 'by-flavour' ? D.moods[d.mood] : null;
   const title = `${mood ? mood.label : L('flavour') || 'Your'} chia jar`.replace(/^Your chia jar$/, 'Your chia jar');
   const bits = [L('base'), L('flavour'), L('topping')].filter(Boolean).map(x => x.toLowerCase());
+  const chia = d.seed ? `${L('seed').toLowerCase()} seeds` : 'chia seeds';   // "black chia seeds", from a drawer
   return {
-    id: `mix-${STEPS.map(s => d[s] || 'x').join('-')}`, room: ROOM, kind: 'chia experiment', title, short: title,
+    id: `mix-${STEPS.map(s => d[s] || 'x').join('-')}${d.seed ? `-${d.seed}` : ''}`, room: ROOM, kind: 'chia experiment', title, short: title,
     hook: bits.length ? `Chia set in ${bits[0]}${bits.length > 1 ? `, with ${bits.slice(1).join(' and ')}` : ''}.` : 'A chia jar of your own.',
-    key_ingredients: ['chia seeds', ...bits], body: 'Stir the chia into the base with the flavour, leave it in the fridge overnight, then top it and eat.',
+    key_ingredients: [chia, ...bits], body: 'Stir the chia into the base with the flavour, leave it in the fridge overnight, then top it and eat.',
     method_short: 'Stir the chia into the base with the flavour, leave it in the fridge overnight, then top it and eat.',
     themes: [...(mood?.themes || []), 'overnight', 'no-cook'], spoons: 0, time: 5, wait: 'overnight', why: mood ? mood.inIt : '',
-    seed: { name: title, ingredients: ['chia seeds', ...bits] },
-    mix: { ...Object.fromEntries(STEPS.filter(s => d[s]).map(s => [s, L(s)])), ...(mood?.inIt ? { inside: mood.inIt } : {}) },
+    seed: { name: title, ingredients: [chia, ...bits] },
+    mix: { ...Object.fromEntries([...STEPS, 'seed'].filter(s => d[s]).map(s => [s, L(s)])), ...(mood?.inIt ? { inside: mood.inIt } : {}) },
   };
 }
 
@@ -159,7 +161,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     } else {
       $('#mx-title').textContent = T.mixTitle;
       const left = writer?.left ?? 0;
-      const rows = STEPS.filter(s => draft[s]).map(s => `<li><span>${esc(T.names?.[s] || s)}</span> <b>${esc(w(labelOf(D, s, draft[s])))}</b></li>`).join('');
+      const rows = [...STEPS, 'seed'].filter(s => draft[s]).map(s => `<li><span>${esc(T.names?.[s] || s)}</span> <b>${esc(w(labelOf(D, s, draft[s])))}</b></li>`).join('');
       body.innerHTML = `<p class="mx-dots">${[...STEPS, 'write'].map((_, i) => `<i class="${i === at ? 'on' : 'done'}"></i>`).join('')}</p>
         <h3 class="tl-h">${esc(T.summary)}</h3><ul class="mx-sum">${rows}</ul>${swapHtml()}
         ${writing ? `<div class="ck-offer"><p>${esc(T.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
@@ -263,14 +265,14 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   });
   addEventListener('resize', () => { if (!root.hidden) root.className = `tell ${mode()} mx-${kind}`; });
 
-  /** A drawer tapped (chia.fromDrawers: drawer id → a flavour or topping id): that becomes the Mix's choice, as the fridge's milk
+  /** A drawer tapped (chia.fromDrawers: drawer id → a flavour, topping or seed id): that becomes the Mix's choice, as the fridge's milk
    *  is its base, so "Mix an experiment" opens with it in. Returns { step, label } for Gemma's line, or null for a plain drawer. */
   function drawer(id) {
     const v = D.fromDrawers?.[id];
-    const step = v && (D.flavours?.[v] ? 'flavour' : D.toppings?.[v] ? 'topping' : null);
+    const step = v && (D.flavours?.[v] ? 'flavour' : D.toppings?.[v] ? 'topping' : D.seeds?.[v] ? 'seed' : null);
     if (!step) return null;
     save(step, v);
-    sound?.mix?.(step);
+    sound?.mix?.(step === 'seed' ? 'topping' : step);   // a seed has no sound of its own
     return { step, label: labelOf(D, step, v) };
   }
 

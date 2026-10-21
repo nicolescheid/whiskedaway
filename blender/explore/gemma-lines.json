@@ -639,7 +639,9 @@
       "drawer-coconut-flakes": "toasted-coconut",
       "drawer-cacao-nibs": "cacao-nibs",
       "drawer-goji-berries": "goji",
-      "drawer-matcha": "matcha"
+      "drawer-matcha": "matcha",
+      "drawer-black-chia": "black",
+      "drawer-white-chia": "white"
     },
     "swaps": [
       {

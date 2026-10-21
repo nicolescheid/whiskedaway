@@ -212,7 +212,7 @@
       "label": "How you're feeling",
       "ref": "the jars",
       "type": "interactive",
-      "tool": "symptoms",
+      "tool": "checkin",
       "themes": [
         "ginger",
         "honey",
