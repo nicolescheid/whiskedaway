@@ -44,22 +44,22 @@
       "kept_mostly": "You've kept {n}, mostly from {room}.",
       "kept_mixed": "You've kept {n}, from around the Inn."
     },
-    "_basket2": "PLACEHOLDERS (Basket 2, 22 Oct) for content editor (3): the book holds only recipes written out in full. title: the book's header. chip_long/chip_short: its own chip in the bar (the basket has its own). loose_title: the header over an idea read from its card, not in the book. how_title + how (3 steps): an empty book, every time. first_use_title + first_use + got_it: once per device, the first time a visitor opens a book that already has recipes. to_basket: the button under how. shopping_list: was \"What do I need?\" (the book's Contents, cook mode, the list's heading).",
     "title": "My Custom Recipe Book",
     "chip_long": "My recipe book",
     "chip_short": "Book",
     "loose_title": "A recipe idea",
     "how_title": "How your book works",
     "how": [
-      "Tap ♥ Keep on an idea you like. Its leaflet goes in your basket.",
-      "Open your basket, tick the ones you want and tap Add recipe to my book. Gemma writes each one out in full, 3 free a day.",
-      "They live here, ready to cook step by step, with a shopping list and Save as PDF."
+      "Tap ♥ Keep on an idea you like. It goes into your basket as a leaflet.",
+      "Tick the ones you want in your basket and tap Add recipe to my book. 3 free today.",
+      "Then it lives here. Cook it step by step, make a shopping list, or save it as a PDF."
     ],
     "to_basket": "Open my basket",
     "first_use_title": "Your recipe book",
-    "first_use": "Every recipe Gemma writes out for you lands here, in full. Cook it step by step, make a shopping list, or save it as a PDF. New ones come from your basket.",
+    "first_use": "Recipes I've written out live here. New ones come from your basket.",
     "got_it": "Got it",
-    "shopping_list": "Shopping list"
+    "shopping_list": "Shopping list",
+    "_about2": "The book holds only recipes written out in full. title: the book's header. chip_long/chip_short: its chip in the bar. loose_title: header over an idea read from its card. how_title + how (3 steps): an empty book, every time. first_use_title + first_use + got_it: once per device, the first time a visitor opens a book that already has recipes. to_basket: the button under how. shopping_list: the book's Contents, cook mode and the list's heading."
   },
   "room_empty": "That's everything I've got in here. Try next door.",
   "diet_clash": "I've taken the {title} away. It isn't {diet}.",
@@ -74,7 +74,7 @@
     "print": "Save as PDF / print",
     "more_diets": "More options ›",
     "diet_labels": {
-      "_about": "PLACEHOLDERS: labels for \"More options\" under the diet question (checkout and a recipe page). The ids are what the write-out gets; hindu-no-beef reads as Hindu here (PM 4 read Nicole's \"Hindi\" as Hindu). All five go to the write-out, and shape the ideas only on cards content has judged: atom.diet_checked lists the needs judged, atom.diet the ones met (none judged yet). keeping ({d} = their needs) + change_diets: checkout when needs are already set.",
+      "_about": "Labels for \"More options\" under the diet question (checkout and a recipe page). The ids go to the write-out. Halal, kosher and Hindu never filter cards; keto and low carb leave out only cards content marks carb_checked (none yet).",
       "halal": "Halal",
       "kosher": "Kosher",
       "hindu-no-beef": "Hindu (no beef)",
