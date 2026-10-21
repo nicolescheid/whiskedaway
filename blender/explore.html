@@ -1654,7 +1654,7 @@ const ideas = createIdeas({
   state, atoms: atomsById, save: () => store.save(state), here: () => homeOf(state.room),
   avatar: () => $('cw-av'), bookChip: () => $('btn-book'),
   layout: (what, on) => { if (what === 'highlight') chatUI.hold(on); },
-  onFirst: () => say(L.ideaFirst, [], true),
+  onFirst: () => { const wait = lineHeldUntil - Date.now(); if (wait > 0) setTimeout(() => say(L.ideaFirst, [], true), wait); else say(L.ideaFirst, [], true); },   // a held line (an Inn note's) is read first
   // Once per device, the first time a touch visitor opens an idea: how to swipe it
   wantHint: () => !book.hint,
   onHint: () => { book.hint = true; say(LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
