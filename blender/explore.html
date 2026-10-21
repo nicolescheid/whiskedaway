@@ -1276,6 +1276,8 @@ function touch(id) {
     SWEET_TOOLS[obj.tool]();                                  // Sweet Spells' cabinet, spell books and lectern (sweet-spells.js)
   } else if (CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
     CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
+  } else if (obj.type === 'submit' && obj.tool === 'generate' && CAST_ROOMS[homeOf(state.room)]) {
+    cast();                                                   // the spell table, the pot, Lay the Table: this room's best idea, written out
   } else if (obj.type === 'submit') {
     openTool(obj.tool_title || 'Find Comfort', obj.tool_text || "The pot can't cook you a full recipe yet. Soon. For now, keep looking around and I'll leave ideas out for you.");
   } else if (TELL_TOOLS[obj.tool]) {
@@ -1769,6 +1771,55 @@ const sweet = createSweetSheets({
   },
 });
 const SWEET_TOOLS = { 'level-up': () => sweet.open('sweet'), flavour: () => sweet.open('cravings'), occasion: () => sweet.open('occasion') };
+// ---------- The centrepieces (hotspot plan B1): Sweet Spells' spell table, Cuddlecore's pot and Flourish's Lay the Table write
+// out this room's best idea for the visitor (writeout.js, one of the 3 a visit) and open it in the book, with Cook this.
+// Written already: it opens free. At the cap or if the writing fails: an honest line and the idea's card instead.
+const CAST_ROOMS = { 'sweet-spells': 'spell', cuddlecore: 'pot', flourish: 'table' };
+const CAST_LINES = {
+  busy: "Hold on, I'm still writing the last one.", nothing: 'Nothing new for you in here just now. Have a look in your book.',
+  atCap: "That's my three written out for this visit. Here's the idea, short and sweet.",
+  failed: "That one didn't take. Here's the idea, short and sweet. Try again in a bit.",
+  writing: 'Let me write it out for you.', done: "It's written out in your book, ready to cook.",
+};
+let casting = false;
+/** This room's best idea for the visitor: the navigator's top pick among the room's own ideas, never one kept, set aside or
+ *  clashing with a dietary need; with nothing to read yet, an idea of the room's already out, else its first */
+function bestHere() {
+  const here = homeOf(state.room);
+  const skip = new Set([...book.ids(), ...state.dismissed, ...world.atoms.filter(a => dietClash(a)).map(a => a.id)]);
+  const pool = world.atoms.filter(a => a.room === here && !skip.has(a.id));
+  if (!pool.length) return null;
+  const top = localNavigate(navTrail(), { ...world, atoms: pool }, { ...steer(), served: [], dismissed: state.dismissed, room: here }).serve[0];
+  if (top) return top;
+  return { atom: state.cards.map(c => c.atom).find(id => pool.some(a => a.id === id)) || pool[0].id, why: '' };
+}
+async function cast() {
+  const kind = CAST_ROOMS[homeOf(state.room)], C = LINES.cast || {};
+  const line = k => C[kind]?.[k] || C[k] || CAST_LINES[k];
+  if (casting) return say(line('busy'), [], true);
+  const best = bestHere();
+  if (!best) return say(line('nothing'), [], true);
+  const rec = snapshot(atomsById[best.atom], best.why);
+  const page = () => bookView.open(null, { from: 'cast', loosePage: rec });   // a loose page: Keep, Cook this, the write-out
+  // Not written: the idea's own card (or its book page, if the tray won't take it)
+  const card = () => {
+    if (!state.cards.some(c => c.atom === rec.id)) serve({ atom: rec.id, why: best.why }, 'local');
+    if (state.cards.some(c => c.atom === rec.id)) ideas.open(rec.id); else page();
+  };
+  if (writer.written(rec.id)) { page(); return say(line('done'), [], true); }
+  if (!writer.left) { say(line('atCap'), [], true); holdLine(); return card(); }
+  casting = true;
+  say(line('writing'), [], true);
+  holdLine();
+  thinking(true);
+  const full = await writer.writeNow(rec);
+  thinking(false);
+  casting = false;
+  if (!full) { say(line('failed'), [], true); holdLine(); return card(); }
+  page();
+  say(line('done'), [], true);
+  holdLine();
+}
 // The swap-the-sugar lines on a Sweet Spells recipe page, when the visitor's sweetener differs from the recipe's (read from the
 // atom: a page's snapshot doesn't carry sweetener or added_sugar)
 function sweetSwapHtml(rec) {
