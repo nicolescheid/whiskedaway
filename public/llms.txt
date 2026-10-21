@@ -9,9 +9,14 @@ It's free, there's no account, and it works on phones and computers.
 ## How it works
 
 Step through the front door, look around, and touch whatever catches your eye. Gemma reads where you go and what
-you touch, and leaves ideas that fit, each with the reason she chose it. You don't type anything. She picks from
-recipes written for the Inn rather than inventing them.
-Keep the ideas you like in your recipe book, which stays on your device.
+you touch, and leaves ideas that fit, each with the reason she chose it. You don't type anything. Her ideas are
+recipes written for the Inn rather than invented on the spot.
+Keep the ideas you like in your basket, then ask Gemma to write them out in full into My Custom Recipe Book (three free
+a day on each device). Those full recipes are written by Claude, an AI model. Visitors can choose metric or cups and
+spoons, swap an ingredient for a substitution, cook step by step, make a shopping list or save a recipe as a PDF.
+Each kitchen's centrepiece (the pot, the table, the spell table) picks that room's best idea, and the Inn has a cat,
+Erwina, and little notes to find. Visitors can also tell Gemma their pantry, country and dietary needs.
+The basket and book stay on the visitor's device.
 
 ## The rooms
 
@@ -34,8 +39,8 @@ The visitor's country (from the same rough location) is the Map's default, and t
 
 No account and no name. A visit is forgotten when the tab closes. To choose ideas, what the visitor touched is sent
 to Claude, Anthropic's AI model, never who they are, and WhiskedAway's server stores none of it. Asking Gemma to write a
-recipe out in full sends that card and what the visitor told her (such as dietary needs) to Claude the same way, and
-nothing is kept. Kept recipes stay on the visitor's device. Visits are counted
+recipe out in full, or to re-write it, sends that card and what the visitor told her (such as dietary needs) to Claude the same way, and
+nothing is kept. The basket and kept recipes stay on the visitor's device. Visits are counted
 anonymously, without cookies.
 
 ## About
