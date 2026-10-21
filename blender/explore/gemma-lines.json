@@ -88,13 +88,13 @@
     "units_unknown": "Measurements:",
     "units_question": "How do you measure?",
     "units_labels": {
-      "_about": "PLACEHOLDERS: the three measurement choices (checkout and a written recipe). In a sentence the part before any brackets is used, lower case (In metric.).",
+      "_about": "The three measurement choices (checkout and a written recipe). In a sentence the part before any brackets is used, lower case (In metric.).",
       "metric": "Metric (grams, ml)",
       "cups": "Cups and spoons",
       "both": "Both"
     },
     "units_rewrite": "Re-write it in {u}",
-    "rewrites_left": "Re-writes don't use your 3 a day ({n} left today).",
+    "rewrites_left": "Re-writes don't use your 3 free ({n} left today).",
     "rewrites_none": "That's my five re-writes for today. I'll do more tomorrow.",
     "rewriting": "Gemma is re-writing it…",
     "rewrite_failed": "That one didn't take. Here's the recipe as it was. Try again in a bit.",
@@ -1153,89 +1153,301 @@
     "close": "Close the basket"
   },
   "substitutions": {
-    "_about": "PLACEHOLDER table for content editor (3). Substitutions (Nicole's word for the feature) offered when a visitor taps an ingredient on a written recipe; Gemma then re-writes the recipe with it. Keys: an ingredient's base word (singular, lower case, as the write-out's key: milk, butter, egg); a key also matches an ingredient whose name contains it as a word. Values: up to 6 short substitutions in shopping words, never free text. Sugar, honey, maple syrup and agave also get Sweet Spells' Sweeten with list automatically.",
+    "_about": "Swaps offered when a visitor taps an ingredient on a written recipe; Gemma then re-writes the recipe with it. Keys: an ingredient's base word (singular, lower case); a key also matches an ingredient whose name contains it as a word. Values: up to 6 short swaps in shopping words, never free text. No health claims. Sugar, honey, maple syrup and agave also get Sweet Spells' Sweeten with list automatically.",
     "table": {
       "milk": [
         "oat milk",
         "soy milk",
-        "almond milk"
+        "almond milk",
+        "coconut milk",
+        "rice milk",
+        "lactose-free milk"
       ],
       "butter": [
         "olive oil",
         "coconut oil",
-        "plant butter"
+        "plant butter",
+        "ghee",
+        "avocado oil"
       ],
       "egg": [
         "flax egg",
         "chia egg",
-        "mashed banana"
+        "mashed banana",
+        "apple sauce",
+        "silken tofu"
       ],
       "cream": [
         "coconut cream",
-        "Greek yoghurt"
+        "Greek yoghurt",
+        "cashew cream",
+        "oat cream",
+        "crème fraîche"
       ],
       "yoghurt": [
         "coconut yoghurt",
-        "soy yoghurt"
+        "soy yoghurt",
+        "Greek yoghurt",
+        "oat yoghurt",
+        "kefir"
       ],
       "cheese": [
         "nutritional yeast",
-        "plant-based cheese"
+        "plant-based cheese",
+        "feta",
+        "ricotta",
+        "parmesan"
       ],
       "flour": [
         "gluten-free flour",
         "oat flour",
-        "wholemeal flour"
+        "wholemeal flour",
+        "spelt flour",
+        "rice flour",
+        "almond flour"
       ],
       "pasta": [
         "gluten-free pasta",
-        "courgette noodles"
+        "courgette noodles",
+        "rice noodles",
+        "wholemeal pasta",
+        "lentil pasta"
       ],
       "rice": [
         "quinoa",
         "cauliflower rice",
-        "brown rice"
+        "brown rice",
+        "couscous",
+        "pearl barley",
+        "buckwheat"
       ],
       "chicken": [
         "tofu",
         "chickpeas",
-        "turkey"
+        "turkey",
+        "white beans",
+        "mushrooms",
+        "pork"
       ],
       "beef": [
         "lamb",
         "lentils",
-        "mushrooms"
+        "mushrooms",
+        "black beans",
+        "pork",
+        "tofu"
       ],
       "pork": [
         "chicken",
-        "tofu"
+        "tofu",
+        "mushrooms",
+        "white beans",
+        "turkey"
       ],
       "bacon": [
         "smoked tofu",
-        "mushrooms"
+        "mushrooms",
+        "smoked paprika and olive oil",
+        "ham",
+        "coconut flakes"
       ],
       "soy sauce": [
         "tamari",
-        "coconut aminos"
+        "coconut aminos",
+        "fish sauce",
+        "Worcestershire sauce",
+        "miso and water"
       ],
       "peanut": [
         "sunflower seeds",
-        "pumpkin seeds"
+        "pumpkin seeds",
+        "cashews",
+        "almonds",
+        "sesame seeds"
       ],
       "almond": [
         "sunflower seeds",
-        "oats"
+        "oats",
+        "pumpkin seeds",
+        "hazelnuts",
+        "coconut flakes"
       ],
       "onion": [
         "spring onion green tops",
-        "leek"
+        "leek",
+        "shallot",
+        "chives",
+        "fennel"
       ],
       "garlic": [
         "garlic-infused oil",
-        "chives"
+        "chives",
+        "garlic chives",
+        "spring onion green tops"
       ],
       "sugar": [
-        "coconut sugar"
+        "coconut sugar",
+        "brown sugar",
+        "honey",
+        "maple syrup",
+        "dates"
+      ],
+      "honey": [
+        "maple syrup",
+        "golden syrup",
+        "agave",
+        "date syrup"
+      ],
+      "maple syrup": [
+        "honey",
+        "golden syrup",
+        "date syrup",
+        "agave"
+      ],
+      "oil": [
+        "olive oil",
+        "avocado oil",
+        "rice bran oil",
+        "coconut oil",
+        "sunflower oil"
+      ],
+      "lemon": [
+        "lime",
+        "orange",
+        "white wine vinegar",
+        "apple cider vinegar"
+      ],
+      "lime": [
+        "lemon",
+        "orange",
+        "white wine vinegar"
+      ],
+      "tomato": [
+        "tinned tomatoes",
+        "roasted capsicum",
+        "passata",
+        "sun-dried tomatoes"
+      ],
+      "potato": [
+        "kumara",
+        "pumpkin",
+        "parsnip",
+        "cauliflower",
+        "swede"
+      ],
+      "kumara": [
+        "pumpkin",
+        "potato",
+        "carrot",
+        "parsnip"
+      ],
+      "spinach": [
+        "silverbeet",
+        "kale",
+        "bok choy",
+        "rocket"
+      ],
+      "kale": [
+        "spinach",
+        "silverbeet",
+        "cavolo nero",
+        "cabbage"
+      ],
+      "coriander": [
+        "parsley",
+        "basil",
+        "mint",
+        "spring onion green tops"
+      ],
+      "parsley": [
+        "coriander",
+        "basil",
+        "chives",
+        "dill"
+      ],
+      "basil": [
+        "parsley",
+        "coriander",
+        "mint",
+        "oregano"
+      ],
+      "mince": [
+        "lentils",
+        "mushrooms",
+        "chopped walnuts",
+        "tofu",
+        "turkey mince"
+      ],
+      "bread": [
+        "gluten-free bread",
+        "wholemeal bread",
+        "sourdough",
+        "wraps",
+        "crackers"
+      ],
+      "oat": [
+        "quinoa flakes",
+        "buckwheat flakes",
+        "rice flakes",
+        "millet flakes"
+      ],
+      "salmon": [
+        "trout",
+        "snapper",
+        "tinned tuna",
+        "tofu",
+        "chickpeas"
+      ],
+      "tofu": [
+        "tempeh",
+        "chickpeas",
+        "white beans",
+        "paneer",
+        "halloumi"
+      ],
+      "stock": [
+        "vegetable stock",
+        "miso in hot water",
+        "chicken stock",
+        "water and a pinch of salt"
+      ],
+      "vinegar": [
+        "lemon juice",
+        "lime juice",
+        "white wine vinegar",
+        "apple cider vinegar"
+      ],
+      "mayonnaise": [
+        "Greek yoghurt",
+        "hummus",
+        "avocado",
+        "vegan mayonnaise"
+      ],
+      "chocolate": [
+        "cacao",
+        "carob",
+        "dark chocolate",
+        "cocoa powder"
+      ],
+      "cocoa": [
+        "cacao powder",
+        "carob powder"
+      ],
+      "banana": [
+        "apple sauce",
+        "pumpkin puree",
+        "mashed pear",
+        "mashed avocado"
+      ],
+      "vanilla": [
+        "maple syrup",
+        "almond extract",
+        "cinnamon",
+        "orange zest"
+      ],
+      "yeast": [
+        "baking powder and lemon juice",
+        "sourdough starter"
       ]
     }
   }
