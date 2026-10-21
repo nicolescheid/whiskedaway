@@ -105,7 +105,8 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <style>
   :root {
     --berry: #8b4d5c; --berry-soft: #a86875; --parchment: #f4efe4; --parchment-90: rgba(244, 239, 228, 0.92);
@@ -206,6 +207,8 @@
   .cw-bar button { width: 20px; height: 18px; border: 1px solid var(--parchment); background: transparent; color: var(--parchment);
                    font: 700 11px/1 'Quicksand'; padding: 0; margin-left: 3px; }
   .chatwin.min .cw-body { display: none; }
+  /* Hidden until chat.js has picked its size (Line, Short or Full): in its raw form it is taller, and jumped when the size landed (CLS) */
+  body:not([data-chat]) #chatwin { visibility: hidden; }
   .cw-status { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
   /* Gemma (Direction C, art-inbox/gemma): round, on a warm glow; she breathes a little, unless motion is reduced */
   .cw-status img { width: 40px; height: 40px; flex: none; object-fit: cover; border-radius: 50%; border: 1px solid var(--line);
@@ -653,7 +656,7 @@ import { track } from '../src/lib/analytics.js';
 import { frontDoor } from './explore/front-door.js';
 window.__door = frontDoor({ active: window.__doorActive, track });
 </script>
-<script type="module">
+<script type="text/wa-module" id="wa-main">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate, aiNavigate } from './explore/navigator.js';
 import { visit } from './explore/visit-state.js';
@@ -2450,6 +2453,27 @@ addEventListener('pagehide', () => { state.look = { yaw: Math.round(look.yaw), p
   }, reduceMotion() ? 0 : 1700);
 });
 resize();
+</script>
+<script>
+// The door picture is the first thing a visitor sees, so it gets the connection first: three.js and the Inn's
+// ~30 modules (the script above) start once the picture has arrived (or after 5 s, or at once when no door shows).
+// Appended to the page before `load`, so the film and everything else still wait on them as before.
+(() => {
+  const src = document.getElementById('wa-main');
+  const img = document.getElementById('fd-pic');
+  let started = false, tries = 0;
+  const start = () => {
+    if (started) return;
+    if (!window.__door && ++tries < 60) { setTimeout(start, 30); return; }   // the door's own script (above) runs first, as it always did
+    started = true;
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.textContent = src.textContent;
+    document.body.appendChild(s);
+  };
+  if (!window.__doorActive || !img || (img.complete && img.naturalWidth)) start();
+  else { img.addEventListener('load', start, { once: true }); img.addEventListener('error', start, { once: true }); setTimeout(start, 5000); }
+})();
 </script>
 </body>
 </html>
