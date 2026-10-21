@@ -193,7 +193,7 @@
       ]
     },
     "basket": {
-      "label": "The basket",
+      "label": "The bread basket",
       "ref": "the bread basket",
       "type": "ambient",
       "themes": [
