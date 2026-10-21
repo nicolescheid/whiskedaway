@@ -1,5 +1,6 @@
 // The recipe book, opened (recipe-book-ux.md v4 §5): a two-page spread over the dimmed room on desktop, a full-height
-// sheet one page at a time on phones. Pages: This visit (Gemma's notebook, moved in), Contents, then one per kept recipe.
+// sheet one page at a time on phones. Pages: This visit (Gemma's notebook, moved in), Contents, then one per kept recipe,
+// then Inn notes (notes.js) once one is found: its list, and a page per note in the order found.
 // A "loose page" is an idea read but not kept: shown on its own, with "Keep this in my book".
 // Escape, ✕ and back close it; ‹ › and the arrow keys turn pages; focus returns to whatever opened it.
 
@@ -12,8 +13,9 @@ const isDesk = () => matchMedia('(min-width: 720px) and (min-height: 501px)').ma
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 const day = t => new Date(t).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' });   // "19 Oct"
 
-export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook, list, actions, extra }) {
-  // actions(rec): a room's own buttons under Cook this ([{ label, do }]), e.g. the Chiapothecary's "Ready by breakfast?" 
+export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTakeOut, onClear, track, bucket, themeLine, clashNote, writeOut, onCook, list, actions, extra, innNotes, noteLines }) {
+  // actions(rec): a room's own buttons under Cook this ([{ label, do }]), e.g. the Chiapothecary's "Ready by breakfast?"
+  // innNotes, noteLines: the found notes' store (notes.js) and their words (gemma-lines.json innNotes)
   const root = document.createElement('div');
   root.id = 'book';
   root.className = 'book';
@@ -69,7 +71,9 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
   stash.appendChild(visitPage);
 
   let at = 'visit', loose = null, opener = null, pushed = false, filter = null, undo = null, undoTimer = null, undoSettled = null;
-  const seq = () => ['visit', 'contents', ...book.ids()];
+  // A note's page is `note:<object id>`; only notes that still have words are shown
+  const noteIds = () => (innNotes && noteLines?.notes ? innNotes.list().filter(id => noteLines.notes[id]) : []);
+  const seq = () => { const n = noteIds(); return ['visit', 'contents', ...book.ids(), ...(n.length ? ['notes', ...n.map(id => `note:${id}`)] : [])]; };
   const isOpen = () => !root.hidden;
 
   function chipCount() {
@@ -100,16 +104,39 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
       ${(actions?.(r) || []).map((a, i) => `<p><button class="bk-outline bk-act" data-act-i="${i}">${esc(a.label)}</button></p>`).join('')}
       ${extra?.(r) || ''}`;   // extra(rec): a room's own lines under the buttons (escaped HTML), e.g. Sweet Spells' swap the sugar
   }
+  // Inn notes: the row in Contents, the section's list, and a note's own page (no Keep, Cook or diet: a note isn't a recipe)
+  function notesRow() {
+    const n = noteIds().length;
+    if (!n) return '';
+    const count = noteLines.count.replace('{n}', n).replace('{total}', Object.keys(noteLines.notes).length);
+    return `<ul class="bk-list bk-notesrow"><li><button data-note="" style="--ring:var(--berry)"><i></i><span>${esc(noteLines.title)}</span><small>${esc(count)}</small></button></li></ul>`;
+  }
+  function notesPage(current) {
+    const ids = noteIds(), total = Object.keys(noteLines.notes).length;
+    return `<h3 class="bk-h">${esc(noteLines.title)}</h3><p class="small">${esc(noteLines.intro)}</p>
+      ${ids.length ? `<p class="small">${esc(noteLines.count.replace('{n}', ids.length).replace('{total}', total))}</p>
+      <ul class="bk-list">${ids.map(id => `<li><button data-note="${esc(id)}" style="--ring:var(--berry)"${id === current ? ' aria-current="page"' : ''}><i></i><span>${esc(noteLines.notes[id].title)}</span></button></li>`).join('')}</ul>`
+        : `<p class="small">${esc(noteLines.empty)}</p>`}`;
+  }
+  function notePage(id, desk) {
+    const n = noteLines.notes[id];
+    return `<div class="bk-ribbon" style="--ring:var(--berry)">${esc(noteLines.title)}</div>
+      <h3 class="bk-title">${esc(n.title)}</h3><p class="bk-note">${esc(n.text)}</p>
+      ${desk ? '' : `<p><button class="link" data-note="">All ${esc(noteLines.title)}</button></p>`}`;
+  }
+  const clearNote = () => `Every recipe you've kept${noteIds().length ? ` and your ${esc(noteLines.title)}` : ''}, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.`;
   function contentsPage() {
     const kept = book.list();
-    if (!kept.length) return `<h3 class="bk-h">Contents</h3><p class="small">Nothing kept yet. When an idea catches your eye, tap Keep and it comes in here.</p>`;
+    if (!kept.length) return `<h3 class="bk-h">Contents</h3><p class="small">Nothing kept yet. When an idea catches your eye, tap Keep and it comes in here.</p>
+      ${noteIds().length ? `${notesRow()}<p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">${clearNote()}</span></p>` : ''}`;
     const rooms = [...new Set(kept.map(k => k.room))].filter(r => RIBBONS[r]);
     const shown = filter ? kept.filter(k => k.room === filter) : kept;
     return `<h3 class="bk-h">Contents</h3>
       ${rooms.length > 1 ? `<div class="bk-filter" role="group" aria-label="Show recipes from"><button data-f="" aria-pressed="${!filter}">All</button>${rooms.map(r => `<button data-f="${esc(r)}" aria-pressed="${filter === r}" style="--ring:${RIBBONS[r].colour}"><i></i>${esc(RIBBONS[r].name)}</button>`).join('')}</div>` : ''}
       <ul class="bk-list">${shown.map(k => `<li><button data-open="${esc(k.id)}" style="--ring:${RIBBONS[k.room]?.colour || 'var(--berry)'}"><i></i><span>${esc(k.title)}</span><small>${esc(RIBBONS[k.room]?.name || '')} · ${esc(day(k.kept))}</small></button></li>`).join('')}</ul>
+      ${notesRow()}
       ${list ? '<p><button class="bk-cook bk-need">What do I need?</button></p>' : ''}
-      <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">Every recipe you've kept, on this device${book.lasting ? '' : ' (this one only lasts the visit: this browser won\'t keep it)'}.</span></p>`;
+      <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">${clearNote()}</span></p>`;
   }
   function theme() {
     const mine = book.keptThisVisit(), line = themeLine?.();
@@ -129,7 +156,12 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     theme();
     stash.appendChild(visitPage);
     left.replaceChildren(); right.replaceChildren();
-    if (page === 'list' && list) {                                  // "What do I need?" (list.js)
+    if (page === 'notes' || page.startsWith('note:')) {            // Inn notes: on desktop the list sits beside a note, Contents beside the list
+      const id = page === 'notes' ? null : page.slice(5);
+      left.innerHTML = id ? notePage(id, desk) : notesPage();
+      right.innerHTML = desk ? (id ? notesPage(id) : contentsPage()) : '';
+      right.hidden = !desk;
+    } else if (page === 'list' && list) {                           // "What do I need?" (list.js)
       list.render(left, () => draw());
       right.innerHTML = desk ? contentsPage() : '';
       right.hidden = !desk;
@@ -171,6 +203,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     $('.bk-count').textContent = book.count ? `${book.count} kept` : '';
     // Contents' buttons
     root.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { onRead?.(b.dataset.open); go(b.dataset.open); });
+    root.querySelectorAll('[data-note]').forEach(b => b.onclick = () => go(b.dataset.note ? `note:${b.dataset.note}` : 'notes'));
     root.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; draw(); root.querySelector(`[data-f="${filter || ''}"]`)?.focus(); });
     root.querySelectorAll('.bk-clear, .bk-clear2').forEach(b => b.onclick = clearBook);
     root.querySelector('.bk-need')?.addEventListener('click', () => { track?.('list_open'); go('list'); });   // not .bk-list: that's Contents' own list of recipes
@@ -200,12 +233,12 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
   $('.bk-dim').onclick = () => close();
 
   function clearBook() {
-    const n = book.count;
-    if (!n) return;
-    const back = book.clear();
+    const n = book.count, m = noteIds().length;                    // n counts recipes only: the notes go too, uncounted
+    if (!n && !m) return;
+    const back = n ? book.clear() : null, backNotes = m ? innNotes.clear() : null;
     filter = null;
     // Gemma says so (and it's counted) once the undo has gone by
-    showUndo('Your book is cleared.', () => { back(); draw(); }, () => onClear?.(n));
+    showUndo('Your book is cleared.', () => { back?.(); backNotes?.(); draw(); }, () => onClear?.(n));
     at = 'contents';
     draw();
   }
@@ -265,6 +298,7 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
   });
   addEventListener('resize', () => { if (isOpen()) draw(); });
   book.subscribe(() => { chipCount(); if (isOpen()) draw(); });
+  innNotes?.subscribe(() => { if (isOpen()) draw(); });
   chip.onclick = () => (isOpen() ? close() : open(book.count ? 'contents' : 'visit', { from: 'chip' }));   // an empty book opens at This visit
   chipCount();
 

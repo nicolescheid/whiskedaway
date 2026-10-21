@@ -82,6 +82,7 @@ All events go through one function per surface, `track(name, params)`, which dro
 | `visit_forget` | "Forget this visit" | none |
 | `leave_to_inn` | "Back to the inn" or a door to / | `room`, `step` |
 | `erwina_seen` | Erwina, the Inn cat, appeared (there, not just her box or a trace) | none: no room, time or weather |
+| `note_found` | An Inn note added to the book (the first touch of an object with a story) | `object` (its hotspot ID), `count` (how many found, 1 to 10) |
 
 `step` is how many trail events the visit has had so far, bucketed `1`, `2-3`, `4-7`, `8-15`, `16+`. It answers "after how many steps" without sending a timeline.
 

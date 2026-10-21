@@ -288,6 +288,8 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-list button:hover { background: rgba(139, 77, 92, .07); }
 .bk-list i, .bk-filter i { width: 10px; height: 10px; border-radius: 50%; background: var(--ring); align-self: center; grid-row: span 2; display: inline-block; }
 .bk-list small { font: 12px 'Quicksand'; color: var(--ink-soft); }
+.bk-list button[aria-current] { background: rgba(139, 77, 92, .1); }
+.bk-note { margin: 0 0 10px; font: 18px/1.5 'Crimson Pro', Georgia, serif; }   /* an Inn note: up to 80 words, read like a page */
 .bk-filter { display: flex; flex-wrap: wrap; gap: 6px; }
 .bk-filter button { min-height: 44px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: 500 13px 'Quicksand'; display: inline-flex; align-items: center; gap: 6px; }
 .bk-filter button[aria-pressed="true"] { border-color: var(--berry); background: var(--berry); color: var(--parchment); }
