@@ -104,7 +104,11 @@
         "broth",
         "cosy"
       ],
-      "moment": "My favourite window. Whatever the weather is doing, you can watch it from here."
+      "moment": "My favourite window. Whatever the weather is doing, you can watch it from here.",
+      "moments": [
+        "I have watched a lot of days from here.",
+        "The glass is old, so the view wobbles a little."
+      ]
     },
     "armchair": {
       "label": "The armchair",
@@ -118,7 +122,11 @@
         "calm",
         "comfort"
       ],
-      "moment": "It sags in exactly the right places. The blanket is still warm."
+      "moment": "It sags in exactly the right places. The blanket is still warm.",
+      "moments": [
+        "Erwina thinks it's hers. I let her think so.",
+        "I have fallen asleep here more than once, mid-sentence."
+      ]
     },
     "plant": {
       "label": "The plant",
@@ -129,7 +137,11 @@
         "green",
         "herbs"
       ],
-      "moment": "I talk to it. It seems to help."
+      "moment": "I talk to it. It seems to help.",
+      "moments": [
+        "It's doing better than I deserve.",
+        "It leans towards the window. Fair enough."
+      ]
     },
     "oil-lamp": {
       "label": "The lamp",
@@ -141,7 +153,11 @@
         "tea",
         "slow"
       ],
-      "moment": "I keep it lit in the evenings. It's the light I read by."
+      "moment": "I keep it lit in the evenings. It's the light I read by.",
+      "moments": [
+        "It smells faintly of warm brass.",
+        "I trim the wick myself. It's the one job I won't hand over."
+      ]
     },
     "cutting-board": {
       "label": "Chopping board",
@@ -153,7 +169,11 @@
         "fresh",
         "knife"
       ],
-      "moment": "Knife marks from more onions than I can count."
+      "moment": "Knife marks from more onions than I can count.",
+      "moments": [
+        "Wooden, so I oil it now and then.",
+        "It leans against the wall when it's not working. So do I."
+      ]
     },
     "bowl": {
       "label": "The bowl",
@@ -166,7 +186,11 @@
         "warming",
         "comfort"
       ],
-      "moment": "My soup bowl. It's heavy, so it holds the warmth."
+      "moment": "My soup bowl. It's heavy, so it holds the warmth.",
+      "moments": [
+        "Chipped on one side. I always turn that side away.",
+        "It does soup, cereal and the odd trifle."
+      ]
     },
     "basket": {
       "label": "The basket",
@@ -178,7 +202,11 @@
         "simple",
         "snack"
       ],
-      "moment": "Half a loaf, wrapped in a tea towel. Help yourself."
+      "moment": "Half a loaf, wrapped in a tea towel. Help yourself.",
+      "moments": [
+        "The tea towel is older than the Inn.",
+        "Tear a bit off. The crust's the best part."
+      ]
     },
     "symptom-jars": {
       "label": "How you're feeling",

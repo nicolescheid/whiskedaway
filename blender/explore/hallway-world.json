@@ -26,9 +26,9 @@
     "front-door": { "label": "Exit out the front door", "ref": "the front door", "type": "door", "go": "/", "themes": [],
                     "leaving": "Off out? Mind the step, love." },
     "stairs": { "label": "Up the stairs", "ref": "the stairs", "type": "ambient", "themes": [],
-                "moment": "Upstairs is the library and the turret. They're not open yet, and the guest rooms are all taken." },
+                "moment": "Upstairs is the library and the turret. They're not open yet, and the guest rooms are all taken.", "moments": ["I hear someone up there sometimes. Probably the pipes.", "The fourth step creaks. I have decided it is a signal."] },
     "cellar-door": { "label": "The cellar door", "ref": "the cellar door", "type": "ambient", "themes": [],
-                     "moment": "It's stiff. It's been stiff for years." },
+                     "moment": "It's stiff. It's been stiff for years.", "moments": ["I've put a chair against it. It still won't stay shut.", "I'm told the cellar's lovely. I'll take their word."] },
     "checkin-desk": { "label": "Check in", "map": "The check-in desk", "ref": "the check-in desk", "type": "interactive", "tool": "checkin",
                       "themes": [] },
     "groceries": { "label": "Your shopping", "map": "The shopping by the door", "ref": "the shopping by the front door", "type": "interactive",
@@ -36,7 +36,7 @@
     "notice-board": { "label": "The notice board", "ref": "the notice board", "type": "ambient", "themes": [],
                       "moment": "What's in season, the soup of the day, and anything I pin up for you. Nothing pinned yet." },
     "sea-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": [],
-                    "moment": "The same bay you can see from Cuddlecore." }
+                    "moment": "The same bay you can see from Cuddlecore.", "moments": ["Stand here long enough and you can hear the water.", "Some days the bay looks painted on."] }
   },
   "dial": [
     { "label": "Cuddlecore", "go": "cuddlecore", "blurb": "Quick comfort, juices and snacks" },

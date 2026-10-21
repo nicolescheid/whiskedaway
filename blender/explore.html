@@ -1243,7 +1243,7 @@ function touch(id) {
   } else if (obj.type === 'ambient' && id === 'notice-board') {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
-    say(obj.moment, [], true);
+    say(momentOf(id, obj), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
   } else if (obj.type === 'weather') {
     openWeather();
   } else if (obj.type === 'time') {
@@ -1545,6 +1545,7 @@ function pickLine(key, list, fill = {}) {
   used.push(t);
   return t.replace(/\{(\w+)\}/g, (_, k) => fill[k]);
 }
+const momentOf = (id, obj) => (obj.moments?.length ? pickLine(`moment.${id}`, [obj.moment, ...obj.moments]) : obj.moment);
 const sizeBucket = n => (n <= 0 ? '0' : n <= 2 ? '1-2' : n <= 5 ? '3-5' : n <= 10 ? '6-10' : '11+');
 
 // What steers the navigator besides the trail (recipe-book-ux.md §6b): never anything kept, served or clashing with a
