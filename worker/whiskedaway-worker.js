@@ -588,7 +588,8 @@ export default {
     }
 
     // Everything else costs money: check the visitor before doing any work
-    const blocked = await guard(request, env, path === '/navigate' ? 'navigate' : 'recipe');
+    // A re-write (a swap, or other measurements) of a recipe already written has its own small limit (/rewrite)
+    const blocked = await guard(request, env, path === '/navigate' ? 'navigate' : path === '/rewrite' ? 'rewrite' : 'recipe');
     if (blocked) return withCors(blocked, request, env);
 
     // Exploratory navigation (docs/concept-exploratory-navigation.md)
@@ -596,15 +597,17 @@ export default {
       return withCors(await handleNavigate(request, env), request, env);
     }
 
-    return withCors(await handleRecipe(request, env), request, env);
+    return withCors(await handleRecipe(request, env, { rewrite: path === '/rewrite' }), request, env);
   }
 };
 
-async function handleRecipe(request, env) {
+async function handleRecipe(request, env, { rewrite = false } = {}) {
   {
 
     try {
       const payload = await request.json();
+      // /rewrite only re-writes an Inn recipe; the Inn's page sends `rewrite` only there
+      if (rewrite !== !!payload.rewrite || (rewrite && payload.tome_id !== 'inn-idea')) return jsonResponse({ error: 'bad_rewrite' }, 400);
       
       // Build the user message from intake data
       const userMessage = buildUserMessage(payload);
@@ -821,6 +824,12 @@ function buildUserMessage(payload) {
       : `Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
+    const UNITS = {
+      metric: 'Measurements: metric (g, kg, ml, l; tsp and tbsp for small amounts).',
+      cups: 'Measurements: cups and spoons (cup, tbsp, tsp); grams only where a cup makes no sense, like a block of butter or meat.',
+      both: 'Measurements: metric first with cups and spoons in brackets, written in "amount" with "unit" empty, e.g. "200 g (1 1/2 cups)" or "15 ml (1 tbsp)".',
+    };
+    if (UNITS[payload.units]) parts.push(UNITS[payload.units]);
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
     // Each room has its own identity (Nicole, Oct 2026); the full recipe keeps to the room the idea came from
     const ROOM_RULES = {
@@ -890,6 +899,22 @@ function buildUserMessage(payload) {
     parts.push('\nPlease create a nourishing meal that supports my goal. Include a "nourishment_note" explaining why this meal is great for my goal with specific nutrients/benefits (warm tone, not clinical). Add 2-3 "boosts" for optional ways to level up the meal. If I provided pantry ingredients, incorporate them and mention that you did. Be encouraging — eating well is self-care. Use ingredient names appropriate for my location.');
   } else if (payload.tome_id === 'cravings-decoded') {
     parts.push('\nPlease decode this craving for me. Explain what might be behind it (nutrients, emotions, habits), give me a verdict (honor/redirect/caution), and suggest 2-4 recipes that would satisfy it well. Make the recipe teasers enticing so I want to click to see more. Be warm and non-judgmental — cravings are information, not failures.');
+  } else if (payload.tome_id === 'inn-idea' && payload.rewrite) {
+    // A re-write (recipe-tools): the recipe as Gemma wrote it, and one change: a swap, or other measurements
+    const rw = payload.rewrite, t = (v, n) => String(v ?? '').slice(0, n);
+    const was = rw.recipe || {};
+    const shown = {
+      name: t(was.name, 100), serves: Number(was.serves) || null, time: t(was.time, 40),
+      ingredients: (Array.isArray(was.ingredients) ? was.ingredients : []).slice(0, 16).map(i => ({ item: t(i?.item, 80), amount: t(i?.amount, 40), unit: t(i?.unit, 12), key: t(i?.key, 40) })),
+      steps: (Array.isArray(was.steps) ? was.steps : []).slice(0, 12).map(x => (typeof x === 'string' ? t(x, 300) : { ...x, text: t(x?.text, 300) })),
+      tip: t(was.tip, 240),
+    };
+    parts.push(`\nHere is the recipe you wrote out for me: ${JSON.stringify(shown)}`);
+    if (rw.swap?.from && rw.swap?.to) parts.push(`Re-write it swapping ${t(rw.swap.from, 60)} for ${t(rw.swap.to, 60)}. Adjust the amounts, steps, time and tip to suit the swap, `
+      + 'and keep everything else as it was. If the swap changes how it cooks, say so in the step it changes.');
+    else parts.push('Re-write it with the measurements above. Change only the amounts and units; keep everything else as it was.');
+    parts.push('Respect every dietary restriction. Write as Gemma, the Inn\'s genie: warm, brief, practical, New Zealand English, plain short steps (one action each), no em dashes, no hype words, no health claims. '
+      + `Respond with JSON only, in exactly the same shape: {"name", "serves", "time", "ingredients": [{"item", "amount", "unit", "key"}], "steps": [{"text", "minutes"?, "uses"?}], "tip"}.`);
   } else if (payload.tome_id === 'inn-idea') {
     parts.push('\nWrite out this one recipe in full, as Gemma, the Inn\'s genie: warm, brief, practical, no health claims. '
       + 'Her voice: New Zealand English spelling and words (yoghurt, flavour, courgette unless my location says otherwise). Short, plain steps, '
@@ -1283,7 +1308,7 @@ async function guard(request, env, route) {
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   const origin = request.headers.get('Origin') || '';
   const pass = await verifyPass(env, request.headers.get('X-WA-Pass'));
-  const limiter = route === 'navigate' ? env.NAVIGATE_LIMIT : env.RECIPE_LIMIT;
+  const limiter = route === 'navigate' ? env.NAVIGATE_LIMIT : route === 'rewrite' ? (env.REWRITE_LIMIT || env.RECIPE_LIMIT) : env.RECIPE_LIMIT;
 
   let problem = null, status = 403;
   if (!allowedOrigins(env).includes(origin)) problem = 'bad_origin';

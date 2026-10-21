@@ -50,7 +50,8 @@ export const EVENTS = {
   recipe_full_asked: ['atom', 'room'],                             // the "full recipe" button (or cook mode) asked Gemma to write one out
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3
   recipe_full_failed: ['atom', 'room', 'reason'],                  // reason: timeout, bot_check, rate_limited, error
-  recipe_print: [],                                                // "Save as PDF / print" on a written recipe
+  recipe_print: [],
+  recipe_rewrite: ['kind', 'outcome', 'remaining'],                // a swap or other measurements on a written recipe; kind: swap, units; outcome: ok, failed; remaining: of 5 a day                                                // "Save as PDF / print" on a written recipe
   // The recipe basket (Stage 1, docs/basket-stage1-design.md): do visitors use up their 3 free write-outs a day?
   basket_add: ['from', 'basket_size'],                             // from: button, swipe, book, cast, star_chart
   checkout_open: ['from', 'basket_size', 'remaining'],             // from: chip, tab, cast, star_chart; remaining: today's write-outs left
