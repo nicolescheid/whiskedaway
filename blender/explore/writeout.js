@@ -110,9 +110,9 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
     rewritesNone: lines.rewrites_none || "That's my five re-writes for today. I'll do more tomorrow.",
     rewriting: lines.rewriting || 'Gemma is re-writing it…',
     rewriteFailed: lines.rewrite_failed || "That one didn't take. Here's the recipe as it was. Try again in a bit.",
-    swapHint: lines.swap_hint || 'Tap an ingredient to swap it.',
-    swapTitle: lines.swap_title || 'Swap {item} for:',
-    swapCancel: lines.swap_cancel || 'Cancel',
+    swapHint: lines.substitutions_hint || 'Substitutions: tap an ingredient to see what you can use instead.',
+    swapTitle: lines.substitutions_title || 'Substitutions for {item}:',
+    swapCancel: lines.substitutions_cancel || 'Cancel',
   };
   const ulabel = id => lines.units_labels?.[id] || UNITS.find(([x]) => x === id)?.[1] || id;
   const uword = id => ulabel(id).replace(/\s*\(.*\)$/, '').toLowerCase();   // "metric", "cups and spoons", "both" in a sentence

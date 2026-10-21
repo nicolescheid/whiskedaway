@@ -98,10 +98,10 @@
     "rewrites_none": "That's my five re-writes for today. I'll do more tomorrow.",
     "rewriting": "Gemma is re-writing it…",
     "rewrite_failed": "That one didn't take. Here's the recipe as it was. Try again in a bit.",
-    "swap_hint": "Tap an ingredient to swap it.",
-    "swap_title": "Swap {item} for:",
-    "swap_cancel": "Cancel",
-    "_tools": "PLACEHOLDERS (recipe-tools, 22 Oct) for content editor (3): units_* (measurements: checkout line, a written recipe's line, the choice, the re-write button with {u}); rewrites_* and rewriting/rewrite_failed (re-writes: 5 a day, not the 3); swap_* (tap an ingredient). The swaps themselves are in swaps.table."
+    "_tools": "PLACEHOLDERS (recipe-tools, 22 Oct) for content editor (3): units_* (measurements: checkout line, a written recipe's line, the choice, the re-write button with {u}); rewrites_* and rewriting/rewrite_failed (re-writes: 5 a day, not the 3); substitutions_* (tap an ingredient; Nicole calls the feature Substitutions). The substitutions themselves are in substitutions.table.",
+    "substitutions_hint": "Substitutions: tap an ingredient to see what you can use instead.",
+    "substitutions_title": "Substitutions for {item}:",
+    "substitutions_cancel": "Cancel"
   },
   "tell": {
     "_about": "Tell Gemma V1, keyed as tell.js and explore.html read them (tell-gemma/v1). {two} = the first two things, joined; {many} = 'A, b and a few more'; {c} = cuisines; {d} = diets; {p} = pantry words; {diet} and {room} as named. Every line stays under 100 characters.",
@@ -1152,8 +1152,8 @@
     "leaflet_how": "How",
     "close": "Close the basket"
   },
-  "swaps": {
-    "_about": "PLACEHOLDER table for content editor (3). Swaps offered when a visitor taps an ingredient on a written recipe; Gemma then re-writes the recipe with it. Keys: an ingredient's base word (singular, lower case, as the write-out's key: milk, butter, egg); a key also matches an ingredient whose name contains it as a word. Values: up to 6 short swaps in shopping words, never free text. Sugar, honey, maple syrup and agave also get Sweet Spells' Sweeten with list automatically.",
+  "substitutions": {
+    "_about": "PLACEHOLDER table for content editor (3). Substitutions (Nicole's word for the feature) offered when a visitor taps an ingredient on a written recipe; Gemma then re-writes the recipe with it. Keys: an ingredient's base word (singular, lower case, as the write-out's key: milk, butter, egg); a key also matches an ingredient whose name contains it as a word. Values: up to 6 short substitutions in shopping words, never free text. Sugar, honey, maple syrup and agave also get Sweet Spells' Sweeten with list automatically.",
     "table": {
       "milk": [
         "oat milk",

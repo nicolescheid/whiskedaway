@@ -70,7 +70,7 @@ Placeholder keys under `basket` in gemma-lines.json (listed in the report); the 
 - Measurements: write_out.units_* ; the visit's `units` (metric | cups | both), default from the Map's country (US → cups,
   else metric). Checkout: "In metric. Change" beside the diet line. A written recipe stores `units` and says "Written in …
   Change"; choosing another offers "Re-write it in …".
-- Swaps: on a written recipe, an ingredient with swaps is a button; its swaps come from gemma-lines.json `swaps.table`
+- Substitutions (Nicole's word; "swap" in code): on a written recipe, an ingredient with some is a button; they come from `substitutions.table`
   (key = the ingredient's base word, also matched as a word in its name; up to 6 short swaps), and sugar/honey/maple/agave
   also get Sweet Spells' "Sweeten with" list. Picking one re-writes the recipe with it; the page keeps the old one until the
   new one lands; a failure shows write_out.rewrite_failed and isn't counted.

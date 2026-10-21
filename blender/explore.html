@@ -1738,11 +1738,11 @@ async function recipeFetch(p) {
 }
 // Measurements (recipe-tools): the visitor's choice for this visit, else from the Map's country (the US measures in cups)
 const unitsNow = () => visit.get('units') || ((visit.get('country') || mapDefault()) === 'US' ? 'cups' : 'metric');
-// Swaps on a written recipe's ingredient: the swap table (gemma-lines.json swaps.table, content's), matched on the ingredient's
+// Swaps on a written recipe's ingredient: Substitutions (Nicole's word; gemma-lines.json substitutions.table, content's), matched on the ingredient's
 // key or a word of its name; sweeteners also offer Sweet Spells' "Sweeten with" list (the sugar-swap table), never free text
 const SWEETENER_KEYS = { sugar: 'sugar', 'caster sugar': 'sugar', 'brown sugar': 'sugar', honey: 'honey', 'maple syrup': 'maple', agave: 'agave', 'agave syrup': 'agave' };
 function swapsFor(ing) {
-  const table = LINES.swaps?.table || {}, key = String(ing.key || '').toLowerCase(), name = String(ing.item || '').toLowerCase();
+  const table = LINES.substitutions?.table || {}, key = String(ing.key || '').toLowerCase(), name = String(ing.item || '').toLowerCase();
   const hit = table[key] ? key : Object.keys(table).filter(k => !k.startsWith('_')).find(k => new RegExp(`\\b${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?\\b`).test(name));
   const xs = [...(hit ? table[hit] : [])];
   const sw = SWEETENER_KEYS[key] || SWEETENER_KEYS[hit];
