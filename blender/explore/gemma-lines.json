@@ -113,6 +113,9 @@
     "units_line": "In {u}.",
     "units_written": "Written in {u}.",
     "units_unknown": "Measurements:",
+    "units_fixed": "Written in {u}. A cup crept in, so I've put it in ml.",
+    "units_mixed": "Mostly in {u}: one or two amounts are still in cups.",
+    "_units_fix": "PLACEHOLDERS (22 Oct, metric fix): instead of units_written on a metric recipe when Gemma used a cup anyway. units_fixed: the page changed the cups to ml (or tbsp for a quarter cup or less). units_mixed: a cup it could not change (no number). {u} = the measurements' name.",
     "units_question": "How do you measure?",
     "units_labels": {
       "_about": "The three measurement choices (checkout and a written recipe). In a sentence the part before any brackets is used, lower case (In metric.).",

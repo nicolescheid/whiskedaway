@@ -71,13 +71,49 @@ export function printSheet(html) {
   setTimeout(done, 1000);                              // browsers that print without afterprint (the dialog blocks until then anyway)
 }
 
+// Measurements that came back other than asked (Nicole's phone, 22 Oct: "1 cup sweetcorn kernels" in a metric recipe)
+const VULGAR = { '½': 1 / 2, '¼': 1 / 4, '¾': 3 / 4, '⅓': 1 / 3, '⅔': 2 / 3 };
+const num = a => {
+  const t = String(a ?? '').trim().replace(/(\d*)\s*([½¼¾⅓⅔])/g, (m, d, f) => String((+d || 0) + VULGAR[f]));
+  const m = t.match(/^(\d+)\s+(\d+)\/(\d+)$/), f = t.match(/^(\d+)\/(\d+)$/);
+  return m ? +m[1] + m[2] / m[3] : f ? f[1] / f[2] : /^\d+(\.\d+)?$/.test(t) ? +t : NaN;
+};
+const CUP = /^cups?$/i;
+/** A written recipe as its page should show it: a "Both" amount whose unit came apart ("200 (1 1/2 cups)" + "g") put back
+ *  together, and in a metric recipe any cup turned into ml (a metric cup, 250 ml) or, for a quarter cup or less, tablespoons.
+ *  unitsFix: 'converted' when cups were changed, 'mixed' when one couldn't be (the page says so instead of "Written in metric") */
+export function fitUnits(f) {
+  if (!f?.ingredients?.length) return f;
+  let converted = 0, mixed = 0;
+  const ingredients = f.ingredients.map(i => {
+    let { amount = '', unit = '' } = i;
+    const br = amount.match(/^(.+?)\s*(\(.+\))$/);
+    if (br && unit && !/[a-z]/i.test(br[1])) { amount = `${br[1]} ${unit} ${br[2]}`; unit = ''; }
+    if (f.units === 'metric') {
+      const inAmount = !unit && amount.match(/^(.+?)\s*(cups?)$/i);
+      if (CUP.test(unit) || inAmount) {
+        const v = num(inAmount ? inAmount[1] : amount);
+        if (Number.isNaN(v)) mixed++;
+        else {
+          converted++;
+          if (v <= 0.25) { const t = Math.max(1, Math.round(v * 16 * 2) / 2); amount = String(t); unit = 'tbsp'; }
+          else { amount = String(Math.round(v * 250 / 5) * 5); unit = 'ml'; }
+        }
+      } else if (/\bcups?\b/i.test(amount)) mixed++;
+    }
+    return amount === i.amount && unit === i.unit ? i : { ...i, amount, unit };
+  });
+  const fix = mixed ? 'mixed' : converted ? 'converted' : null;
+  return ingredients.every((x, n) => x === f.ingredients[n]) && !fix ? f : { ...f, ingredients, ...(fix ? { unitsFix: fix } : {}) };
+}
+
 /** A written recipe, checked into a safe shape (or null) */
 export function cleanRecipe(r) {
   if (!r || typeof r !== 'object') return null;
   const s = (v, n) => String(v ?? '').slice(0, n).trim();
   const ingredients = (Array.isArray(r.ingredients) ? r.ingredients : []).slice(0, 16)
     .map(i => (typeof i === 'string' ? { item: s(i, 80), amount: '' }
-      : { item: s(i?.item ?? i?.name, 80), amount: s(i?.amount ?? i?.quantity, 40), unit: s(i?.unit, 12), key: s(i?.key, 40).toLowerCase() }))
+      : { item: s(i?.item ?? i?.name, 80), amount: s(i?.amount ?? i?.quantity, 60), unit: s(i?.unit, 12), key: s(i?.key, 40).toLowerCase() }))
     .filter(i => i.item);
   // Steps come as strings (older write-outs) or { text, minutes?, uses? } (cook-mode-ux.md §3); both are kept as given
   const steps = (Array.isArray(r.steps) ? r.steps : []).slice(0, 12).map(x => {
@@ -108,6 +144,8 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
     unitsLine: lines.units_line || 'In {u}.',
     unitsWritten: lines.units_written || 'Written in {u}.',
     unitsUnknown: lines.units_unknown || 'Measurements:',
+    unitsFixed: lines.units_fixed || "Written in {u}. A cup crept in, so I've put it in ml.",
+    unitsMixed: lines.units_mixed || 'Mostly in {u}: one or two amounts are still in cups.',
     unitsQuestion: lines.units_question || 'How do you measure?',
     unitsRewrite: lines.units_rewrite || 'Re-write it in {u}',
     rewritesLeft: lines.rewrites_left || "Re-writes don't use your 3 a day ({n} left today).",
@@ -154,7 +192,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
   }
   const left = () => Math.max(0, WRITE_CAP - usedToday());
   /** A recipe she's already written for this atom, from the book or this tab */
-  const written = id => book.get(id)?.full || mem.recipes[id] || null;
+  const written = id => fitUnits(book.get(id)?.full || mem.recipes[id] || null);
 
   function fullHtml(f) {
     const busyHere = rewriting === f.id, canRw = rwLeft() > 0 && !busyHere;
@@ -172,7 +210,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
     return `${busyHere ? `<p class="bk-writing" role="status">${esc(L.rewriting)} <span class="dots" aria-hidden="true">• • •</span></p>` : ''}
       ${rwFailed === f.id ? `<p class="bk-failed" role="status">${esc(L.rewriteFailed)}</p>` : ''}
       <h4>You'll need${f.serves ? ` <span class="small">(serves ${f.serves})</span>` : ''}</h4>
-      <p class="small bk-unitsline">${esc(f.units ? L.unitsWritten.replace('{u}', uword(f.units)) : L.unitsUnknown)}
+      <p class="small bk-unitsline">${esc(!f.units ? L.unitsUnknown : (f.unitsFix === 'mixed' ? L.unitsMixed : f.unitsFix === 'converted' ? L.unitsFixed : L.unitsWritten).replace('{u}', uword(f.units)))}
         ${busyHere ? '' : `<button class="link bk-unitschange" aria-expanded="${uOpen}">${esc(L.change)}</button>`}</p>
       ${uOpen ? `<div class="bk-diet bk-units" role="group" aria-label="${esc(L.unitsQuestion)}">${UNITS.map(([id]) => `<button data-units="${id}" aria-pressed="${units() === id}">${esc(ulabel(id))}</button>`).join('')}
         ${units() !== f.units ? (canRw ? `<p><button class="bk-outline bk-unitsrw">${esc(L.unitsRewrite.replace('{u}', uword(units())))}</button></p><p class="small">${esc(L.rewritesLeft.replace('{n}', rwLeft()))}</p>`

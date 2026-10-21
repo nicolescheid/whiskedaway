@@ -78,3 +78,20 @@ test('showAmount', () => {
   assert.equal(showAmount(12, 'spoon', ['cup']), '1/4 cup');
   assert.equal(showAmount(2, 'u:pinch', ['pinch']), '2 pinches');
 });
+
+// A metric write-out that slipped into cups (Nicole's phone, 22 Oct), and a "Both" amount whose unit came apart
+import { fitUnits } from '../blender/explore/writeout.js';
+test('metric recipes: cups become ml (or tbsp for a quarter cup), and the page says so', () => {
+  const f = fitUnits({ units: 'metric', ingredients: [{ item: 'sweetcorn kernels', amount: '1', unit: 'cup' },
+    { item: 'baby spinach', amount: '1 1/2 cups', unit: '' }, { item: 'oil', amount: '1/4', unit: 'cup' }, { item: 'whitebait', amount: '150', unit: 'g' }] });
+  assert.deepEqual(f.ingredients.map(i => `${i.amount} ${i.unit}`), ['250 ml', '375 ml', '4 tbsp', '150 g']);
+  assert.equal(f.unitsFix, 'converted');
+  assert.equal(fitUnits({ units: 'metric', ingredients: [{ item: 'rice', amount: 'a cup', unit: '' }] }).unitsFix, 'mixed');
+  const ok = { units: 'metric', ingredients: [{ item: 'flour', amount: '200', unit: 'g' }] };
+  assert.equal(fitUnits(ok), ok);
+});
+test('"Both" keeps its brackets: a unit that came apart goes back in the amount, and cups are left alone', () => {
+  const f = fitUnits({ units: 'both', ingredients: [{ item: 'flour', amount: '200 (1 1/2 cups)', unit: 'g' }, { item: 'oil', amount: '15 ml (1 tbsp)', unit: '' }] });
+  assert.deepEqual(f.ingredients.map(i => i.amount), ['200 g (1 1/2 cups)', '15 ml (1 tbsp)']);
+  assert.equal(f.unitsFix, undefined);
+});
