@@ -369,6 +369,62 @@
         "kiwifruit"
       ]
     },
+    "shopWords": {
+      "_about": "Cards and book pages in the visitor's own shopping words (shopwords.js). The cards are written in New Zealand words; a country listed here swaps its words in, and one that isn't (NZ, other) keeps them. Whole words only, plurals follow.",
+      "AU": {
+        "courgette": "zucchini",
+        "kūmara": "sweet potato",
+        "baking soda": "bicarb soda"
+      },
+      "GB": {
+        "kūmara": "sweet potato",
+        "capsicum": "pepper",
+        "silverbeet": "chard",
+        "baking soda": "bicarbonate of soda"
+      },
+      "IE": {
+        "kūmara": "sweet potato",
+        "capsicum": "pepper",
+        "silverbeet": "chard",
+        "baking soda": "bicarbonate of soda"
+      },
+      "US": {
+        "courgette": "zucchini",
+        "coriander": "cilantro",
+        "kūmara": "sweet potato",
+        "capsicum": "bell pepper",
+        "aubergine": "eggplant",
+        "spring onion": "scallion",
+        "rocket": "arugula",
+        "yoghurt": "yogurt",
+        "silverbeet": "Swiss chard",
+        "beetroot": "beet",
+        "caster sugar": "superfine sugar",
+        "icing sugar": "powdered sugar",
+        "plain flour": "all-purpose flour",
+        "desiccated coconut": "shredded coconut",
+        "prawn": "shrimp",
+        "tinned": "canned"
+      },
+      "CA": {
+        "courgette": "zucchini",
+        "coriander": "cilantro",
+        "kūmara": "sweet potato",
+        "capsicum": "bell pepper",
+        "aubergine": "eggplant",
+        "spring onion": "green onion",
+        "rocket": "arugula",
+        "yoghurt": "yogurt",
+        "silverbeet": "Swiss chard",
+        "beetroot": "beet",
+        "caster sugar": "superfine sugar",
+        "icing sugar": "icing sugar",
+        "plain flour": "all-purpose flour",
+        "desiccated coconut": "shredded coconut",
+        "prawn": "shrimp",
+        "tinned": "canned"
+      }
+    },
     "_synonyms": "word → words that mean the same; a pantry word matches an atom when it or one of these is in its key_ingredients (after singularising).",
     "why": {
       "pantry": "you've got {p} to use",

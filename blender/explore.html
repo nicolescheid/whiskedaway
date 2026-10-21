@@ -678,6 +678,7 @@ import { createList } from './explore/list.js';
 import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine, servingsWords, heardWords } from './explore/checkin.js';
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 import { createErwina } from './explore/erwina.js';
+import { createShopWords } from './explore/shopwords.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1806,6 +1807,9 @@ const mapDefault = () => (state.connCountry && countryLabel(state.connCountry) ?
 // Words that mean the same in the kitchen (tell-data.json groups): each word maps to the rest of its group
 const SYNONYMS = {};
 for (const [w, xs] of Object.entries(T.synonyms || {})) SYNONYMS[w.toLowerCase()] = [].concat(xs).map(x => String(x).toLowerCase());
+// Cards and the book show the visitor's country's words once the Map knows it (brainstorm-1 D6): written in NZ words, swapped on display
+const shopWords = createShopWords({ table: T.shopWords, atoms: () => world.atoms });
+const applyShopWords = () => { if (shopWords.apply(visit.get('country') || mapDefault())) { ideas.render(); bookView.refresh(); } };
 const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : { items: p?.items || [], useUp: !!p?.useUp }; };
 const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
 const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free', 'low-fodmap': 'low-FODMAP' };
@@ -1895,7 +1899,7 @@ function emptyRoomLine() {
 const tell = createTell({
   visit, lines: LINES.tell, track, defaultCountry: mapDefault,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
-  onDone: (k, r) => (k === 'checkin' ? checkedIn(r) : acknowledge(k, r)),
+  onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : acknowledge(k, r); },
   openEnergy: () => tagsUI.openEnergy(),
   checkin: {
     energies: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
@@ -2403,6 +2407,7 @@ if (state.room !== 'cuddlecore') askHemisphere();
 look.yaw = room().yaw ?? 0;
 look.pitch = room().pitch ?? -6;
 fillMap();
+shopWords.apply(visit.get('country') || mapDefault());   // before the first render
 ideas.render();
 renderTheme();
 renderNotes();
