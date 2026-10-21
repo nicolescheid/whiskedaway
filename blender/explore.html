@@ -1781,7 +1781,7 @@ const SWEET_TOOLS = { 'level-up': () => sweet.open('sweet'), flavour: () => swee
 // Written already: it opens free. At the cap or if the writing fails: an honest line and the idea's card instead.
 const CAST_ROOMS = { 'sweet-spells': 'spell', cuddlecore: 'pot', flourish: 'table' };
 const CAST_LINES = {                                          // stand-ins: gemma-lines.json cast.{spell,pot,table} has the real ones
-  busy: "Hold on, I'm still writing the last one.",
+  busy: "Hold on, I'm still writing the last one.", nothing: "I've nothing to write out yet. Have a look around.",
   atCap: "That's my three written out for this visit. Here's an idea to look at instead.",
   failed: "That one didn't take. Here's an idea to look at instead.",
   writing: 'Let me write it out for you.', done: 'Written out. Ready when you are.',
@@ -1813,7 +1813,7 @@ async function cast(id) {
   const line = k => C[kind]?.[k] || C[k] || CAST_LINES[k];
   if (casting) return say(line('busy'), [], true);
   const best = bestHere();
-  if (!best) return say(line('atCap'), [], true);
+  if (!best) return say(line('nothing'), [], true);
   const a = atomsById[best.atom], rec = book.get(a.id) || snapshot(a, best.why);
   if (writer.written(rec.id)) { ideaPage(rec, 'cast'); return say(line('done'), [], true); }
   if (!writer.left) { say(line('atCap'), [], true); holdLine(); return ideaCard(rec, best.why, 'cast'); }
