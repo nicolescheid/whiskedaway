@@ -1256,6 +1256,81 @@
         "why": "Soft, sweet and warm, from one pot."
       },
       "body": "Peel and chunk the kūmara, boil for fifteen minutes until soft, then mash with butter, salt and pepper."
+    },
+    {
+      "id": "manuka-honey-toast",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Mānuka honey on toast",
+      "short": "Honey toast",
+      "icon": "🍯",
+      "ref": "the honey toast",
+      "hook": "Buttered toast with a spoon of mānuka honey.",
+      "time": 3,
+      "key_ingredients": [
+        "bread",
+        "butter",
+        "mānuka honey"
+      ],
+      "method_short": "Toast the bread and butter it while it is hot. Spoon mānuka honey over the top and let it soak in.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "themes": [
+        "bread",
+        "simple",
+        "cosy",
+        "low-spoons",
+        "breakfast",
+        "comfort",
+        "quick"
+      ],
+      "seed": {
+        "name": "Mānuka honey on buttered toast",
+        "why": "Mānuka honey is dark and a little earthy. It suits plain buttered toast."
+      }
+    },
+    {
+      "id": "cheese-rolls",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Cheese rolls",
+      "short": "Cheese rolls",
+      "icon": "🌯",
+      "ref": "the cheese rolls",
+      "hook": "Bread rolled round a cheesy onion filling, toasted golden.",
+      "time": 15,
+      "key_ingredients": [
+        "sliced bread",
+        "tasty cheese",
+        "onion",
+        "butter"
+      ],
+      "method_short": "Mix grated cheese with soft fried onion and a splash of milk. Roll it up in flattened bread, butter the outside and toast until golden.",
+      "diet": [
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "themes": [
+        "hearty",
+        "cosy",
+        "bread",
+        "warming",
+        "simple",
+        "comfort"
+      ],
+      "seed": {
+        "name": "Southland-style cheese rolls",
+        "why": "A Southland favourite: cheese and onion in a toasted roll of bread."
+      }
     }
   ],
   "weathers": {

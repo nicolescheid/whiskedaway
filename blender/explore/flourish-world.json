@@ -240,6 +240,26 @@
       "diet": ["nut-free"],
       "themes": ["winter", "garden", "green", "hearty", "meal", "cooking", "whole-food", "evening"],
       "seed": { "name": "Silverbeet and feta filo pie", "why": "Silverbeet grows right through winter, and this uses a whole bunch." },
-      "body": "Wilt silverbeet with onion, mix with feta and egg, and bake between buttered layers of filo until golden." }
+      "body": "Wilt silverbeet with onion, mix with feta and egg, and bake between buttered layers of filo until golden." },
+    { "id": "whitebait-fritters", "room": "flourish", "kind": "recipe idea", "spoons": 2, "title": "Whitebait fritters",
+      "short": "Whitebait", "icon": "🐠", "ref": "the whitebait fritters",
+      "hook": "Whitebait in a light egg batter, fried in small golden fritters.", "time": 20,
+      "key_ingredients": ["whitebait", "eggs", "flour", "butter", "lemon"],
+      "method_short": "Mix whitebait with beaten eggs and a spoonful of flour. Fry small spoonfuls in butter until golden, and finish with lemon.",
+      "diet": ["nut-free"],
+      "cuisines": ["Kiwi classics"],
+      "themes": ["spring", "fish", "light", "meal", "cooking", "whole-food"],
+      "seed": { "name": "Whitebait fritters with lemon", "why": "Whitebait is only in the shops for a few weeks in spring." },
+      "body": "Mix whitebait with beaten eggs and a spoonful of flour. Fry small spoonfuls in butter until golden, and finish with lemon." },
+    { "id": "kumara-wedges", "room": "flourish", "kind": "recipe idea", "spoons": 1, "title": "Kūmara wedges with lime yoghurt",
+      "short": "Kūmara wedges", "icon": "🍟", "ref": "the kūmara wedges",
+      "hook": "Kūmara wedges roasted crisp, with lime yoghurt.", "time": 10, "wait": "35 minutes in the oven",
+      "key_ingredients": ["kūmara", "olive oil", "paprika", "yoghurt", "lime"],
+      "method_short": "Cut kūmara into wedges, toss with oil and paprika and roast until crisp at the edges. Stir lime zest and juice into yoghurt for dipping.",
+      "diet": ["vegetarian", "gluten-free", "nut-free"],
+      "cuisines": ["Kiwi classics"],
+      "themes": ["autumn", "winter", "garden", "meal", "whole-food", "hearty"],
+      "seed": { "name": "Kūmara wedges with lime yoghurt", "why": "Kūmara roasts sweet and crisp, and lime keeps the yoghurt sharp." },
+      "body": "Cut kūmara into wedges, toss with oil and paprika and roast until crisp at the edges. Stir lime zest and juice into yoghurt for dipping." }
   ]
 }
