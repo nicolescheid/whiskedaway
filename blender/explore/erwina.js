@@ -29,7 +29,7 @@ const SPOTS = {
     // the lane oil lamp (glasshouse_build.oil_lamps) stands between her and the camera
     occluders: [{ cyl: [1.47, 2.55, 0.8, 0.05, 0.03] }, { cyl: [1.47, 2.55, 0.83, 0.022, 0.04] },
                 { cyl: [1.47, 2.55, 0.87, 0.045, 0.1] }, { cyl: [1.47, 2.55, 0.97, 0.012, 0.25] }],
-    trace: 'hairs', hair: 0xd9dce2, size: 0.5, shadow: true,     // the staging is close to the camera: a smaller tuft
+    trace: 'hairs', hair: 0x9a9ea6, size: 0.55, shadow: true,     // the staging is close to the camera: a smaller tuft
     // the sun in these renders (glasshouse_build SUN_AZ): from the garden, a little lane-ward, high. She's backlit by it.
     sun: { az: -35, el: 45, color: 0xffe0b0, k: s => ({ fair: 2.6, 'very-dry': 2.8, change: 1.6 })[s.weather] || 0 },
   },
@@ -38,13 +38,13 @@ const SPOTS = {
     when: s => ['rain', 'stormy'].includes(s.weather),                                  // curled up above the warm range
     // the hood's lower box (flourish_build: hood_low) hides the ledge she lies on
     occluders: [{ box: [0, 0.62, 3.17, 4.5, 1.98, 2.12] }],
-    trace: 'hairs', hair: 0x7a7a7f, lift: 0.85, shadow: false,    // grey on the hood's white top; a tuft and a pressed patch where she lay
+    trace: 'hairs', hair: 0x7a7d85, lift: 0.9, shadow: false,    // grey on the hood's white top; a tuft and a pressed patch where she lay
   },
   hallway: {
     rooms: ['hall-middle', 'hall-entrance'], camYaw: 0, at: [0.02, 7.7, 0.6], turn: 0, pose: 'sit',
     when: s => s.night,                                                                  // the sea-window sill at night
     occluders: [],
-    trace: 'hairs', hair: 0xdfe2e8, shadow: true,
+    trace: 'hairs', hair: 0x9a9ea6, size: 1.8, shadow: true,
     sun: { at: [-0.86, 7.25, 2.15], color: 0xffc58a, k: s => (s.night ? 1.8 : 0) },    // the wall lamp by the window
     basket: [0.6, 7.47, 0.24],                     // the lidded basket under the window (hallway_build): her box here
   },
@@ -204,27 +204,31 @@ export function createErwina(o) {
     return m;
   }
   /**
-   * What she leaves: a soft patch of pressed fur and a good tuft of long hairs, some lifting off the surface so they
-   * catch the light. Sized to be seen on a phone (375 px wide) from the middle of the room, in the spot's own hair
-   * colour (light on the dark sill, grey on the white hood). The same tuft every time.
+   * What she leaves: a soft pressed patch of her own grey fur with a scatter of fine short hairs and a few loose wisps
+   * (not a tuft of long strands, which read as sticks). The patch is what a phone sees; the hairs give it its edge.
+   * Colour is the spot's grey: lighter on the dark sill, darker on the white hood. The same patch every time.
    */
-  function hairs(color, curled, lift = 0.34, size = 1) {
+  function hairs(color, curled, lift = 0.5, size = 1) {
     const g = new THREE.Group();
     const spread = (curled ? 0.11 : 0.12) * size;      // on the hood the top is narrow: keep it all over the box, not hanging past its edge
-    const patch = blob(spread * 2.6, spread * 2.1, 0.4, color);
-    patch.position.y = 0.002;
-    g.add(patch);
-    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide });
+    const wide = blob(spread * 2.6, spread * 2.2, 0.8, color);          // the pressed patch, soft at its edges
+    wide.position.y = 0.002;
+    const core = blob(spread * 1.5, spread * 1.2, 0.55, color);
+    core.position.set(0.01 * size, 0.0025, 0.005 * size);
+    g.add(wide, core);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: curled ? 0.9 : 0.7, depthWrite: false, side: THREE.DoubleSide });
     let r = 7;                                                   // a small fixed-seed generator
     const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
-    for (let n = 0; n < 34; n++) {
-      const len = (0.07 + rnd() * 0.09) * (curled ? 1.7 : 1) * size, a = rnd() * Math.PI * 2, rad = Math.sqrt(rnd()) * spread;
-      const h = new THREE.Mesh(new THREE.PlaneGeometry(0.009 * Math.max(0.7, size), len), mat);
-      h.rotation.set(-Math.PI / 2 + (rnd() < lift ? 0.6 + rnd() * 0.6 : rnd() * 0.15), 0, rnd() * Math.PI);   // most or a third of them lift, by spot
-      h.position.set(Math.cos(a) * rad * 1.2, 0.006 + rnd() * 0.01, Math.sin(a) * rad * 0.9);
+    const one = (len, w, rad, up) => {
+      const a = rnd() * Math.PI * 2;
+      const h = new THREE.Mesh(new THREE.PlaneGeometry(w, len), mat);
+      h.rotation.set(-Math.PI / 2 + up, 0, rnd() * Math.PI);
+      h.position.set(Math.cos(a) * rad * 1.2, 0.004 + (len / 2) * Math.sin(up), Math.sin(a) * rad * 0.9);
       h.renderOrder = 3;
       g.add(h);
-    }
+    };
+    for (let n = 0; n < 150; n++) one((0.016 + rnd() * 0.024) * size, 0.0026, Math.sqrt(rnd()) * spread, rnd() * 0.25);   // fine and short, lying down
+    for (let n = 0; n < (curled ? 26 : 10); n++) one((0.045 + rnd() * 0.04) * size * (curled ? 1.5 : 1), curled ? 0.007 : 0.0032, (0.4 + rnd() * 0.6) * spread, rnd() < lift ? 0.5 + rnd() * 0.5 : rnd() * 0.2);   // a few loose wisps
     if (curled) g.position.x = -0.1;
     return g;
   }
