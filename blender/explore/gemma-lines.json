@@ -1008,5 +1008,9 @@
         "text": "It's been trying to lift the roof off for years. Every spring I cut it back, and every summer it climbs the frame again and pushes at a pane, as if it knows something about the sky I don't. The flowers last a day, and the fruit comes if I leave it alone. I've given up arguing. The glasshouse is half its, now."
       }
     }
+  },
+  "dial": {
+    "_when": "Tapping a dial entry with no door behind it (Nourish Academy, Cravings Decoded). {label} is filled in.",
+    "closed": "{label} is only engraved on the dial. There is no door behind it."
   }
 }

@@ -1350,7 +1350,7 @@ function turnDial(o) {
   const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
   const starGo = STAR_OVERRIDES[lean] || world.clusters[lean]?.room || 'cuddlecore';
   const go = o.star ? starGo : o.go;
-  if (!go) return say(`${o.label} isn't open yet. Soon.`, [], true);
+  if (!go) return say((LINES.dial?.closed || '{label} is only engraved on the dial. There is no door behind it.').replace('{label}', o.label), [], true);
   if (go === state.room) return say("You're already here.", [], true);
   const starSays = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',
                      chiapothecary: 'Your wander says the Chiapothecary. In you go.' };
