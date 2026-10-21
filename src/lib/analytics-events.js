@@ -43,7 +43,9 @@ export const EVENTS = {
   timer_start: [],
   timer_done: [],
   list_open: [],
-  list_share: [],                         // the share sheet or copy was used; what was shared never leaves the device through us
+  list_share: [],                         // (before 22 Oct) the share sheet or copy was used; what was shared never leaves the device through us
+  list_build: ['from', 'count'],          // a recipe put on the shopping list; from: contents, recipe, list, cook, jars; count: recipes on it now 1|2-3|4+
+  list_export: ['kind'],                  // the list taken away; kind: copy, share or print. Never what's on it
   tell_open: ['kind', 'from'],          // Tell Gemma: kind pantry|map|dietary|confidence|time|servings|energy|sweetness|sweetener|craving|occasion|mood|mix; from object|tag|menu|book|offer|foyer
   tell_set: ['kind', 'count', 'use_up', 'from'],   // count 0|1|2-3|4+ (pantry, map, dietary, sweetener, craving); never the values (see ANSWER_KINDS). Dietary values (FODMAP included) never leave the page
   mix_swap: ['outcome'],                 // the Chiapothecary: Gemma suggested a swap; outcome accepted or declined. Never the ingredients

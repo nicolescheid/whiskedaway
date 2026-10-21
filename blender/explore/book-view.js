@@ -121,8 +121,15 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
       ${r.seed?.time ? `<p class="small">${esc(r.seed.time)}</p>` : ''}</div>
       <div class="bk-write"></div>
       ${onCook ? '<p><button class="bk-cook">Cook this, step by step</button></p>' : ''}
+      ${list && book.has(r.id) ? listRow(r) : ''}
       ${(actions?.(r) || []).map((a, i) => `<p><button class="bk-outline bk-act" data-act-i="${i}">${esc(a.label)}</button></p>`).join('')}
       ${extra?.(r) || ''}`;   // extra(rec): a room's own lines under the buttons (escaped HTML), e.g. Sweet Spells' swap the sugar
+  }
+  // On a written recipe's page: put it on the shopping list (list.js keeps the pick), and a way to the list once it's on
+  function listRow(r) {
+    const on = list.has(r.id);
+    return `<p class="bk-listrow"><button class="bk-outline bk-addlist" aria-pressed="${on}">${esc(on ? bookLines.on_list || '✓ On my shopping list' : bookLines.add_to_list || 'Add to shopping list')}</button>
+      ${on ? `<button class="link bk-seelist">${esc(bookLines.see_list || 'See the list ›')}</button>` : ''}</p>`;
   }
   // Inn notes: the row in Contents, the section's list, and a note's own page (no Keep, Cook or diet: a note isn't a recipe)
   function notesRow() {
@@ -161,9 +168,11 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
     const shown = filter ? kept.filter(k => k.room === filter) : kept;
     return `<h3 class="bk-h">Contents</h3>
       ${rooms.length > 1 ? `<div class="bk-filter" role="group" aria-label="Show recipes from"><button data-f="" aria-pressed="${!filter}">All</button>${rooms.map(r => `<button data-f="${esc(r)}" aria-pressed="${filter === r}" style="--ring:${RIBBONS[r].colour}"><i></i>${esc(RIBBONS[r].name)}</button>`).join('')}</div>` : ''}
-      <ul class="bk-list">${shown.map(k => `<li><button data-open="${esc(k.id)}" style="--ring:${RIBBONS[k.room]?.colour || 'var(--berry)'}"><i></i><span>${esc(k.title)}</span><small>${esc(RIBBONS[k.room]?.name || '')} · ${esc(day(k.kept))}</small></button></li>`).join('')}</ul>
+      ${list ? `<p class="small bk-pickhint">${esc(bookLines.list_tick || 'Tick ☐ the recipes you want on your shopping list.')}</p>` : ''}
+      <ul class="bk-list">${shown.map(k => `<li${list ? ' class="bk-pick"' : ''}><button data-open="${esc(k.id)}" style="--ring:${RIBBONS[k.room]?.colour || 'var(--berry)'}"><i></i><span>${esc(k.title)}</span><small>${esc(RIBBONS[k.room]?.name || '')} · ${esc(day(k.kept))}</small></button>${list
+        ? `<label class="bk-onlist"><input type="checkbox" data-onlist="${esc(k.id)}" ${list.has(k.id) ? 'checked' : ''} aria-label="${esc((bookLines.list_tick_aria || '{title} on my shopping list').replace('{title}', k.title))}"></label>` : ''}</li>`).join('')}</ul>
       ${notesRow()}
-      ${list ? `<p><button class="bk-cook bk-need">${esc(bookLines.shopping_list || 'Shopping list')}</button></p>` : ''}
+      ${list ? `<p><button class="bk-cook bk-need">${esc(bookLines.shopping_list || 'Shopping list')}${list.count ? ` (${list.count})` : ''}</button></p>` : ''}
       <p><button class="bk-outline bk-clear">Clear my book</button> <span class="small">${clearNote()}</span></p>`;
   }
   function theme() {
@@ -254,6 +263,17 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
     root.querySelectorAll('.bk-clear, .bk-clear2').forEach(b => b.onclick = clearBook);
     root.querySelector('.bk-need')?.addEventListener('click', () => { track?.('list_open'); enterList(loose ? 'contents' : at); });   // not .bk-list: that's Contents' own list of recipes
     root.querySelector('.bk-tobasket')?.addEventListener('click', () => onBasket?.());
+    root.querySelectorAll('[data-onlist]').forEach(c => c.onchange = () => {
+      list.set(c.dataset.onlist, c.checked, 'contents');
+      draw();
+      root.querySelector(`[data-onlist="${CSS.escape(c.dataset.onlist)}"]`)?.focus({ preventScroll: true });
+    });
+    root.querySelector('.bk-addlist')?.addEventListener('click', () => {
+      list.set(rec.id, !list.has(rec.id), 'recipe');
+      draw();
+      root.querySelector('.bk-addlist')?.focus({ preventScroll: true });
+    });
+    root.querySelector('.bk-seelist')?.addEventListener('click', () => { track?.('list_open'); enterList(at); });
     // The first-use explainer, above whatever page shows first; it goes when they say Got it or close the book
     if (introShown && !loose && book.count) {
       left.insertAdjacentHTML('afterbegin', firstUseHtml());

@@ -105,6 +105,8 @@ Added after the first plan; counts only, never recipe text, diet answers, ingred
 | `cook_done` | Cook mode finished | none |
 | `timer_start`, `timer_done` | A cook-mode timer | none |
 | `list_open`, `list_share` | The shopping list opened, shared or copied | none |
+| `list_build` | A recipe put on the shopping list (22 Oct, multi-recipe list) | `from` (contents, recipe, list, cook, jars), `count` (recipes on it: 1, 2-3, 4+) |
+| `list_export` | The list taken away; replaces `list_share` from 22 Oct | `kind` (copy, share, print). Never what is on the list |
 
 `step` is how many trail events the visit has had so far, bucketed `1`, `2-3`, `4-7`, `8-15`, `16+`. It answers "after how many steps" without sending a timeline.
 

@@ -51,15 +51,19 @@ export const UNITS = [['metric', 'Metric (grams, ml)'], ['cups', 'Cups and spoon
 
 /** "Save as PDF / print": the recipe alone on a print-only sheet (the print stylesheet hides the rest), then the browser's print */
 export function printRecipe(rec, f) {
-  let sheet = document.getElementById('print-sheet');
-  if (!sheet) { sheet = document.createElement('div'); sheet.id = 'print-sheet'; document.body.appendChild(sheet); }
-  sheet.innerHTML = `<h1>${esc(f.name || rec.title)}</h1>${rec.hook ? `<p class="ps-hook">${esc(rec.hook)}</p>` : ''}
+  printSheet(`<h1>${esc(f.name || rec.title)}</h1>${rec.hook ? `<p class="ps-hook">${esc(rec.hook)}</p>` : ''}
     <h2>You'll need${f.serves ? ` (serves ${f.serves})` : ''}</h2>
     <ul>${f.ingredients.map(i => `<li>${i.amount ? `<b>${esc(i.amount)}${i.unit ? ` ${esc(i.unit)}` : ''}</b> ` : ''}${esc(i.item)}</li>`).join('')}</ul>
     <h2>How${f.time ? ` (${esc(f.time)})` : ''}</h2>
     <ol>${f.steps.map(x => `<li>${esc(typeof x === 'string' ? x : x.text)}</li>`).join('')}</ol>
     ${f.tip ? `<p><b>Gemma's tip:</b> ${esc(f.tip)}</p>` : ''}
-    <p class="ps-foot">Written by Gemma at the WhiskedAway Inn · whiskedaway.com</p>`;
+    <p class="ps-foot">Written by Gemma at the WhiskedAway Inn · whiskedaway.com</p>`);
+}
+/** Print `html` alone on the print-only sheet (a recipe, the shopping list), then the browser's print */
+export function printSheet(html) {
+  let sheet = document.getElementById('print-sheet');
+  if (!sheet) { sheet = document.createElement('div'); sheet.id = 'print-sheet'; document.body.appendChild(sheet); }
+  sheet.innerHTML = html;
   document.body.classList.add('print-recipe');
   const done = () => { document.body.classList.remove('print-recipe'); removeEventListener('afterprint', done); };
   addEventListener('afterprint', done);

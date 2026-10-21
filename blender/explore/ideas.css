@@ -483,10 +483,27 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .ls-need { list-style: none; margin: 0 0 10px; padding: 0; }
 .ls-need label { display: flex; align-items: center; gap: 10px; min-height: 44px; font: 18px 'Crimson Pro', Georgia, serif; cursor: pointer; }
 .ls-need input { width: 22px; height: 22px; accent-color: var(--berry); flex: none; }
-.ls-need input:checked + span { text-decoration: line-through; color: var(--ink-soft); }
+.ls-need input:checked + span { color: var(--ink-soft); }
+.ls-need input:checked + span .ls-t { text-decoration: line-through; }
 .ls-got summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font: 600 13px 'Quicksand'; color: var(--ink-soft); }
 .ls-got button { min-height: 40px; border: 0; background: none; text-decoration: line-through; color: var(--ink-soft); font: 16px 'Crimson Pro', Georgia, serif; }
-.ls-acts { display: flex; gap: 10px; flex-wrap: wrap; }
+.ls-acts { display: flex; gap: 8px 10px; flex-wrap: wrap; align-items: center; }
+.ls-acts button { margin: 0; }
+.ls-acts button:disabled { opacity: .5; }
+.ls-acts .link { min-height: 44px; }
+.ls-pick { margin: 0 0 4px; }
+.ls-group { margin: 12px 0 0; font: 600 13px 'Quicksand'; color: var(--ink-soft); }
+.ls-why { display: block; font: 12px 'Quicksand'; color: var(--ink-soft); text-decoration: none; }
+.ls-hint { margin: 4px 0 8px; }
+/* Contents: a tick beside each recipe puts it on the shopping list */
+.bk-list li.bk-pick { display: flex; align-items: center; gap: 4px; }
+.bk-list li.bk-pick > button { flex: 1; min-width: 0; }
+.bk-onlist { flex: none; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; }
+.bk-onlist input { width: 22px; height: 22px; margin: 0; accent-color: var(--berry); cursor: pointer; }
+.bk-pickhint { margin: 4px 0 0; }
+.bk-listrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.bk-listrow .bk-addlist[aria-pressed="true"] { border-color: var(--berry); color: var(--berry); }
+.bk-listrow .link { min-height: 44px; }
 .ck-said { margin: 6px 16px 0; padding: 8px 12px; border-radius: 12px 12px 12px 4px; background: #fff; border: 1px solid var(--line);
            font: 17px/1.35 'Crimson Pro', Georgia, serif; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
 .ck-said[hidden] { display: none; }
@@ -614,6 +631,8 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
   #print-sheet .ps-hook { font-style: italic; margin: 0 0 6pt; }
   #print-sheet li { margin: 2pt 0; break-inside: avoid; }
   #print-sheet .ps-foot { margin-top: 18pt; font-size: 9pt; color: #555; }
+  #print-sheet .ps-list { list-style: none; padding: 0; }
+  #print-sheet .ps-list small { color: #555; }
 }
 
 /* The basket's own sheet (basket-view.js): the book's dialog look, one page. Desktop: a narrow box over the dimmed room */

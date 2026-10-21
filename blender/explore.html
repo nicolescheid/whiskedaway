@@ -1827,6 +1827,7 @@ const cook = createCook({ written: id => writer.written(id), writer, sound, trac
   // list's own step would be the one popped, and back would skip it)
   isKept: id => book.has(id), onList: (rec, stepped) => {
     track('list_open');
+    shopList.set(rec.id, true, 'cook');                         // the recipe being cooked goes on the list
     const go = () => bookView.open('list', { from: 'cook' });
     if (!stepped) return go();
     let ran = false;
@@ -1834,9 +1835,9 @@ const cook = createCook({ written: id => writer.written(id), writer, sound, trac
     addEventListener('popstate', () => setTimeout(once), { once: true });
     setTimeout(once, 400);
   } });
-// "What do I need?" (explore/list.js): one shopping list from the book, the pantry set aside
-const shopList = createList({ title: LINES.book?.shopping_list, book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
-  servings: () => servingsNumber(visit.get('servings')), track });
+// The shopping list (explore/list.js): the written recipes the visitor picks, summed, the pantry set aside, in their shopping words
+const shopList = createList({ title: LINES.book?.shopping_list, lines: LINES.book || {}, book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
+  servings: () => servingsNumber(visit.get('servings')), words: t => shopWords.text(t), track });
 const bookView = createBookView({
   onCook: (rec, from) => cook.open(rec, from),
   list: shopList,
@@ -1979,6 +1980,7 @@ const chiaActions = [
   // not kept yet goes in first; and if the check-in said another number, Gemma says it's changed (QA 7)
   { label: chia.data.lines.jars, do: rec => {
     if (!book.has(rec.id)) keepIdea(rec.id, rec.why, 'jars');
+    if (book.has(rec.id)) shopList.set(rec.id, true, 'jars');
     const was = visit.get('servings');
     setAnswer('servings', '4', { from: 'jars', quiet: true });
     bookView.open('list', { from: 'jars' });
