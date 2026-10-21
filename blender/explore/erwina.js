@@ -40,6 +40,30 @@ const SPOTS = {
     occluders: [{ box: [0, 0.62, 3.17, 4.5, 1.98, 2.12] }],
     trace: 'hairs', hair: 0x7a7d85, lift: 0.9, shadow: false,    // grey on the hood's white top; a tuft and a pressed patch where she lay
   },
+  // The armchair by the back wall of Cuddlecore (cuddlecore_build: ArmChair_01, seat at 0.46 m): warm nights when the weather turns
+  cuddlecore: {
+    rooms: ['cuddlecore'], camYaw: 0, at: [0.85, -1.56, 0.47], turn: 0, pose: 'sit', boxScale: 0.7,
+    when: s => s.night && ['stormy', 'change'].includes(s.weather),
+    occluders: [],
+    trace: 'hairs', hair: 0x8f9299, size: 1.1, shadow: true,
+    sun: { at: [0.3, 0.2, 1.9], color: 0xffcf9a, k: s => (s.night ? 1.3 : 0) },        // the room's lamplight, from the middle
+  },
+  // The window seat in Sweet Spells' bay (sweet_spells_build: the seat cushion at 0.49 m), at its right end, clear of the spell table's props
+  'sweet-spells': {
+    rooms: ['sweet-spells'], camYaw: 180, at: [2.75, -0.2, 0.49], turn: 0, pose: 'sit', boxScale: 0.7,
+    when: s => !s.night && ['rain', 'change'].includes(s.weather),                       // watching the lane in the wet
+    occluders: [],
+    trace: 'hairs', hair: 0x8f9299, size: 1.1, shadow: true,
+    sun: { at: [2.2, 1.6, 2.3], color: 0xffe2bc, k: s => (s.night ? 0 : 1.5) },          // the room's light, from the middle: the bay behind her would leave her in silhouette
+  },
+  // The shop-window sill in the Chiapothecary (chiapothecary_build: sill at 0.95 m), between the jars and the plant
+  chiapothecary: {
+    rooms: ['chiapothecary'], camYaw: 0, at: [2.375, 0.17, 0.95], turn: 0, pose: 'sit', boxScale: 0.6,
+    when: s => !s.night && ['stormy', 'very-dry'].includes(s.weather),
+    occluders: [],
+    trace: 'hairs', hair: 0x9a9da4, size: 1.1, shadow: true,
+    sun: { at: [2.2, 2.2, 2.4], color: 0xfff0d8, k: s => (s.night ? 0 : 1.7) },          // the room's light on her face, not the window's behind her
+  },
   hallway: {
     rooms: ['hall-middle', 'hall-entrance'], camYaw: 0, at: [0.02, 7.7, 0.6], turn: 0, pose: 'sit',
     when: s => s.night,                                                                  // the sea-window sill at night
