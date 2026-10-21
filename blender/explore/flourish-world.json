@@ -27,7 +27,7 @@
     "fl-herbs": { "label": "The herbs", "ref": "the herbs on the window ledge", "type": "ambient", "themes": ["herbs", "fresh", "green"],
                   "moment": "Rosemary, thyme and mint. They like the sun on this ledge." },
     "fl-phonograph": { "label": "The phonograph", "ref": "the phonograph", "type": "ambient", "themes": [], "plays": "fl-phonograph",
-                       "moment": "Wind the handle and it plays: Grieg, Vivaldi or Dvořák, depending on the hour.",
+                       "moment": "Wind the handle and it plays: Grieg, Vivaldi or Dvořák, depending on the hour.", "moments": ["The records came with the house. I've never bought one, and never wanted to.", "It skips on the third track. I've stopped minding."],
                        "moment_stop": "Needle up. That'll do for now.",
                        "moment_quiet": "Give the handle a few turns. Turn the sound on, by the bell, and you'll hear it." },
     "fl-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": ["sunny", "fresh", "light"],

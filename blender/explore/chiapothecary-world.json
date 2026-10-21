@@ -46,7 +46,7 @@
     "drawer-matcha": { "label": "Matcha", "ref": "the drawer of matcha", "type": "ambient", "themes": ["energising", "green"],
                        "moment": "Matcha. Half a teaspoon is plenty, and it'll wake you up." },
     "chia-lane-window": { "label": "The lane", "ref": "the lane outside", "type": "ambient", "themes": ["slow", "cosy"],
-                     "moment": "The same lane Sweet Spells looks out on. On a quiet day you can hear its music box across the hall." },
+                     "moment": "The same lane Sweet Spells looks out on. On a quiet day you can hear its music box across the hall.", "moments": ["Nobody hurries down that lane. I've never once seen anyone run.", "The cobbles are older than the Inn, and they let you know it."] },
     "chia-exit-door": { "label": "Into the hallway", "ref": "the door to the hallway", "type": "door", "go": "hall-middle", "arrive_yaw": 0, "themes": [] },
     "chia-glasshouse-door": { "label": "Into the Conservatory", "blurb": "What's growing this season", "ref": "the glass door to the Conservatory", "type": "door", "go": "glasshouse", "arrive_yaw": 45,
                               "themes": [], "always_visible": true },

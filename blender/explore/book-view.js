@@ -196,7 +196,8 @@ export function createBookView({ book, atoms, chip, notes, onKeep, onRead, onTak
     // Turning pages: in the book's order (a loose page sits outside it; ‹ › go to Contents)
     const i = s.indexOf(page), n = desk ? s.length - 1 : s.length;   // on desktop This visit and Contents share a spread
     const pos = desk ? Math.max(0, i - 1) : i;
-    $('.bk-dots').innerHTML = loose ? '' : Array.from({ length: Math.min(n, 12) }, (_, k) => `<i class="${k === Math.min(pos, 11) ? 'on' : ''}"></i>`).join('');
+    const cap = desk ? 12 : 8;                                       // phones: few enough that "Contents · This visit" stays on one line at 375 px
+    $('.bk-dots').innerHTML = loose ? '' : Array.from({ length: Math.min(n, cap) }, (_, k) => `<i class="${k === Math.min(pos, cap - 1) ? 'on' : ''}"></i>`).join('');
     const atStart = !loose && (desk ? i <= 1 : i <= 0), atEnd = !loose && i === s.length - 1;
     root.querySelectorAll('.bk-prev, .bk-prev2').forEach(b => { b.disabled = atStart; });
     $('.bk-next').disabled = atEnd;

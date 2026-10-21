@@ -1236,7 +1236,7 @@ function touch(id) {
     // Something that plays (the music box). With the sound off, the speaker by the bell glows to say where it is
     const now = sound.music(id);
     if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
-    say(!sound.on ? obj.moment_quiet || obj.moment : now ? obj.moment : obj.moment_stop || obj.moment, [], true);
+    say(!sound.on ? obj.moment_quiet || obj.moment : now ? momentOf(id, obj) : obj.moment_stop || obj.moment, [], true);   // playing: its `moments` rotate too
   } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
     // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
     const got = chia.drawer(id);
@@ -1654,7 +1654,7 @@ const ideas = createIdeas({
   state, atoms: atomsById, save: () => store.save(state), here: () => homeOf(state.room),
   avatar: () => $('cw-av'), bookChip: () => $('btn-book'),
   layout: (what, on) => { if (what === 'highlight') chatUI.hold(on); },
-  onFirst: () => say(L.ideaFirst, [], true),
+  onFirst: () => { const wait = lineHeldUntil - Date.now(); if (wait > 0) setTimeout(() => say(L.ideaFirst, [], true), wait); else say(L.ideaFirst, [], true); },   // a held line (an Inn note's) is read first
   // Once per device, the first time a touch visitor opens an idea: how to swipe it
   wantHint: () => !book.hint,
   onHint: () => { book.hint = true; say(LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
