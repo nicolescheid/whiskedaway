@@ -1635,6 +1635,208 @@
         "why": "Dinner from a kettle and a packet, and still a proper bowl."
       },
       "body": "Cover rice vermicelli with boiling water for five minutes, then drain. Toss with soy sauce, sesame oil, spring onion and frozen peas, which thaw in the hot noodles."
+    },
+    {
+      "id": "boil-an-egg",
+      "room": "cuddlecore",
+      "kind": "technique",
+      "spoons": 1,
+      "title": "Boil an egg the way you like it",
+      "short": "Boiled egg",
+      "icon": "🥚",
+      "ref": "the boiled egg",
+      "hook": "Lower an egg into boiling water, then let the timer do the rest.",
+      "time": 10,
+      "key_ingredients": [
+        "eggs",
+        "water",
+        "salt"
+      ],
+      "method_short": "Lower the egg into boiling water on a spoon. Six minutes for a soft yolk, nine for firm, then straight into cold water so it peels.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
+      "tools": ["pan", "timer"],
+      "appliances": ["stove"],
+      "appliances_checked": true,
+      "themes": [
+        "learning",
+        "simple",
+        "cooking",
+        "quick",
+        "low-spoons",
+        "breakfast",
+        "protein"
+      ],
+      "seed": {
+        "name": "Soft or hard boiled eggs",
+        "why": "Timing is the whole trick, and a timer does it for you."
+      },
+      "body": "Lower the egg into boiling water on a spoon. Six minutes for a soft yolk, nine for firm, then straight into cold water so it peels."
+    },
+    {
+      "id": "rice-in-a-pot",
+      "room": "cuddlecore",
+      "kind": "technique",
+      "spoons": 1,
+      "title": "Cook rice in a pot",
+      "short": "Rice in a pot",
+      "icon": "🍙",
+      "ref": "the pot of rice",
+      "hook": "Rice, water and a lid. No rice cooker needed.",
+      "time": 25,
+      "wait": "5 minutes standing",
+      "key_ingredients": [
+        "long-grain rice",
+        "water",
+        "salt"
+      ],
+      "method_short": "Rinse a cup of rice, add a cup and a half of water and bring it to the boil. Turn it right down with the lid on for twelve minutes, then leave it covered for five more.",
+      "diet": [
+        "vegetarian",
+        "vegan",
+        "dairy-free",
+        "gluten-free",
+        "nut-free"
+      ],
+      "tools": ["pan", "timer"],
+      "appliances": ["stove"],
+      "appliances_checked": true,
+      "themes": [
+        "learning",
+        "simple",
+        "cooking",
+        "low-spoons",
+        "pantry",
+        "what-you-have"
+      ],
+      "seed": {
+        "name": "Plain boiled rice in a pot",
+        "why": "Once you can do rice, every curry and stir-fry gets easier."
+      },
+      "body": "Rinse a cup of rice, add a cup and a half of water and bring it to the boil. Turn it right down with the lid on for twelve minutes, then leave it covered for five more."
+    },
+    {
+      "id": "use-a-timer",
+      "room": "cuddlecore",
+      "kind": "technique",
+      "spoons": 0,
+      "title": "Set a timer and walk away",
+      "short": "Use a timer",
+      "icon": "⏰",
+      "ref": "the timer",
+      "hook": "A timer remembers so you don't have to.",
+      "time": 5,
+      "key_ingredients": [
+        "eggs",
+        "rice",
+        "pasta"
+      ],
+      "method_short": "Set the timer when the food goes on, not when you remember. Pick the shorter time, check, then add a minute if it needs it. Your phone, the oven or a wind-up dial all do the job.",
+      "diet": [
+        "vegetarian",
+        "dairy-free",
+        "nut-free"
+      ],
+      "tools": ["timer"],
+      "appliances": [],
+      "appliances_checked": true,
+      "themes": [
+        "learning",
+        "simple",
+        "quick",
+        "low-spoons",
+        "cooking",
+        "rest"
+      ],
+      "seed": {
+        "name": "Pasta, timed",
+        "why": "Most overcooking is just forgetting."
+      },
+      "body": "Set the timer when the food goes on, not when you remember. Pick the shorter time, check, then add a minute if it needs it. Your phone, the oven or a wind-up dial all do the job."
+    },
+    {
+      "id": "season-to-taste",
+      "room": "cuddlecore",
+      "kind": "technique",
+      "spoons": 0,
+      "title": "Season to taste",
+      "short": "Season to taste",
+      "icon": "🧂",
+      "ref": "the salt and pepper",
+      "hook": "A pinch, a stir, a taste. Repeat until it's right.",
+      "time": 5,
+      "key_ingredients": [
+        "salt",
+        "lemon",
+        "black pepper"
+      ],
+      "method_short": "Taste before you season, add a small pinch of salt, stir and taste again. If it still seems flat, try a squeeze of lemon or a drop of vinegar before more salt. Use a clean spoon each time.",
+      "diet": [
+        "vegetarian",
+        "vegan",
+        "dairy-free",
+        "gluten-free",
+        "nut-free"
+      ],
+      "tools": ["wooden-spoon"],
+      "appliances": [],
+      "appliances_checked": true,
+      "themes": [
+        "learning",
+        "simple",
+        "cooking",
+        "why",
+        "low-spoons"
+      ],
+      "seed": {
+        "name": "A pot of soup, seasoned as you go",
+        "why": "Small steps are how you stop it going wrong."
+      },
+      "body": "Taste before you season, add a small pinch of salt, stir and taste again. If it still seems flat, try a squeeze of lemon or a drop of vinegar before more salt. Use a clean spoon each time."
+    },
+    {
+      "id": "drain-without-scalding",
+      "room": "cuddlecore",
+      "kind": "technique",
+      "spoons": 1,
+      "title": "Drain pasta without scalding yourself",
+      "short": "Draining",
+      "icon": "🧺",
+      "ref": "the colander",
+      "hook": "Colander in the sink first, then tip the pot away from you.",
+      "time": 10,
+      "key_ingredients": [
+        "pasta",
+        "water",
+        "salt",
+        "olive oil"
+      ],
+      "method_short": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce.",
+      "diet": [
+        "vegetarian",
+        "dairy-free",
+        "nut-free"
+      ],
+      "tools": ["colander"],
+      "appliances": ["stove"],
+      "appliances_checked": true,
+      "themes": [
+        "learning",
+        "simple",
+        "cooking",
+        "pantry",
+        "low-spoons",
+        "hands-on"
+      ],
+      "seed": {
+        "name": "Pasta with olive oil and a little cooking water",
+        "why": "The safe way is also the tidy way."
+      },
+      "body": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce."
     }
   ],
   "weathers": {
