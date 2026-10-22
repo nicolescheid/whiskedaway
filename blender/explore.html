@@ -1141,6 +1141,7 @@ function buildHotspots() {
     el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}${obj.blurb ? `<span class="blurb">${esc(obj.blurb)}</span>` : ''}</span>`;
     const hname = obj.map || obj.label;   // the Map's name, so the three dials aren't all "The dial" (a11y review 1, B4)
     el.setAttribute('aria-label', obj.blurb ? `${hname}: ${obj.blurb}` : hname);
+    el.dataset.spot = id;                                    // for scripted checks (the sheet contract test)
     el.addEventListener('click', e => { e.stopPropagation(); touch(id); });
     document.body.appendChild(el);
     return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
@@ -2753,7 +2754,8 @@ function endCheckinOffer() {
   store.save(state);
   checkinPill();
 }
-window.__explore = { state, visit, lines: LINES, book, ideas, chatUI, bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate };
+window.__explore = { state, visit, lines: LINES, book, ideas, chatUI, bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate,
+                    world, spot: id => spots[id] };
 
 setRoomText();
 buildHotspots();

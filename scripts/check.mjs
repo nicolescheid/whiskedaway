@@ -1,7 +1,8 @@
 // npm run check: the automatic check before every deploy (brainstorm 1, G1).
 // Builds the site, runs the navigator unit tests, serves dist/ on a local port and walks the Inn in a real browser:
 // every room at five sizes, by day and by night. Prints PASS, or FAIL with a short list. Exit code 0 or 1.
-//   node scripts/check.mjs [--no-build] [--headed] [--only=375x812]
+//   node scripts/check.mjs [--no-build] [--headed] [--only=375x812] [--sheets-only]
+// Then the sheet contract (scripts/sheet-contract.mjs): every sheet opened from its real opener and closed every way out.
 // Uses the Chrome (or Edge) already installed, through playwright-core: no browser download.
 // The genie Worker is never called: its requests are answered locally with empty replies, and the AI navigator is
 // off on localhost, so Turnstile never loads.
@@ -11,6 +12,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, extname, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sheetContract, judge } from './sheet-contract.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -67,7 +69,7 @@ for (const channel of ['chrome', 'msedge']) {
 }
 if (!browser) { console.log('\nFAIL\n- no Chrome or Edge found for the browser check'); process.exit(1); }
 
-const SIZES = [[375, 812], [375, 635], [724, 340], [812, 375], [1280, 800]].filter(([w, h]) => !only || only === `${w}x${h}`);
+const SIZES = flag('--sheets-only') ? [] : [[375, 812], [375, 635], [724, 340], [812, 375], [1280, 800]].filter(([w, h]) => !only || only === `${w}x${h}`);
 const hall = JSON.parse(readFileSync(join(root, 'blender/explore/hallway-world.json'), 'utf8'));
 const ROOMS = ['cuddlecore', ...Object.keys(hall.stops), 'glasshouse', 'flourish', 'sweet-spells', 'chiapothecary'];
 const TIMES = ['midday', 'night'];
@@ -137,6 +139,7 @@ for (const [width, height] of SIZES) for (const time of TIMES) {
 }
 
 // The front door: one h1 for the page outline
+if (!flag('--sheets-only')) {
 step('front door and star dial');
 {
   const { page, context, where } = await openPage({ width: 1280, height: 800, time: 'midday', path: '/?door=1', phone: false });
@@ -182,6 +185,15 @@ step('Gemma in every room');
   }
   await context.close();
 }
+}
+
+// The sheet contract: known failures are listed, new ones fail
+let sheets = null;
+{
+  const sizes = [[375, 812], [1280, 800]].filter(([w, h]) => !only || only === `${w}x${h}`);
+  try { sheets = judge(await sheetContract({ browser, base, root, sizes, step })); } catch (e) { fail(`sheet contract: ${String(e.message).split('\n')[0]}`); }
+  for (const f of sheets?.fails || []) fail(`sheet contract: ${f}`);
+}
 
 await browser.close();
 server.close();
@@ -199,6 +211,11 @@ failures.length = 0;
 for (const [key, times] of merged) failures.push(times.length ? key.replace(/^(\d+x\d+)/, `$1 ${times.length === 2 ? 'day+night' : times[0]}`) : key);
 const warned = [...new Set(warnings.map(w => w.replace(/ (midday|night)/, '')))];
 if (warned.length) { console.log(`\nWarnings: ${warned.length} hotspot${warned.length > 1 ? 's' : ''} under the chat window (known, R1)`); for (const w of warned) console.log(`  · ${w}`); }
+if (sheets) {
+  console.log(`\nSheet contract: ${sheets.cases} cases, ${sheets.checks} checks, ${sheets.fails.length} new failure${sheets.fails.length === 1 ? '' : 's'}`);
+  if (sheets.expected.length) { console.log(`Known failures (${sheets.expected.length}, listed in EXPECTED until the layer manager fixes them):`); for (const e of sheets.expected) console.log(`  · ${e}`); }
+  for (const f of sheets.fixed) console.log(`  ! ${f}`);
+}
 if (!failures.length) { console.log(`\nPASS (${secs} s)`); process.exit(0); }
 console.log(`\nFAIL (${secs} s): ${failures.length} problem${failures.length > 1 ? 's' : ''}`);
 for (const f of failures) console.log(`- ${f}`);
