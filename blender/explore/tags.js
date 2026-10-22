@@ -7,10 +7,11 @@
 import { DIETS, MORE_DIETS } from './writeout.js';
 import { cuisineLabel } from './tell.js';
 import { SERVINGS, checkinWords } from './checkin.js';
+import { kitchenTag } from './kitchen.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you', lines = {}, extra = {} }) {
+export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell me about you', lines = {}, kitchenLines = {}, extra = {} }) {
   const W = checkinWords(lines);
   // The check-in's answers (checkin.js): a small picker like energy's, and the same setter as the desk's sheet (choose.answer)
   const answer = (k, icon, name, ids) => ({ icon, name, title: W.rows[k], word: v => (W[k][v] || '').toLowerCase().replace(/^i'/, "I'"),
@@ -40,6 +41,9 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     time: answer('time', '⏳', 'Time', Object.keys(W.time)),
     servings: { ...answer('servings', '🍽', 'Cooking for', SERVINGS), word: v => (v === '1' || v === 'crowd' ? W.servings[v] : `for ${W.servings[v] || v}`).toLowerCase() },
     confidence: answer('confidence', '🧑‍🍳', 'Confidence', Object.keys(W.confidence)),
+    // Your kitchen (kitchen.js): "🍳 oven · air fryer", "🥗 no cooking"; the tag's own icon is the first word of the content's tag line
+    kitchen: { icon: v => kitchenTag(v, kitchenLines).split(' ')[0], name: kitchenLines.menu || 'Your kitchen', sheet: 'kitchen',
+               word: v => kitchenTag(v, kitchenLines).replace(/^\S+\s+/, '') },
     ...extra,                     // a room's own about-you answers, each with open() for its sheet (Sweet Spells' how sweet)
   };
   el.setAttribute('role', 'list');
@@ -56,7 +60,7 @@ export function createTags({ el, visit, world, choose, tell, chipLabel = '+ Tell
     const about = visit.all().about;
     const rows = Object.entries(about).filter(([k, v]) => KINDS[k] && KINDS[k].word(v));
     el.innerHTML = rows.map(([k, v]) => `<span role="listitem"><button class="tag" data-k="${esc(k)}" aria-label="${esc(KINDS[k].name)}: ${esc(KINDS[k].word(v))}. Change or forget">`
-      + `<span aria-hidden="true">${KINDS[k].icon}</span> ${esc(KINDS[k].word(v))}</button></span>`).join('')
+      + `<span aria-hidden="true">${typeof KINDS[k].icon === 'function' ? KINDS[k].icon(v) : KINDS[k].icon}</span> ${esc(KINDS[k].word(v))}</button></span>`).join('')
       + (tell ? `<span role="listitem"><button class="tag tag-add">${esc(chipLabel)}</button></span>` : '');
     el.querySelectorAll('.tag[data-k]').forEach(b => b.onclick = e => {
       e.stopPropagation();

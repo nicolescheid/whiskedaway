@@ -535,7 +535,25 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .tl-candles button[aria-pressed="true"] .tl-wax { box-shadow: 0 -6px 14px rgba(255, 190, 110, .55); }
 @keyframes tl-flicker { 0%, 100% { transform: scale(1) rotate(0); } 30% { transform: scale(.94, 1.06) rotate(-2deg); } 60% { transform: scale(1.04, .96) rotate(2deg); } }
 @media (prefers-reduced-motion: reduce) { .tl-flame { transition: none; } .tl-candles button[aria-pressed="true"] .tl-flame { animation: none; } }
+/* ---------- Your kitchen (tell.js drawKitchen): icon toggles, four across (three on phones), No cooking on its own row */
+.kt-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 8px 0; }
+.tell.phone .kt-grid, .tell.land .kt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tell .kt-grid.kt-none { grid-template-columns: 1fr; }
+.kt-ap { min-height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 4px;
+  border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); font: 500 13px/1.2 'Quicksand'; text-align: center; }
+.kt-ap b { font-weight: 600; }
+.kt-icon { font-size: 26px; line-height: 1; filter: grayscale(.6); opacity: .75; transition: filter .2s, opacity .2s; }
+.kt-ap[aria-pressed="true"] { border-color: var(--berry); box-shadow: inset 0 0 0 2px var(--berry); background: #fff8f4; }
+.kt-ap[aria-pressed="true"] .kt-icon { filter: none; opacity: 1; }
+.kt-ap.kt-here:not([aria-pressed="true"]) { border-style: dashed; border-color: var(--berry); }
+.kt-ap.kt-wide { min-height: 52px; flex-direction: row; gap: 10px; }
+.kt-ap.kt-wide .small { margin: 0; }
+.kt-said { min-height: 1.3em; font-style: italic; }
+.kt-acts { margin: 0; }
+.kt-acts .link { min-height: 44px; }
 /* ---------- the Chiapothecary's moods and Mix an experiment (chia-mix.js): the Tell Gemma sheet, one step per screen */
+.mx-group { margin: 10px 0 0; font: 600 13px 'Quicksand'; color: var(--ink-soft); }
+.mx-said { min-height: 1.3em; font-style: italic; }
 /* The Mix keeps one height through its steps, so the header and its ✕ stay put (QA 7); the body scrolls */
 .tell.desk.mx-mix .tl-box { height: min(540px, calc(100vh - 48px)); }
 .tell.phone.mx-mix .tl-box { height: min(70dvh, 560px); }

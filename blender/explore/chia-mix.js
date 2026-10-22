@@ -4,6 +4,9 @@
 // Gemma's swaps are a fixed, content-owned table, checked on every tap: one inline line with [Swap to X] [Keep mine], never a
 // popup and never blocking Next. Moods say what's in them, never what they do (no health claims).
 // Words and lists come from gemma-lines.json `chia` (content editor); these stand in until then.
+// A bigger jar (appliances-chia-plan.md §2): the Mix starts with "How big a jar?". Keep it simple is the flow above; A real mix
+// swaps the one topping for add-ins in groups (chia.addins), any number, with Gemma's line at the soft cap (never a block).
+// Drawer taps add to the add-ins rather than replacing the choice. The add-ins have their own swap rules (chia.addinSwaps).
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -11,6 +14,9 @@ const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)
   : matchMedia('(max-width: 719px)').matches ? 'phone' : 'desk');
 const ROOM = 'chiapothecary';
 export const STEPS = ['mood', 'base', 'flavour', 'topping'];
+export const REAL_STEPS = ['mood', 'base', 'flavour', 'addins'];
+/** The Mix's screens for this draft: the jar size first, then the simple or the real mix's steps */
+export const stepsFor = d => ['mode', ...(d.mode === 'real' ? REAL_STEPS : STEPS)];
 
 const DEFAULTS = {
   moods: {
@@ -50,7 +56,8 @@ export function chiaData(lines = {}) {
   if (c.moods && !Array.isArray(c.moods.options) && !c.mix) {
     const cl = c.lines || {};
     return { moods: c.moods, bases: c.bases || DEFAULTS.bases, flavours: c.flavours || DEFAULTS.flavours, toppings: c.toppings || DEFAULTS.toppings, seeds: c.seeds || DEFAULTS.seeds,
-      fromDrawers: c.fromDrawers || {}, swaps: Array.isArray(c.swaps) ? c.swaps : DEFAULTS.swaps,
+      fromDrawers: c.fromDrawers || {}, swaps: [...(Array.isArray(c.swaps) ? c.swaps : DEFAULTS.swaps), ...(c.addinSwaps?.rules || [])],
+      ...addinData(c),
       lines: { ...L, ...cl, intro: cl.mixIntro ?? cl.intro ?? '', steps: { ...L.steps, ...(cl.steps || {}) }, names: { ...L.names, ...(cl.names || {}) } } };
   }
   const opts = list => (Array.isArray(list) && list.length ? Object.fromEntries(list.map(o => [o.id, o.label])) : null);
@@ -70,6 +77,7 @@ export function chiaData(lines = {}) {
       line: r.swap ? (sw.line || L.swapLine).replace('{x}', low(name(r.swap.step, r.swap.to))).replace('{y}', low(name(r.swap.step, (r.when || {})[r.swap.step])))
         .replace('{reason}', r.reason || '').trim() : r.reason || '' }))
     : DEFAULTS.swaps;
+  Object.assign(D, addinData(c));
   D.lines = { ...L,
     moodTitle: c.moods?.title || L.moodTitle, moodHelper: c.moods?.helper || '', mixTitle: m.title || L.mixTitle, intro: m.intro || '', prefill: m.prefill || '',
     steps: { mood: m.steps?.mood?.title || L.steps.mood, base: m.steps?.base?.title || L.steps.base, flavour: m.steps?.flavour?.title || L.steps.flavour,
@@ -81,11 +89,45 @@ export function chiaData(lines = {}) {
     jars: c.jars?.label || L.jars, jarsLine: c.jars?.line || L.jarsLine };
   return D;
 }
-/** The first swap whose `when` all match the choices so far and the visitor hasn't turned down; null if none */
-export function swapFor(data, draft, declined = new Set()) {
-  return (data.swaps || []).map((r, i) => ({ ...r, i })).find(r => !declined.has(r.i) && (!r.swap || draft[r.swap.step] !== r.swap.to)
-    && Object.keys(r.when || {}).length && Object.entries(r.when).every(([k, v]) => draft[k] === v)) || null;
+/** chia.modes and chia.addins: the groups, each add-in by id ({ id, label, group, when, note, thirsty, clash, check }), the soft cap */
+function addinData(c = {}) {
+  const groups = (c.addins?.groups || []).map(g => ({ id: g.id, label: g.label, items: (g.items || []).map(x => x.id) }));
+  const addins = {};
+  for (const g of c.addins?.groups || []) for (const x of g.items || []) addins[x.id] = { ...x, group: g.id };
+  return { groups, addins, softCap: Number(c.modes?.soft_cap) || 6, modes: c.modes || {} };
 }
+// A real mix's add-ins only count in a real mix: a simple jar keeps them in the store but out of its rules and its recipe
+const addinsOf = d => (d.mode === 'real' ? [].concat(d.addins || []).filter(id => id !== d.flavour) : []);
+/** Whether one rule's `when` matches: single choices (mood, base, flavour, topping) by value; `addins` every id listed is picked;
+ *  `group` + `atLeast` that many picked from one group */
+export function whenMatches(data, when = {}, draft = {}) {
+  const picked = addinsOf(draft);
+  const keys = Object.keys(when);
+  if (!keys.length) return false;
+  return keys.every(k => {
+    if (k === 'addins') return [].concat(when.addins).every(id => picked.includes(id));
+    if (k === 'group') return picked.filter(id => data.addins?.[id]?.group === when.group).length >= (Number(when.atLeast) || 1);
+    if (k === 'atLeast') return 'group' in when;
+    return draft[k] === when[k];
+  });
+}
+/** The first swap whose `when` all match the choices so far and the visitor hasn't turned down; null if none. A swap that's
+ *  already made (its step at `to`, or the add-in it removes gone) doesn't show again */
+export function swapFor(data, draft, declined = new Set()) {
+  const done = sw => (sw.step === 'addins' ? !addinsOf(draft).includes(sw.remove) : draft[sw.step] === sw.to);
+  return (data.swaps || []).map((r, i) => ({ ...r, i })).find(r => !declined.has(r.i) && (!r.swap || !done(r.swap)) && whenMatches(data, r.when, draft)) || null;
+}
+/** One add-in tapped: in, or out again; returns the new list (never capped: the soft cap is Gemma's line) */
+export const toggleAddin = (list, id) => ([].concat(list || []).includes(id) ? [].concat(list).filter(x => x !== id) : [...[].concat(list || []), id]);
+/** Gemma's line at the soft cap: softCap on reaching it, softCapMore two past it; '' otherwise */
+export function capLine(data, n) {
+  const cap = data.softCap || 6, L = data.lines || {};
+  return n === cap ? L.softCap || "That's a proper jar." : n === cap + 2 ? L.softCapMore || "That's a very full jar. I'd stop here." : '';
+}
+const listWords = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`).toLowerCase().replace(/^./, c => c.toUpperCase());
+// "Berries go in", "Rolled oats drink up liquid": a plural label (ends in a single s) takes the plural verb in a content line
+const PLURAL_VERBS = [[/\bgoes\b/, 'go'], [/\bis\b/, 'are'], [/\bdrinks\b/, 'drink'], [/\bsoaks\b/, 'soak']];
+export const agree = (line, label) => (/[^s]s$/i.test(String(label).trim()) ? PLURAL_VERBS.reduce((t, [re, v]) => t.replace(re, v), line) : line);
 const optionsFor = (D, step) => (step === 'mood' ? Object.fromEntries(Object.entries(D.moods).map(([id, m]) => [id, m.label])) : D[`${step}s`] || {});
 export const labelOf = (D, step, id) => (id ? optionsFor(D, step)[id] || id : '');
 
@@ -94,20 +136,23 @@ export function mixRecipe(D, d) {
   const L = s => labelOf(D, s, d[s]);
   const mood = d.mood && d.mood !== 'by-flavour' ? D.moods[d.mood] : null;
   const title = `${mood ? mood.label : L('flavour') || 'Your'} chia jar`.replace(/^Your chia jar$/, 'Your chia jar');
-  const bits = [L('base'), L('flavour'), L('topping')].filter(Boolean).map(x => x.toLowerCase());
+  const real = d.mode === 'real', adds = addinsOf(d).filter(id => D.addins?.[id]), A = id => D.addins[id].label;
+  const bits = [L('base'), L('flavour'), real ? '' : L('topping'), ...adds.map(A)].filter(Boolean).map(x => x.toLowerCase());
   const chia = d.seed ? `${L('seed').toLowerCase()} seeds` : 'chia seeds';   // "black chia seeds", from a drawer
   return {
-    id: `mix-${STEPS.map(s => d[s] || 'x').join('-')}${d.seed ? `-${d.seed}` : ''}`, room: ROOM, kind: 'chia experiment', title, short: title,
-    hook: bits.length ? `Chia set in ${bits[0]}${bits.length > 1 ? `, with ${bits.slice(1).join(' and ')}` : ''}.` : 'A chia jar of your own.',
+    id: `mix-${(real ? REAL_STEPS.slice(0, 3) : STEPS).map(s => d[s] || 'x').join('-')}${d.seed ? `-${d.seed}` : ''}${adds.length ? `-${[...adds].sort().join('-')}` : ''}`,
+    room: ROOM, kind: 'chia experiment', title, short: title,
+    hook: bits.length ? `Chia set in ${bits[0]}${bits.length > 1 ? `, with ${bits.length > 4 ? `${bits.slice(1, 3).join(', ')} and ${bits.length - 3} more` : bits.slice(1).join(' and ')}` : ''}.` : 'A chia jar of your own.',
     key_ingredients: [chia, ...bits], body: 'Stir the chia into the base with the flavour, leave it in the fridge overnight, then top it and eat.',
     method_short: 'Stir the chia into the base with the flavour, leave it in the fridge overnight, then top it and eat.',
     themes: [...(mood?.themes || []), 'overnight', 'no-cook'], spoons: 0, time: 5, wait: 'overnight', why: mood ? mood.inIt : '',
     seed: { name: title, ingredients: [chia, ...bits] },
-    mix: { ...Object.fromEntries([...STEPS, 'seed'].filter(s => d[s]).map(s => [s, L(s)])), ...(mood?.inIt ? { inside: mood.inIt } : {}) },
+    mix: { ...Object.fromEntries([...(real ? REAL_STEPS.slice(0, 3) : STEPS), 'seed'].filter(s => d[s]).map(s => [s, L(s)])), ...(mood?.inIt ? { inside: mood.inIt } : {}),
+           ...(adds.length ? { addins: adds.map(A), top: adds.filter(id => D.addins[id].when === 'top').map(A), thirsty: adds.filter(id => D.addins[id].thirsty).map(A) } : {}) },
   };
 }
 
-export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten, words = t => t }) {
+export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten, words = t => t, diets = () => [] }) {
   // words(text): the visitor's shopping words (shopwords.js) for what the sheet shows; the data keeps the written words
   const D = chiaData(lines), T = D.lines, w = t => words(String(t ?? ''));
   const root = document.createElement('div');
@@ -125,11 +170,22 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const body = $('.tl-body'), foot = $('.mx-foot');
-  let kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, pushed = false, then = null, reply = '', prefilled = false;
+  let kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, pushed = false, then = null, reply = '', prefilled = false, said = '';
+  const steps = () => stepsFor(draft);
 
   const save = (step, v) => { visit.setDish(ROOM, step, v ?? null); };
   const chips = step => {
     const opts = optionsFor(D, step);
+    if (step === 'mode') {                                       // How big a jar? Two big choices, like the moods
+      const M = D.modes || {};
+      const one = (id, label, sub) => `<li><button data-s="mode" data-v="${id}" aria-pressed="${draft.mode === id}" aria-label="${esc(label)}. ${esc(sub)}"><b>${esc(label)}</b><span>${esc(sub)}</span></button></li>`;
+      return `<ul class="mx-moods mx-modes" role="group" aria-label="${esc(T.modeTitle || 'How big a jar?')}">${one('simple', M.simple?.label || T.modeSimple || 'Keep it simple', M.simple?.sub || T.modeSimpleSub || '')}${one('real', M.real?.label || T.modeReal || 'A real mix', M.real?.sub || T.modeRealSub || '')}</ul>`;
+    }
+    if (step === 'addins') {                                     // A real mix: every group, any number
+      const on = [].concat(draft.addins || []);
+      return D.groups.map(g => `<h4 class="mx-group">${esc(g.label)}</h4><div class="tl-chips tl-pick" role="group" aria-label="${esc(g.label)}">${g.items.map(id =>
+        `<button data-a="${esc(id)}" aria-pressed="${on.includes(id)}">${esc(w(D.addins[id].label))}</button>`).join('')}</div>`).join('');
+    }
     if (step === 'mood') {
       return `<ul class="mx-moods" role="group" aria-label="${esc(T.steps.mood)}">${Object.entries(D.moods).map(([id, m]) =>
         `<li><button data-s="mood" data-v="${esc(id)}" aria-pressed="${draft.mood === id}" aria-label="${esc(w(m.label))}. ${esc(w(m.inIt))}"><b>${esc(w(m.label))}</b><span>${esc(w(m.inIt))}</span></button></li>`).join('')}</ul>`;
@@ -142,28 +198,50 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     const r = swapFor(D, draft, declined);
     if (!r) return reply ? `<p class="small mx-reply" role="status">${esc(reply)}</p>` : '';
     if (!r.swap) return `<div class="ck-offer mx-swap mx-note" role="status"><p>${esc(w(r.line))}</p></div>`;   // a note: nothing to choose
-    return `<div class="ck-offer mx-swap" role="status"><p>${esc(w(r.line))}</p><p><button class="bk-cook" data-swap="${r.i}">${esc(w(T.swapYes.replace('{x}', labelOf(D, r.swap.step, r.swap.to).toLowerCase())))}</button>
-      <button class="bk-outline" data-keep="${r.i}">${esc(T.swapNo)}</button></p></div>`;
+    const yes = r.yes || T.swapYes.replace('{x}', (r.swap.step === 'addins' ? `no ${D.addins[r.swap.remove]?.label || r.swap.remove}` : labelOf(D, r.swap.step, r.swap.to)).toLowerCase());
+    return `<div class="ck-offer mx-swap" role="status"><p>${esc(w(r.line))}</p><p><button class="bk-cook" data-swap="${r.i}">${esc(w(yes))}</button>
+      <button class="bk-outline" data-keep="${r.i}">${esc(r.no || T.swapNo)}</button></p></div>`;
   };
 
+  const jarRows = () => {
+    const real = draft.mode === 'real', single = (real ? REAL_STEPS.slice(0, 3) : STEPS).concat('seed').filter(s => draft[s]);
+    let html = single.map(s => `<li><span>${esc(T.names?.[s] || s)}</span> <b>${esc(w(labelOf(D, s, draft[s])))}</b></li>`).join('');
+    if (!real) return `<ul class="mx-sum">${html}</ul>`;
+    const adds = addinsOf(draft).filter(id => D.addins[id]), night = adds.filter(id => D.addins[id].when !== 'top'), top = adds.filter(id => D.addins[id].when === 'top');
+    const list = (title, ids) => (ids.length ? `<li><span>${esc(title)}</span> <b>${esc(ids.map(id => w(D.addins[id].label)).join(', '))}</b></li>` : '');
+    html += list(T.jarNight || 'In the jar overnight', night) + list(T.jarTop || 'On top when you eat', top);
+    const thirsty = adds.filter(id => D.addins[id].thirsty).map(id => D.addins[id].label);
+    return `<ul class="mx-sum">${html}</ul>${adds.length ? '' : `<p class="small">${esc(T.addinsNone || '')}</p>`}
+      <p class="small">${esc(T.ratio || '')}${thirsty.length && T.thirsty ? ` ${esc(w(agree(T.thirsty, thirsty.length > 1 ? 'these' : thirsty[0]).replace('{x}', listWords(thirsty))))}` : ''}</p>`;
+  };
+  // An add-in that breaks a dietary need the visitor gave (clash), or depends on the product (check): one plain line
+  const dietNote = id => {
+    const x = D.addins[id], ds = [].concat(diets() || []);
+    const clash = (x.clash || []).find(d => ds.includes(d)), check = (x.check || []).find(d => ds.includes(d));
+    if (clash) return (T.addinClash || "{x} isn't {d}, so I'd leave it out.").replace('{x}', x.label).replace('{d}', clash.replace('-', ' '));
+    if (check) return (T.addinCheck || 'Check the label on the {x} for {d}.').replace('{x}', x.label.toLowerCase()).replace('{d}', check.replace('-', ' '));
+    return '';
+  };
   function draw() {
     if (kind === 'mood') {
       $('#mx-title').textContent = T.moodTitle;
       body.innerHTML = `${T.moodHelper ? `<p class="small">${esc(T.moodHelper)}</p>` : ''}${chips('mood')}`;
       foot.innerHTML = `<button class="tl-done mx-done">Done</button>`;
-    } else if (at < STEPS.length) {
-      const step = STEPS[at];
+    } else if (at < steps().length) {
+      const S = steps(), step = S[at];
+      const title = step === 'mode' ? T.modeTitle || D.modes?.title || 'How big a jar?' : step === 'addins' ? T.addinsTitle || 'What goes in the jar?' : T.steps[step];
+      const chosen = step === 'addins' ? addinsOf(draft).length : draft[step];
       $('#mx-title').textContent = T.mixTitle;
-      body.innerHTML = `<p class="mx-dots" aria-label="Step ${at + 1} of ${STEPS.length + 1}">${[...STEPS, 'write'].map((_, i) => `<i class="${i === at ? 'on' : i < at ? 'done' : ''}"></i>`).join('')}</p>
+      body.innerHTML = `<p class="mx-dots" aria-label="Step ${at + 1} of ${S.length + 1}">${[...S, 'write'].map((_, i) => `<i class="${i === at ? 'on' : i < at ? 'done' : ''}"></i>`).join('')}</p>
         ${at === 0 && T.intro ? `<p class="small">${esc(T.intro)}</p>` : ''}${at === 0 && prefilled && T.prefill ? `<p class="small">${esc(T.prefill)}</p>` : ''}
-        <h3 class="tl-h">${esc(T.steps[step])}</h3>${chips(step)}${swapHtml()}`;
-      foot.innerHTML = `<button class="bk-outline mx-back" ${at ? '' : 'hidden'}>${esc(T.back)}</button><button class="tl-done mx-next">${esc(draft[step] ? T.next : T.skip)}</button>`;
+        <h3 class="tl-h">${esc(title)}</h3>${step === 'addins' && T.addinsHelper ? `<p class="small">${esc(T.addinsHelper)}</p>` : ''}
+        ${step === 'addins' ? `<p class="small mx-said" role="status">${esc(w(said))}</p>${swapHtml()}` : ''}${chips(step)}${step === 'addins' ? '' : swapHtml()}`;
+      foot.innerHTML = `<button class="bk-outline mx-back" ${at ? '' : 'hidden'}>${esc(T.back)}</button><button class="tl-done mx-next">${esc(chosen ? T.next : T.skip)}</button>`;
     } else {
       $('#mx-title').textContent = T.mixTitle;
       const left = writer?.left ?? 0;
-      const rows = [...STEPS, 'seed'].filter(s => draft[s]).map(s => `<li><span>${esc(T.names?.[s] || s)}</span> <b>${esc(w(labelOf(D, s, draft[s])))}</b></li>`).join('');
-      body.innerHTML = `<p class="mx-dots">${[...STEPS, 'write'].map((_, i) => `<i class="${i === at ? 'on' : 'done'}"></i>`).join('')}</p>
-        <h3 class="tl-h">${esc(T.summary)}</h3><ul class="mx-sum">${rows}</ul>${swapHtml()}
+      body.innerHTML = `<p class="mx-dots">${[...steps(), 'write'].map((_, i) => `<i class="${i === at ? 'on' : 'done'}"></i>`).join('')}</p>
+        <h3 class="tl-h">${esc(T.summary)}</h3>${jarRows()}${swapHtml()}
         ${writing ? `<div class="ck-offer"><p>${esc(T.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
           : failed ? `<p class="small">${esc(T.failed)}</p>` : `<p class="small">${esc(left > 0 ? T.cap.replace('{n}', left) : T.capNone)}</p>`}`;
       foot.innerHTML = `<button class="bk-outline mx-back">${esc(T.back)}</button>${left > 0 && !writing ? `<button class="tl-done mx-write">${esc(T.write)}</button>` : ''}`;
@@ -172,16 +250,33 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
       const s = b.dataset.s, v = b.dataset.v;
       draft[s] = draft[s] === v ? null : v;                       // tap again to unchoose
       reply = '';
+      // A real mix takes the simple jar's topping in as an add-in (the same ids), so nothing chosen is lost
+      if (s === 'mode' && draft.mode === 'real' && draft.topping && D.addins[draft.topping] && !(draft.addins || []).includes(draft.topping)) {
+        draft.addins = [...(draft.addins || []), draft.topping]; save('addins', draft.addins);
+      }
       if (kind === 'mix') save(s, draft[s]);
-      if (draft[s]) { if (s === 'mood') sound?.answer?.('mood'); else sound?.mix?.(s); }   // clink and cork; the potion sounds
+      if (draft[s] && s !== 'mode') { if (s === 'mood') sound?.answer?.('mood'); else sound?.mix?.(s); }   // clink and cork; the potion sounds
       // A mood suggests the rest, where nothing's chosen yet
       if (s === 'mood' && draft.mood && kind === 'mix') for (const [k, x] of Object.entries(D.moods[draft.mood]?.suggest || {})) if (!draft[k]) { draft[k] = x; save(k, x); }
       draw();
       body.querySelector(`[data-s="${s}"][data-v="${CSS.escape(v)}"]`)?.focus({ preventScroll: true });
     });
+    // A real mix's add-ins: in or out, Gemma's line for it (its note, the diet, the soft cap) under the groups
+    body.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+      const id = b.dataset.a, x = D.addins[id], on = (draft.addins || []).includes(id);
+      draft.addins = toggleAddin(draft.addins, id);
+      save('addins', draft.addins.length ? draft.addins : null);
+      reply = '';
+      said = on ? agree(T.addinRemoved || '{x} is out again.', x.label).replace('{x}', x.label)
+        : [agree(T.addinAdded || '{x} goes in.', x.label).replace('{x}', x.label), dietNote(id) || x.note, capLine(D, addinsOf(draft).length)].filter(Boolean).join(' ');
+      if (!on) sound?.mix?.('topping');
+      draw();
+      body.querySelector(`[data-a="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
+    });
     body.querySelector('[data-swap]')?.addEventListener('click', e => {
       const r = D.swaps[+e.currentTarget.dataset.swap];
-      draft[r.swap.step] = r.swap.to; save(r.swap.step, r.swap.to);
+      if (r.swap.step === 'addins') { draft.addins = (draft.addins || []).filter(x => x !== r.swap.remove); save('addins', draft.addins.length ? draft.addins : null); }
+      else { draft[r.swap.step] = r.swap.to; save(r.swap.step, r.swap.to); }
       reply = T.swapped;
       track?.('mix_swap', { outcome: 'accepted' });
       draw();
@@ -193,8 +288,11 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
       draw();
     });
     // "Swapped." belongs to the step it was said on (QA 7): a new step starts without it
-    foot.querySelector('.mx-back')?.addEventListener('click', () => { at = Math.max(0, at - 1); failed = false; reply = ''; draw(); });
-    foot.querySelector('.mx-next')?.addEventListener('click', () => { at += 1; reply = ''; draw(); foot.querySelector('.mx-next, .mx-write')?.focus({ preventScroll: true }); });
+    foot.querySelector('.mx-back')?.addEventListener('click', () => { at = Math.max(0, at - 1); failed = false; reply = ''; said = ''; draw(); });
+    foot.querySelector('.mx-next')?.addEventListener('click', () => {
+      if (steps()[at] === 'mode' && !draft.mode) { draft.mode = 'simple'; save('mode', 'simple'); }   // skipped: today's jar
+      at += 1; reply = ''; said = ''; draw(); foot.querySelector('.mx-next, .mx-write')?.focus({ preventScroll: true });
+    });
     foot.querySelector('.mx-write')?.addEventListener('click', write);
     foot.querySelector('.mx-done')?.addEventListener('click', doneMood);
   }
@@ -226,9 +324,11 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     beforeOpen?.();
     kind = k; from = src; writing = false; failed = false;
     draft = { ...visit.dish(ROOM) };
-    prefilled = !!(draft.base || draft.flavour || draft.topping);   // from the fridge, the drawers or an earlier mix
-    reply = '';
-    at = step ? Math.max(0, STEPS.indexOf(step)) : 0;
+    prefilled = !!(draft.base || draft.flavour || draft.topping || draft.addins?.length);   // from the fridge, the drawers or an earlier mix
+    reply = ''; said = '';
+    // The fridge opens at the base, the drawers at the flavour (a real mix's add-ins); the jar size is a step back
+    const to = step === 'flavour' && draft.mode === 'real' ? 'addins' : step;
+    at = to ? Math.max(0, steps().indexOf(to)) : 0;
     root.hidden = false;
     root.className = `tell ${mode()} mx-${k}`;
     for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.mixInert = '1'; }
@@ -265,15 +365,26 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   });
   addEventListener('resize', () => { if (!root.hidden) root.className = `tell ${mode()} mx-${kind}`; });
 
-  /** A drawer tapped (chia.fromDrawers: drawer id → a flavour, topping or seed id): that becomes the Mix's choice, as the fridge's milk
-   *  is its base, so "Mix an experiment" opens with it in. Returns { step, label } for Gemma's line, or null for a plain drawer. */
+  /** A drawer tapped (chia.fromDrawers: drawer id → a flavour, topping, add-in or seed id): it goes into the Mix, as the fridge's milk
+   *  is its base, so "Mix an experiment" opens with it in. Drawers add (QA 4, P3): an empty flavour or topping takes it, and it joins
+   *  the add-ins too; two add-ins from the drawers make it a real mix. Returns { step, label } for Gemma's line, or null. */
   function drawer(id) {
     const v = D.fromDrawers?.[id];
-    const step = v && (D.flavours?.[v] ? 'flavour' : D.toppings?.[v] ? 'topping' : D.seeds?.[v] ? 'seed' : null);
+    const step = v && (D.flavours?.[v] ? 'flavour' : D.toppings?.[v] ? 'topping' : D.seeds?.[v] ? 'seed' : D.addins?.[v] ? 'addins' : null);
     if (!step) return null;
-    save(step, v);
+    const dish = visit.dish(ROOM);
+    if (step === 'seed') save('seed', v);
+    else {
+      if (step !== 'addins' && !dish[step]) save(step, v);
+      if (D.addins?.[v]) {
+        const adds = [].concat(dish.addins || []);
+        if (!adds.includes(v)) adds.push(v);
+        save('addins', adds);
+        if (adds.filter(x => x !== (dish.flavour || (step === 'flavour' ? v : null))).length >= 2 && dish.mode !== 'real') save('mode', 'real');
+      }
+    }
     sound?.mix?.(step === 'seed' ? 'topping' : step);   // a seed has no sound of its own
-    return { step, label: labelOf(D, step, v) };
+    return { step, label: step === 'addins' ? D.addins[v].label : labelOf(D, step, v) };
   }
 
   return { open, close, drawer, data: D, get isOpen() { return !root.hidden; } };

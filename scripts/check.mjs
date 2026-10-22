@@ -32,7 +32,7 @@ if (!flag('--no-build')) {
 
 // ---------- 2. unit tests
 step('navigator unit tests');
-const u = spawnSync(process.execPath, ['--test', 'test/navigator.test.mjs', 'test/analytics.test.mjs', 'test/list.test.mjs', 'test/idea-pick.test.mjs'], { cwd: root, encoding: 'utf8' });
+const u = spawnSync(process.execPath, ['--test', 'test/navigator.test.mjs', 'test/analytics.test.mjs', 'test/list.test.mjs', 'test/idea-pick.test.mjs', 'test/kitchen.test.mjs', 'test/chia-mix.test.mjs'], { cwd: root, encoding: 'utf8' });
 for (const line of u.stdout.split('\n')) if (/^✖ /.test(line) && !/failing tests/.test(line)) fail(`unit test: ${line.replace(/^✖ /, '').replace(/ \([\d.]+ms\)$/, '')}`);
 if (u.status !== 0 && !failures.some(f => f.startsWith('unit test'))) fail('unit tests failed to run');
 

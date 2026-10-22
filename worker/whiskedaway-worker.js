@@ -3,6 +3,7 @@
 
 // The analytics allow-list, shared with the browser (docs/analytics-plan.md)
 import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
+import { kitchenLine, addinsLine } from './inn-extras.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -848,6 +849,8 @@ function buildUserMessage(payload) {
     const mixed = [['Mood', mix.mood, 40], ['What the mood is made of', mix.inside, 120], ['Base', mix.base, 40], ['Flavour', mix.flavour, 40], ['Topping', mix.topping, 40]]
       .filter(([, v]) => v).map(([k, v, n]) => `${k}: ${txt(v, n).replace(/\.$/, '')}`);
     if (mixed.length) parts.push(`Their own mix, to keep to: ${mixed.join('; ')}.`);
+    if (addinsLine(mix)) parts.push(addinsLine(mix));               // A real mix's add-ins (inn-extras.js)
+    if (kitchenLine(payload)) parts.push(kitchenLine(payload));     // Your kitchen: the appliances they cook with, or no cooking
     // Sweet Spells (rooms-views.md, Stage B): how sweet and what with (Inn-wide), and what it's for
     const SWEETNESS = {
       'The full treat': 'How sweet: the full treat. Sweeten it as the recipe usually would.',

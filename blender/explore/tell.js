@@ -8,6 +8,7 @@
 import { DIETS } from './writeout.js';
 import { SERVINGS, checkinWords } from './checkin.js';
 import { patienceString, confidenceDial } from './checkin-controls.js';
+import { APPLIANCES, NONE, kitchenPicks, togglePick, kitchenWords } from './kitchen.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -49,7 +50,8 @@ export function parsePantry(text) {
     .filter(w => w && w.length <= 24);
 }
 
-export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {} }) {
+export function createTell({ visit, lines = {}, kitchenLines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {} }) {
+  const K = kitchenLines, KS = K.sheet || {};                   // gemma-lines.json `kitchen`
   const W = checkinWords(lines);                               // the check-in's words (checkin.js)
   const P = lines.pantry || {}, M = lines.map || {}, D = lines.dietary || {}, N = lines.menu || {}, B = lines.buttons || {};   // gemma-lines.json `tell`
   const L = {
@@ -60,8 +62,10 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
                otherNote: D.otherNote || "I'll pass that on when I write your recipe. I can't check my cards for it.",
                fodmapNote: D.fodmapNote || "I'll pass it on when I write your recipe. I only leave out cards I've checked." },
     checkin: { title: W.title },
+    kitchen: { title: KS.title || 'Your kitchen', sub: KS.sub || "Tap what you cook with. Leave them all off and I'll suggest anything.",
+               noneNote: KS.none_note || '', clear: KS.clear || 'Clear all', privacy: KS.privacy || '' },
     menu: { title: N.title || 'Tell me about you', checkin: N.checkin || W.title, energy: N.energy || 'Energy', pantry: N.pantry || 'Pantry', map: N.map || 'The map',
-            dietary: N.dietary || 'Dietary needs', none: N.none || 'not yet' },
+            dietary: N.dietary || 'Dietary needs', kitchen: K.menu || 'Your kitchen', kitchenNone: K.menu_none || 'anything goes', none: N.none || 'not yet' },
     forget: B.forget || 'Forget this', done: B.done || 'Done', close: B.close || 'Close',
   };
   const root = document.createElement('div');
@@ -79,7 +83,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const body = $('.tl-body');
-  let kind = null, from = null, draft = null, opener = null, pushed = false;
+  let kind = null, from = null, draft = null, opener = null, pushed = false, here = null;
 
   const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : (p || { items: [], useUp: false }); };
   const current = k => ({
@@ -88,6 +92,7 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     dietary: { dietary: [].concat(visit.get('dietary') || []), other: visit.get('dietaryOther') || '' },
     checkin: { energy: visit.get('energy'), time: visit.get('time'), servings: visit.get('servings'), confidence: visit.get('confidence'),
                weather: checkin.weather?.() || null },
+    kitchen: { picks: kitchenPicks(visit.get('kitchen')) },
   }[k]);
 
   // ---------- the contents
@@ -174,26 +179,49 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
       if (prev !== d[k]) checkin.onTap?.(k, d[k], prev);         // the answer's sound, in the tap (sound.js)
     });
   }
+  // Your kitchen (appliances-chia-plan.md §1): icon toggles, "No cooking" on its own row; Gemma's line for the last tap under them.
+  // An appliance in the Inn opens it with its own icon ringed (`here`), not picked: the visitor still chooses
+  function drawKitchen(said = '') {
+    const d = draft;
+    const btn = (id, A, cls = '') => `<button class="kt-ap${cls}${id === here ? ' kt-here' : ''}" data-ap="${esc(id)}" aria-pressed="${d.picks.includes(id)}">`
+      + `<span class="kt-icon" aria-hidden="true">${esc(A.icon || '')}</span><b>${esc(A.label || id)}</b>${A.sub ? `<span class="small">${esc(A.sub)}</span>` : ''}</button>`;
+    body.innerHTML = `<p class="small">${esc(L.kitchen.sub)}</p>
+      <div class="kt-grid" role="group" aria-label="${esc(L.kitchen.title)}">${APPLIANCES.map(id => btn(id, K.appliances?.[id] || {})).join('')}</div>
+      <div class="kt-grid kt-none" role="group" aria-label="${esc(K.none?.label || 'No cooking')}">${btn(NONE, { icon: '🥗', label: 'No cooking', ...(K.none || {}) }, ' kt-wide')}</div>
+      ${L.kitchen.noneNote ? `<p class="small">${esc(L.kitchen.noneNote)}</p>` : ''}
+      <p class="small kt-said" role="status">${esc(said)}</p>
+      <p class="kt-acts"><button class="link kt-clear" ${d.picks.length ? '' : 'hidden'}>${esc(L.kitchen.clear)}</button></p>
+      ${L.kitchen.privacy ? `<p class="small">${esc(L.kitchen.privacy)}</p>` : ''}`;
+    body.querySelectorAll('[data-ap]').forEach(b => b.onclick = () => {
+      const id = b.dataset.ap, on = d.picks.includes(id);
+      d.picks = togglePick(d.picks, id);
+      const line = on ? '' : K.pick?.[id] || '';
+      drawKitchen(line);
+      body.querySelector(`[data-ap="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
+    });
+    body.querySelector('.kt-clear').onclick = () => { d.picks = []; drawKitchen(K.cleared || ''); body.querySelector('[data-ap]')?.focus({ preventScroll: true }); };
+  }
   function drawMenu() {
     const p = pantryNow(), cu = [].concat(visit.get('cuisines') || []), di = [].concat(visit.get('dietary') || []);
     const t = visit.get('time'), sv = visit.get('servings'), cf = visit.get('confidence');
     const rows = [['checkin', L.menu.checkin, [t && W.time[t], sv && W.servings[sv], cf && W.confidence[cf]].filter(Boolean).join(', ')],
       ['energy', L.menu.energy, energyLabel?.() || ''], ['pantry', L.menu.pantry, p.items.slice(0, 2).join(', ') + (p.items.length > 2 ? ` +${p.items.length - 2}` : '')],
-      ['map', L.menu.map, cu.map(cuisineLabel).join(', ')], ['dietary', L.menu.dietary, di.join(', ') + (visit.get('dietaryOther') ? (di.length ? ' +1' : 'something else') : '')]];
+      ['map', L.menu.map, cu.map(cuisineLabel).join(', ')], ['dietary', L.menu.dietary, di.join(', ') + (visit.get('dietaryOther') ? (di.length ? ' +1' : 'something else') : '')],
+      ['kitchen', L.menu.kitchen, kitchenWords(visit.get('kitchen'), K).join(', ') || L.menu.kitchenNone]];
     body.innerHTML = `<ul class="tl-menu">${rows.map(([k, n, v]) => `<li><button data-k="${k}"><b>${esc(n)}</b><span>${esc(v || L.menu.none)}</span><i aria-hidden="true">›</i></button></li>`).join('')}</ul>`;
     body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
       if (b.dataset.k === 'energy') { close({ silent: true }); return openEnergy?.(); }
       open(b.dataset.k, 'menu', { keepOpener: true });
     });
   }
-  const DRAW = { pantry: drawPantry, map: drawMap, dietary: drawDietary, checkin: drawCheckin, menu: drawMenu };
+  const DRAW = { pantry: drawPantry, map: drawMap, dietary: drawDietary, checkin: drawCheckin, kitchen: () => drawKitchen(), menu: drawMenu };
 
   // ---------- open, Done, forget, close
-  function open(k, src = 'tag', { keepOpener = false } = {}) {
+  function open(k, src = 'tag', { keepOpener = false, appliance = null } = {}) {
     if (!DRAW[k]) return;
     if (!keepOpener) opener = document.activeElement;
     beforeOpen?.();                                               // the chat's Full sheet or a highlight gives way: one sheet at a time
-    kind = k; from = src;
+    kind = k; from = src; here = APPLIANCES.includes(appliance) ? appliance : null;
     draft = k === 'menu' ? null : JSON.parse(JSON.stringify(current(k)));
     $('#tell-title').textContent = k === 'menu' ? L.menu.title : L[k].title;
     root.dataset.kind = k;
@@ -208,10 +236,11 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     if (!pushed) { history.pushState({ ...(history.state || {}), tell: true }, ''); pushed = true; }
     if (!was && !reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     if (k !== 'menu') track?.('tell_open', { kind: k, from: src });
-    (body.querySelector('input, button') || $('.tl-x')).focus({ preventScroll: true });
+    (body.querySelector('.kt-here') || body.querySelector('input, button') || $('.tl-x')).focus({ preventScroll: true });
   }
-  function close({ silent = false, viaBack = false } = {}) {
+  function close({ silent = false, viaBack = false, keep = true } = {}) {
     if (root.hidden) return;
+    if (kind === 'kitchen' && keep) return done(false, { viaBack });   // every way out of Your kitchen keeps the taps (✕, the dim, Escape, back)
     root.hidden = true;
     for (const el of document.body.children) if (el.dataset.tellInert) { el.inert = false; delete el.dataset.tellInert; }
     if (pushed) { pushed = false; if (!viaBack && history.state?.tell) history.back(); }
@@ -219,9 +248,18 @@ export function createTell({ visit, lines = {}, track, beforeOpen, onDone, openE
     if (!silent && opener?.isConnected) opener.focus({ preventScroll: true });
   }
   const bucket = n => (n <= 0 ? '0' : n === 1 ? '1' : n <= 3 ? '2-3' : '4+');
-  function done(forget = false) {
+  function done(forget = false, { viaBack = false } = {}) {
     if (!kind || kind === 'menu') return close();
     const k = kind, before = current(k);
+    if (k === 'kitchen') {
+      const after = { picks: forget ? [] : kitchenPicks(draft.picks) };
+      close({ viaBack, keep: false });
+      if (JSON.stringify(before) === JSON.stringify(after)) return;
+      visit.set('kitchen', after.picks.length ? after.picks : null);
+      track?.('tell_set', { kind: k, count: bucket(after.picks.filter(x => x !== NONE).length), from });
+      setTimeout(() => onDone?.(k, { before, after, forgot: forget && !!before.picks.length }), reduce() ? 0 : 200);
+      return;
+    }
     if (k === 'checkin') {                                         // the page sets each answer through its one setter (checkin.js)
       const after = forget ? { ...before, energy: null, time: null, servings: null, confidence: null } : draft;
       const changed = Object.keys(after).filter(x => (before[x] ?? null) !== (after[x] ?? null));

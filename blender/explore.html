@@ -706,6 +706,7 @@ import { createErwina } from './explore/erwina.js';
 import { createShopWords } from './explore/shopwords.js';
 import { createStarChart } from './explore/star-chart.js';
 import { pickIdea } from './explore/idea-pick.js';
+import { kitchenPicks, kitchenFits, fitKitchen, kitchenWords, kitchenPayload, NONE as NO_COOKING } from './explore/kitchen.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1286,6 +1287,12 @@ function touch(id) {
       || (many ? '{x} are in your Mix, if you make one.' : "{x}'s in your Mix, if you make one.")).replace('{x}', got.label) : '';
     say([obj.moment, add].filter(Boolean).join(' '), [], true);
     if (got) holdLine();                                      // her reading waits, so this line is the one you see
+  } else if (id === 'fl-range' || obj.type === 'kitchen') {
+    // Your kitchen (appliances-chia-plan.md §1): the range, and the appliances art adds (type "kitchen", `appliance` ringed in the sheet)
+    const K = LINES.kitchen || {};
+    say([momentOf(id, obj), kitchenNow().length ? '' : pickLine('kitchen.range', [].concat(K.range || []))].filter(Boolean).join(' '), [], true);
+    holdLine();
+    tell.open('kitchen', 'object', { appliance: obj.appliance || null });
   } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
     if (fortune(obj, noteLine)) noteLine = null;              // pick a star and she reads it, then a surprise sweet idea's card
   } else if (obj.type === 'ambient' && id === 'notice-board') {
@@ -1294,7 +1301,7 @@ function touch(id) {
     say([momentOf(id, obj), obj.ideas && obj.bridge].filter(Boolean).join(' '), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
     if (id === 'wind-chime') sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
     // Food on the counters and the Conservatory's herbs show their idea's card (Nicole, 22 Oct): obj.ideas, best fit first
-    if (obj.ideas?.length) showIdea(pickIdea(obj.ideas.map(x => atomsById[x]).filter(a => a && !dietClash(a)),
+    if (obj.ideas?.length) showIdea(pickIdea(obj.ideas.map(x => atomsById[x]).filter(a => a && !dietClash(a)).sort((a, b) => kitchenOk(b) - kitchenOk(a)),
       { canServe, onCard: a => onCard(a.id), season: room().seasons ? seasonNow() : null }), 'object');
     holdLine();                         // her reading waits, so the object's line stays up long enough to read (QA 9 issue 2)
   } else if (obj.type === 'weather') {
@@ -1633,7 +1640,7 @@ function steer() {
     awayOk: !awayOut() || !!state.awayLift?.[homeOf(state.room)],
     moodThemes: chiaData(LINES).moods[visit.dish('chiapothecary', 'mood')]?.themes || [],   // not chia.data: steer() can run before it's made
     ...sweetSteer(visit),                                                                    // Sweet Spells' cravings and "no added sugar"
-    served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a)).map(a => a.id)],
+    served: [...state.served, ...kept.map(k => k.id), ...world.atoms.filter(a => dietClash(a) || !kitchenOk(a)).map(a => a.id)],
     book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
     about: { pantry: pantryNow().items, useUp: pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: SYNONYMS,
              why: { ...CW.why, ...T.why }, cuisineLabel,
@@ -1648,6 +1655,16 @@ function steer() {
 const PASS_ONLY = new Set(['low-fodmap', ...WRITE_ONLY, ...CARB_DIETS]);
 const judged = (a, d) => (d === 'low-fodmap' ? !!a.fodmap_checked : !PASS_ONLY.has(d) || (a.diet_checked || []).includes(d));
 const dietClash = a => [].concat(visit.get('dietary') || []).find(d => judged(a, d) && !(a.diet || []).includes(d)) || null;
+// Your kitchen (explore/kitchen.js): ideas need one of the picked appliances, or no cooking. When a room runs dry on it, Gemma says
+// so once and the room is loosened (state.kitchenLoose[room]) until the kitchen changes
+const kitchenNow = () => kitchenPicks(visit.get('kitchen'));
+const kitchenOk = a => !!state.kitchenLoose?.[a.room] || kitchenFits(a, kitchenNow());
+function loosenKitchen(home) {
+  if (!kitchenNow().length || state.kitchenLoose?.[home]) return null;
+  (state.kitchenLoose ||= {})[home] = true;
+  const K = LINES.kitchen || {};
+  return pickLine('kitchen.loosen', [K.loosen, K.loosen_alt].filter(Boolean)) || "Nothing in here fits your kitchen, so I'll loosen it for this room.";
+}
 const CLASH_NOTE = { vegetarian: 'not vegetarian', vegan: 'not vegan', 'gluten-free': 'has gluten', 'dairy-free': 'has dairy', 'nut-free': 'has nuts' };
 
 // At most one of the ideas out is from another room (PM on T4); the hallway and glasshouse have none of their own
@@ -1772,6 +1789,8 @@ async function recipeFetch(p) {
   finally { clearTimeout(timer); }
   return genieFetch(p.rewrite ? '/rewrite' : '/recipe', p, { signal: AbortSignal.timeout(45000) });   // a re-write has its own route and limit
 }
+// The room's own answers as the Worker reads them (four short ones): a real mix's jar size and add-ins go in `mix` instead
+const dishWords = r => { const d = visit.dish(r); return Object.fromEntries(Object.entries(d).filter(([k, v]) => !['mode', 'addins', ...(d.mode === 'real' ? ['topping'] : [])].includes(k) && typeof v === 'string')); };
 // Measurements (recipe-tools): the visitor's choice for this visit, else from the Map's country (the US measures in cups)
 const unitsNow = () => visit.get('units') || ((visit.get('country') || mapDefault()) === 'US' ? 'cups' : 'metric');
 // Swaps on a written recipe's ingredient: Substitutions (Nicole's word; gemma-lines.json substitutions.table, content's), matched on the ingredient's
@@ -1798,12 +1817,13 @@ const writer = createWriteOut({
     energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,
     theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
     dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
-    country: countryLabel(visit.get('country') || mapDefault()), dish: visit.dish(rec.room),
+    country: countryLabel(visit.get('country') || mapDefault()), dish: dishWords(rec.room),
     // Sweet Spells (Inn-wide): how sweet and what with, as words; the occasion as words (the dish has its id)
     sweetness: sweet.data.howSweet.options[visit.get('sweetness')] || null,
     sweeteners: [].concat(visit.get('sweeteners') || []).map(x => sweet.data.sweetenWith.options[x] || x),
     occasion: rec.room === 'sweet-spells' ? sweet.data.occasions.options[visit.dish('sweet-spells', 'occasion')]?.label || null : null,
     servings: servingsNumber(visit.get('servings')), confidence: visit.get('confidence') || null, time_available: TIME_LIMIT[visit.get('time')] || null,
+    ...kitchenPayload(kitchenNow(), LINES.kitchen),               // { appliances: ['oven', 'air fryer'] } or { no_cooking: true }
   }),
   onWritten: (rec, full) => { record({ kind: 'recipe', atom: rec.id }); intoBook(rec, full); },
   onChange: () => bookView.refresh(),
@@ -1885,6 +1905,7 @@ const bookView = createBookView({
 const chia = createChiaMix({
   visit, lines: LINES, writer, track, sound,
   words: t => shopWords.text(t),                             // the Mix in the visitor's shopping words (QA 9 issue 3)
+  diets: () => visit.get('dietary'),                           // an add-in that clashes with one gets a plain line
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
   say: t => { say(t, [], true); holdLine(); },
   onStart: rec => { atomsById[rec.id] = rec; },               // so the notebook, Keep and Cook this treat it like any idea
@@ -1919,8 +1940,14 @@ const CAST_LINES = {                                          // stand-ins: gemm
   writing: 'Let me write it out for you.', done: 'Written out. Ready when you are.',
 };
 // This room's recipe ideas the visitor could still be offered: not set aside, not clashing with a dietary need
-const roomIdeas = () => world.atoms.filter(a => a.room === homeOf(state.room) && a.kind === 'recipe idea'
-  && !state.dismissed.includes(a.id) && !dietClash(a));
+// and fitting their kitchen; with none that fit, the kitchen is loosened for the room and Gemma says so
+function roomIdeas() {
+  const all = world.atoms.filter(a => a.room === homeOf(state.room) && a.kind === 'recipe idea' && !state.dismissed.includes(a.id) && !dietClash(a));
+  const { atoms, loosened } = fitKitchen(all, state.kitchenLoose?.[homeOf(state.room)] ? [] : kitchenNow());
+  const line = loosened && loosenKitchen(homeOf(state.room));
+  if (line) { say(line, [], true); holdLine(); }
+  return atoms;
+}
 /** This room's best idea for the visitor (PM 4): the best not kept and not yet written; else the best kept one not yet written;
  *  else the best already written (it opens free). Best = the navigator's top pick, or with nothing to read yet, one already out. */
 function bestHere() {
@@ -2107,6 +2134,20 @@ function checkedIn({ after, changed, from, forgot }) {
   if (line) { say(capFirst(line), [], true); holdLine(); }
   scheduleNavigate();
 }
+// Your kitchen's Done: her line for one appliance, else "{x}. I'll keep to those." (two named at most), or cleared; each appliance
+// picked is counted (kitchen_pick: its id, nothing else)
+function kitchenSaid({ before, after, forgot }) {
+  const K = LINES.kitchen || {}, p = after.picks;
+  for (const id of p) if (!before.picks.includes(id)) track('kitchen_pick', { appliance: id });
+  if (forgot) return say(TL.forgot, [], true);
+  const words = kitchenWords(p, K);
+  const line = !p.length ? K.cleared || "Cleared. I'll suggest anything."
+    : p.length === 1 ? K.pick?.[p[0]] || `${capFirst(words[0])}.`
+    : (K.many || "{x}. I'll keep to those.").replace('{x}', capFirst(listOf(words.slice(0, 2)) + (words.length > 2 ? ' and the rest' : '')));
+  say(line, [], true);
+  holdLine();
+  scheduleNavigate();
+}
 function acknowledge(kind, { after, forgot }) {
   const A = T.ack || {};
   if (forgot) return say(TL.forgot, [], true);
@@ -2147,11 +2188,17 @@ function maybeOfferTell() {
 }
 // When the diet filter (or the visit) has emptied this room: once per room, name the room with most that fit, and let other
 // rooms' ideas in here; once per visit, say when nothing anywhere fits. Never a bubble that breaks the filter (§5)
-const fits = a => !dietClash(a) && !state.served.includes(a.id) && !state.dismissed.includes(a.id) && !book.has(a.id);
+const fitsDiet = a => !dietClash(a) && !state.served.includes(a.id) && !state.dismissed.includes(a.id) && !book.has(a.id);
+const fits = a => fitsDiet(a) && kitchenOk(a);
 function emptyRoomLine() {
   const home = homeOf(state.room);
   if (!hasOwn()) return null;
   if (world.atoms.some(a => a.room === home && fits(a))) return null;
+  // The kitchen first: if the room still has ideas for their diet, loosen the kitchen here and serve again
+  if (world.atoms.some(a => a.room === home && fitsDiet(a))) {
+    const line = loosenKitchen(home);
+    if (line) { scheduleNavigate(); return line; }
+  }
   const diet = [].concat(visit.get('dietary') || []).filter(x => !PASS_ONLY.has(x));   // not a filter yet (no cards checked), so never the reason
   if (!world.atoms.some(fits)) {
     if (!diet.length || state.nothingSaid) return null;
@@ -2169,9 +2216,9 @@ function emptyRoomLine() {
   return TL.roomNone.replace('{diet}', listOf(diet.map(x => DIET_WORD[x] || x))).replace('{room}', name);   // "vegan, gluten-free and nut-free"
 }
 const tell = createTell({
-  visit, lines: LINES.tell, track, defaultCountry: mapDefault,
+  visit, lines: LINES.tell, kitchenLines: LINES.kitchen || {}, track, defaultCountry: mapDefault,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
-  onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : acknowledge(k, r); },
+  onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : k === 'kitchen' ? kitchenSaid(r) : acknowledge(k, r); },
   openEnergy: () => tagsUI.openEnergy(),
   checkin: {
     energies: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
@@ -2187,7 +2234,7 @@ const tell = createTell({
   },
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 });
-const tagsUI = createTags({ el: chatUI.tags, visit, world, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
+const tagsUI = createTags({ el: chatUI.tags, visit, world, kitchenLines: LINES.kitchen || {}, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
   chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(sweet.data, (k, src) => sweet.open(k, src)) });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
@@ -2271,8 +2318,9 @@ const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TO
                pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
                cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
                country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
+               kitchen: v => kitchenPicks(v).length && `${LINES.kitchen?.visit_row || 'Your kitchen'}: ${kitchenPicks(v)[0] === NO_COOKING ? kitchenWords(v, LINES.kitchen)[0] : listOf(kitchenWords(v, LINES.kitchen))}.`,
                time: v => toldLine(CW, 'time', v), servings: v => toldLine(CW, 'servings', v), confidence: v => toldLine(CW, 'confidence', v), ...sweetTold(sweet.data) };
-const TOLD_SHEET = { dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet' };
+const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet' };
 const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 function renderTold() {
   const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
@@ -2297,6 +2345,7 @@ function fromBook(fn) {
 visit.subscribe(({ part, key, value }) => {
   renderTold();
   if (part === 'all' || key === 'energy') showCandle();               // forgetting the energy puts the candle out
+  if (part === 'all' || key === 'kitchen') { state.kitchenLoose = {}; if (part === 'about' && !value) scheduleNavigate(); }
   if (part === 'about' && ['energy', 'time', 'servings', 'confidence'].includes(key) && !value) scheduleNavigate();
   if ((part === 'about' && key === 'servings') || part === 'all') bookView.refresh();   // the shopping list's amounts
   if ((part === 'about' && key === 'dietary') || part === 'all') {
