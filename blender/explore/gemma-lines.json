@@ -619,7 +619,541 @@
       "moment": "What did you bring in? Tell me and I'll cook around it."
     }
   },
+  "kitchen": {
+    "_about": "Your kitchen (appliances-chia-plan.md, 22 Oct 2026). Ids match each atom's `appliances` list (stove, oven, microwave, air-fryer, bbq, food-processor, slow-cooker); [] on an atom means no cooking. `icon` is an emoji stand-in (Unicode 13 or older); SVG line icons would read better at 44 px. `short` is the lower-case name for the header tag and for the write-out's \"cook it with\". Nothing picked = no preference. `pick` lines are Gemma's answer to a tap, `many` when several are picked. Every line under 100 characters.",
+    "sheet": {
+      "title": "Your kitchen",
+      "sub": "Tap what you cook with. Leave them all off and I'll suggest anything.",
+      "none_note": "No cooking clears the rest. It means fridge and chopping board only.",
+      "clear": "Clear all",
+      "done": "Done",
+      "privacy": "Only used for Gemma's ideas and the recipes she writes for you."
+    },
+    "appliances": {
+      "stove": {
+        "label": "Stove top",
+        "short": "stove",
+        "icon": "🍳"
+      },
+      "oven": {
+        "label": "Oven",
+        "short": "oven",
+        "icon": "🥧"
+      },
+      "microwave": {
+        "label": "Microwave",
+        "short": "microwave",
+        "icon": "⏲️"
+      },
+      "air-fryer": {
+        "label": "Air fryer",
+        "short": "air fryer",
+        "icon": "🍟"
+      },
+      "bbq": {
+        "label": "BBQ",
+        "short": "BBQ",
+        "icon": "🔥"
+      },
+      "food-processor": {
+        "label": "Food processor or blender",
+        "short": "blender",
+        "icon": "🥤"
+      },
+      "slow-cooker": {
+        "label": "Slow cooker",
+        "short": "slow cooker",
+        "icon": "🍲"
+      }
+    },
+    "none": {
+      "label": "No cooking",
+      "short": "no cooking",
+      "icon": "🥗",
+      "sub": "Fridge and chopping board only"
+    },
+    "pick": {
+      "stove": "The stove top. Pans are my favourite.",
+      "oven": "The oven. Good, I'll bring the roasts and bakes.",
+      "microwave": "The microwave. Quick has its place.",
+      "air-fryer": "The air fryer. Crisp without the fuss.",
+      "bbq": "The BBQ. I'll look for things that like a flame.",
+      "food-processor": "A blender. Smoothies, dips and truffles, then.",
+      "slow-cooker": "The slow cooker. Start it early and forget it.",
+      "none": "No cooking. Cold and easy, then."
+    },
+    "many": "{x}. I'll keep to those.",
+    "cleared": "Cleared. I'll suggest anything.",
+    "tag": "🍳 {x}",
+    "tag_join": " · ",
+    "tag_many": "🍳 {two} +{n}",
+    "tag_none": "🥗 no cooking",
+    "tag_empty": "🍳 any kitchen",
+    "loosen": "Nothing in here fits your kitchen, so I'll loosen it for this room.",
+    "loosen_alt": "I've run out of ideas for that kitchen in here. I'll stretch a little.",
+    "range": [
+      "The range is mine, but what do you cook on? Tell me and I'll keep to it.",
+      "Tell me what's in your kitchen and I'll keep to what you can cook."
+    ],
+    "menu": "Your kitchen",
+    "menu_none": "anything goes",
+    "visit_row": "Your kitchen",
+    "visit_row_empty": "Anything goes",
+    "writeout_hint": "cook it with: {x}"
+  },
   "chia": {
+    "modes": {
+      "_about": "First choice in Mix an experiment: Keep it simple (today's flow: mood, base, flavour, one thing on top) or A real mix (the same steps, then add-ins from `addins`, any number). Soft cap at `soft_cap` picks: Gemma says the softCap line, never blocks.",
+      "title": "How big a jar?",
+      "simple": {
+        "label": "Keep it simple",
+        "sub": "A mood, a base, a flavour and one thing on top."
+      },
+      "real": {
+        "label": "A real mix",
+        "sub": "Pick as many add-ins as you like. I'll keep the chia to liquid right."
+      },
+      "soft_cap": 6
+    },
+    "addins": {
+      "_about": "Add-ins for A real mix (22 Oct 2026). 40 options in five groups. `when`: night = stirs in the night before, top = goes on just before eating, either = both work. `note` is Gemma's one line when it's picked (under 100 characters, food facts only, no health claims). `us` is the US shopping word where the table in tell.shopWords doesn't already cover it (yoghurt and desiccated coconut are covered). `thirsty`: soaks up liquid, so the write-out adds a splash more. `clash`: diets it breaks for certain; `check`: diets that depend on the product, so say to read the label. Ids that also appear in toppings, flavours or fromDrawers (berries, kiwifruit, passionfruit, walnuts, toasted-coconut, cacao-nibs, granola, goji, cocoa, matcha) mean the same thing there.",
+      "groups": [
+        {
+          "id": "fruit",
+          "label": "Fruit",
+          "items": [
+            {
+              "id": "berries",
+              "label": "Berries",
+              "when": "either",
+              "note": "Frozen berries go in the night before and thaw into the jar."
+            },
+            {
+              "id": "banana",
+              "label": "Banana",
+              "when": "top",
+              "note": "Slice it just before eating. In the jar overnight it browns."
+            },
+            {
+              "id": "mango",
+              "label": "Mango",
+              "when": "either",
+              "note": "Diced on top, or blitzed through the jar the night before."
+            },
+            {
+              "id": "kiwifruit",
+              "label": "Kiwifruit",
+              "us": "kiwi",
+              "when": "top",
+              "note": "On top only. Left in dairy overnight, it turns bitter."
+            },
+            {
+              "id": "passionfruit",
+              "label": "Passionfruit",
+              "us": "passion fruit",
+              "when": "top",
+              "note": "Spoon the pulp over just before you eat."
+            },
+            {
+              "id": "apple",
+              "label": "Grated apple",
+              "when": "night",
+              "note": "Grate it in the night before and it softens in the jar."
+            },
+            {
+              "id": "feijoa",
+              "label": "Feijoa",
+              "us": "feijoa (pineapple guava)",
+              "when": "either",
+              "note": "Scoop and mash it in the night before, or spoon it over."
+            },
+            {
+              "id": "dates",
+              "label": "Dates",
+              "when": "night",
+              "note": "Chop them small and stir in the night before. They go soft and sticky."
+            },
+            {
+              "id": "goji",
+              "label": "Goji berries",
+              "when": "night",
+              "note": "They plump up overnight in the milk."
+            }
+          ]
+        },
+        {
+          "id": "nuts-seeds",
+          "label": "Nuts and seeds",
+          "items": [
+            {
+              "id": "walnuts",
+              "label": "Walnuts",
+              "when": "top",
+              "note": "Chopped and added when you eat, so they stay crunchy.",
+              "clash": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "almonds",
+              "label": "Almonds",
+              "when": "top",
+              "note": "Flaked or chopped, on top. Overnight they go soft.",
+              "clash": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "pistachios",
+              "label": "Pistachios",
+              "when": "top",
+              "note": "Crushed over the top for crunch and colour.",
+              "clash": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "pumpkin-seeds",
+              "label": "Pumpkin seeds",
+              "us": "pepitas (pumpkin seeds)",
+              "when": "top",
+              "note": "Toast them if you like, then keep them for the top."
+            },
+            {
+              "id": "sunflower-seeds",
+              "label": "Sunflower seeds",
+              "when": "either",
+              "note": "On top for crunch, or stirred in to go softer."
+            },
+            {
+              "id": "hemp-seeds",
+              "label": "Hemp seeds",
+              "when": "either",
+              "note": "Stir a spoon in or sprinkle it over. Nothing to prepare."
+            },
+            {
+              "id": "ground-flax",
+              "label": "Ground flaxseed",
+              "when": "night",
+              "note": "Stir in the night before. It drinks up liquid, so I'll add a splash more.",
+              "thirsty": true
+            }
+          ]
+        },
+        {
+          "id": "spices",
+          "label": "Spices",
+          "items": [
+            {
+              "id": "cinnamon",
+              "label": "Cinnamon",
+              "when": "night",
+              "note": "A pinch to half a teaspoon, stirred in the night before."
+            },
+            {
+              "id": "cardamom",
+              "label": "Cardamom",
+              "when": "night",
+              "note": "Crush the seeds from a pod or two. A little goes a long way."
+            },
+            {
+              "id": "ground-ginger",
+              "label": "Ground ginger",
+              "when": "night",
+              "note": "A pinch. It gets warmer as the jar sits."
+            },
+            {
+              "id": "turmeric",
+              "label": "Turmeric",
+              "when": "night",
+              "note": "A pinch only. It stains the spoon, and anything else it meets."
+            },
+            {
+              "id": "vanilla",
+              "label": "Vanilla",
+              "when": "night",
+              "note": "Half a teaspoon of extract, or the seeds from a pod."
+            },
+            {
+              "id": "mixed-spice",
+              "label": "Mixed spice",
+              "us": "pumpkin pie spice (the closest)",
+              "when": "night",
+              "note": "A pinch. Cinnamon, nutmeg and allspice, already mixed."
+            }
+          ]
+        },
+        {
+          "id": "sweeteners",
+          "label": "Sweeteners",
+          "items": [
+            {
+              "id": "honey",
+              "label": "Honey",
+              "when": "either",
+              "note": "Stir it in the night before, or drizzle it on top.",
+              "clash": [
+                "vegan"
+              ]
+            },
+            {
+              "id": "maple-syrup",
+              "label": "Maple syrup",
+              "when": "either",
+              "note": "Stir it into the milk first so it spreads right through."
+            },
+            {
+              "id": "agave",
+              "label": "Agave",
+              "when": "either",
+              "note": "Thinner than honey, so it mixes through easily."
+            },
+            {
+              "id": "date-syrup",
+              "label": "Date syrup",
+              "when": "night",
+              "note": "Thick and dark. Stir it into the milk first."
+            },
+            {
+              "id": "brown-sugar",
+              "label": "Brown sugar",
+              "when": "night",
+              "note": "Stir it into the milk until it dissolves, then add the chia."
+            },
+            {
+              "id": "jam",
+              "label": "Jam",
+              "us": "jam or jelly",
+              "when": "either",
+              "note": "Layer it at the bottom of the jar, or swirl it on top."
+            }
+          ]
+        },
+        {
+          "id": "extras",
+          "label": "Extras",
+          "items": [
+            {
+              "id": "peanut-butter",
+              "label": "Peanut butter",
+              "when": "night",
+              "note": "Whisk it into the milk first, so it doesn't clump.",
+              "clash": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "almond-butter",
+              "label": "Almond butter",
+              "when": "night",
+              "note": "Warm it a little if it's stiff, then whisk it into the milk.",
+              "clash": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "cocoa",
+              "label": "Cocoa powder",
+              "when": "night",
+              "note": "Whisk it into the milk first, or it floats in clumps.",
+              "check": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "cacao-nibs",
+              "label": "Cacao nibs",
+              "when": "top",
+              "note": "On top for crunch. Overnight they lose it.",
+              "check": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "matcha",
+              "label": "Matcha",
+              "when": "night",
+              "note": "Whisk it into a little warm milk first, then top up cold."
+            },
+            {
+              "id": "toasted-coconut",
+              "label": "Toasted coconut",
+              "when": "top",
+              "note": "Toast it in a dry pan until golden. Add it at the end.",
+              "check": [
+                "nut-free"
+              ]
+            },
+            {
+              "id": "yoghurt",
+              "label": "Greek yoghurt",
+              "when": "either",
+              "note": "A dollop on top, or stirred through for a creamier jar.",
+              "clash": [
+                "vegan",
+                "dairy-free"
+              ]
+            },
+            {
+              "id": "citrus-zest",
+              "label": "Citrus zest",
+              "when": "either",
+              "note": "A little grated zest, stirred in or sprinkled on top."
+            },
+            {
+              "id": "protein-powder",
+              "label": "Protein powder",
+              "when": "night",
+              "note": "Whisk it into the milk first. It thickens, so I'll add a splash more.",
+              "thirsty": true,
+              "check": [
+                "vegan",
+                "dairy-free",
+                "gluten-free"
+              ]
+            },
+            {
+              "id": "rolled-oats",
+              "label": "Rolled oats",
+              "us": "old-fashioned oats",
+              "when": "night",
+              "note": "They need the full night to soften, and a splash more milk.",
+              "thirsty": true,
+              "check": [
+                "gluten-free"
+              ]
+            },
+            {
+              "id": "granola",
+              "label": "Granola",
+              "when": "top",
+              "note": "Goes soft overnight, so add it just before you eat.",
+              "check": [
+                "nut-free",
+                "gluten-free"
+              ]
+            },
+            {
+              "id": "mint",
+              "label": "Mint",
+              "when": "top",
+              "note": "Torn over the top. It bruises if you stir it in."
+            }
+          ]
+        }
+      ]
+    },
+    "addinSwaps": {
+      "_about": "Swap lines for add-ins, in the swaps format. Add-ins are many, so `when` can name `addins` (every id listed is picked) or `group` + `atLeast` (that many picked from one group), alongside the usual single choices (base, flavour, mood). `swap` {step:'addins', remove:id} takes one out; null is a note with nothing to choose. `yes` and `no` are optional button labels. First match wins, one at a time, never blocking.",
+      "rules": [
+        {
+          "when": {
+            "addins": [
+              "peanut-butter",
+              "almond-butter"
+            ]
+          },
+          "swap": {
+            "step": "addins",
+            "remove": "almond-butter"
+          },
+          "line": "Two nut butters is a lot of nut butter. Would you keep just the peanut butter?",
+          "yes": "Just peanut butter",
+          "no": "Keep both"
+        },
+        {
+          "when": {
+            "addins": [
+              "matcha",
+              "cocoa"
+            ]
+          },
+          "swap": {
+            "step": "addins",
+            "remove": "matcha"
+          },
+          "line": "Matcha and cocoa both want the front. Would you keep the cocoa?",
+          "yes": "Keep the cocoa",
+          "no": "Keep both"
+        },
+        {
+          "when": {
+            "group": "sweeteners",
+            "atLeast": 3
+          },
+          "swap": null,
+          "line": "Three sweeteners will be very sweet. One or two is plenty."
+        },
+        {
+          "when": {
+            "group": "spices",
+            "atLeast": 4
+          },
+          "swap": null,
+          "line": "That's a lot of spice. Go easy on each."
+        },
+        {
+          "when": {
+            "addins": [
+              "kiwifruit"
+            ],
+            "base": "milk"
+          },
+          "swap": null,
+          "line": "Kiwifruit goes on top. Overnight in milk it turns bitter."
+        },
+        {
+          "when": {
+            "addins": [
+              "kiwifruit"
+            ],
+            "base": "yoghurt"
+          },
+          "swap": null,
+          "line": "Kiwifruit goes on top. Overnight in yoghurt it turns bitter."
+        },
+        {
+          "when": {
+            "addins": [
+              "kiwifruit"
+            ],
+            "base": "kefir"
+          },
+          "swap": null,
+          "line": "Kiwifruit goes on top. Overnight in kefir it turns bitter."
+        },
+        {
+          "when": {
+            "addins": [
+              "granola",
+              "rolled-oats"
+            ]
+          },
+          "swap": null,
+          "line": "Oats go in the jar and granola goes on top. Don't swap them round."
+        },
+        {
+          "when": {
+            "addins": [
+              "cocoa"
+            ],
+            "flavour": "lemon"
+          },
+          "swap": null,
+          "line": "Lemon and cocoa is an odd pair. Orange zest sits better with it."
+        },
+        {
+          "when": {
+            "addins": [
+              "banana"
+            ],
+            "base": "yoghurt"
+          },
+          "swap": null,
+          "line": "Banana goes on top, just before you eat. It browns in the jar."
+        }
+      ]
+    },
     "_about": "The Chiapothecary's moods and Mix an experiment (rooms-views.md, stage A), keyed as the Ideas build reads them (rooms-chia). Moods, not medicine: each says what's in it, never what it does. Swap lines are food facts only; first match wins, one at a time, never blocking. Every line under 100 characters ({x} {m} {n} filled by the page).",
     "moods": {
       "morning-spark": {
@@ -872,6 +1406,26 @@
       "seedAdded": "{x}'s in the jar.",
       "drawerAdded": "{x}'s in your Mix, if you make one.",
       "drawerAddedMany": "{x} are in your Mix, if you make one.",
+      "modeTitle": "How big a jar?",
+      "modeSimple": "Keep it simple",
+      "modeSimpleSub": "A mood, a base, a flavour and one thing on top.",
+      "modeReal": "A real mix",
+      "modeRealSub": "Pick as many add-ins as you like. I'll keep the chia to liquid right.",
+      "addinsTitle": "What goes in the jar?",
+      "addinsHelper": "Tap as many as you like. Tap again to take one out.",
+      "addinNight": "In the jar overnight",
+      "addinTop": "On top when you eat",
+      "addinEither": "Either works",
+      "addinAdded": "{x} goes in.",
+      "addinRemoved": "{x} is out again.",
+      "addinsNone": "Nothing added yet. A plain jar is fine too.",
+      "softCap": "That's a proper jar. There's room for more, but it gets crowded.",
+      "softCapMore": "That's a very full jar. I'd stop here.",
+      "ratio": "Three tablespoons of chia to a cup of liquid. I'll keep to that.",
+      "thirsty": "{x} drinks up liquid, so I've added a splash more milk.",
+      "jarNight": "In the jar overnight",
+      "jarTop": "On top when you eat",
+      "writeoutAddins": "Add-ins: {x}",
       "_drawers": "After a drawer's own line, when it puts something in the Mix: seedAdded for the chia (black, white), drawerAddedMany when the label is plural (Goji berries, Cacao nibs), else drawerAdded. {x} is the label."
     }
   },
