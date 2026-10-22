@@ -101,6 +101,15 @@ The dietary filter is the strongest serving rule: a card that clashes is never s
   depend on certification, sourcing or portion size, which a card can't promise. A written-out recipe can
   still respect them when a visitor asks.
 
+### Cuddlecore wording
+
+Cuddlecore is for people who are ill, living with an illness, or eating around a condition. Keep it plain and kind, and never claim an effect:
+
+- Say what the food is like: `gentle`, `soft`, `mild`, `warm`, `easy on you`, `little effort`. Never `good for`, `helps`, `soothes`, `heals`, `settles`.
+- Never promise that a card suits a condition. Until a dietitian has checked a card, it carries no condition tag.
+- Don't assume the visitor is just tired. Some are here every day. No pity, no "poor you", no "back on your feet".
+- The armchair has a path for days when eating is hard: a sip, then a nibble, then one pan (`armchair.unwell` in cuddlecore-world.json).
+
 ## Cuisine tags
 
 The Map's chips (gemma-lines.json tell.cuisines) give a small bonus to atoms whose `cuisines` field names a chosen one. Add a cuisine only when the dish
@@ -116,7 +125,7 @@ is said. She speaks on the 1st keep of a visit, the 3rd, then every 4th, and on 
 
 | Room | What it's for | Identity tags |
 |---|---|---|
-| Cuddlecore Kitchen | Quick and easy. Under the weather, or a stressful day. Juices, smoothies, smart snacks. Mostly 0 or 1 spoon. | `comfort`, `unwell`, `stress`, `quick`, `juice`, `smoothie`, `snack` |
+| Cuddlecore Kitchen | The kitchen for days you're not at your best: ill today, living with a long-term illness (so this is your normal kitchen), or eating around a condition. Gentle, mild, low effort; sips and nibbles as well as one-pan meals. Mostly 0 or 1 spoon. | `comfort`, `unwell`, `stress`, `quick`, `juice`, `smoothie`, `snack` |
 | Flourish | Proper meals with more prep. Nutrition and whole foods. | `whole-food`, `meal` |
 | Sweet Spells | The sweet tooth, by time of day, leaning to the evening. | `sweet`, plus `breakfast`, `midday`, `evening`, `night` |
 | Chiapothecary | A chia routine: overnight breakfast, or a jar in the fridge for any time. Restorative, focus, skin, vitamins, energy. | `routine`, `overnight`, `restorative`, `focus`, `skin`, `vitamins`, `energy` |
