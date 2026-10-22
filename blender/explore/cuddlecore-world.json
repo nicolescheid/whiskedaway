@@ -164,7 +164,11 @@
       "label": "The little table",
       "ref": "the little table",
       "type": "ambient",
-      "ideas": [],
+      "ideas": [
+        "honey-ginger-lemon",
+        "evening-milk",
+        "armchair-plate"
+      ],
       "themes": [
         "rest",
         "calm",
@@ -181,7 +185,9 @@
       "label": "The measuring cups",
       "ref": "the measuring cups",
       "type": "ambient",
-      "ideas": [],
+      "ideas": [
+        "measure-it"
+      ],
       "themes": [
         "learning",
         "simple",
@@ -197,7 +203,9 @@
       "label": "The wooden spoons",
       "ref": "the wooden spoons",
       "type": "ambient",
-      "ideas": [],
+      "ideas": [
+        "season-to-taste"
+      ],
       "themes": [
         "learning",
         "cooking",
@@ -213,7 +221,11 @@
       "label": "The timer",
       "ref": "the timer",
       "type": "ambient",
-      "ideas": [],
+      "ideas": [
+        "use-a-timer",
+        "boil-an-egg",
+        "rice-in-a-pot"
+      ],
       "themes": [
         "learning",
         "simple",
