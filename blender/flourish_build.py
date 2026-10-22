@@ -27,6 +27,7 @@ import sys
 from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from appliances import APPLIANCES, appliance_mats  # noqa: E402
 from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, cyl, emission_mat, image_mat, look,  # noqa: E402
                      mat, meshes_of, model, pano_camera, pbr, point_light, retint, sphere, srgb, swap_material, text,
                      use_gpu, window_glass)
@@ -84,7 +85,7 @@ HOTSPOTS = {}
 
 # ---------------------------------------------------------------- helpers
 
-def hotspot(key, label, target, kind="interactive", overlay=None):
+def hotspot(key, label, target, kind="interactive", overlay=None, appliance=None):
     if isinstance(target, (list, tuple)) and target and hasattr(target[0], "name"):
         objs = []
         for t in target:
@@ -96,6 +97,8 @@ def hotspot(key, label, target, kind="interactive", overlay=None):
     c = center_of(objs) if objs else list(target)
     HOTSPOTS[key] = {"label": label, "type": kind, "overlay": overlay, "center": [round(v, 3) for v in c],
                      "objects": [o.name for o in objs]}
+    if appliance:
+        HOTSPOTS[key]["appliance"] = appliance
 
 
 def frame_matrix(origin, normal, right):
@@ -911,7 +914,9 @@ def build():
     g_w, g_h = 9.0, 3.0
     backdrop("view_garden", os.path.join(PACK, WX["garden"]), (W + 3.5, 7.5, EYE + 0.42 * g_h - g_h / 2), (g_w, g_h), "-x",
              WX["backdrop"])
-    box_span("garden_step", W + 0.3, W + 1.0, sy0 - 0.2, sy1 + 0.2, -0.12, -0.05, pbr("brick", "terracotta_floor_tiles", 0.8))
+    brick = pbr("brick", "terracotta_floor_tiles", 0.8)
+    box_span("garden_step", W + 0.3, W + 1.0, sy0 - 0.2, sy1 + 0.2, -0.12, -0.05, brick)
+    box_span("garden_patio", W + 0.3, W + 2.9, sy0 - 0.2, D + 2.2, -0.12, -0.05, brick)     # the barbecue's flags
 
     # Trug of vegetables on the floor beside the door, soil still on them
     tx, ty = 4.1, 2.3
@@ -1069,6 +1074,30 @@ def build():
     stock.append(crock)
     box_span("napkins", dx0 + 0.8, dx0 + 1.1, 0.12, 0.38, 0.9, 0.94, marigold_linen, bevel=0.01)
     hotspot("fl-dresser", "The dresser", [base, top] + shelves + stock, kind="ambient")
+
+    # ---- Your kitchen: the cooking appliances. A food processor on the hutch's worktop, left of the spoon crock's neighbour
+    # napkins; a low bench of the same paint on the garden wall (under the botanical print) for the air fryer and slow cooker;
+    # a kettle barbecue outside the stable door, seen through its open top half.
+    am = appliance_mats()
+    fp = APPLIANCES["food-processor"](am, (2.15, 0.3, 0.9), rot_z=0, name="app_food_processor")
+    fp.scale = (0.85, 0.85, 0.85)            # clear of the hutch's lowest shelf
+    bpy.context.view_layer.update()
+    hotspot("fl-food-processor", "The food processor", fp, kind="kitchen", appliance="food-processor")
+    bx0, by0, by1 = W - 0.52, 0.7, 2.0
+    box_span("bench_base", bx0, W, by0, by1, 0.06, 0.86, dresser_paint, bevel=0.01)
+    box_span("bench_plinth", bx0 + 0.02, W, by0 + 0.02, by1 - 0.02, 0, 0.06, dresser_paint, bevel=0.004)
+    for i in range(2):
+        yc = by0 + (by1 - by0) * (i + 0.5) / 2
+        box_span(f"bench_door_{i}", bx0 - 0.015, bx0, yc - 0.28, yc + 0.28, 0.1, 0.8, dresser_paint, bevel=0.008)
+        sphere(f"bench_knob_{i}", (bx0 - 0.03, yc + (0.2 if i == 0 else -0.2), 0.62), 0.016, brass_worn)
+    box_span("bench_top", bx0 - 0.03, W, by0 - 0.02, by1 + 0.02, 0.86, 0.9, honey, bevel=0.008)
+    af = APPLIANCES["air-fryer"](am, (W - 0.27, 1.18, 0.9), rot_z=90, name="app_air_fryer")
+    hotspot("fl-air-fryer", "The air fryer", af, kind="kitchen", appliance="air-fryer")
+    sc = APPLIANCES["slow-cooker"](am, (W - 0.27, 1.64, 0.9), rot_z=90, name="app_slow_cooker")
+    hotspot("fl-slow-cooker", "The slow cooker", sc, kind="kitchen", appliance="slow-cooker")
+    box_span("bbq_hearth", 5.9, 6.7, 5.0, 5.8, -0.12, 0.42, pbr("hearth_brick", "terracotta_floor_tiles", 0.5, tint=srgb("#b9a58a"), tint_mix=0.5), bevel=0.01)
+    bbq = APPLIANCES["bbq"](am, (6.3, 5.4, 0.42), rot_z=-60, name="app_bbq")
+    hotspot("fl-bbq", "The barbecue", bbq, kind="kitchen", appliance="bbq")
 
     # Phonograph on its side table: walnut case, black record, brass horn, a winding crank
     px, py = 0.9, 0.32
@@ -1296,6 +1325,8 @@ def stop_hotspots(cam):
         yaw = round((yaw - CAM_YAW + 540) % 360 - 180, 2)
         out[key] = {"label": hs["label"], "type": hs["type"], "overlay": hs["overlay"], "yaw": yaw, "pitch": pitch,
                     "distance": round((Vector(hs["center"]) - Vector(cam)).length, 2), "visible": visible_from(cam, hs)}
+        if hs.get("appliance"):
+            out[key]["appliance"] = hs["appliance"]
     return out
 
 
