@@ -4,6 +4,7 @@
 // The analytics allow-list, shared with the browser (docs/analytics-plan.md)
 import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
 import { kitchenLine, addinsLine } from './inn-extras.js';
+import { cacheKey, validRecipe, countKey, countWriteout, CACHE_TTL } from './writeout-cache.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -598,11 +599,13 @@ export default {
       return withCors(await handleNavigate(request, env), request, env);
     }
 
-    return withCors(await handleRecipe(request, env, { rewrite: path === '/rewrite' }), request, env);
+    return withCors(await handleRecipe(request, env, { rewrite: path === '/rewrite', ctx }), request, env);
   }
 };
 
-async function handleRecipe(request, env, { rewrite = false } = {}) {
+const RECIPE_MODEL = 'claude-sonnet-5';
+
+async function handleRecipe(request, env, { rewrite = false, ctx = null } = {}) {
   {
 
     try {
@@ -610,11 +613,31 @@ async function handleRecipe(request, env, { rewrite = false } = {}) {
       // /rewrite only re-writes an Inn recipe; the Inn's page sends `rewrite` only there
       if (rewrite !== !!payload.rewrite || (rewrite && payload.tome_id !== 'inn-idea')) return jsonResponse({ error: 'bad_rewrite' }, 400);
       
+      // The write-out cache (writeout-cache.js): the same options as an earlier Inn write-out get that recipe back, with no Claude
+      // call. The page still counts it against the visitor's 3 a day. Each write-out also adds to the visitor's day count (logged only)
+      const later = f => (ctx?.waitUntil ? ctx.waitUntil(f().catch(() => {})) : f().catch(() => {}));
+      const kv = payload.tome_id === 'inn-idea' ? env.WRITEOUT_CACHE : null;
+      const key = kv ? await cacheKey(payload, { model: RECIPE_MODEL }) : null;
+      const tally = hit => later(async () => {
+        const pass = await verifyPass(env, request.headers.get('X-WA-Pass'));
+        const day = await countWriteout(kv, await countKey(pass?.sid, env.PASS_SECRET), hit);
+        if (day) console.log(JSON.stringify({ measure: 'writeout_day', n: day.n, hits: day.hits }));
+      });
+      if (key) {
+        const cached = await kv.get(key, 'json').catch(() => null);
+        console.log(JSON.stringify({ measure: 'writeout_cache', result: cached ? 'hit' : 'miss', room: payload.room || null, rewrite }));
+        if (cached) {
+          tally(true);
+          return new Response(JSON.stringify(cached), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-WA-Cache': 'hit' } });
+        }
+      }
+
       // Build the user message from intake data
       const userMessage = buildUserMessage(payload);
 
       // Call Claude
-      const claudeResponse = await fetch(ANTHROPIC_API_URL, {
+      // env.ANTHROPIC_API_URL is a local-test seam only (.dev.vars, a mock); it is never set in production
+      const claudeResponse = await fetch(env.ANTHROPIC_API_URL || ANTHROPIC_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -622,7 +645,7 @@ async function handleRecipe(request, env, { rewrite = false } = {}) {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-5',
+          model: RECIPE_MODEL,
           max_tokens: 2048,
           thinking: { type: 'disabled' },
           // the Inn writes under its own card; the constitution is the same every time, so it's cached (the visit's details follow it)
@@ -674,6 +697,12 @@ async function handleRecipe(request, env, { rewrite = false } = {}) {
       } catch (parseError) {
         console.error('Failed to parse Claude response as JSON', { length: textContent.text?.length });   // never the reply itself: it can echo what the visitor told Gemma
         throw new Error('Invalid response format from Alchemist');
+      }
+
+      if (key) {
+        tally(false);
+        if (validRecipe(recipeData)) later(() => kv.put(key, JSON.stringify(recipeData), { expirationTtl: CACHE_TTL }));
+        else console.log(JSON.stringify({ measure: 'writeout_cache', result: 'not_kept', room: payload.room || null, rewrite }));
       }
 
       return new Response(JSON.stringify(recipeData), {
