@@ -1946,9 +1946,12 @@ function fortune(obj) {
   const title = /(^|[.!?]\s+)\u0001/.test(t) || /^(Anzac|Kiwi|Mānuka)\b/.test(a.title) ? a.title : a.title[0].toLowerCase() + a.title.slice(1);
   say(t.replace('\u0001', title), [], true);
   holdLine();
-  // Stage 1: the fortune's idea goes in the basket and the checkout opens with it ticked
-  if (basket.add(basket.get(a.id) || snapshot(a, ''))) track('basket_add', { from: 'star_chart', basket_size: sizeBucket(basket.count) });
-  whenFree(() => basketView.open({ from: 'star_chart', tick: a.id }));
+  // The fortune stays the moment (Nicole, 22 Oct: opening checkout covered it): the idea's card comes out, and ♥ Keep
+  // puts it in the basket like any other card
+  whenFree(() => {
+    if (!state.cards.some(c => c.atom === a.id)) serve({ atom: a.id, why: '' }, 'local');
+    if (state.cards.some(c => c.atom === a.id)) ideas.open(a.id, { focus: false });
+  });
 }
 // The swap-the-sugar lines on a Sweet Spells recipe page, when the visitor's sweetener differs from the recipe's (read from the
 // atom: a page's snapshot doesn't carry sweetener or added_sugar)
