@@ -28,6 +28,7 @@ from mathutils import Matrix, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from appliances import APPLIANCES, appliance_mats  # noqa: E402
+from tools import TOOLS, tool_mats  # noqa: E402
 from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, cyl, emission_mat, image_mat, look,  # noqa: E402
                      mat, meshes_of, model, pano_camera, pbr, point_light, retint, sphere, srgb, swap_material, text,
                      use_gpu, window_glass)
@@ -1109,6 +1110,17 @@ def build():
     box_span("bbq_hearth_cap", 5.86, 6.74, 4.96, 5.84, 0.7, 0.74, hearth, bevel=0.01)
     bbq = APPLIANCES["bbq"](am, (6.3, 5.4, 0.74), rot_z=215, name="app_bbq")
     hotspot("fl-bbq", "The barbecue", bbq, kind="kitchen", appliance="bbq")
+
+    # ---- Teaching tools: a knife block and scales on the hutch worktop; a colander and a heavy skillet on the peg rail
+    tm = tool_mats()
+    kb = TOOLS["knife-block"](tm, (2.88, 0.3, 0.9), rot_z=0, name="app_knife_block")
+    hotspot("fl-knife-block", "The knife block", kb, kind="ambient")
+    sc2 = TOOLS["scales"](tm, (3.22, 0.3, 0.9), rot_z=0, name="app_scales")
+    hotspot("fl-scales", "The scales", sc2, kind="ambient")
+    col = TOOLS["colander"](tm, (0.1, 0.75, 1.7), rot_z=-90, name="app_colander")
+    hotspot("fl-colander", "The colander", col, kind="ambient")
+    sk = TOOLS["skillet"](tm, (0.1, 1.45, 1.7), rot_z=-90, name="app_skillet")
+    hotspot("fl-skillet", "The skillet", sk, kind="ambient")
 
     # Phonograph on its side table: walnut case, black record, brass horn, a winding crank
     px, py = 0.9, 0.32
