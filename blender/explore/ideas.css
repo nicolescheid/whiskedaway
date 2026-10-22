@@ -666,3 +666,19 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 /* The shopping list's way back (book-view.js listBack) */
 .bk-listback { margin: -4px 0 6px; }
 .bk-listback .link { min-height: 44px; font: 600 14px 'Quicksand'; text-decoration: none; }
+
+/* Sweet Spells' star chart (star-chart.js): pick one of three stars, and Gemma's reading types out under it */
+.sc-sub { margin: 0 0 10px; }
+.sc-sky { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 14px 8px; border-radius: 12px;
+  background: radial-gradient(ellipse at 50% 20%, #2c2a4a, #16142a 75%); }
+.sc-star { min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 10px;
+  background: none; color: #f3e7c4; font: 500 13px 'Quicksand'; cursor: pointer; transition: opacity .4s, transform .4s; }
+.sc-star:hover, .sc-star:focus-visible { background: rgba(255, 255, 255, .06); }
+.sc-glyph { font-size: 34px; line-height: 1; color: #ffe9a8; text-shadow: 0 0 8px rgba(255, 228, 150, .6); animation: sc-twinkle 2.4s ease-in-out var(--d, 0s) infinite; }
+.sc-star.on { transform: scale(1.08); }
+.sc-star.on .sc-glyph { animation: none; text-shadow: 0 0 12px #ffe9a8, 0 0 28px rgba(255, 220, 130, .9); transform: scale(1.3); transition: transform .4s; }
+.sc-star.off { opacity: .35; cursor: default; }
+.sc-star:disabled { color: #f3e7c4; }
+.sc-reading { min-height: 4.5em; margin: 12px 2px 0; font: 18px/1.4 'Crimson Pro', Georgia, serif; }
+@keyframes sc-twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.88); } }
+@media (prefers-reduced-motion: reduce) { .sc-glyph { animation: none; } .sc-star { transition: none; } }

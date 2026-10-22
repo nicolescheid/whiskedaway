@@ -699,6 +699,7 @@ import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine,
 import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
 import { createErwina } from './explore/erwina.js';
 import { createShopWords } from './explore/shopwords.js';
+import { createStarChart } from './explore/star-chart.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1250,7 +1251,7 @@ function touch(id) {
   if (obj.type === 'energy') return chooseEnergy(obj.energy);   // the candle is the event: no separate touch
   record({ kind: 'touch', id });
   track('hotspot_touch', { room: state.room, object: id, object_type: obj.type });
-  const noteLine = innNoteLine(id);                          // an Inn note: said after the object's own line
+  let noteLine = innNoteLine(id);                            // an Inn note: said after the object's own line
   if (obj.type === 'ambient' && obj.plays) {
     // Something that plays (the music box). With the sound off, the speaker by the bell glows to say where it is
     const now = sound.music(id);
@@ -1264,7 +1265,7 @@ function touch(id) {
     say([obj.moment, add].filter(Boolean).join(' '), [], true);
     if (got) holdLine();                                      // her reading waits, so this line is the one you see
   } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
-    fortune(obj);                                             // a fortune, then a surprise sweet idea's card
+    if (fortune(obj, noteLine)) noteLine = null;              // pick a star and she reads it, then a surprise sweet idea's card
   } else if (obj.type === 'ambient' && id === 'notice-board') {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
@@ -1908,7 +1909,7 @@ function bestHere() {
 // An idea's page in the book: its own page if kept, else a loose page (Keep, Cook this, the write-out)
 // A sheet the visitor opened while she wrote (Check in, Tell Gemma, the Mix, Sweet Spells' sheets, cook mode): what the cast
 // opens waits until it's closed and its history step back has gone, or the book would cover it and leave it inert (Nicole's phone)
-const sheetOpen = () => tell.isOpen || chia.isOpen || sweet.isOpen || cook.isOpen;
+const sheetOpen = () => tell.isOpen || chia.isOpen || sweet.isOpen || cook.isOpen || stars.isOpen;
 function whenFree(fn) {
   if (!sheetOpen()) return fn();
   const iv = setInterval(() => {
@@ -1935,23 +1936,35 @@ function cast(id) {
   holdLine();
   whenFree(() => basketView.open({ from: 'cast', tick: rec.id }));
 }
-// ---------- The star chart reads your fortune (Nicole, from the brainstorm): a fortune naming a surprise sweet idea from the room,
-// then that idea's card. starChart.fortunes in gemma-lines.json; {idea} is the idea's title
-function fortune(obj) {
+// ---------- The star chart reads your fortune (Nicole, 22 Oct: a little mini-game): "Pick a star" (explore/star-chart.js), and
+// Gemma reads it: a line about the visitor's day ({star}, and {weather} when the Inn's weather has words), then the fortune that
+// names a surprise sweet idea from the room ({idea}). She says it once the sheet closes, then the idea's card comes out, and
+// an Inn note found on this tap after that. starChart in gemma-lines.json
+const stars = createStarChart({ lines: LINES.starChart || {}, track, sound,
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); } });
+function fortune(obj, noteLine) {
+  const SC = LINES.starChart || {};
   const pool = roomIdeas().filter(a => !book.has(a.id)), fresh = pool.filter(a => !state.cards.some(c => c.atom === a.id) && !basket.has(a.id));
   const from = fresh.length ? fresh : pool, a = from[Math.floor(Math.random() * from.length)];
-  const t = a && pickLine('fortune', LINES.starChart?.fortunes || [], { idea: '\u0001' });
-  if (!t) return say(momentOf('star-chart', obj), [], true);
+  const t = a && pickLine('fortune', SC.fortunes || [], { idea: '\u0001' });
+  if (!t) { say(momentOf('star-chart', obj), [], true); return false; }
   // The title starts a sentence as it's written, and mid-sentence in lower case (not a name: "Anzac biscuits")
   const title = /(^|[.!?]\s+)\u0001/.test(t) || /^(Anzac|Kiwi|Mānuka)\b/.test(a.title) ? a.title : a.title[0].toLowerCase() + a.title.slice(1);
-  say(t.replace('\u0001', title), [], true);
-  holdLine();
-  // The fortune stays the moment (Nicole, 22 Oct: opening checkout covered it): the idea's card comes out, and ♥ Keep
-  // puts it in the basket like any other card
-  whenFree(() => {
-    if (!state.cards.some(c => c.atom === a.id)) serve({ atom: a.id, why: '' }, 'local');
-    if (state.cards.some(c => c.atom === a.id)) ideas.open(a.id, { focus: false });
-  });
+  const told = t.replace('\u0001', title);
+  const weather = SC.weather?.[state.weather]?.[isNight() ? 'night' : 'day'];
+  const read = star => [pickLine('star.reading', SC.readings || [], { star, ...(weather ? { weather } : {}) }), told].filter(Boolean).join(' ');
+  stars.open({ read, close: reading => {
+    say(reading, [], true);
+    holdLine();
+    // The fortune stays the moment (Nicole, 22 Oct: opening checkout covered it): the idea's card comes out, and ♥ Keep
+    // puts it in the basket like any other card
+    whenFree(() => {
+      if (!state.cards.some(c => c.atom === a.id)) serve({ atom: a.id, why: '' }, 'local');
+      if (state.cards.some(c => c.atom === a.id)) ideas.open(a.id, { focus: false });
+      if (noteLine) setTimeout(() => { say(noteLine, [], true); holdLine(); }, 4500);   // the reading first, long enough to read
+    });
+  } });
+  return true;
 }
 // The swap-the-sugar lines on a Sweet Spells recipe page, when the visitor's sweetener differs from the recipe's (read from the
 // atom: a page's snapshot doesn't carry sweetener or added_sugar)
