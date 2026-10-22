@@ -705,6 +705,7 @@ import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabe
 import { createErwina } from './explore/erwina.js';
 import { createShopWords } from './explore/shopwords.js';
 import { createStarChart } from './explore/star-chart.js';
+import { pickIdea } from './explore/idea-pick.js';
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -745,6 +746,8 @@ world.atoms.push(...sweetWorld.atoms);
 Object.assign(world.objects, chiaWorld.objects);
 Object.assign(world.clusters, chiaWorld.clusters);
 world.atoms.push(...chiaWorld.atoms);
+// The Conservatory's own herb ideas (Nicole, 22 Oct: the herbs serve an idea that uses them)
+world.atoms.push(...(glassWorld.atoms || []));
 
 // ---------- rooms: the kitchen, and the hallway's two camera stops
 const ROOMS = {
@@ -1288,7 +1291,11 @@ function touch(id) {
   } else if (obj.type === 'ambient' && id === 'notice-board') {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
-    say(momentOf(id, obj), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
+    say([momentOf(id, obj), obj.ideas && obj.bridge].filter(Boolean).join(' '), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
+    if (id === 'wind-chime') sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
+    // Food on the counters and the Conservatory's herbs show their idea's card (Nicole, 22 Oct): obj.ideas, best fit first
+    if (obj.ideas?.length) showIdea(pickIdea(obj.ideas.map(x => atomsById[x]).filter(a => a && !dietClash(a)),
+      { canServe, onCard: a => onCard(a.id), season: room().seasons ? seasonNow() : null }), 'object');
     holdLine();                         // her reading waits, so the object's line stays up long enough to read (QA 9 issue 2)
   } else if (obj.type === 'weather') {
     openWeather();
@@ -1961,15 +1968,29 @@ function cast(id) {
 // an Inn note found on this tap after that. starChart in gemma-lines.json
 const stars = createStarChart({ lines: LINES.starChart || {}, track, sound,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); } });
+// An idea the page can still serve as a new card: not served this visit, not kept or in the basket, no headline ingredient
+// shared with a card out (serve() refuses those), and not a second away idea
+const onCard = id => state.cards.some(c => c.atom === id);
+function canServe(a) {
+  if (state.served.includes(a.id) || book.has(a.id) || basket.has(a.id)) return false;
+  if (isAway(a) && awayOut() && !state.awayLift?.[homeOf(state.room)]) return false;
+  const head = headline(a);
+  return !head || !state.cards.some(c => atomsById[c.atom] && headline(atomsById[c.atom]) === head);
+}
+/** Bring out the card for `a` (pickIdea): served as a new card, or reopened; else its page in the book (kept, or served earlier) */
+function showIdea(a, from) {
+  if (!a) return;
+  whenFree(() => {
+    if (!onCard(a.id)) serve({ atom: a.id, why: '' }, 'local');
+    if (onCard(a.id)) ideas.open(a.id, { focus: false });
+    else ideaPage(book.get(a.id) || basket.get(a.id) || snapshot(a, ''), from);
+  });
+}
 function fortune(obj, noteLine) {
   const SC = LINES.starChart || {};
   // The idea named is always the one that comes out (QA 4 S1): first an idea serve() will take (not served this visit, not
   // kept, no headline clash with a card out); else one already on a card (it reopens); else any of the room's (its page opens)
-  const pool = roomIdeas(), onCard = id => state.cards.some(c => c.atom === id);
-  const heads = state.cards.map(c => atomsById[c.atom] && headline(atomsById[c.atom])).filter(Boolean);
-  const takes = pool.filter(a => !state.served.includes(a.id) && !book.has(a.id) && !basket.has(a.id) && !heads.includes(headline(a)));
-  const out = pool.filter(a => onCard(a.id));
-  const from = takes.length ? takes : out.length ? out : pool, a = from[Math.floor(Math.random() * from.length)];
+  const a = pickIdea(roomIdeas().sort(() => Math.random() - 0.5), { canServe, onCard: x => onCard(x.id), anyCard: true });
   const t = a && pickLine('fortune', SC.fortunes || [], { idea: '\u0001' });
   if (!t) { say(momentOf('star-chart', obj), [], true); return false; }
   // The title starts a sentence as it's written, and mid-sentence in lower case (not a name: "Anzac biscuits")
@@ -1983,9 +2004,7 @@ function fortune(obj, noteLine) {
     // The fortune stays the moment (Nicole, 22 Oct: opening checkout covered it): the idea's card comes out, and ♥ Keep
     // puts it in the basket like any other card
     whenFree(() => {
-      if (!onCard(a.id)) serve({ atom: a.id, why: '' }, 'local');
-      if (onCard(a.id)) ideas.open(a.id, { focus: false });
-      else ideaPage(book.get(a.id) || basket.get(a.id) || snapshot(a, ''), 'star_chart');   // kept, or served earlier: its page
+      showIdea(a, 'star_chart');
       if (noteLine) setTimeout(() => { say(noteLine, [], true); holdLine(); }, 4500);   // the reading first, long enough to read
     });
   } });

@@ -529,6 +529,10 @@ export const sound = {
   toggle() { this.set(!on); if (on) { lastShimmer = -Infinity; this.shimmer(); } },
 
   // Gemma's shimmer: a wish arriving. A quick rising E-major arpeggio with a sparkle on top.
+  // The wind chime tapped: a few of its notes, like the garden door opening (the scatter's chime, nearer)
+  chime() {
+    play(t => [1174.7, 1480, 1760].forEach((f, i) => note(f, t + i * 0.16, { gain: 0.05, decay: 2.2, partials: [[1, 1], [2.76, 0.2], [5.4, 0.06]] })));
+  },
   shimmer() {
     if (performance.now() - lastShimmer < 2500) return;
     lastShimmer = performance.now();
