@@ -906,9 +906,18 @@ def build():
     low_g = group("sd_lower", m_low, low)
     # upper leaf: swung right round into the room and back against the wall, so the morning sun comes straight in
     up = stable_leaf("sd_up", SD_SPLIT + 0.005, SD_H - 0.02)
-    m_up = Matrix.Rotation(math.radians(172), 4, "Z") @ m_closed
+    m_up = Matrix.Rotation(math.radians(160), 4, "Z") @ m_closed
     m_up.translation = Vector((W - 0.01, sy0 + 0.01, 0))
     up_g = group("sd_upper", m_up, up)
+    # so it reads as a hinged leaf: iron pintles on the jamb at the strap heights, and a stay rod holding it back to the wall
+    for z_ in (SD_SPLIT + 0.005 + 0.12, SD_H - 0.02 - 0.12):
+        cyl(f"sd_pintle_{z_:.2f}", (W - 0.025, sy0 + 0.012, z_), 0.011, 0.11, iron, verts=12, bevel=0)
+    bpy.context.view_layer.update()
+    free = up_g.matrix_world @ Vector((SD_W - 0.04, 0.05, 1.5))
+    hook = (W - 0.012, free.y, 1.5)
+    cyl("sd_hook_plate", (W - 0.01, free.y, 1.5), 0.02, 0.012, iron, verts=16, bevel=0, rot=(0, math.radians(90), 0))
+    rod = cyl("sd_stay", ((hook[0] + free.x) / 2, free.y, 1.5), 0.005, abs(hook[0] - free.x), iron, verts=8, bevel=0, rot=(0, math.radians(90), 0))
+    cyl("sd_stay_eye", (free.x, free.y, 1.5), 0.012, 0.012, iron, verts=16, bevel=0, rot=(0, math.radians(90), 0))
     hotspot("fl-back-door", "The garden door", meshes_of(low_g) + meshes_of(up_g), kind="door")
     # The garden through the open top: plate horizon 42% down, at eye height
     g_w, g_h = 9.0, 3.0
@@ -1095,8 +1104,10 @@ def build():
     hotspot("fl-air-fryer", "The air fryer", af, kind="kitchen", appliance="air-fryer")
     sc = APPLIANCES["slow-cooker"](am, (W - 0.27, 1.64, 0.9), rot_z=90, name="app_slow_cooker")
     hotspot("fl-slow-cooker", "The slow cooker", sc, kind="kitchen", appliance="slow-cooker")
-    box_span("bbq_hearth", 5.9, 6.7, 5.0, 5.8, -0.12, 0.42, pbr("hearth_brick", "terracotta_floor_tiles", 0.5, tint=srgb("#b9a58a"), tint_mix=0.5), bevel=0.01)
-    bbq = APPLIANCES["bbq"](am, (6.3, 5.4, 0.42), rot_z=-60, name="app_bbq")
+    hearth = pbr("hearth_brick", "terracotta_floor_tiles", 0.5, tint=srgb("#b9a58a"), tint_mix=0.5)
+    box_span("bbq_hearth", 5.9, 6.7, 5.0, 5.8, -0.12, 0.7, hearth, bevel=0.01)             # a brick plinth, so the lid and bowl clear the shut lower leaf
+    box_span("bbq_hearth_cap", 5.86, 6.74, 4.96, 5.84, 0.7, 0.74, hearth, bevel=0.01)
+    bbq = APPLIANCES["bbq"](am, (6.3, 5.4, 0.74), rot_z=215, name="app_bbq")
     hotspot("fl-bbq", "The barbecue", bbq, kind="kitchen", appliance="bbq")
 
     # Phonograph on its side table: walnut case, black record, brass horn, a winding crank
