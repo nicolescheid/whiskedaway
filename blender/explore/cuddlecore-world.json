@@ -110,6 +110,39 @@
         "The glass is old, so the view wobbles a little."
       ]
     },
+    "microwave": {
+      "label": "The microwave",
+      "ref": "the microwave",
+      "type": "kitchen",
+      "appliance": "microwave",
+      "themes": [
+        "quick",
+        "no-cook",
+        "low-spoons",
+        "simple"
+      ],
+      "moment": "Reheating, porridge, a mug of something warm. Quick, and no apology needed.",
+      "moments": [
+        "Stir halfway and let it stand. Most things like a minute to settle.",
+        "Not glamorous. Very reliable."
+      ]
+    },
+    "air-fryer": {
+      "label": "The air fryer",
+      "ref": "the air fryer",
+      "type": "kitchen",
+      "appliance": "air-fryer",
+      "themes": [
+        "quick",
+        "simple",
+        "hands-on"
+      ],
+      "moment": "Crisp things for not much effort. Good for a tired evening.",
+      "moments": [
+        "Toast, leftovers, a handful of chips. It all comes out better than it went in.",
+        "Easier to clean than the oven, which is half the appeal."
+      ]
+    },
     "armchair": {
       "label": "The armchair",
       "ref": "the armchair",

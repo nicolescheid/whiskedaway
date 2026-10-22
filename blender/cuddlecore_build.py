@@ -21,6 +21,7 @@ import sys
 from mathutils import Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from appliances import APPLIANCES, appliance_mats  # noqa: E402
 from whisked import emission_mat, window_glass  # noqa: E402
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
@@ -239,7 +240,7 @@ def area_light(name, loc, rot, size, watts, color, portal=False):
 HOTSPOTS = {}
 
 
-def hotspot(key, label, overlay, target, kind="interactive"):
+def hotspot(key, label, overlay, target, kind="interactive", appliance=None):
     bpy.context.view_layer.update()
     if isinstance(target, (list, tuple)) and target and hasattr(target[0], "bound_box"):
         c = bbox_center(target)
@@ -252,6 +253,8 @@ def hotspot(key, label, overlay, target, kind="interactive"):
     pitch = math.degrees(math.atan2(dz, math.hypot(dx, dy)))  # + = up
     HOTSPOTS[key] = {"label": label, "overlay": overlay, "type": kind,
                      "yaw": round(yaw, 2), "pitch": round(pitch, 2)}
+    if appliance:
+        HOTSPOTS[key]["appliance"] = appliance
 
 
 def shelf_heights(root, x, y, top):
@@ -823,6 +826,13 @@ def build():
         cyl(f"shelf_bowl_{k}", (HX - 0.13, by - 0.35, 1.965 + k * 0.04), 0.1 - k * 0.012, 0.04, stoneware, bevel=0.01)
     model("potted_plant_02", (HX - 0.15, by + 0.38, 1.94), rot_z=10, scale=0.28)
     hotspot("dietary-shelf", "Dietary needs", "dietary", book_shelf)
+
+    # Your kitchen: a microwave and an air fryer on the bare right-hand worktop, under the cookbook shelves (front toward the room)
+    am = appliance_mats()
+    mw = APPLIANCES["microwave"](am, (HX - 0.28, by + 0.25, 0.93), rot_z=90, name="app_microwave")
+    hotspot("microwave", "The microwave", None, mw, kind="kitchen", appliance="microwave")
+    af = APPLIANCES["air-fryer"](am, (HX - 0.27, by - 0.38, 0.93), rot_z=90, name="app_air_fryer")
+    hotspot("air-fryer", "The air fryer", None, af, kind="kitchen", appliance="air-fryer")
 
     # ---- Back wall: cream armchair with a knitted berry throw, rag rug, botanical print, oak door
     door = box("door", (-0.95, -HY + 0.035, 1.025), (0.9, 0.05, 2.05), door_oak, bevel=0.01)
