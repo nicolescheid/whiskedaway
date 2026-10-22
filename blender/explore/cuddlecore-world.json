@@ -1,11 +1,11 @@
 {
   "room": "cuddlecore",
   "name": "Cuddlecore",
-  "intro": "Quick comfort in here, for when you're tired, unwell or busy. Juices and snacks too.",
+  "intro": "For days you're not at your best, and for the long haul. Gentle food, little effort.",
   "yaw": 30,
   "clusters": {
     "warm-slow": {
-      "label": "something warm and soothing",
+      "label": "something warm and gentle",
       "themes": [
         "warming",
         "broth",
@@ -137,7 +137,7 @@
         "simple",
         "hands-on"
       ],
-      "moment": "Crisp things for not much effort. Good for a tired evening.",
+      "moment": "Crisp things for not much effort. Good for a flat day.",
       "moments": [
         "Toast, leftovers, a handful of chips. It all comes out better than it went in.",
         "Easier to clean than the oven, which is half the appeal."
@@ -175,8 +175,15 @@
       "moment": "It sags in exactly the right places. The blanket is still warm.",
       "moments": [
         "Erwina thinks it's hers. I let her think so.",
-        "I have fallen asleep here more than once, mid-sentence."
-      ]
+        "I have fallen asleep here more than once, mid-sentence.",
+        "On the days you can't face food, a sip is plenty. Sit, and I'll sort something small."
+      ],
+      "unwell": {
+        "line": "Too unwell to eat much? Sit down. Small is fine in here.",
+        "sip": "A sip first. Warm water, weak tea, a little broth. Nothing else to do.",
+        "nibble": "A nibble next. Toast, a cracker, a spoon of rice. Stop whenever you like.",
+        "one_pan": "Feeling up to a bit more? One pan, a few steps, and I'll keep it mild."
+      }
     },
     "plant": {
       "label": "The plant",
@@ -187,7 +194,7 @@
         "green",
         "herbs"
       ],
-      "moment": "I talk to it. It seems to help.",
+      "moment": "I talk to it. It seems to listen.",
       "moments": [
         "It's doing better than I deserve.",
         "It leans towards the window. Fair enough."
