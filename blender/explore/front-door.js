@@ -52,7 +52,7 @@ export function frontDoor({ active, track }) {
         <div id="welcome-intro">
           <p>Have a wander. Drag to look around, and touch anything that glows.</p>
           <p>I'll notice what you're drawn to and bring you something to cook. Doors with dials lead to the other rooms.</p>
-          <p>What I notice stays in this tab. My notebook, up at the top, shows you all of it.</p>
+          <p>What I notice stays in this tab. Open My recipe book and pick This visit to see all of it.</p>
         </div>
         <div id="welcome-help">
           <p><b>Ring the bell any time.</b></p>
@@ -60,7 +60,7 @@ export function frontDoor({ active, track }) {
             <li>Drag, or swipe on a phone, to look around.</li>
             <li>Touch anything that glows. A door with a dial beside it takes you to another room, and the star on the dial follows your wander.</li>
             <li>The map lists everything in the room you're in.</li>
-            <li>My notebook shows what I've noticed. "Forget this visit" clears it.</li>
+            <li>Open My recipe book and pick This visit to see what I've noticed. "Forget this visit" clears it.</li>
             <li>"Front door" takes you back outside.</li>
             <li>The speaker beside the bell turns the Inn's sounds on. They start off.</li>
           </ul>
@@ -198,6 +198,11 @@ export function frontDoor({ active, track }) {
     const onKey = e => { if (e.key === 'Escape') skip(); };
     addEventListener('keydown', onKey);
     button.addEventListener('click', skip);
+    // After 2 s, a quiet "Tap to skip" (QA 3: nothing said a tap or Escape skips the 8 s film)
+    const hint = document.createElement('p');
+    hint.className = 'fd-skip'; hint.textContent = 'Tap to skip'; hint.hidden = true; hint.setAttribute('aria-hidden', 'true');
+    door.querySelector('.fd-first').appendChild(hint);
+    const hintT = setTimeout(() => { hint.hidden = false; }, 2000);
     const failed = new Promise(r => v.addEventListener('error', r, { once: true }));
     let ok = true;
     try { await v.play(); } catch { ok = false; }
@@ -207,6 +212,7 @@ export function frontDoor({ active, track }) {
     ]) : 'failed';
     removeEventListener('keydown', onKey);
     button.removeEventListener('click', skip);
+    clearTimeout(hintT); hint.remove();
     if (how !== 'ended') { hush(); v.pause(); await showHall(); }
   }
 

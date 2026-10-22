@@ -124,7 +124,7 @@
       "both": "Both"
     },
     "units_rewrite": "Re-write it in {u}",
-    "rewrites_left": "Re-writes don't use your 3 free ({n} left today).",
+    "rewrites_left": "Swaps don't use your 3 free write-outs a day ({n} left today).",
     "rewrites_none": "That's my five re-writes for today. I'll do more tomorrow.",
     "rewriting": "Gemma is re-writing it…",
     "rewrite_failed": "That one didn't take. Here's the recipe as it was. Try again in a bit.",
@@ -869,7 +869,10 @@
       "jars": "Make 4 jars",
       "jarsLine": "Four jars, one batch. That's most of the week sorted.",
       "jarsChanged": "Four jars, so I've made it four, not {n}. I've scaled your list.",
-      "seedAdded": "{x} is in."
+      "seedAdded": "{x}'s in the jar.",
+      "drawerAdded": "{x}'s in your Mix, if you make one.",
+      "drawerAddedMany": "{x} are in your Mix, if you make one.",
+      "_drawers": "After a drawer's own line, when it puts something in the Mix: seedAdded for the chia (black, white), drawerAddedMany when the label is plural (Goji berries, Cacao nibs), else drawerAdded. {x} is the label."
     }
   },
   "sweet": {

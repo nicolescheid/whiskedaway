@@ -308,7 +308,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-undo[hidden] { display: none; }
 .bk-undo button { min-height: 44px; min-width: 64px; border: 0; border-radius: 999px; background: var(--parchment); color: var(--berry); font: 700 13px 'Quicksand'; }
 .book .link { background: none; border: 0; color: var(--berry); text-decoration: underline; padding: 0; font: 13px 'Quicksand'; }
-@media (pointer: coarse) { .book .link { position: relative; } .book .link::after { content: ''; position: absolute; inset: -14px -6px; } }
+@media (pointer: coarse), (max-width: 719px) { .book .link { position: relative; } .book .link::after { content: ''; position: absolute; inset: -14px -6px; } }
 /* Phones: one page at a time, a full-height sheet */
 .book:not(.desk) .bk-box { position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; max-width: none; }   /* the visible screen, whatever the toolbars do */
 .book:not(.desk) .bk-spread { grid-template-columns: 1fr; }
@@ -639,6 +639,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bs-sheet .bs-page { flex: 1; min-height: 0; }
 .bs-sheet.desk .bk-box { width: min(560px, calc(100vw - 48px)); }
 .book:not(.desk).bs-sheet .bs-page { padding: 14px 18px calc(14px + env(safe-area-inset-bottom)); }
+.book:not(.desk).bs-sheet .bk-head { padding-left: calc(18px + env(safe-area-inset-left, 0px)); }   /* no ‹ here: the title lines up with the page (QA 3) */
 .bs-read { grid-column: 1 / -1; padding: 0 0 10px 42px; }
 .bs-hook { margin: 0 0 4px; font: italic 15px/1.4 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
 .bk-diet .bk-moredivs { min-height: 44px; padding: 0 6px; }

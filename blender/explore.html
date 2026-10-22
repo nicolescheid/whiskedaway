@@ -143,6 +143,7 @@
                 padding: 5px 12px; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.25);
                 opacity: 0; transform: translateX(-4px); transition: all .25s; pointer-events: none;
                 position: absolute; left: 20px; }   /* out of the button's box, so a hidden name never covers the next dot */
+  .spot.name-left .name { left: auto; right: 20px; transform: translateX(4px); }   /* clear of the idea bubbles (render) */
   .spot::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }   /* a little more to tap than the dot */
   .spot.is-tool .name, .spot.revealed .name { pointer-events: auto; }                     /* a name you can see, you can tap */
   .spot:hover .name, .spot:focus-visible .name, .spot.is-tool .name, .spot.revealed .name { opacity: 1; transform: none; }
@@ -272,6 +273,10 @@
   /* The first screen is the picture, a little under full height so the story peeks up; the film takes the whole screen */
   #front-door .fd-first { position: relative; height: calc(100vh - 40px); height: calc(100dvh - 40px); transition: height .25s ease; }
   #front-door.playing, #front-door.short { overflow: hidden; }
+  #front-door .fd-skip { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 3; margin: 0;
+    padding: 4px 12px; border-radius: 999px; background: rgba(20, 14, 10, .45); color: #fcf6e5; font: 500 12px 'Quicksand'; pointer-events: none; animation: fd-skip-in .6s ease; }
+  #front-door .fd-skip[hidden] { display: none; }
+  @keyframes fd-skip-in { from { opacity: 0; } to { opacity: 1; } }
   #front-door.playing .fd-first, #front-door.short .fd-first { height: 100vh; height: 100dvh; }
   #front-door.playing .fd-after, #front-door.short .fd-after { display: none; }
   /* Screens far from the film's shape (4:3, square, ultra-wide) see the whole film with paper bands, which turn dark indoors */
@@ -384,7 +389,7 @@
   .chip .short { display: none; }
   @media (max-width: 400px) { .chip .long { display: none; } .chip .short { display: inline; } .bar { column-gap: 4px; } .bar .chip { padding: 6px 7px; } .chip .badge { margin-left: 4px; } }   /* six chips in one row at 375 (basket and book) */
   /* Touch screens: every chip in the bar gets a 44 px tall tap area, whatever it looks like */
-  @media (pointer: coarse) { .bar .chip { position: relative; } .bar .chip::after { content: ''; position: absolute; inset: -8px -3px; } }
+  @media (pointer: coarse), (max-width: 560px) { .bar .chip { position: relative; } .bar .chip::after { content: ''; position: absolute; inset: -8px -3px; } }   /* 44 px to tap, the chips stay small (QA 3 #2) */
   @media (prefers-reduced-motion: reduce) {
     .cw-msg, .cw-typing span { animation: none; }
     .spot.revealed .dot { animation: none; box-shadow: 0 0 0 3px rgba(232, 184, 122, .5), 0 0 16px 4px rgba(232, 184, 122, .6); }
@@ -1122,16 +1127,27 @@ function buildHotspots() {
   showCandle();
 }
 
+let ideasCol = null;
 function render() {
+  ideasCol ||= document.querySelector('.ideas');
   camera.lookAt(dir(look.yaw, look.pitch));
   renderer.render(scene, camera);
+  // A name that would run under Gemma's idea bubbles (the right-hand column) trails to the left of its dot instead
+  // (QA 3 #5: the foyer's Check in under the bubbles at 812x375)
+  const col = ideasCol?.childElementCount ? ideasCol.getBoundingClientRect() : null;
   for (const h of hotspots) {
     const p = h.v.clone().project(camera);
     const vis = p.z < 1 && Math.abs(p.x) < 1.05 && Math.abs(p.y) < 1.05;
     h.el.style.display = vis ? '' : 'none';
-    h.el.style.left = `${(p.x + 1) / 2 * innerWidth}px`;
-    h.el.style.top = `${(1 - p.y) / 2 * innerHeight}px`;
+    const x = (p.x + 1) / 2 * innerWidth, y = (1 - p.y) / 2 * innerHeight;
+    h.el.style.left = `${x}px`;
+    h.el.style.top = `${y}px`;
     h.x = p.x;
+    if (vis) {
+      const w = h.nameW ||= h.el.querySelector('.name')?.offsetWidth || 0;
+      h.el.classList.toggle('name-left', !!col && col.width > 0 && x + 20 + w > col.left - 6 && x - 26 - w > 0
+        && y > col.top - 20 && y < col.bottom + 20);
+    }
   }
   edgeHints.update(hotspots, camera);                     // phones: arrows toward what's off-screen
   // Names trail to the right, so keep the spots in left-to-right order: a spot is always above any name coming
@@ -1261,7 +1277,10 @@ function touch(id) {
   } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
     // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
     const got = chia.drawer(id);
-    const add = got ? ((got.step === 'seed' && chia.data.lines.seedAdded) || chia.data.lines.drawerAdded || "{x}'s in your Mix, if you make one.").replace('{x}', got.label) : '';
+    // "Goji berries are in", not "Goji berries's in" (QA 4 S2): a label ending in a plural s takes the plural line
+    const CL = chia.data.lines, many = got && /[^s]s$/i.test(got.label);
+    const add = got ? ((got.step === 'seed' && CL.seedAdded) || (many && CL.drawerAddedMany) || CL.drawerAdded
+      || (many ? '{x} are in your Mix, if you make one.' : "{x}'s in your Mix, if you make one.")).replace('{x}', got.label) : '';
     say([obj.moment, add].filter(Boolean).join(' '), [], true);
     if (got) holdLine();                                      // her reading waits, so this line is the one you see
   } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
@@ -1944,8 +1963,13 @@ const stars = createStarChart({ lines: LINES.starChart || {}, track, sound,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); } });
 function fortune(obj, noteLine) {
   const SC = LINES.starChart || {};
-  const pool = roomIdeas().filter(a => !book.has(a.id)), fresh = pool.filter(a => !state.cards.some(c => c.atom === a.id) && !basket.has(a.id));
-  const from = fresh.length ? fresh : pool, a = from[Math.floor(Math.random() * from.length)];
+  // The idea named is always the one that comes out (QA 4 S1): first an idea serve() will take (not served this visit, not
+  // kept, no headline clash with a card out); else one already on a card (it reopens); else any of the room's (its page opens)
+  const pool = roomIdeas(), onCard = id => state.cards.some(c => c.atom === id);
+  const heads = state.cards.map(c => atomsById[c.atom] && headline(atomsById[c.atom])).filter(Boolean);
+  const takes = pool.filter(a => !state.served.includes(a.id) && !book.has(a.id) && !basket.has(a.id) && !heads.includes(headline(a)));
+  const out = pool.filter(a => onCard(a.id));
+  const from = takes.length ? takes : out.length ? out : pool, a = from[Math.floor(Math.random() * from.length)];
   const t = a && pickLine('fortune', SC.fortunes || [], { idea: '\u0001' });
   if (!t) { say(momentOf('star-chart', obj), [], true); return false; }
   // The title starts a sentence as it's written, and mid-sentence in lower case (not a name: "Anzac biscuits")
@@ -1959,8 +1983,9 @@ function fortune(obj, noteLine) {
     // The fortune stays the moment (Nicole, 22 Oct: opening checkout covered it): the idea's card comes out, and ♥ Keep
     // puts it in the basket like any other card
     whenFree(() => {
-      if (!state.cards.some(c => c.atom === a.id)) serve({ atom: a.id, why: '' }, 'local');
-      if (state.cards.some(c => c.atom === a.id)) ideas.open(a.id, { focus: false });
+      if (!onCard(a.id)) serve({ atom: a.id, why: '' }, 'local');
+      if (onCard(a.id)) ideas.open(a.id, { focus: false });
+      else ideaPage(book.get(a.id) || basket.get(a.id) || snapshot(a, ''), 'star_chart');   // kept, or served earlier: its page
       if (noteLine) setTimeout(() => { say(noteLine, [], true); holdLine(); }, 4500);   // the reading first, long enough to read
     });
   } });

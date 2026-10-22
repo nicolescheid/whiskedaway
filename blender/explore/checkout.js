@@ -54,7 +54,8 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
           ${running ? '' : `<button class="link" data-out="${esc(x.id)}" aria-label="${esc(L.remove)}: ${esc(x.title)}">✕</button>`}</span>
         ${reading.has(x.id) ? leaflet(x) : ''}</li>`;
     };
-    el.innerHTML = `<p class="bs-allow"><b>${esc(allowanceLine())}</b></p>
+    // "Your leaflets wait here" only when some do (QA 3 #1): an empty basket at the cap just says it's empty
+    el.innerHTML = `${items.length || left() ? `<p class="bs-allow"><b>${esc(allowanceLine())}</b></p>` : ''}
       ${items.length ? `${left() ? `<p class="small">${esc(L.intro)}</p>` : ''}<div class="bs-diet"></div><div class="bs-units"></div><ul class="bs-list">${items.map(row).join('')}</ul>
         ${left() && n >= left() && !running ? `<p class="small">${esc(L.full)}</p>` : ''}
         ${left() ? `<p><button class="tl-done bs-write" ${!n || running ? 'disabled' : ''}>${esc(n > 1 ? L.write.replace('{n}', n) : L.writeOne)}</button></p>` : ''}`
