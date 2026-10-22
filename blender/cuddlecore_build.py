@@ -624,8 +624,6 @@ def build():
     box("range_plinth", (0, ry + 0.03, 0.04), (0.96, 0.62, 0.08), cast_iron, bevel=0.005)
     box("range_body", (0, ry, 0.49), (1.0, 0.7, 0.82), enamel, bevel=0.035)
     box("range_top", (0, ry + 0.01, 0.92), (1.03, 0.72, 0.04), cast_iron, bevel=0.008)
-    cyl("hotplate_lid", (-0.24, ry + 0.02, 0.965), 0.16, 0.05, enamel, bevel=0.02)
-    cyl("hotplate_knob", (-0.24, ry + 0.02, 1.0), 0.02, 0.03, chrome)
     cyl("hotplate_r", (0.24, ry + 0.02, 0.945), 0.16, 0.012, cast_iron, bevel=0.003)
     cyl("towel_rail", (0, front - 0.06, 0.86), 0.012, 1.0, brass, rot=(0, math.radians(90), 0))
     for x in (-0.48, 0.48):
@@ -833,6 +831,9 @@ def build():
     hotspot("microwave", "The microwave", None, mw, kind="kitchen", appliance="microwave")
     af = APPLIANCES["air-fryer"](am, (HX - 0.27, by - 0.38, 0.93), rot_z=90, name="app_air_fryer")
     hotspot("air-fryer", "The air fryer", None, af, kind="kitchen", appliance="air-fryer")
+    # the kettle on the left hotplate (where the cover used to sit), spout toward the room a little
+    kt = APPLIANCES["kettle"](am, (-0.24, ry + 0.02, 0.94), rot_z=-20, name="app_kettle")
+    hotspot("kettle", "The kettle", None, kt, kind="kitchen", appliance="kettle")
 
     # ---- Back wall: cream armchair with a knitted berry throw, rag rug, botanical print, oak door
     door = box("door", (-0.95, -HY + 0.035, 1.025), (0.9, 0.05, 2.05), door_oak, bevel=0.01)

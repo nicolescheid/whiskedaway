@@ -172,5 +172,13 @@
     "yaw": 115.36,
     "pitch": -12.93,
     "appliance": "air-fryer"
+  },
+  "kettle": {
+    "label": "The kettle",
+    "overlay": null,
+    "type": "kitchen",
+    "yaw": -6.54,
+    "pitch": -15.39,
+    "appliance": "kettle"
   }
 }

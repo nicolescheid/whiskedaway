@@ -17,11 +17,19 @@ from mathutils import Matrix, Vector
 from whisked import box, cyl, mat, sphere, srgb
 
 
+def _smoke_mat():
+    m = mat("app_smoke", srgb("#d9d6d0"), rough=1.0)
+    m.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.22
+    return m
+
+
 def appliance_mats():
     return {
         "enamel": mat("app_enamel", srgb("#ece3cf"), rough=0.3, coat=0.6),
         "honey": mat("app_honey_glaze", srgb("#d9a441"), rough=0.28, coat=0.5),
         "sage": mat("app_sage_enamel", srgb("#66805d"), rough=0.32, coat=0.5),
+        "forest": mat("app_forest_enamel", srgb("#2f4636"), rough=0.35, coat=0.5),
+        "smoke": _smoke_mat(),
         "brass": mat("app_brass", srgb("#bd9655"), rough=0.3, metal=1.0),
         "iron": mat("app_iron", srgb("#2a2622"), rough=0.6, metal=0.8),
         "dark": mat("app_dark_glass", srgb("#1d1f1f"), rough=0.12, coat=0.5),
@@ -130,6 +138,45 @@ def microwave(m, loc, rot_z=0.0, name="microwave"):
     return _group(name, p, loc, rot_z)
 
 
+def _rod(name, a, b, r, material, verts=12):
+    """A cylinder from point a to point b."""
+    d = Vector((b[0] - a[0], b[1] - a[1], b[2] - a[2]))
+    o = cyl(name, tuple((a[i] + b[i]) / 2 for i in range(3)), r, d.length, material, verts=verts, bevel=0)
+    o.rotation_mode = "QUATERNION"
+    o.rotation_quaternion = d.to_track_quat("Z", "Y")
+    return o
+
+
+def kettle(m, loc, rot_z=0.0, name="kettle"):
+    """A stovetop kettle: round cream enamel body, brass spout, lid knob and an arched brass handle. 0.3 x 0.2 x 0.27 m,
+    spout toward +X, handle over the top; the base is centred on the origin."""
+    p = []
+    body = _lathe(f"{name}_body", [(0.0, 0.0), (0.09, 0.004), (0.12, 0.04), (0.132, 0.09), (0.115, 0.145), (0.085, 0.178), (0.07, 0.19)],
+                  m["enamel"], thick=0.004)
+    p.append(body)
+    p.append(cyl(f"{name}_band", (0, 0, 0.012), 0.103, 0.016, m["brass"], verts=48, bevel=0.003))
+    lid = sphere(f"{name}_lid", (0, 0, 0.19), 0.07, m["enamel"], scale=(1, 1, 0.45))
+    p.append(lid)
+    p.append(sphere(f"{name}_knob", (0, 0, 0.225), 0.02, m["brass"]))
+    # spout: three tapering sections curving up and out from the body's shoulder
+    pts = [(0.105, 0, 0.07), (0.15, 0, 0.12), (0.19, 0, 0.18), (0.21, 0, 0.215)]
+    for k in range(3):
+        p.append(_rod(f"{name}_spout_{k}", pts[k], pts[k + 1], 0.026 - 0.007 * k, m["brass"], verts=16))
+    for k in range(1, 3):
+        p.append(sphere(f"{name}_spout_joint_{k}", pts[k], 0.026 - 0.007 * (k - 0.5), m["brass"]))
+    # handle: an arch from the back shoulder over the lid, with cream grip
+    P0, P1, P2 = (-0.125, 0, 0.12), (-0.13, 0, 0.36), (0.06, 0, 0.17)      # a quadratic arch from the back shoulder over the lid
+    arch = []
+    for i in range(9):
+        t = i / 8
+        arch.append(tuple((1 - t) ** 2 * P0[j] + 2 * (1 - t) * t * P1[j] + t * t * P2[j] for j in range(3)))
+    for k in range(len(arch) - 1):
+        p.append(_rod(f"{name}_handle_{k}", arch[k], arch[k + 1], 0.009, m["brass"], verts=10))
+    for k in range(2, 6):
+        p.append(_rod(f"{name}_grip_{k}", arch[k], arch[k + 1], 0.013, m["cream"], verts=12))
+    return _group(name, p, loc, rot_z)
+
+
 def _lathe(name, profile, material, segs=64, thick=0.004):
     verts, faces = [], []
     for r, z in profile:
@@ -156,25 +203,38 @@ def _lathe(name, profile, material, segs=64, thick=0.004):
     return o
 
 
-def kettle_grill(m, loc, rot_z=0.0, name="kettle_grill"):
-    """A kettle barbecue on three iron legs: sage enamel bowl and lid, brass rim and handle, a wooden side handle.
-    0.62 m across, 1.18 m to the lid handle."""
+def kettle_grill(m, loc, rot_z=0.0, name="kettle_grill", ajar=14):
+    """A kettle barbecue on three iron legs: deep green enamel bowl and lid, brass rim and handle, a wooden side handle.
+    0.62 m across, 1.18 m to the lid handle. The lid stands `ajar` degrees open on the +X side, with a wisp of smoke."""
     p = []
     z_rim = 0.64
     bowl = _lathe(f"{name}_bowl", [(0.0, 0.0), (0.09, 0.008), (0.19, 0.06), (0.26, 0.15), (0.295, 0.25), (0.3, z_rim - 0.34)],
-                  m["sage"])
+                  m["forest"])
     bowl.location = (0, 0, 0.34)
     p.append(bowl)
-    lid = _lathe(f"{name}_lid", [(0.31, 0.0), (0.3, 0.05), (0.26, 0.12), (0.18, 0.18), (0.08, 0.215), (0.0, 0.225)], m["sage"])
+    lp = []                                      # the lid's parts, hinged at the back (-X) rim
+    lid = _lathe(f"{name}_lid", [(0.31, 0.0), (0.3, 0.05), (0.26, 0.12), (0.18, 0.18), (0.08, 0.215), (0.0, 0.225)], m["forest"])
     lid.location = (0, 0, z_rim)
-    lid.rotation_euler = (0, 0, 0)
-    p.append(lid)
-    p.append(cyl(f"{name}_rim", (0, 0, z_rim), 0.305, 0.016, m["brass"], verts=64, bevel=0.003))
-    p.append(cyl(f"{name}_vent", (0, 0, z_rim + 0.232), 0.03, 0.02, m["brass"], verts=24, bevel=0.004))
-    for s in (-1, 1):
-        p.append(cyl(f"{name}_handle_post_{s}", (s * 0.09, 0.0, z_rim + 0.255), 0.009, 0.05, m["brass"], verts=12, bevel=0))
-    hb = cyl(f"{name}_handle_bar", (0, 0, z_rim + 0.285), 0.012, 0.21, m["brass"], verts=16, bevel=0, rot=(0, math.radians(90), 0))
-    p.append(hb)
+    lp.append(lid)
+    lp.append(cyl(f"{name}_rim", (0, 0, z_rim), 0.305, 0.016, m["brass"], verts=64, bevel=0.003))
+    lp.append(cyl(f"{name}_vent", (0, 0, z_rim + 0.232), 0.03, 0.02, m["brass"], verts=24, bevel=0.004))
+    for s_ in (-1, 1):
+        lp.append(cyl(f"{name}_handle_post_{s_}", (0.0, s_ * 0.09, z_rim + 0.255), 0.009, 0.05, m["brass"], verts=12, bevel=0))
+    lp.append(cyl(f"{name}_handle_bar", (0, 0, z_rim + 0.285), 0.012, 0.21, m["brass"], verts=16, bevel=0, rot=(math.radians(90), 0, 0)))
+    hinge = bpy.data.objects.new(f"{name}_hinge", None)
+    bpy.context.scene.collection.objects.link(hinge)
+    hinge.location = (-0.3, 0, z_rim)
+    bpy.context.view_layer.update()
+    for o in lp:
+        o.parent = hinge
+        o.matrix_parent_inverse = hinge.matrix_world.inverted()
+    hinge.rotation_euler = (0, -math.radians(ajar), 0)
+    p.append(hinge)
+    p.append(cyl(f"{name}_rim_bowl", (0, 0, z_rim), 0.305, 0.016, m["brass"], verts=64, bevel=0.003))
+    # a wisp of smoke from the gap
+    for k in range(5):
+        p.append(sphere(f"{name}_smoke_{k}", (0.26 + 0.05 * k, 0.02 * (k % 2), z_rim + 0.2 + 0.17 * k), 0.05 + 0.025 * k, m["smoke"],
+                        scale=(1.0, 0.9, 1.3)))
     # wooden handle on the side of the bowl (a turned peg and a crossbar)
     p.append(box(f"{name}_side_handle", (0.36, 0, z_rim - 0.05), (0.14, 0.03, 0.03), m["iron"], bevel=0.008))
     p.append(cyl(f"{name}_side_grip", (0.42, 0, z_rim - 0.05), 0.016, 0.1, m["honey"], verts=16, bevel=0.004,
@@ -200,4 +260,5 @@ APPLIANCES = {
     "air-fryer": air_fryer,
     "microwave": microwave,
     "bbq": kettle_grill,
+    "kettle": kettle,
 }

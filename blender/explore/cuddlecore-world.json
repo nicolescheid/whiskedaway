@@ -143,6 +143,23 @@
         "Easier to clean than the oven, which is half the appeal."
       ]
     },
+    "kettle": {
+      "label": "The kettle",
+      "ref": "the kettle",
+      "type": "kitchen",
+      "appliance": "kettle",
+      "themes": [
+        "tea",
+        "calm",
+        "warming",
+        "simple"
+      ],
+      "moment": "It lives on the left hob. It sings when I forget it, which is often.",
+      "moments": [
+        "Tea, hot water for a bottle, a quick broth. It earns its place.",
+        "Filled before I've said good morning."
+      ]
+    },
     "armchair": {
       "label": "The armchair",
       "ref": "the armchair",
