@@ -1444,6 +1444,180 @@
         "name": "Southland-style cheese rolls",
         "why": "A Southland favourite: cheese and onion in a toasted roll of bread."
       }
+    },
+    {
+      "id": "sausage-sizzle",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "A sausage sizzle at home",
+      "short": "Sausage sizzle",
+      "icon": "🌭",
+      "ref": "the sausage sizzle",
+      "hook": "Sausage and fried onion in a slice of white bread, with sauce.",
+      "time": 20,
+      "key_ingredients": [
+        "sausages",
+        "white bread",
+        "onion",
+        "tomato sauce"
+      ],
+      "method_short": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
+      "diet": [
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "appliances": ["bbq", "stove"],
+      "appliances_checked": true,
+      "themes": [
+        "comfort",
+        "quick",
+        "snack",
+        "hearty",
+        "cooking",
+        "summer",
+        "simple"
+      ],
+      "seed": {
+        "name": "Sausage sizzle with fried onion",
+        "why": "A Saturday-morning classic, and it works in any back yard."
+      },
+      "body": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store."
+    },
+    {
+      "id": "slow-cooker-porridge",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Porridge that cooks itself",
+      "short": "Slow porridge",
+      "icon": "🌾",
+      "ref": "the slow-cooker porridge",
+      "hook": "Oats, milk and apple in the slow cooker, ready when you are.",
+      "time": 5,
+      "wait": "7 hours on low",
+      "key_ingredients": [
+        "steel-cut oats",
+        "milk",
+        "apple",
+        "cinnamon"
+      ],
+      "method_short": "Steel-cut oats, milk, water, grated apple and a pinch of cinnamon in the pot, on low for seven hours. Stir it and eat it hot.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
+      "appliances": ["slow-cooker"],
+      "appliances_checked": true,
+      "themes": [
+        "breakfast",
+        "warming",
+        "cosy",
+        "comfort",
+        "low-spoons",
+        "simple",
+        "oats",
+        "winter"
+      ],
+      "seed": {
+        "name": "Slow-cooker apple and cinnamon porridge",
+        "why": "Five minutes to set up, and nothing else to do."
+      },
+      "body": "Steel-cut oats, milk, water, grated apple and a pinch of cinnamon in the pot, on low for seven hours. Stir it and eat it hot."
+    },
+    {
+      "id": "couscous-lunch",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Couscous with chickpeas, lemon and herbs",
+      "short": "Couscous bowl",
+      "icon": "🥘",
+      "ref": "the couscous",
+      "hook": "Couscous soaked in boiling water, with chickpeas, lemon and herbs.",
+      "time": 10,
+      "key_ingredients": [
+        "couscous",
+        "chickpeas",
+        "lemon",
+        "parsley",
+        "olive oil"
+      ],
+      "method_short": "Cover couscous with boiling water for five minutes, then fork it through with a tin of chickpeas, lemon juice, chopped herbs and oil. No pot needed.",
+      "diet": [
+        "vegetarian",
+        "vegan",
+        "dairy-free",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Middle Eastern"
+      ],
+      "appliances": ["kettle"],
+      "appliances_checked": true,
+      "themes": [
+        "quick",
+        "simple",
+        "light",
+        "fresh",
+        "midday",
+        "pantry",
+        "what-you-have",
+        "low-spoons"
+      ],
+      "seed": {
+        "name": "Couscous with chickpeas, lemon and herbs",
+        "why": "The kettle does the cooking, and so does the couscous."
+      },
+      "body": "Cover couscous with boiling water for five minutes, then fork it through with a tin of chickpeas, lemon juice, chopped herbs and oil. No pot needed."
+    },
+    {
+      "id": "noodle-bowl",
+      "room": "cuddlecore",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Rice noodles with soy, sesame and peas",
+      "short": "Noodle bowl",
+      "icon": "🍲",
+      "ref": "the noodle bowl",
+      "hook": "Rice noodles soaked in boiling water, with soy, sesame and peas.",
+      "time": 10,
+      "key_ingredients": [
+        "rice vermicelli",
+        "soy sauce",
+        "sesame oil",
+        "spring onion",
+        "frozen peas"
+      ],
+      "method_short": "Cover rice vermicelli with boiling water for five minutes, then drain. Toss with soy sauce, sesame oil, spring onion and frozen peas, which thaw in the hot noodles.",
+      "diet": [
+        "vegetarian",
+        "vegan",
+        "dairy-free",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Chinese"
+      ],
+      "appliances": ["kettle"],
+      "appliances_checked": true,
+      "themes": [
+        "quick",
+        "simple",
+        "comfort",
+        "low-spoons",
+        "pantry",
+        "what-you-have",
+        "warming",
+        "evening"
+      ],
+      "seed": {
+        "name": "Rice noodle bowl with soy, sesame and peas",
+        "why": "Dinner from a kettle and a packet, and still a proper bowl."
+      },
+      "body": "Cover rice vermicelli with boiling water for five minutes, then drain. Toss with soy sauce, sesame oil, spring onion and frozen peas, which thaw in the hot noodles."
     }
   ],
   "weathers": {
