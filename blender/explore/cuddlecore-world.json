@@ -386,7 +386,7 @@
         "dairy-free",
         "nut-free"
       ],
-      "appliances": ["stove", "microwave"],
+      "appliances": ["kettle", "stove", "microwave"],
       "appliances_checked": true,
       "themes": [
         "warming",
@@ -431,7 +431,7 @@
       "cuisines": [
         "Japanese"
       ],
-      "appliances": ["stove", "microwave"],
+      "appliances": ["kettle", "stove", "microwave"],
       "appliances_checked": true,
       "themes": [
         "broth",

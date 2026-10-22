@@ -9,14 +9,15 @@ const list = (v, n, m = 40) => (Array.isArray(v) ? v : []).slice(0, n).map(x => 
 /** The kitchen line, or '' for no preference */
 export function kitchenLine(payload = {}) {
   if (payload.no_cooking === true) {
-    return 'Their kitchen: no cooking at all, only a fridge, a chopping board, a kettle and a toaster. Make it a no-cook version, '
-      + 'and never ask for a stove, oven, microwave, air fryer, BBQ, blender or slow cooker.';
+    return 'Their kitchen: no cooking at all, only a fridge, a chopping board and a toaster. Make it a no-cook version, '
+      + 'and never ask for a stove, oven, microwave, kettle (no boiling water), air fryer, BBQ, blender or slow cooker.';
   }
   const xs = list(payload.appliances, 8, 30);
   if (!xs.length) return '';
-  return `Their kitchen: cook it with: ${xs.join(', ')} (a kettle, toaster and fridge are fine too). Use only these. `
+  return `Their kitchen: cook it with: ${xs.join(', ')} (a toaster and fridge are fine too). Use only these. `
     + 'If the idea usually needs something else, adapt the method to one they have (an air fryer instead of the oven, a microwave instead of the stove '
-    + 'for warming, a fork or whisk instead of a blender) and say so in a few words in that step. Never ask for an appliance they did not list.';
+    + 'for warming, a kettle for boiling water, a fork or whisk instead of a blender) and say so in a few words in that step. '
+    + 'A kettle only boils water: never warm milk or cook in it. Never ask for an appliance they did not list.';
 }
 
 /** The add-ins line for a real mix, with the chia to liquid kept honest, or '' for a simple jar */

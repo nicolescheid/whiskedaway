@@ -4,7 +4,7 @@
 // content hasn't tagged (no appliances_checked) always fit. Words come from gemma-lines.json `kitchen` (content editor).
 // Pure functions only (unit tests: test/kitchen.test.mjs); the sheet is tell.js's, the wiring explore.html's.
 
-export const APPLIANCES = ['stove', 'oven', 'microwave', 'air-fryer', 'bbq', 'food-processor', 'slow-cooker'];
+export const APPLIANCES = ['stove', 'oven', 'microwave', 'kettle', 'air-fryer', 'bbq', 'food-processor', 'slow-cooker'];
 export const NONE = 'none';
 const KNOWN = new Set([...APPLIANCES, NONE]);
 

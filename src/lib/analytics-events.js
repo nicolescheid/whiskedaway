@@ -48,7 +48,7 @@ export const EVENTS = {
   list_export: ['kind'],                  // the list taken away; kind: copy, share or print. Never what's on it
   tell_open: ['kind', 'from'],          // Tell Gemma: kind pantry|map|dietary|confidence|time|servings|energy|sweetness|sweetener|craving|occasion|mood|mix|kitchen; from object|tag|menu|book|offer|foyer
   tell_set: ['kind', 'count', 'use_up', 'from'],   // count 0|1|2-3|4+ (pantry, map, dietary, sweetener, craving); never the values (see ANSWER_KINDS). Dietary values (FODMAP included) never leave the page
-  kitchen_pick: ['appliance'],           // Your kitchen: one per appliance newly picked on Done (stove, oven, microwave, air-fryer, bbq, food-processor, slow-cooker, none). Never with anything else
+  kitchen_pick: ['appliance'],           // Your kitchen: one per appliance newly picked on Done (stove, oven, microwave, kettle, air-fryer, bbq, food-processor, slow-cooker, none). Never with anything else
   mix_swap: ['outcome'],                 // the Chiapothecary: Gemma suggested a swap; outcome accepted or declined. Never the ingredients
   recipe_full_asked: ['atom', 'room'],                             // the "full recipe" button (or cook mode) asked Gemma to write one out
   recipe_full: ['atom', 'room', 'remaining'],                      // Gemma wrote one out in full; remaining: 0, 1, 2-3

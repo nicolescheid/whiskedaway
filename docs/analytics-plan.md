@@ -98,7 +98,7 @@ Added after the first plan; counts only, never recipe text, diet answers, ingred
 | `tell_open` | A Tell Gemma sheet opens | `kind`, `from` |
 | `tell_set` | A Tell Gemma answer is set | `kind`, `from`, and for the multi-value kinds `count` (`0`, `1`, `2-3`, `4+`) and `use_up`. Single-choice kinds (`ANSWER_KINDS` in analytics-events.js) never send a count: it would be the answer |
 | `mix_swap` | The Chiapothecary: Gemma suggested a swap | `outcome` (`accepted`, `declined`) |
-| `kitchen_pick` | Your kitchen: an appliance newly picked, one event each on Done (with `tell_set` kind `kitchen` and a count) | `appliance` (`stove`, `oven`, `microwave`, `air-fryer`, `bbq`, `food-processor`, `slow-cooker`, `none`) |
+| `kitchen_pick` | Your kitchen: an appliance newly picked, one event each on Done (with `tell_set` kind `kitchen` and a count) | `appliance` (`stove`, `oven`, `microwave`, `kettle`, `air-fryer`, `bbq`, `food-processor`, `slow-cooker`, `none`) |
 | `recipe_full_asked` | The "full recipe" button, or cook mode, asked Gemma to write a recipe out (3 a visit) | `atom`, `room` |
 | `recipe_full` | She wrote it out | `atom`, `room`, `remaining` (`0`, `1`, `2-3`) |
 | `recipe_full_failed` | She couldn't | `atom`, `room`, `reason` (`timeout`, `bot_check`, `rate_limited`, `error`) |

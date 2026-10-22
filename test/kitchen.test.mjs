@@ -19,7 +19,7 @@ test('a tap: none clears the rest, an appliance clears none, again takes it out'
   assert.deepEqual(togglePick(['oven', 'stove'], 'none'), ['none']);
   assert.deepEqual(togglePick(['none'], 'bbq'), ['bbq']);
   assert.deepEqual(togglePick(['oven', 'bbq'], 'oven'), ['bbq']);
-  assert.deepEqual(togglePick([], 'kettle'), []);
+  assert.deepEqual(togglePick([], 'toaster'), []);
 });
 
 test('the filter: any of the picked appliances, or no cooking', () => {
@@ -83,4 +83,29 @@ test('Worker: the add-ins line lists every add-in and keeps the ratio honest', (
   assert.match(l, /on top just before eating, not in the jar overnight: Granola\./, 'only picked ones go on top');
   assert.match(l, /3 tbsp chia seeds to 1 cup \(250 ml\)/);
   assert.match(l, /Rolled oats soaks up liquid/);
+});
+
+test('the kettle: a kettle-only visitor gets hot-water drinks and no-cook ideas, never cooked ones', () => {
+  const tea = atom('tea', ['kettle', 'stove', 'microwave']), salad = atom('salad', []), milk = atom('warm-milk', ['stove', 'microwave']);
+  assert.ok(kitchenFits(tea, ['kettle']));
+  assert.ok(kitchenFits(salad, ['kettle']));
+  assert.ok(!kitchenFits(milk, ['kettle']), 'a kettle cannot warm milk');
+  assert.ok(kitchenFits(tea, ['stove']), 'the stove still boils water');
+  assert.ok(!kitchenFits(tea, ['none']), 'no cooking means no boiling water');
+  assert.equal(kitchenTag(['kettle'], K), '🍳 kettle');
+  assert.match(K.pick.kettle, /kettle/i);
+  assert.deepEqual(kitchenPayload(['kettle', 'oven'], K), { appliances: ['oven', 'kettle'] });
+});
+
+test('content: the hot-water drinks carry the kettle', () => {
+  const all = ['cuddlecore', 'glasshouse'].flatMap(r => JSON.parse(readFileSync(new URL(`../blender/explore/${r}-world.json`, import.meta.url), 'utf8')).atoms);
+  for (const id of ['honey-ginger-lemon', 'five-minute-miso', 'hibiscus-iced-tea']) assert.deepEqual(all.find(a => a.id === id).appliances, ['kettle', 'stove', 'microwave'], id);
+});
+
+test('Worker: the kettle is a choice, not assumed', () => {
+  assert.match(kitchenLine({ appliances: ['kettle'] }), /cook it with: kettle/);
+  assert.match(kitchenLine({ appliances: ['kettle'] }), /never warm milk/);
+  assert.doesNotMatch(kitchenLine({ no_cooking: true }), /a kettle and/);
+  assert.match(kitchenLine({ no_cooking: true }), /kettle \(no boiling water\)/);
+  assert.match(kitchenLine({ appliances: APPLIANCES.map(x => x.replace('-', ' ')) }), /slow cooker/, 'all eight fit the list');
 });

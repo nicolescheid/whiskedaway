@@ -664,6 +664,11 @@
         "label": "Slow cooker",
         "short": "slow cooker",
         "icon": "🍲"
+      },
+      "kettle": {
+        "label": "Kettle",
+        "short": "kettle",
+        "icon": "🫖"
       }
     },
     "none": {
@@ -680,6 +685,7 @@
       "bbq": "The BBQ. I'll look for things that like a flame.",
       "food-processor": "A blender. Smoothies, dips and truffles, then.",
       "slow-cooker": "The slow cooker. Start it early and forget it.",
+      "kettle": "The kettle. Then I'll keep the tea and the hot honey drinks coming.",
       "none": "No cooking. Cold and easy, then."
     },
     "many": "{x}. I'll keep to those.",
