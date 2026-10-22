@@ -10,7 +10,7 @@
 // HMAC of the pass's sid (never the sid itself), kept 3 days. Logged only, not enforced.
 
 /** Bump on any change to the Inn's prompt (INN_CONSTITUTION, buildUserMessage's inn-idea lines, inn-extras.js) or the model */
-export const PROMPT_VERSION = 'inn-2026-10-23';
+export const PROMPT_VERSION = 'inn-2026-10-23b';
 export const CACHE_TTL = 30 * 24 * 3600;
 export const COUNT_TTL = 3 * 24 * 3600;
 

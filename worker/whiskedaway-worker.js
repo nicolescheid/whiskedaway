@@ -865,7 +865,7 @@ function buildUserMessage(payload) {
     for (const [k, v] of Object.entries(payload.dish || {}).slice(0, 4)) parts.push(`For this dish, ${txt(k, 20)}: ${txt(v, 40)}`);
     // Each room has its own identity (Nicole, Oct 2026); the full recipe keeps to the room the idea came from
     const ROOM_RULES = {
-      cuddlecore: 'From Cuddlecore: quick comfort. Keep it to one pan or pot and about 20 minutes, with few steps and little washing up.',
+      cuddlecore: 'From Cuddlecore: the kitchen for days you are not at your best. Keep it gentle and low effort: soft, mild food, one pan or pot, about 20 minutes, few steps and little washing up. Never say what the food does for you.',
       flourish: 'From Flourish: a proper meal from whole foods. A bit more prep is fine, and it should be a complete, satisfying plate.',
       'sweet-spells': 'From Sweet Spells: a sweet thing. Suit it to the time of day given (a sweet breakfast in the morning, a pudding in the evening).',
       chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time. '
