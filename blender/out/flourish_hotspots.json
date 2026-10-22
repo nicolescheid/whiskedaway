@@ -159,9 +159,9 @@
           "label": "The barbecue",
           "type": "kitchen",
           "overlay": null,
-          "yaw": 45.71,
-          "pitch": -7.1,
-          "distance": 5.77,
+          "yaw": 45.34,
+          "pitch": -0.04,
+          "distance": 5.69,
           "visible": true,
           "appliance": "bbq"
         }
