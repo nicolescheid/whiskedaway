@@ -699,7 +699,8 @@
     "menu_none": "anything goes",
     "visit_row": "Your kitchen",
     "visit_row_empty": "Anything goes",
-    "writeout_hint": "cook it with: {x}"
+    "writeout_hint": "cook it with: {x}",
+    "cards_stay": "The cards out already stay. New ones will suit your kitchen."
   },
   "chia": {
     "modes": {
@@ -1378,7 +1379,9 @@
       "moodTitle": "Pick a mood",
       "moodHelper": "Each one is a set of ingredients. What it does for you is your call.",
       "mixTitle": "Mix an experiment",
-      "mixIntro": "Four choices, then I'll write up the recipe.",
+      "mixIntro": "A few choices, then I'll write up the recipe.",
+      "addinClash": "{x} isn't {d}, so you may want to leave it out.",
+      "addinCheck": "If you need it {d}, check the label on the {x}.",
       "prefill": "I've started with what you picked from the drawers and the fridge.",
       "steps": {
         "mood": "First, a mood",

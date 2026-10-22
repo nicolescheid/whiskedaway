@@ -126,7 +126,7 @@ export function capLine(data, n) {
 }
 const listWords = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`).toLowerCase().replace(/^./, c => c.toUpperCase());
 // "Berries go in", "Rolled oats drink up liquid": a plural label (ends in a single s) takes the plural verb in a content line
-const PLURAL_VERBS = [[/\bgoes\b/, 'go'], [/\bis\b/, 'are'], [/\bdrinks\b/, 'drink'], [/\bsoaks\b/, 'soak']];
+const PLURAL_VERBS = [[/\bgoes\b/, 'go'], [/\bis\b/, 'are'], [/\bisn't\b/, "aren't"], [/\bdrinks\b/, 'drink'], [/\bsoaks\b/, 'soak']];
 export const agree = (line, label) => (/[^s]s$/i.test(String(label).trim()) ? PLURAL_VERBS.reduce((t, [re, v]) => t.replace(re, v), line) : line);
 const optionsFor = (D, step) => (step === 'mood' ? Object.fromEntries(Object.entries(D.moods).map(([id, m]) => [id, m.label])) : D[`${step}s`] || {});
 export const labelOf = (D, step, id) => (id ? optionsFor(D, step)[id] || id : '');
@@ -214,12 +214,13 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     return `<ul class="mx-sum">${html}</ul>${adds.length ? '' : `<p class="small">${esc(T.addinsNone || '')}</p>`}
       <p class="small">${esc(T.ratio || '')}${thirsty.length && T.thirsty ? ` ${esc(w(agree(T.thirsty, thirsty.length > 1 ? 'these' : thirsty[0]).replace('{x}', listWords(thirsty))))}` : ''}</p>`;
   };
-  // An add-in that breaks a dietary need the visitor gave (clash), or depends on the product (check): one plain line
+  // An add-in that breaks a dietary need the visitor gave (content's `clash`), or depends on the product (`check`): one plain
+  // line from content (chia.lines addinClash, addinCheck), nothing about health; no line when content has none
   const dietNote = id => {
     const x = D.addins[id], ds = [].concat(diets() || []);
     const clash = (x.clash || []).find(d => ds.includes(d)), check = (x.check || []).find(d => ds.includes(d));
-    if (clash) return (T.addinClash || "{x} isn't {d}, so I'd leave it out.").replace('{x}', x.label).replace('{d}', clash.replace('-', ' '));
-    if (check) return (T.addinCheck || 'Check the label on the {x} for {d}.').replace('{x}', x.label.toLowerCase()).replace('{d}', check.replace('-', ' '));
+    if (clash && T.addinClash) return agree(T.addinClash, x.label).replace('{x}', x.label).replace('{d}', clash);
+    if (check && T.addinCheck) return T.addinCheck.replace('{x}', x.label.toLowerCase()).replace('{d}', check);
     return '';
   };
   function draw() {

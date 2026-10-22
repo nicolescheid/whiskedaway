@@ -2144,7 +2144,9 @@ function kitchenSaid({ before, after, forgot }) {
   const line = !p.length ? K.cleared || "Cleared. I'll suggest anything."
     : p.length === 1 ? K.pick?.[p[0]] || `${capFirst(words[0])}.`
     : (K.many || "{x}. I'll keep to those.").replace('{x}', capFirst(listOf(words.slice(0, 2)) + (words.length > 2 ? ' and the rest' : '')));
-  say(line, [], true);
+  // Cards already out stay (PM): say so once when some no longer fit
+  const misfit = p.length && state.cards.some(c => atomsById[c.atom] && !kitchenFits(atomsById[c.atom], p));
+  say([line, misfit && K.cards_stay].filter(Boolean).join(' '), [], true);
   holdLine();
   scheduleNavigate();
 }

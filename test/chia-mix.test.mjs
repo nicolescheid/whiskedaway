@@ -75,4 +75,6 @@ test('plural labels take the plural verb', async () => {
   assert.equal(agree('{x} goes in.', 'Mango'), '{x} goes in.');
   assert.equal(agree('{x} is out again.', 'Rolled oats'), '{x} are out again.');
   assert.equal(agree('{x} drinks up liquid', 'Ground flaxseed'), '{x} drinks up liquid');
+  assert.equal(agree(D.lines.addinClash, 'Walnuts').startsWith("{x} aren't {d}"), true, 'the content clash line agrees');
+  assert.ok(!/health|good for|boost/i.test(D.lines.addinClash + D.lines.addinCheck), 'no health words');
 });
