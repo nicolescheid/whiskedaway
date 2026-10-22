@@ -16,7 +16,7 @@
                  "moment": "From the farm up the road. The hens are laying well this week.", "moments": ["Brown eggs, mostly. The hens don't take requests.", "I keep them out of the fridge. Hard to say why."] },
     "fl-greens": { "ideas": ["eggs-on-greens", "silverbeet-pie", "tabbouleh"], "label": "The greens", "ref": "the bowl of greens", "type": "ambient", "themes": ["green", "garden", "fresh", "nourishing"],
                    "moment": "Kale and parsley, picked twenty minutes ago." },
-    "fl-range": { "ideas": ["red-lentil-soup", "chickpea-curry"], "label": "The range", "ref": "the range", "type": "ambient", "themes": ["cooking", "hearty", "hands-on", "warming", "eggs", "meal"],
+    "fl-range": { "label": "The range", "ref": "the range", "type": "ambient", "themes": ["cooking", "hearty", "hands-on", "warming", "eggs", "meal"],
                   "moment": "I light it first thing and it stays lit all day. The big pan lives on it." },
     "fl-dresser": { "ideas": ["seeded-oats", "chickpea-curry", "red-lentil-soup"], "label": "The kitchen hutch", "ref": "the kitchen hutch", "type": "ambient", "themes": ["pantry", "pulses", "seeds", "oats", "what-you-have", "whole-food"],
                     "moment": "Lentils, chickpeas, oats and seeds. Keep these jars full and there's always a good meal.", "moments": ["Everything is labelled. Mostly correctly.", "I top the jars up on the first of the month."] },

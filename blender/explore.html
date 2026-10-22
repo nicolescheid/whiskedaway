@@ -1657,7 +1657,7 @@ const awayOut = () => state.cards.some(c => atomsById[c.atom] && isAway(atomsByI
 // An idea's headline ingredient: its first key ingredient that isn't a base most recipes share (chia seeds, milk, butter…)
 const BASES = new Set(['chia seed', 'chia', 'oat milk', 'milk', 'water', 'olive oil', 'butter', 'salt', 'black pepper', 'honey', 'maple syrup', 'greek yoghurt', 'yoghurt', 'egg']);
 const headline = a => (a.key_ingredients || []).map(i => i.toLowerCase().replace(/ies$/, 'y').replace(/([^s])s$/, '$1')).find(i => !BASES.has(i)) || null;
-function serve({ atom, why, fromKeep }, mode) {
+function serve({ atom, why, fromKeep }, mode, opts) {
   const a = atomsById[atom];
   if (!a || state.served.includes(atom) || book.has(atom)) return;
   if (isAway(a) && awayOut() && !state.awayLift?.[homeOf(state.room)]) return;   // not served, so it can come another time
@@ -1666,7 +1666,7 @@ function serve({ atom, why, fromKeep }, mode) {
   if (head && state.cards.some(c => atomsById[c.atom] && headline(atomsById[c.atom]) === head)) return;
   state.served.push(atom);
   servedBy[atom] = mode;
-  ideas.add({ atom, why }, ideaSource());
+  ideas.add({ atom, why }, ideaSource(), opts);
   // An idea that came from a keep says so, unless Gemma has just spoken about that keep (one line per event)
   if (fromKeep && state.trail.at(-1)?.kind === 'keep' && !state.keepSpoke && LINES.idea?.from_keep) say(pickLine('fromKeep', LINES.idea.from_keep), [], true);
   state.keepSpoke = false;
@@ -1981,7 +1981,7 @@ function canServe(a) {
 function showIdea(a, from) {
   if (!a) return;
   whenFree(() => {
-    if (!onCard(a.id)) serve({ atom: a.id, why: '' }, 'local');
+    if (!onCard(a.id)) serve({ atom: a.id, why: '' }, 'local', { force: true });   // asked for: it makes room
     if (onCard(a.id)) ideas.open(a.id, { focus: false });
     else ideaPage(book.get(a.id) || basket.get(a.id) || snapshot(a, ''), from);
   });

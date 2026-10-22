@@ -76,7 +76,8 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
   }
 
   /** A new idea from the navigator. `from`: the point it rises from ({x, y}), or null for Gemma's avatar. */
-  function add({ atom, why }, from = null) {
+  // force: a card the visitor asked for (an object's or the star chart's): with every card opened, it replaces the oldest
+  function add({ atom, why }, from = null, { force = false } = {}) {
     if (!atoms[atom] || entry(atom)) return;
     const first = !state.ideaSeen;
     state.ideaSeen = true;
@@ -85,7 +86,8 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
     else if (undoing) { state.waiting = card; save(); render(); return; }   // the set-aside idea's slot is kept for its Undo (QA P3-2)
     else {
       // Replace the oldest one that hasn't been opened; if every one has been, it waits as "+1"
-      const i = state.cards.map(c => c.opened).lastIndexOf(false);
+      let i = state.cards.map(c => c.opened).lastIndexOf(false);
+      if (i < 0 && force) i = state.cards.length - 1;
       if (i < 0) { state.waiting = card; save(); render(); return; }
       const gone = state.cards.splice(i, 1)[0];
       const el = col.querySelector(`[data-atom="${CSS.escape(gone.atom)}"]`);
