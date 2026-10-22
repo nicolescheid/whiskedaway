@@ -156,5 +156,21 @@
     "type": "ambient",
     "yaw": 146.0,
     "pitch": -36
+  },
+  "microwave": {
+    "label": "The microwave",
+    "overlay": null,
+    "type": "kitchen",
+    "yaw": 98.73,
+    "pitch": -14.9,
+    "appliance": "microwave"
+  },
+  "air-fryer": {
+    "label": "The air fryer",
+    "overlay": null,
+    "type": "kitchen",
+    "yaw": 115.36,
+    "pitch": -12.93,
+    "appliance": "air-fryer"
   }
 }

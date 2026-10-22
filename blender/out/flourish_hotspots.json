@@ -66,8 +66,8 @@
           "label": "The garden door",
           "type": "door",
           "overlay": null,
-          "yaw": 49.5,
-          "pitch": -10.68,
+          "yaw": 56.0,
+          "pitch": -14.0,
           "distance": 3.08,
           "visible": true
         },
@@ -124,6 +124,46 @@
           "pitch": -38.96,
           "distance": 1.56,
           "visible": false
+        },
+        "fl-food-processor": {
+          "label": "The food processor",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": -176.97,
+          "pitch": -25.18,
+          "distance": 1.21,
+          "visible": true,
+          "appliance": "food-processor"
+        },
+        "fl-air-fryer": {
+          "label": "The air fryer",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": 96.24,
+          "pitch": -14.65,
+          "distance": 2.09,
+          "visible": true,
+          "appliance": "air-fryer"
+        },
+        "fl-slow-cooker": {
+          "label": "The slow cooker",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": 83.24,
+          "pitch": -14.77,
+          "distance": 2.11,
+          "visible": true,
+          "appliance": "slow-cooker"
+        },
+        "fl-bbq": {
+          "label": "The barbecue",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": 45.71,
+          "pitch": -7.1,
+          "distance": 5.77,
+          "visible": true,
+          "appliance": "bbq"
         }
       }
     }
