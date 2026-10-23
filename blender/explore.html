@@ -718,9 +718,10 @@ import { install as installSweetGlue } from './explore/sweet-glue.js';
 import { install as installCentrepieces } from './explore/centrepieces.js';
 import { install as installTellGlue } from './explore/tell-glue.js';
 import { install as installThemeGlue } from './explore/theme-glue.js';
+import { install as installPanels } from './explore/panels.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, renderNotes, fromBook, chooseEnergy });   // wa-split: main's functions the modules call
+Object.assign(inn, { lookTo, record, introduce, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, chooseEnergy, showWeather, showCandle });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -768,7 +769,7 @@ world.atoms.push(...(glassWorld.atoms || []));
 const ROOMS = {
   cuddlecore: { title: 'Cuddlecore', where: 'In Cuddlecore', eye: [0, 0, 1.6], spots: kitchenSpots, yaw: world.yaw,
                 pano: (w, night, full) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` },
-};
+}; inn.ROOMS = ROOMS;
 for (const [id, st] of Object.entries(hallWorld.stops)) {
   const stop = hallSpots.stops[st.stop];
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
@@ -812,7 +813,7 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a])); inn.atomsById = atomsById;
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
 const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null; inn.homeOf = homeOf;
-const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
+const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); inn.esc = esc;
 
 // ---------- state (session only)
@@ -1008,11 +1009,11 @@ function crossFade(tex) {
 }
 
 /** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
-let erwina = null;                                   // the Inn cat (explore/erwina.js), made once the room is set up
+inn.erwina = null;                                   // the Inn cat (explore/erwina.js), made once the room is set up
 async function showWeather(w, { fade = true } = {}) {
   const night = isNight(), R = room(), at = state.room, season = seasonNow();
   sound.ambience(at, w, { night, season, time: timeNow() });                     // the room's quiet bed follows the weather
-  erwina?.update();                                  // the cat: is a spot possible here, in this weather, at this time?
+  inn.erwina?.update();                                  // the cat: is a spot possible here, in this weather, at this time?
   const stale = () => w !== state.weather || night !== isNight() || at !== state.room || season !== seasonNow();
   let shown = w;                                     // a room without this weather's render falls back to rain
   let preview = night && !R.dayOnly && !R.noNight ? await loadTex(R.pano(w, true, false)) : null;
@@ -1023,7 +1024,7 @@ async function showWeather(w, { fade = true } = {}) {
   $('tint').className = night ? (haveNight ? '' : 'night') : (timeNow() === 'midday' ? '' : timeNow());
   setThemeColor();
   stage.className = stage.className.replace(/\s*wx-\S+/g, '') + (R.dayOnly || shown !== w ? ` wx-${w}` : '');
-  if (preview) erwina?.lightFrom(preview);          // she's lit from the pano on screen
+  if (preview) inn.erwina?.lightFrom(preview);          // she's lit from the pano on screen
   if (preview) fade && sphere.material.map ? crossFade(preview) : (showTex(preview), render());
   if (useFull) {
     const full = await loadTex(fullUrl(R.pano(shown, haveNight, true)));
@@ -1031,9 +1032,9 @@ async function showWeather(w, { fade = true } = {}) {
   }
 }
 const firstView = showWeather(state.weather, { fade: false });
-firstView.then(() => erwina?.ensure());                // the cat: armed on a first load or reload too, once the first view is up
-addEventListener('pageshow', () => erwina?.ensure());
-document.addEventListener('visibilitychange', () => { if (!document.hidden) erwina?.ensure(); });
+firstView.then(() => inn.erwina?.ensure());                // the cat: armed on a first load or reload too, once the first view is up
+addEventListener('pageshow', () => inn.erwina?.ensure());
+document.addEventListener('visibilitychange', () => { if (!document.hidden) inn.erwina?.ensure(); });
 window.__door?.innShown(firstView);
 // The browser's toolbar colour: the door's paper while it's up, then parchment by day and the night blue after dark
 function setThemeColor() {
@@ -1066,17 +1067,17 @@ const ERWINA_LINES = {
   trace: ['Still warm. She was just here.', "Hairs. Erwina's been and gone."],
   tap: ["Gone. She doesn't stay for questions.", 'And off she goes. She does that too.'],
 };
-const erwinaNote = sure => LINES.erwina?.notebook?.[sure ? 'seen' : 'maybe'] || (sure ? 'You saw Erwina' : 'You think you saw Erwina');
-erwina = createErwina({
+const erwinaNote = sure => LINES.erwina?.notebook?.[sure ? 'seen' : 'maybe'] || (sure ? 'You saw Erwina' : 'You think you saw Erwina'); inn.erwinaNote = erwinaNote;
+inn.erwina = createErwina({
   THREE, scene, camera, stage, render, ROOMS, dir, look, saveData, panoTier, sound, track,
   room: () => state.room, weather: () => state.weather, isNight,
   pick: kind => inn.pickLine(`erwina.${kind}`, LINES.erwina?.[kind]?.length ? LINES.erwina[kind] : ERWINA_LINES[kind]),
   say: t => inn.say(t, [], true),
-  notes: () => renderNotes(),
+  notes: () => inn.renderNotes(),
   chatCover: () => document.body.dataset.chat === 'full' ? $('chatwin').getBoundingClientRect() : null,   // under the open chat she isn't being looked at
 });
-if (sphere.material.map) erwina.lightFrom(sphere.material.map);
-erwina.update();
+if (sphere.material.map) inn.erwina.lightFrom(sphere.material.map);
+inn.erwina.update();
 
 // ---------- the clocks: hands drawn live in true perspective, one set per room view
 // room metres -> viewer space, for a camera standing at eye
@@ -1089,7 +1090,7 @@ if (ROOMS.cuddlecore.clock) {
   kitchenSpots.clock = { yaw: THREE.MathUtils.radToDeg(Math.atan2(cx, cy)), pitch: THREE.MathUtils.radToDeg(Math.atan2(cz - 1.6, Math.hypot(cx, cy))) };
 }
 for (const [id, R] of Object.entries(ROOMS)) if (R.clock) clocks[id] = makeClock(R.clock, R.eye);
-const setHands = (hours, animate) => Object.values(clocks).forEach(c => c.setHands(hours, animate));
+const setHands = (hours, animate) => Object.values(clocks).forEach(c => c.setHands(hours, animate)); inn.setHands = setHands;
 function showClock() { for (const [id, c] of Object.entries(clocks)) c.group.visible = id === state.room; }
 
 function makeClock(clockFx, eye) {
@@ -1140,7 +1141,7 @@ function makeClock(clockFx, eye) {
   };
   return { group: clock, setHands };
 }
-const handsHour = () => state.time ? world.times[state.time].hour : new Date().getHours() + new Date().getMinutes() / 60;
+const handsHour = () => state.time ? world.times[state.time].hour : new Date().getHours() + new Date().getMinutes() / 60; inn.handsHour = handsHour;
 
 // ---------- hotspots
 inn.hotspots = []; let spotOrder = '';
@@ -1201,7 +1202,7 @@ function resize() {
 }
 addEventListener('resize', resize);
 
-let drag = null, lastMove = performance.now(), hasLooked = false;   // no lingering until the visitor has looked around
+let drag = null; let lastMove = performance.now(); inn.hasLooked = false;   // no lingering until the visitor has looked around
 stage.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, ...look }; stage.classList.add('dragging'); stage.setPointerCapture(e.pointerId); });
 stage.addEventListener('pointermove', e => {
   if (!drag) return;
@@ -1209,7 +1210,7 @@ stage.addEventListener('pointermove', e => {
   look.yaw = drag.yaw - (e.clientX - drag.x) * k;
   look.pitch = THREE.MathUtils.clamp(drag.pitch + (e.clientY - drag.y) * k, -75, 75);
   lastMove = performance.now();
-  hasLooked = true;
+  inn.hasLooked = true;
   render();
 });
 // A drag ends however the pointer goes: lifted, cancelled by the browser (a scroll or gesture took over), or capture lost (R16)
@@ -1228,7 +1229,7 @@ stage.addEventListener('keydown', e => {
   if (turn) { look.yaw += turn[0]; look.pitch = THREE.MathUtils.clamp(look.pitch + turn[1], -75, 75); }
   if (zoom) { camera.fov = THREE.MathUtils.clamp(camera.fov + zoom, 40, 95); camera.updateProjectionMatrix(); }
   lastMove = performance.now();
-  hasLooked = true;
+  inn.hasLooked = true;
   render();
 });
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1250,7 +1251,7 @@ function lookTo(yaw, pitch) {
 }
 
 // ---------- trail + lingering
-const label = id => world.objects[id]?.label || id;
+const label = id => world.objects[id]?.label || id; inn.label = label;
 const lingered = {};
 const SYS = {
   touch: e => `You went to ${world.objects[e.id]?.ref || label(e.id)}`,
@@ -1266,7 +1267,7 @@ const SYS = {
   recipe: e => `Gemma wrote out "${atomsById[e.atom]?.title}"`,
 };
 // ---------- counting (docs/analytics-plan.md): what happens to the site, never the wander itself
-const stepNow = () => stepBucket(state.trail.length);
+const stepNow = () => stepBucket(state.trail.length); inn.stepNow = stepNow;
 const servedBy = {}; inn.servedBy = servedBy;                      // which navigator served each card, kept for this page only
 function countAtom(name, atom, more = {}) {
   track(name, { atom, atom_kind: atomsById[atom]?.kind, nav_mode: servedBy[atom] || state.result?.mode || (AI ? 'ai' : 'local'),
@@ -1278,12 +1279,12 @@ function record(e) {
   state.trail.push({ ...e, t: Date.now() });
   state.trail = state.trail.slice(-40);
   store.save(state);
-  renderNotes();
+  inn.renderNotes();
   if (e.kind !== 'room' && e.kind !== 'dial') inn.scheduleNavigate();   // walking about isn't a mood
 }
 setInterval(() => {
-  erwina?.tick({ still: !drag && !document.hidden && performance.now() - lastMove >= 1000 });   // the cat looks for a still second
-  if (!hasLooked || drag || document.hidden || performance.now() - lastMove < 2000) return;
+  inn.erwina?.tick({ still: !drag && !document.hidden && performance.now() - lastMove >= 1000 });   // the cat looks for a still second
+  if (!inn.hasLooked || drag || document.hidden || performance.now() - lastMove < 2000) return;
   const centre = dir(look.yaw, look.pitch);
   for (const h of inn.hotspots) {
     const ang = THREE.MathUtils.radToDeg(centre.angleTo(h.v.clone().normalize()));
@@ -1387,7 +1388,7 @@ function goRoom(id, yaw) {
   look.pitch = room().pitch ?? -6;                    // a stop may look a little lower on arrival (Flourish: its low table clears the chat)
   setRoomText();
   buildHotspots();
-  fillMap();
+  inn.fillMap();
   showClock();
   showWeather(state.weather);
   record({ kind: 'room', id });
@@ -1461,132 +1462,7 @@ installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary an
 
 installThemeGlue(inn);   // the visit's theme caption and the hallway notice board
 
-// The top bar's and the chat's heights: the highlight, the undo and Turnstile's box sit between them on phones
-function fitDock() {
-  const s = document.documentElement.style;
-  s.setProperty('--bar-h', `${Math.round(document.querySelector('.bar').getBoundingClientRect().bottom)}px`);
-  s.setProperty('--chat-h', `${Math.round(innerHeight - $('chatwin').getBoundingClientRect().top)}px`);
-  s.setProperty('--ideas-h', `${Math.round(inn.ideas.el.getBoundingClientRect().height)}px`);   // the theme caption sits above the column
-  inn.ideas.place();
-}
-const fitter = new ResizeObserver(fitDock);
-fitter.observe(document.querySelector('.bar'));
-fitter.observe($('chatwin'));
-fitter.observe(inn.ideas.el);
-addEventListener('resize', fitDock);
-
-// ---------- map + notebook (the fixed navigation)
-function fillMap() {
-  $('map-tools').innerHTML = $('map-room').innerHTML = '';
-  const item = id => {
-    const li = document.createElement('li');
-    const b = document.createElement('button');
-    b.textContent = world.objects[id]?.map || label(id);
-    if (world.objects[id]?.blurb) { b.insertAdjacentHTML('beforeend', `<span class="blurb">${esc(world.objects[id].blurb)}</span>`); b.setAttribute('aria-label', `${b.firstChild.textContent}: ${world.objects[id].blurb}`); }
-    b.onclick = () => { const s = inn.spots[id]; hasLooked = true; lookTo(s.yaw, s.pitch); record({ kind: 'map', id }); };
-    li.appendChild(b);
-    return li;
-  };
-  Object.entries(world.objects).forEach(([id, o]) => {
-    if (!inn.spots[id] || o.map_hide) return;
-    $(o.type === 'ambient' ? 'map-room' : 'map-tools').appendChild(item(id));
-  });
-}
-// The notebook's "What you've told me" (its own block: it becomes the book's "This visit" page): what the visitor told
-// the Inn about themselves, in Gemma's words, each with its own "forget". An energy's line is its "told" in
-// cuddlecore-world.json when the content editor adds one; until then these.
-const TOLD_ENERGY = { 'burnt-out': "You're running on empty today.", low: "You're running low today.",
-                      half: "You've got about half your energy today.", 'three-quarters': "You've got plenty in you today.",
-                      full: "You're full of beans today." };
-const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]),
-               dietary: v => [].concat(v || []).length && `You're eating ${listOf([].concat(v).map(d => inn.DIET_WORD[d] || d))}.`,
-               dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
-               pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
-               cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
-               country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
-               kitchen: v => kitchenPicks(v).length && `${LINES.kitchen?.visit_row || 'Your kitchen'}: ${kitchenPicks(v)[0] === NO_COOKING ? kitchenWords(v, LINES.kitchen)[0] : listOf(kitchenWords(v, LINES.kitchen))}.`,
-               time: v => toldLine(inn.CW, 'time', v), servings: v => toldLine(inn.CW, 'servings', v), confidence: v => toldLine(inn.CW, 'confidence', v), ...sweetTold(inn.sweet.data) };
-const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet' };
-const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`); inn.listOf = listOf;
-function renderTold() {
-  const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
-  $('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
-    : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
-  $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
-  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : inn.tell.open(b.dataset.change, 'book'))));
-  $('told').querySelector('[data-menu]')?.addEventListener('click', fromBook(() => inn.tell.openMenu('book')));
-}
-// A sheet opened from inside the book waits for the book's step back in history: otherwise that late step lands on the
-// sheet's own history entry and closes it again (QA 9 issue 1)
-function fromBook(fn) {
-  return () => {
-    if (!inn.bookView.isOpen) return fn();
-    inn.bookView.close();
-    layers.afterBack(fn);
-  };
-}
-visit.subscribe(({ part, key, value }) => {
-  renderTold();
-  if (part === 'all' || key === 'energy') showCandle();               // forgetting the energy puts the candle out
-  if (part === 'all' || key === 'kitchen') { state.kitchenLoose = {}; if (part === 'about' && !value) inn.scheduleNavigate(); }
-  if (part === 'about' && ['energy', 'time', 'servings', 'confidence'].includes(key) && !value) inn.scheduleNavigate();
-  if ((part === 'about' && key === 'servings') || part === 'all') inn.bookView.refresh();   // the shopping list's amounts
-  if ((part === 'about' && key === 'dietary') || part === 'all') {
-    const gone = state.cards.filter(c => atomsById[c.atom] && inn.dietClash(atomsById[c.atom]));
-    gone.forEach(c => inn.ideas.remove(c.atom));
-    if (gone.length) {
-      const a = atomsById[gone[0].atom];
-      inn.say((LINES.diet_clash || "I've taken the {title} away. It isn't {diet}.").replace('{title}', a.short?.toLowerCase() || a.title).replace('{diet}', inn.dietClash(a)), [], true);
-    }
-    inn.bookView.refresh();
-  }
-});
-function renderNotes() {
-  renderTold();
-  const r = state.result;
-  let pass = null;
-  try { pass = JSON.parse(sessionStorage.getItem('wa-genie-pass') || 'null'); } catch { /* ignore */ }
-  $('visitor').textContent = !AI ? 'Not needed in local mode.'
-    : pass && pass.until > Date.now() ? `Passed ✓ (good for ${Math.round((pass.until - Date.now()) / 60000)} more minutes)`
-    : (() => { try { const e = sessionStorage.getItem('wa-genie-error'); return e ? `Didn't pass (${/timeout/.test(e) ? 'the check took too long' : /unavailable/.test(e) ? "the check couldn't load" : 'the check failed'}), so Gemma is reading your wander on her own.` : null; } catch { return null; } })()
-      || 'Not passed yet. Gemma checks quietly the first time you wander.';
-  $('guess').textContent = r?.hypothesis ? `You might be after ${r.hypothesis}.` : 'Nothing yet. Have a wander.';
-  $('conf').style.width = `${Math.round((r?.confidence || 0) * 100)}%`;
-  const verbs = { touch: 'Touched', linger: 'Lingered by', map: 'Looked on the map for', open: 'Read', dismiss: 'Set aside', keep: 'Kept', recipe: 'Got the full recipe for', choose: 'Chose', weather: 'Turned the barometer to', time: 'Pushed the clock to', room: 'Went into', dial: 'Turned the dial to', energy: 'Picked the', season: 'Turned the seasons wheel to' };
-  // Sightings of Erwina sit among the trail by time, as plain lines (they're kept by erwina.js, not in the trail)
-  const cat = (erwina?.notes() || []).map(n => ({ t: n.t, html: `<li>${esc(erwinaNote(n.sure))}</li>` }));
-  $('trail').innerHTML = state.trail.slice().reverse().slice(0, 25).filter(e => verbs[e.kind]).map(e => ({ t: e.t || 0, html:
-    `<li>${verbs[e.kind]} ${esc(e.kind === 'weather' ? world.weathers[e.id]?.label : e.kind === 'time' ? world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? world.energies[e.id]?.candle : e.kind === 'season' ? world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (world.objects[e.id]?.ref || label(e.id)) : e.atom ? atomsById[e.atom]?.title : world.clusters[e.cluster]?.label)}</li>` })).concat(cat)
-    .sort((a, b) => b.t - a.t).slice(0, 25).map(i => i.html).join('');
-}
-function togglePanel(id, btn) {
-  const p = $(id), open = !p.classList.contains('open');
-  document.querySelectorAll('.panel').forEach(x => x.classList.remove('open'));
-  document.querySelectorAll('.bar .chip').forEach(x => { x.classList.remove('on'); x.setAttribute('aria-expanded', 'false'); });
-  if (open) { p.classList.add('open'); btn.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); }
-  if (open) track('map_open', { room: state.room });
-}
-$('btn-map').onclick = e => togglePanel('map', e.currentTarget);
-// The bar's "Front door" does what the hall's front door does (J6): Gemma says goodbye, then the door picture
-$('btn-inn').onclick = e => {
-  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;          // a new tab or window: let the link be a link
-  e.preventDefault();
-  track('leave_to_inn', { room: state.room, step: stepNow() });
-  inn.say(hallWorld.objects['front-door']?.leaving || 'Mind the step, love.', [], true);
-  setTimeout(() => { location.href = $('btn-inn').href; }, 1200);
-};
-$('forget').onclick = () => {
-  track('visit_forget');
-  store.clear();
-  visit.clear();                               // what they told the Inn goes too
-  Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], waiting: null, ideaSeen: false, keeps: 0, dismissals: 0, linesUsed: {}, result: null, weather: world.default_weather || 'rain', time: null, season: null, seasonTold: false, introduced: [], asked: false, chat: [] });
-  showCandle();
-  inn.renderChat(); inn.setChips([]);
-  setHands(handsHour());
-  showWeather(state.weather);
-  inn.ideas.clearAll(); inn.writer.clear(); renderNotes(); inn.applyReveal([]);
-  inn.chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
-};
+installPanels(inn);   // the bar, the Map panel, the notebook and Forget
 
 function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; showDialog('tool'); }
 $('tool-ok').onclick = () => hideDialog('tool');
@@ -1615,7 +1491,7 @@ addEventListener('keydown', e => {
     if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
   } else if (e.key === 'Escape' && !d) {
     const p = document.querySelector('.panel.open');
-    if (p) { const btn = $('btn-map'); togglePanel(p.id, btn); btn.focus(); }
+    if (p) { const btn = $('btn-map'); inn.togglePanel(p.id, btn); btn.focus(); }
   }
 }, true);
 
@@ -1921,11 +1797,11 @@ showClock();
 if (state.room !== 'cuddlecore') askHemisphere();
 look.yaw = room().yaw ?? 0;
 look.pitch = room().pitch ?? -6;
-fillMap();
+inn.fillMap();
 inn.shopWords.apply(visit.get('country') || inn.mapDefault());   // before the first render
 inn.ideas.render();
 inn.renderTheme();
-renderNotes();
+inn.renderNotes();
 inn.renderChat();
 if (state.chips?.length) inn.setChips(state.chips);
 checkinPill();                                     // a reload keeps the check-in offer if it's still open   // the last question's answers, if it's still open (J9)
