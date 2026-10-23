@@ -70,16 +70,16 @@
           "label": "The herbs",
           "type": "ambient",
           "overlay": null,
-          "yaw": -132.41,
-          "pitch": -37.05,
-          "distance": 2.43,
+          "yaw": -134.43,
+          "pitch": -38.36,
+          "distance": 2.36,
           "visible": true
         },
         "gd-beds": {
           "label": "The vegetable beds",
           "type": "ambient",
           "overlay": null,
-          "yaw": 62.33,
+          "yaw": 62.04,
           "pitch": -5.45,
           "distance": 4.75,
           "visible": true
@@ -201,18 +201,18 @@
           "label": "The herbs",
           "type": "ambient",
           "overlay": null,
-          "yaw": -123.98,
-          "pitch": -13.89,
-          "distance": 6.09,
+          "yaw": -125.02,
+          "pitch": -13.96,
+          "distance": 6.06,
           "visible": false
         },
         "gd-beds": {
           "label": "The vegetable beds",
           "type": "ambient",
           "overlay": null,
-          "yaw": 162.2,
-          "pitch": -5.11,
-          "distance": 5.06,
+          "yaw": 162.0,
+          "pitch": -5.13,
+          "distance": 5.05,
           "visible": true
         },
         "gd-tent": {
