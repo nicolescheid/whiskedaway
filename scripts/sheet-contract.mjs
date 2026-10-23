@@ -5,6 +5,8 @@
 //   - history:  the page is on the same history entry it was on before the sheet opened (no step left over, none taken too many)
 //   - focus:    focus is back on what opened it
 //   - kept:     an answer tapped in the sheet is kept, where the sheet's policy says it should be for that way out
+// While it's open (accessibility-review-1.md, section A): the room behind it is inert and focus is inside it. Escape closes
+// that one layer and nothing else (A1: it used to shrink the chat too).
 // Plus three journeys: sheets over sheets (cook mode and the shopping list over the book, Tell Gemma from the book), the
 // Tell Gemma menu into one of its sheets, and a centrepiece's cast finishing while another sheet is open.
 //
@@ -89,7 +91,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
     const errors = [];
     const onErr = e => errors.push(String(e.message).slice(0, 160));
     page.on('pageerror', onErr);
-    page.setDefaultTimeout(5000);                               // a sheet that never opens or closes fails fast, not after 30 s
+    page.setDefaultTimeout(5000); page.setDefaultNavigationTimeout(20000);                              // a sheet that never opens or closes fails fast, not after 30 s
     const load = async (room = 'cuddlecore') => {
       // after a Back that left the Inn, that navigation may still be landing: let it, then come back in
       for (let i = 0; ; i++) {
@@ -99,7 +101,8 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
       await page.waitForTimeout(400);
     };
     // A new tab after Back has left the Inn, so the next case starts on a clean history
-    const fresh = async () => { await page.close().catch(() => {}); page = await ctx.newPage(); page.on('pageerror', onErr); page.setDefaultTimeout(5000); await load(); };
+    const fresh = async () => { const old = page; page = await ctx.newPage(); old.close().catch(() => {});   // never waited on: closing a tab mid-navigation can hang
+      page.on('pageerror', onErr); page.setDefaultTimeout(5000); page.setDefaultNavigationTimeout(20000); await load(); };
     await load();
     let bad = false;                                           // this case failed something: the next one starts in a new tab
     const rec = (sheet, way, check, ok, note = '') => { if (!ok) bad = true; results.push({ size, sheet, way, check, ok, note }); };
@@ -110,16 +113,26 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
       for (const way of ALL) {
         const sel = way === 'done' || way === 'x' ? S.ways[way] : true;
         if (!sel) continue;                                     // this sheet has no such way out
-        if (bad) { bad = false; await fresh(); }
-        try {
+        const wasBad = bad; bad = false;
+        if (process.env.SHEETS_VERBOSE) console.log(`  · ${size} ${S.id} ${way}`);
+        try { await watchdog(async () => {
+          if (wasBad) await fresh();
           if (!(await page.evaluate(() => !!window.__explore))) await load();
           await settleClean(page);
+          // Escape is tested with the chat at Short, where a second Escape handler would shrink it (A1)
+          const chatBefore = way === 'escape' ? await page.evaluate(() => { window.__explore.chatUI.choose?.('short', 'button'); return document.body.dataset.chat; }) : null;
           const opener = await openSheet(page, S);
-          if (!opener.ok) { rec(S.id, way, 'opens', false, opener.note); continue; }
+          if (!opener.ok) { rec(S.id, way, 'opens', false, opener.note); return; }
+          if (way === 'escape') {                               // once per sheet: what's true while it's open
+            const during = await page.evaluate(root => ({ behind: !!document.getElementById('stage')?.closest('[inert]'),
+              inside: !!document.querySelector(root)?.contains(document.activeElement) }), S.root);
+            rec(S.id, 'open', 'room behind inert', during.behind);
+            rec(S.id, 'open', 'focus inside', during.inside);
+          }
           const before = await page.evaluate(PROBE);
           const answered = await answer(page, S);
           const r = await closeBy(page, S, way);
-          if (r.left) { rec(S.id, way, 'closed', false, 'Back left the Inn'); continue; }
+          if (r.left) { rec(S.id, way, 'closed', false, 'Back left the Inn'); return; }
           await page.waitForTimeout(900);                       // her line after a close waits 200 ms, then types 350 ms
           const after = await page.evaluate(([root, openerSel]) => ({
             hidden: (() => { const el = document.querySelector(root); return !el || el.hidden || (el.classList.contains('tool') && !el.classList.contains('open')); })(),
@@ -133,6 +146,10 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
           const balanced = JSON.stringify(hist) === JSON.stringify(opener.state);
           rec(S.id, way, 'history', balanced, balanced ? '' : `on ${JSON.stringify(hist)}, want ${JSON.stringify(opener.state)}`);
           rec(S.id, way, 'focus', after.focus, after.focus ? '' : `focus on ${after.active}`);
+          if (chatBefore) {
+            const chatAfter = await page.evaluate(() => document.body.dataset.chat);
+            rec(S.id, way, 'closes only itself', chatAfter === chatBefore, chatAfter === chatBefore ? '' : `the chat went from ${chatBefore} to ${chatAfter}`);
+          }
           if (answered) {
             const now = await page.evaluate(PROBE);
             const kept = S.answer === 'star' ? now.chat > before.chat : S.answer === 'weather' ? now.weather !== before.weather
@@ -140,16 +157,17 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
             const want = S.keep.includes(way);
             rec(S.id, way, 'kept', kept === want, want ? (kept ? '' : 'the answer was lost') : (kept ? 'kept, though this way out cancels' : ''));
           }
-        } catch (e) { rec(S.id, way, 'runs', false, String(e.message).split('\n')[0].slice(0, 140)); }
+        }); } catch (e) { rec(S.id, way, 'runs', false, String(e.message).split('\n')[0].slice(0, 140)); }
       }
     }
 
     // ---------- journeys
     for (const J of process.env.SHEETS_ONLY ? [] : JOURNEYS) {
       try {
+        if (process.env.SHEETS_VERBOSE) console.log(`  · ${size} ${J.id}`);
         await fresh();
         await settleClean(page);
-        const out = await J.run(page, { atom });
+        const out = await watchdog(() => J.run(page, { atom }), 60000);
         for (const [check, ok, note] of out) rec(J.id, '-', check, ok, note || '');
       } catch (e) { rec(J.id, '-', 'runs', false, String(e.message).split('\n')[0].slice(0, 140)); }
     }
@@ -158,6 +176,13 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
   }
   if (process.env.SHEETS_DUMP) (await import('node:fs')).writeFileSync(process.env.SHEETS_DUMP, JSON.stringify(results, null, 1));
   return results;
+}
+
+/** fn, or a failure after `ms` (an evaluate that never returns would otherwise hang the whole check) */
+function watchdog(fn, ms = 30000) {
+  let timer;
+  return Promise.race([fn(), new Promise((_, no) => { timer = setTimeout(() => no(new Error(`hung for ${ms / 1000} s`)), ms); })])
+    .finally(() => clearTimeout(timer));
 }
 
 /** Report: failures not in EXPECTED fail the check; expected ones are listed; expected ones that passed are warnings */
@@ -251,7 +276,7 @@ async function closeBy(page, S, way) {
     await page.keyboard.press('Escape');
   } else {
     // A different document after Back (a page further back, or about:blank) means Back left the Inn
-    await page.evaluate(() => { window.__sameDoc = true; history.back(); });
+    try { await page.evaluate(() => { window.__sameDoc = true; setTimeout(() => history.back()); }); } catch { return { left: true }; }
     await page.waitForTimeout(700);
     const left = await page.evaluate(() => !window.__sameDoc).catch(() => true);
     if (left) return { left: true };
@@ -272,6 +297,19 @@ const sameEntry = async (page, want) => { const now = await page.evaluate(() => 
 const back = async page => { await page.evaluate(() => history.back()); await page.waitForTimeout(700); return page.evaluate(() => !!window.__explore).catch(() => false); };
 
 const JOURNEYS = [
+  { id: 'opener gone', async run(page) {
+    const out = [];
+    await page.evaluate(async () => { const ex = window.__explore, s = ex.spot('pantry-cabinet'); ex.lookTo(s.yaw, s.pitch); await new Promise(r => setTimeout(r, 100)); document.querySelector('.spot[data-spot="pantry-cabinet"]').focus(); });
+    await page.keyboard.press('Enter');
+    out.push(['the pantry opens', await shown(page, '#tell')]);
+    await page.evaluate(() => { document.querySelector('.spot[data-spot="pantry-cabinet"]')?.remove(); });   // its hotspot goes, as on a room change
+    await page.click('#tell .tl-x');
+    await page.waitForTimeout(600);
+    const at = await page.evaluate(() => { const a = document.activeElement; return !a || a === document.body ? 'body' : (a.id || a.className || a.tagName).toString().slice(0, 40); });
+    out.push(['focus has somewhere to go', at !== 'body', `focus on ${at}`]);
+    out.push(...await clean(page));
+    return out;
+  } },
   { id: 'cook over the book', async run(page, { atom }) {
     const out = [], entry = await marked(page);
     await page.click('#btn-mybook');
