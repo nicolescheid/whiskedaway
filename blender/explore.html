@@ -707,6 +707,7 @@ import { createErwina } from './explore/erwina.js';
 import { createShopWords } from './explore/shopwords.js';
 import { createStarChart } from './explore/star-chart.js';
 import { pickIdea } from './explore/idea-pick.js';
+import { layers } from './explore/layers.js';
 import { kitchenPicks, kitchenFits, fitKitchen, kitchenWords, kitchenPayload, NONE as NO_COOKING } from './explore/kitchen.js';
 
 const params = new URLSearchParams(location.search);
@@ -1411,10 +1412,10 @@ function openDial() {
   const opts = hallWorld.dial.concat([{ label: 'Wherever my wander points', star: true }]);
   $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}"${o.blurb ? ` aria-label="${esc(o.label)}: ${esc(o.blurb)}"` : ''}>${o.star ? '✦ ' : ''}${esc(o.label)}${o.blurb ? `<span class="blurb">${esc(o.blurb)}</span>` : ''}</button>`).join('');
   $('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
-  $('dialdlg').classList.add('open');
+  showDialog('dialdlg');
 }
 function turnDial(o) {
-  $('dialdlg').classList.remove('open');
+  hideDialog('dialdlg');
   record({ kind: 'dial', id: o.star ? 'the star' : o.label });
   track('dial_turn', { dial_choice: o.star ? 'star' : o.go || 'closed' });
   // The star opens the room whose reading the wander leans to (the room identities, content stage 3): juices, smoothies,
@@ -1431,8 +1432,7 @@ function turnDial(o) {
   say(o.star ? (starSays[go] || 'Your wander says Cuddlecore. In you go.') : 'In you go.', [], true);
   setTimeout(() => goRoom(go), 700);
 }
-$('dial-ok').onclick = () => $('dialdlg').classList.remove('open');
-addEventListener('keydown', e => { if (e.key === 'Escape') $('dialdlg').classList.remove('open'); });
+$('dial-ok').onclick = () => hideDialog('dialdlg');
 
 // ---------- navigator
 let navTimer, navSeq = 0, lineHeldUntil = 0;
@@ -1605,8 +1605,8 @@ document.addEventListener('click', e => { if (e.target.closest('.dial button')) 
 sound.place(state.room);
 let lastHour = new Date().getHours();
 setInterval(() => { const h = new Date().getHours(); if (h !== lastHour && !state.time) sound.strike(h); lastHour = h; }, 20000);
-$('cw-credits').onclick = () => $('credits').classList.add('open');
-$('credits-ok').onclick = () => $('credits').classList.remove('open');
+$('cw-credits').onclick = () => showDialog('credits');
+$('credits-ok').onclick = () => hideDialog('credits');
 
 // ---------- Gemma's Ideas (explore/ideas.js) and the recipe book (explore/book.js, explore/book-view.js)
 // Lines for ideas and the book come from gemma-lines.json (content editor); these stand in for any it doesn't have yet
@@ -2428,33 +2428,36 @@ $('forget').onclick = () => {
   chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
 };
 
-function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; $('tool').classList.add('open'); $('tool-ok').focus(); }
-$('tool-ok').onclick = () => $('tool').classList.remove('open');
-addEventListener('keydown', e => { if (e.key === 'Escape') $('tool').classList.remove('open'); });
+function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; showDialog('tool'); }
+$('tool-ok').onclick = () => hideDialog('tool');
 
-// ---------- dialogs: focus goes in, Tab stays inside, Escape closes, and focus goes back to what opened it
-// (the welcome card does its own focus and Escape, in front-door.js)
-let opener = null;
-document.addEventListener('focusin', e => { if (!e.target.closest('.tool')) opener = e.target; });
-document.addEventListener('click', e => { const t = e.target.closest?.('button, a[href]'); if (t && !t.closest('.tool')) opener = t; }, true);
-const openDialog = () => [...document.querySelectorAll('.tool.open')].at(-1);
-const focusables = el => [...el.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled && x.offsetParent);
-document.querySelectorAll('.tool').forEach(d => new MutationObserver(() => {
-  const at = document.activeElement;
-  if (d.classList.contains('open')) { if (!d.contains(at)) (d.querySelector('.dial .on') || d.querySelector('.dial button, .ok') || focusables(d)[0])?.focus(); }
-  else if (opener?.isConnected && (!at || at === document.body || d.contains(at))) opener.focus();
-}).observe(d, { attributes: true, attributeFilter: ['class'] }));
+// ---------- the Inn's small dialogs (.tool: the barometer, clock, dial, seasons wheel, credits): each one a layer
+// (explore/layers.js), which owns their history step, Escape, Tab, inert and focus. The welcome card is front-door.js's own
+function showDialog(id) {
+  const d = $(id);
+  if (!layers.isOpen(d)) {                                  // open already (the seasons wheel redraws itself): just the focus
+    d.classList.add('open');
+    layers.open({ el: d, name: id, close: () => hideDialog(id) });
+  }
+  (d.querySelector('.dial .on') || d.querySelector('.dial button, .ok'))?.focus();
+}
+function hideDialog(id) {
+  const d = $(id);
+  if (!d.classList.contains('open')) return;
+  d.classList.remove('open');
+  layers.closed({ el: d, name: id });
+}
+// The welcome card keeps Tab inside it; Escape with no layer open closes the Map panel
 addEventListener('keydown', e => {
-  const d = openDialog();
+  const d = $('welcome')?.classList.contains('open') ? $('welcome') : null;
   if (e.key === 'Tab' && d) {
-    const f = focusables(d), i = f.indexOf(document.activeElement);
+    const f = [...d.querySelectorAll('button, a[href]')].filter(x => !x.disabled && x.offsetParent), i = f.indexOf(document.activeElement);
     if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-  } else if (e.key === 'Escape') {
-    if (d) { if (d.id !== 'welcome') d.classList.remove('open'); return; }
+  } else if (e.key === 'Escape' && !d) {
     const p = document.querySelector('.panel.open');
     if (p) { const btn = $('btn-map'); togglePanel(p.id, btn); btn.focus(); }
   }
-}, true);   // capture: see which dialog was open before the per-dialog Escape handlers close it
+}, true);
 
 // Test hooks for scripted checks
 // ---------- barometer
@@ -2462,8 +2465,7 @@ function openWeather() {
   $('dial').innerHTML = Object.entries(world.weathers).map(([id, w]) =>
     `<button data-w="${esc(id)}" class="${id === state.weather ? 'on' : ''}" aria-pressed="${id === state.weather}">${esc(w.label)}</button>`).join('');
   $('dial').querySelectorAll('button').forEach(b => b.onclick = () => chooseWeather(b.dataset.w));
-  $('weather').classList.add('open');
-  $('dial').querySelector('.on')?.focus();
+  showDialog('weather');
 }
 function chooseWeather(id, { quiet = false } = {}) {
   if (!world.weathers[id]) return;
@@ -2477,15 +2479,14 @@ function chooseWeather(id, { quiet = false } = {}) {
   track('weather_change', { room: state.room, weather: id });
   introduce();
 }
-$('weather-ok').onclick = () => $('weather').classList.remove('open');
-addEventListener('keydown', e => { if (e.key === 'Escape') $('weather').classList.remove('open'); });
+$('weather-ok').onclick = () => hideDialog('weather');
 
 // ---------- clock
 function openClock() {
   const mine = deviceTime();
   $('clock-text').textContent = `Where you are it's ${world.times[mine].label.toLowerCase()}. Push the hands to whatever time you're cooking for.`;
   renderClock();
-  $('clockdlg').classList.add('open');
+  showDialog('clockdlg');
 }
 // The clock's buttons (QA R5): the time in effect is pressed (the pushed one, or the visitor's own when they haven't pushed
 // it), the visitor's own time says so on the button, and "Back to my time" appears as soon as the hands have moved
@@ -2516,8 +2517,7 @@ function chooseTime(id) {
     scheduleNavigate();
   }
 }
-$('clock-ok').onclick = () => $('clockdlg').classList.remove('open');
-addEventListener('keydown', e => { if (e.key === 'Escape') $('clockdlg').classList.remove('open'); });
+$('clock-ok').onclick = () => hideDialog('clockdlg');
 
 // ---------- seasons wheel: the Conservatory opens in the visitor's season; the wheel shows any other
 function openSeasons() {
@@ -2526,8 +2526,7 @@ function openSeasons() {
     .concat(state.season ? [{ id: '', label: 'Back to my season' }] : []);
   $('seasondial').innerHTML = opts.map(o => `<button data-s="${esc(o.id)}" class="${o.id && o.id === seasonNow() ? 'on' : ''}" aria-pressed="${!!o.id && o.id === seasonNow()}">${esc(o.label)}</button>`).join('');
   $('seasondial').querySelectorAll('button').forEach(b => b.onclick = () => chooseSeason(b.dataset.s || null));
-  $('seasondlg').classList.add('open');
-  $('seasondial').querySelector('.on')?.focus();
+  showDialog('seasondlg');
 }
 function chooseSeason(id) {
   if (id && !world.seasons[id]) return;
@@ -2548,8 +2547,7 @@ function chooseSeason(id) {
   }
   if ($('seasondlg').classList.contains('open')) openSeasons();   // show or drop "Back to my season"
 }
-$('season-ok').onclick = () => $('seasondlg').classList.remove('open');
-addEventListener('keydown', e => { if (e.key === 'Escape') $('seasondlg').classList.remove('open'); });
+$('season-ok').onclick = () => hideDialog('seasondlg');
 
 // ---------- energy candles: pick the one that matches how much you've got in you today
 // The candles are rendered unlit (the kitchen's five and the foyer desk's five). The chosen one is lit here:

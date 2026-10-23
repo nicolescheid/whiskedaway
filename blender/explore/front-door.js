@@ -10,6 +10,7 @@
 
 import { sound } from './sound.js';
 import { slowLink } from './data-budget.js';
+import { layers } from './layers.js';
 
 const ASSETS = 'explore/assets/front-door/';
 // The film's last frame is a 28 mm lens on a 36 mm sensor: its vertical view in degrees, before cropping to the screen
@@ -285,6 +286,7 @@ export function frontDoor({ active, track }) {
     credits.inert = false;
     credits.style.zIndex = '60';                         // above the door
     credits.classList.add('open');
+    layers.open({ el: credits, name: 'credits', close: () => $('credits-ok')?.click() });   // the Inn's credits-ok closes it
     $('credits-ok')?.focus();
   });
 

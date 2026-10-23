@@ -45,17 +45,9 @@ export const SHEETS = [
 
 // Today's known failures (23 Oct, main e7f5e48), reported but not failed. Key: "<sheet> <way>: <what>". The layer manager
 // (explore/layers.js, step 2) is meant to empty this list
-const NO_STEP = 'Back leaves the Inn: the Inn dialogs (the barometer, clock, dial and seasons wheel) take no history step';
+// Moved onto layers.js and off this list: the Inn dialogs' Back, inert and Escape (23 Oct)
 export const EXPECTED = {
-  'barometer back closed': NO_STEP,
-  'clock back closed': NO_STEP,
-  'hall dial back closed': NO_STEP,
-  'seasons wheel back closed': NO_STEP,
   // accessibility-review-1.md, section A (23 Oct)
-  ...Object.fromEntries(['barometer', 'clock', 'hall dial', 'seasons wheel'].flatMap(d => [
-    [`${d} open room behind inert`, 'A3: the Inn dialogs rely on aria-modal and a Tab trap; the room behind them stays live'],
-    [`${d} escape closes only itself`, 'A1: one Escape closes the dialog and also shrinks the chat (two Escape owners)'],
-  ])),
   'star chart escape closes only itself': 'A1: on phones, Escape on the star chart also shrinks the chat',
   'opener gone focus has somewhere to go': 'A5: no fallback when the opener has gone, so focus drops to body',
 };
