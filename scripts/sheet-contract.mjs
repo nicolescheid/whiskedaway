@@ -48,7 +48,6 @@ export const SHEETS = [
 // Moved onto layers.js and off this list: the Inn dialogs' Back, inert and Escape (23 Oct)
 export const EXPECTED = {
   // accessibility-review-1.md, section A (23 Oct)
-  'star chart escape closes only itself': 'A1: on phones, Escape on the star chart also shrinks the chat',
   'opener gone focus has somewhere to go': 'A5: no fallback when the opener has gone, so focus drops to body',
 };
 
@@ -131,6 +130,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
           const before = await page.evaluate(PROBE);
           const answered = await answer(page, S);
           const r = await closeBy(page, S, way);
+          const chatAfter = chatBefore && !r.left ? await page.evaluate(() => document.body.dataset.chat) : null;   // at once: an idea card coming out later lowers the chat by design
           if (r.left) { rec(S.id, way, 'closed', false, 'Back left the Inn'); return; }
           await page.waitForTimeout(900);                       // her line after a close waits 200 ms, then types 350 ms
           const after = await page.evaluate(([root, openerSel]) => ({
@@ -146,7 +146,6 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
           rec(S.id, way, 'history', balanced, balanced ? '' : `on ${JSON.stringify(hist)}, want ${JSON.stringify(opener.state)}`);
           rec(S.id, way, 'focus', after.focus, after.focus ? '' : `focus on ${after.active}`);
           if (chatBefore) {
-            const chatAfter = await page.evaluate(() => document.body.dataset.chat);
             rec(S.id, way, 'closes only itself', chatAfter === chatBefore, chatAfter === chatBefore ? '' : `the chat went from ${chatBefore} to ${chatAfter}`);
           }
           if (answered) {

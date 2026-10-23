@@ -27,8 +27,9 @@ const subs = new Set();
 let owed = 0;                           // steps back we still have to take for layers closed by their own buttons
 let inFlight = false;                   // one history.back() of ours is on its way (they're taken one at a time)
 let seq = 0;
+const on = (...a) => { if (typeof window !== 'undefined') addEventListener(...a); };   // the unit tests import modules that import this in Node
 let clicked = null;                     // the last button clicked: the opener where a click doesn't focus it (Safari)
-addEventListener('click', e => { clicked = e.target.closest?.('button, a[href], [tabindex]') || null; }, true);
+on('click', e => { clicked = e.target.closest?.('button, a[href], [tabindex]') || null; }, true);
 
 const run = fns => fns.splice(0).forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
 const emit = () => subs.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
@@ -63,8 +64,8 @@ function stepBack() {
 function open(layer) {
   let L = stack.find(x => x.el === layer.el && x.name === layer.name);
   if (!L) {
-    const active = document.activeElement;
-    L = { modal: true, keep: [], ...layer, opener: layer.opener ?? (active && active !== document.body ? active : clicked), pushed: false, token: null };
+    const active = document.activeElement, given = layer.opener && layer.opener !== document.body ? layer.opener : null;
+    L = { modal: true, keep: [], ...layer, opener: given ?? (active && active !== document.body ? active : clicked), pushed: false, token: null };
     stack.push(L);
     L.expands?.setAttribute('aria-expanded', 'true');
   }
@@ -100,7 +101,7 @@ function focusAfter(L) {
   to?.focus({ preventScroll: true });
 }
 
-addEventListener('popstate', () => {
+on('popstate', () => {
   if (inFlight) {                                      // our own step back has landed
     inFlight = false;
     owed = Math.max(0, owed - 1);
@@ -135,7 +136,7 @@ function afterBack(fn) {
 }
 
 // Escape and Tab belong to the top layer. Capture on window: it runs before anything else hears the key
-addEventListener('keydown', e => {
+on('keydown', e => {
   const L = stack.at(-1);
   if (!L) return;
   if (e.key === 'Escape') {
@@ -151,7 +152,7 @@ addEventListener('keydown', e => {
   }
 }, true);
 // Tap outside: the top layer's scrim closes it
-addEventListener('click', e => {
+on('click', e => {
   const L = stack.at(-1);
   if (L?.dim && e.target === L.dim) L.close('outside');
 }, true);
