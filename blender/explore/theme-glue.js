@@ -43,4 +43,7 @@ export function install(inn) {
     const pick = pin.atoms.map(id => inn.atomsById[id]).find(a => a && inn.fits(a) && !inn.state.cards.some(c => c.atom === a.id));
     if (pick) setTimeout(() => inn.serve({ atom: pick.id, why: inn.LINES.noticeboard_why || "Because it's in season." }, 'local'), 600);
   }
+
+  // Taps (explore/touch.js): the hallway notice board
+  inn.onTouch(50, (obj, id) => obj.type === 'ambient' && id === 'notice-board', obj => { noticeBoard(obj); });
 }

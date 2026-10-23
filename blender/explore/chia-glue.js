@@ -46,4 +46,16 @@ export function install(inn) {
       inn.say(changed || chia.data.lines.jarsLine, [], true); inn.holdLine();
     } },
   ]; inn.chiaActions = chiaActions;
+
+  // Taps (explore/touch.js): a drawer of add-ins goes into the Mix with her line; the room's tools open the Mix's sheets
+  inn.onTouch(20, (obj, id) => obj.type === 'ambient' && inn.state.room === 'chiapothecary' && chia.data.fromDrawers?.[id], (obj, id) => {
+    const got = chia.drawer(id);
+    // "Goji berries are in", not "Goji berries's in" (QA 4 S2): a label ending in a plural s takes the plural line
+    const CL = chia.data.lines, many = got && /[^s]s$/i.test(got.label);
+    const add = got ? ((got.step === 'seed' && CL.seedAdded) || (many && CL.drawerAddedMany) || CL.drawerAdded
+      || (many ? '{x} are in your Mix, if you make one.' : "{x}'s in your Mix, if you make one.")).replace('{x}', got.label) : '';
+    inn.say([obj.moment, add].filter(Boolean).join(' '), [], true);
+    if (got) inn.holdLine();                                      // her reading waits, so this line is the one you see
+  });
+  inn.onTouch(110, obj => CHIA_TOOLS[obj.tool] && inn.state.room === 'chiapothecary', obj => { CHIA_TOOLS[obj.tool](); });
 }

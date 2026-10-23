@@ -35,4 +35,7 @@ export function install(inn) {
     if (!['dietary', 'sweetness', 'sweeteners', null].includes(e.detail.key)) return;
     document.querySelectorAll('.bk-swapslot').forEach(el => { el.innerHTML = sweetSwapInner(el.dataset.id); });
   });
+
+  // Taps (explore/touch.js): Sweet Spells' cabinet, spell books and lectern open their sheets
+  inn.onTouch(100, obj => SWEET_TOOLS[obj.tool] && inn.state.room === 'sweet-spells', obj => { SWEET_TOOLS[obj.tool](); });
 }

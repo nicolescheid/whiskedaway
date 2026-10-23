@@ -125,4 +125,9 @@ export function install(inn) {
     if (inn.$('seasondlg').classList.contains('open')) openSeasons();   // show or drop "Back to my season"
   }
   inn.$('season-ok').onclick = () => hideDialog('seasondlg');
+
+  // Taps (explore/touch.js): the barometer, the clock and the seasons wheel open their dials
+  inn.onTouch(70, obj => ['weather', 'time', 'season'].includes(obj.type), obj => {
+    ({ weather: openWeather, time: openClock, season: openSeasons })[obj.type]();
+  });
 }

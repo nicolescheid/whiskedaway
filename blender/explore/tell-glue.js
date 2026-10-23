@@ -177,4 +177,19 @@ export function install(inn) {
   }); inn.tell = tell;
   const tagsUI = createTags({ el: inn.chatUI.tags, visit, world: inn.world, kitchenLines: inn.LINES.kitchen || {}, choose: { energy: id => inn.chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
     chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(inn.sweet.data, (k, src) => inn.sweet.open(k, src)) });
+
+  // Taps (explore/touch.js): the range and the appliances open Your kitchen (appliances-chia-plan.md §1); the pantry, the map,
+  // the cookbooks and the desk open their sheets after her line
+  inn.onTouch(30, (obj, id) => id === 'fl-range' || obj.type === 'kitchen', (obj, id) => {
+    const K = inn.LINES.kitchen || {};
+    inn.say([inn.momentOf(id, obj), inn.kitchenNow().length ? '' : inn.pickLine('kitchen.range', [].concat(K.range || []))].filter(Boolean).join(' '), [], true);
+    inn.holdLine();
+    tell.open('kitchen', 'object', { appliance: obj.appliance || null });
+  });
+  inn.onTouch(140, obj => TELL_TOOLS[obj.tool], (obj, id) => {
+    // Cuddlecore's "How you're feeling" jars open the check-in (a stand-in line until content writes tell.objects['symptom-jars'])
+    const told = T.objects?.[id] || (id === 'symptom-jars' ? "Tell me how much you've got in you today, and I'll cook to suit." : null);
+    if (told) { inn.say(told, [], true); inn.holdLine(); }   // her reading waits, so this line is the one you see
+    tell.open(TELL_TOOLS[obj.tool], 'object');
+  });
 }

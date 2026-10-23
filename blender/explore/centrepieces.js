@@ -112,4 +112,11 @@ export function install(inn) {
     } });
     return true;
   }
+
+  // Taps (explore/touch.js): the star chart reads a fortune (and takes the Inn note, said after the reading); the spell table,
+  // the pot and Lay the Table cast this room's best idea
+  inn.onTouch(40, (obj, id) => obj.type === 'ambient' && id === 'star-chart' && inn.LINES.starChart?.fortunes?.length, (obj, id, tap) => {
+    if (fortune(obj, tap.note)) tap.note = null;
+  });
+  inn.onTouch(120, obj => obj.type === 'submit' && obj.tool === 'generate' && CAST_ROOMS[inn.homeOf(inn.state.room)], (obj, id) => { cast(id); });
 }

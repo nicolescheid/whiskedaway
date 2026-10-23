@@ -175,4 +175,23 @@ export function install(inn) {
     setTimeout(() => goRoom(go), 700);
   }
   inn.$('dial-ok').onclick = () => inn.hideDialog('dialdlg');
+
+  // Taps (explore/touch.js): doors and walks (a closed door says so; a door out of the Inn says goodbye first), and the
+  // hallway's magic dial
+  inn.onTouch(80, obj => obj.type === 'door' || obj.type === 'walk', (obj, id) => {
+    if (!obj.go) {
+      inn.track('door_closed', { room: inn.state.room, object: id });
+      inn.say(obj.closed || "That one's not open yet.", [], true);
+      return true;
+    }
+    if (obj.type === 'door') sound.door();
+    if (obj.go.startsWith('/')) {
+      inn.track('leave_to_inn', { room: inn.state.room, step: stepNow() });
+      inn.say(obj.leaving || 'Mind the step, love.', [], true);
+      setTimeout(() => { location.href = obj.go === '/' ? '/?door=1' : obj.go; }, 1200);   // "/" alone would skip the door (J6)
+      return true;
+    }
+    goRoom(obj.go, obj.arrive_yaw);
+  });
+  inn.onTouch(90, obj => obj.type === 'dial', () => { openDial(); });
 }
