@@ -180,5 +180,33 @@
     "yaw": -6.54,
     "pitch": -15.39,
     "appliance": "kettle"
+  },
+  "little-table": {
+    "label": "The little table",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": 134.24,
+    "pitch": -25.71
+  },
+  "measuring-cups": {
+    "label": "The measuring cups",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": -129.85,
+    "pitch": -3.64
+  },
+  "wooden-spoons": {
+    "label": "The wooden spoons",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": -111.91,
+    "pitch": -5.47
+  },
+  "timer": {
+    "label": "The timer",
+    "overlay": null,
+    "type": "ambient",
+    "yaw": -121.15,
+    "pitch": -9.49
   }
 }
