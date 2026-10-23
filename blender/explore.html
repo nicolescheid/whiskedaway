@@ -723,9 +723,10 @@ import { install as installInnDialogs } from './explore/inn-dialogs.js';
 import { install as installCandles } from './explore/candles.js';
 import { install as installArrival } from './explore/arrival.js';
 import { install as installPanorama } from './explore/panorama.js';
+import { install as installRooms } from './explore/rooms.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
-Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { record, introduce, countAtom, touch });   // wa-split: main's functions the modules call
+Object.assign(inn, { track, genieFetch, getPass, GENIE_URL, stepBucket });   // wa-split: libs
+Object.assign(inn, { touch });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -746,7 +747,7 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
-]); inn.kitchenSpots = kitchenSpots; inn.hallWorld = hallWorld; inn.LINES = LINES; inn.world = world;
+]); inn.chiaWorld = chiaWorld; inn.sweetWorld = sweetWorld; inn.flWorld = flWorld; inn.kitchenSpots = kitchenSpots; inn.hallWorld = hallWorld; inn.LINES = LINES; inn.world = world;
 // Tell Gemma's lists live in gemma-lines.json `tell` (content editor): cuisines by name, countries {code, name, example}
 useTellData({ cuisines: (LINES.tell?.cuisines || []).map(n => ({ id: n, label: n })),
               countries: (LINES.tell?.countries || []).map(c => ({ id: c.code, label: c.name, example: c.example })) });
@@ -788,7 +789,7 @@ for (const [id, st] of Object.entries(glassWorld.stops)) {
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => glassWorld.objects[k] && (h.visible || glassWorld.objects[k].always_visible)));
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, seasons: true,
-                pano: (w, night, full) => `out/glasshouse_pano_${seasonNow()}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+                pano: (w, night, full) => `out/glasshouse_pano_${inn.seasonNow()}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
 // Flourish: the second kitchen, in every weather by day and night, like Cuddlecore
 for (const [id, st] of Object.entries(flWorld.stops)) {
@@ -817,7 +818,7 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a])); inn.atomsById = atomsById;
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
 const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null; inn.homeOf = homeOf;
-const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
+const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); inn.esc = esc;
 
 // ---------- state (session only)
@@ -873,7 +874,7 @@ const showRoomInUrl = () => {
   u.searchParams.set('room', state.room);
   u.searchParams.delete('door');                         // the door has been decided for this load
   history.replaceState(history.state, '', u.pathname + u.search + u.hash);
-};
+}; inn.showRoomInUrl = showRoomInUrl;
 // A room link walks straight in, so the front door counts as done for this tab
 if (params.has('room') && !window.__door?.active) try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* storage blocked */ }
 // At the front door the address stays "/" (a reload or a copied link gets the door and its story); front-door.js
@@ -882,113 +883,18 @@ if (!window.__door?.active) showRoomInUrl();
 state.chat = state.chat || [];             // Gemma's chat log for this visit
 delete state.sound;                        // sound on or off lives in explore/sound.js now, off by default
 
-// ---------- time of day: the device's own, unless the visitor pushed the clock
-const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
-// With today's local sunrise and sunset (from /local-weather), it's night from half an hour after sunset until half an
-// hour before sunrise, so an October evening in Auckland goes dark at about 8.30 pm and a June one at 5.30 pm.
-// Without them, the fixed hours above (night from 9 pm to 5 am).
-const hours = t => { const [a, b] = t.split(':').map(Number); return a + b / 60; };
-const deviceTime = () => {
-  const d = new Date(), h = d.getHours() + d.getMinutes() / 60, sun = state.sun;
-  if (!sun || hours(sun.set) <= hours(sun.rise)) return bucketFor(d.getHours());   // no sun times, or a sunset past midnight (far north in summer)
-  if (h < hours(sun.rise) - 0.5 || h >= hours(sun.set) + 0.5) return 'night';
-  return bucketFor(Math.min(Math.max(d.getHours(), 5), 20));
-}; inn.deviceTime = deviceTime;
-const timeNow = () => state.time || deviceTime(); inn.timeNow = timeNow;
-const isNight = () => timeNow() === 'night'; inn.isNight = isNight;
-/** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */
-// What the visitor told the Inn (the store) stands for the whole visit: it goes last, so it holds however long the trail gets
-// (the trail keeps 40 steps, and a candle picked early used to drop out of it)
-const navTrail = () => {
-  const told = [...(visit.get('energy') ? [{ kind: 'energy', id: visit.get('energy') }] : []),
-                ...(visit.dish('chiapothecary', 'mood') ? [{ kind: 'mood', id: visit.dish('chiapothecary', 'mood') }] : [])];
-  const trail = state.trail.filter(e => e.kind !== 'energy');
-  // The visitor's own season counts lightly, unless they've turned the wheel (that counts in full)
-  const own = trail.some(e => e.kind === 'season') ? [] : [{ kind: 'own-season', id: seasonNow() }];
-  return [...(trail.some(e => e.kind === 'time') ? [] : [{ kind: 'clock', id: deviceTime() }]), ...own, ...trail, ...told];
-}; inn.navTrail = navTrail;
-
-// ---------- season: a good guess from where the visitor seems to be, never a lock (docs/inn-floorplan.html)
-// North of the equator March to May is spring; south of it, September to November. Only the guess is used, in the page.
-const NORTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
-const FLIP = { spring: 'autumn', summer: 'winter', autumn: 'spring', winter: 'summer' };
-const seasonFor = hemi => { const n = NORTH[new Date().getMonth()]; return hemi === 'south' ? FLIP[n] : n; }; inn.seasonFor = seasonFor;
-const SOUTH_TZ = /^(Australia\/|Antarctica\/|Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Apia|Noumea|Efate|Norfolk|Tahiti|Rarotonga|Pago_Pago|Port_Moresby|Guadalcanal|Niue|Wallis|Funafuti|Easter)|America\/(Argentina\/|Sao_Paulo|Santiago|Montevideo|Asuncion|La_Paz|Lima|Bahia|Recife|Fortaleza|Belem|Maceio|Araguaina|Campo_Grande|Cuiaba|Porto_Velho|Rio_Branco|Punta_Arenas|Noronha)|Africa\/(Johannesburg|Maputo|Harare|Lusaka|Windhoek|Gaborone|Maseru|Mbabane|Blantyre|Lubumbashi|Luanda|Dar_es_Salaam|Kinshasa|Kigali|Bujumbura)|Indian\/(Mauritius|Reunion|Antananarivo|Comoro|Mayotte)|Atlantic\/(St_Helena|Stanley|South_Georgia))/;
-const tzHemisphere = () => { try { return SOUTH_TZ.test(Intl.DateTimeFormat().resolvedOptions().timeZone || '') ? 'south' : 'north'; } catch { return 'north'; } };
-inn.seasonGuess = seasonFor(tzHemisphere());
-state.season = state.season || null;        // a season the visitor turned the wheel to, or null for their own
-const seasonNow = () => state.season || inn.seasonGuess; inn.seasonNow = seasonNow;
-// The rough latitude Cloudflare attaches to the visit (via the Worker) beats the time zone, when it answers.
-// Asked once, on the way to the Conservatory; nothing about it is kept.
-let hemiAsked = null;
-function askHemisphere() {
-  return hemiAsked || (hemiAsked = (async () => {
-    try {
-      const r = await fetch(`${GENIE_URL}/hemisphere`, { signal: AbortSignal.timeout(2500) });
-      const { hemisphere } = r.ok ? await r.json() : {};
-      if (hemisphere !== 'north' && hemisphere !== 'south') return;
-      const guess = seasonFor(hemisphere);
-      if (guess === inn.seasonGuess) return;
-      inn.seasonGuess = guess;
-      if (!state.season && room().seasons) inn.showWeather(state.weather);
-    } catch { /* the time zone's guess stands */ }
-  })());
-}
+installRooms(inn);   // time, season, the trail, moving between rooms, the hallway dial
 
 installPanorama(inn);   // the 360° view: renderer, weathers, clocks, hotspots, looking around, Erwina
 
-// ---------- trail + lingering
-const label = id => world.objects[id]?.label || id; inn.label = label;
-const lingered = {};
-const SYS = {
-  touch: e => `You went to ${world.objects[e.id]?.ref || label(e.id)}`,
-  weather: e => `You turned the barometer to ${world.weathers[e.id]?.label}`,
-  time: e => `You pushed the clock to ${world.times[e.id]?.label.toLowerCase()}`,
-  season: e => `You turned the seasons wheel to ${world.seasons[e.id]?.label.toLowerCase()}`,
-  energy: e => `You picked the ${world.energies[e.id]?.candle}`,
-  choose: e => `You chose ${world.clusters[e.cluster]?.label}`,
-  room: e => `You went into ${ROOMS[e.id]?.title.replace(/^The /, 'the ')}`,
-  dial: e => `You turned the dial to ${e.id}`,
-  dismiss: e => `You set aside "${atomsById[e.atom]?.title}"`,
-  keep: e => `You kept "${atomsById[e.atom]?.title}"`,
-  recipe: e => `Gemma wrote out "${atomsById[e.atom]?.title}"`,
-};
-// ---------- counting (docs/analytics-plan.md): what happens to the site, never the wander itself
-const stepNow = () => stepBucket(state.trail.length); inn.stepNow = stepNow;
-const servedBy = {}; inn.servedBy = servedBy;                      // which navigator served each card, kept for this page only
-function countAtom(name, atom, more = {}) {
-  track(name, { atom, atom_kind: atomsById[atom]?.kind, nav_mode: servedBy[atom] || state.result?.mode || (AI ? 'ai' : 'local'),
-                room: state.room, step: stepNow(), ...more });
-}
-
-function record(e) {
-  if (SYS[e.kind]) inn.chatLine('sys', SYS[e.kind](e));
-  state.trail.push({ ...e, t: Date.now() });
-  state.trail = state.trail.slice(-40);
-  store.save(state);
-  inn.renderNotes();
-  if (e.kind !== 'room' && e.kind !== 'dial') inn.scheduleNavigate();   // walking about isn't a mood
-}
-setInterval(() => {
-  inn.erwina?.tick({ still: !inn.drag && !document.hidden && performance.now() - inn.lastMove >= 1000 });   // the cat looks for a still second
-  if (!inn.hasLooked || inn.drag || document.hidden || performance.now() - inn.lastMove < 2000) return;
-  const centre = inn.dir(inn.look.yaw, inn.look.pitch);
-  for (const h of inn.hotspots) {
-    const ang = THREE.MathUtils.radToDeg(centre.angleTo(h.v.clone().normalize()));
-    if (ang < 11 && (!lingered[h.id] || Date.now() - lingered[h.id] > 30000)) {
-      lingered[h.id] = Date.now();
-      record({ kind: 'linger', id: h.id });
-    }
-  }
-}, 300);
 
 function touch(id) {
   const obj = world.objects[id];
   // A visitor who skipped the weather question and started looking around still hears what this room is for, before
   // the object's own line (the barometer answers the question itself; a door introduces the room it opens)
-  if (!['weather', 'door', 'walk'].includes(obj.type)) introduce();
+  if (!['weather', 'door', 'walk'].includes(obj.type)) inn.introduce();
   if (obj.type === 'energy') return inn.chooseEnergy(obj.energy);   // the candle is the event: no separate touch
-  record({ kind: 'touch', id });
+  inn.record({ kind: 'touch', id });
   track('hotspot_touch', { room: state.room, object: id, object_type: obj.type });
   let noteLine = inn.innNoteLine(id);                            // an Inn note: said after the object's own line
   if (obj.type === 'ambient' && obj.plays) {
@@ -1021,7 +927,7 @@ function touch(id) {
     if (id === 'wind-chime') sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
     // Food on the counters and the Conservatory's herbs show their idea's card (Nicole, 22 Oct): obj.ideas, best fit first
     if (obj.ideas?.length) inn.showIdea(pickIdea(obj.ideas.map(x => atomsById[x]).filter(a => a && !inn.dietClash(a)).sort((a, b) => inn.kitchenOk(b) - inn.kitchenOk(a)),
-      { canServe: inn.canServe, onCard: a => inn.onCard(a.id), season: room().seasons ? seasonNow() : null }), 'object');
+      { canServe: inn.canServe, onCard: a => inn.onCard(a.id), season: room().seasons ? inn.seasonNow() : null }), 'object');
     inn.holdLine();                         // her reading waits, so the object's line stays up long enough to read (QA 9 issue 2)
   } else if (obj.type === 'weather') {
     inn.openWeather();
@@ -1036,13 +942,13 @@ function touch(id) {
     }
     if (obj.type === 'door') sound.door();
     if (obj.go.startsWith('/')) {
-      track('leave_to_inn', { room: state.room, step: stepNow() });
+      track('leave_to_inn', { room: state.room, step: inn.stepNow() });
       inn.say(obj.leaving || 'Mind the step, love.', [], true);
       return setTimeout(() => { location.href = obj.go === '/' ? '/?door=1' : obj.go; }, 1200);   // "/" alone would skip the door (J6)
     }
-    goRoom(obj.go, obj.arrive_yaw);
+    inn.goRoom(obj.go, obj.arrive_yaw);
   } else if (obj.type === 'dial') {
-    openDial();
+    inn.openDial();
   } else if (inn.SWEET_TOOLS[obj.tool] && state.room === 'sweet-spells') {
     inn.SWEET_TOOLS[obj.tool]();                                  // Sweet Spells' cabinet, spell books and lectern (sweet-spells.js)
   } else if (inn.CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
@@ -1063,76 +969,6 @@ function touch(id) {
   if (noteLine) { inn.say(noteLine, [], true); inn.holdLine(); }
 }
 
-// ---------- moving between rooms
-function goRoom(id, yaw) {
-  if (!ROOMS[id] || id === state.room) return;
-  const from = state.room;
-  state.room = id;
-  showRoomInUrl();
-  sound.place(id);
-  inn.spots = room().spots;
-  inn.look.yaw = yaw ?? room().yaw ?? 0;
-  inn.look.pitch = room().pitch ?? -6;                    // a stop may look a little lower on arrival (Flourish: its low table clears the chat)
-  setRoomText();
-  inn.buildHotspots();
-  inn.fillMap();
-  inn.showClock();
-  inn.showWeather(state.weather);
-  record({ kind: 'room', id });
-  track('room_enter', { room: id, from_room: from, step: stepNow() });
-  if (state.result) inn.applyReveal(state.result.reveal);
-  inn.render();
-  if (id !== 'cuddlecore') askHemisphere();
-  if (room().seasons && !state.seasonTold) {
-    // First time in the Conservatory: say which season it opened in, and that the wheel changes it
-    state.seasonTold = true;
-    askHemisphere().then(() => inn.say(state.season
-      ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
-      : `It's ${inn.seasonGuess} where you are, I think. The wheel by the door turns it to any season.`, [], true));
-  }
-  introduce(id);
-  inn.chatUI.flashTags();                          // what you've told Gemma shows for a moment on arrival (Inn rule 11)
-}
-// First time in a room this visit: Gemma says what it's for, in the words of its blurb (ux-journey J3).
-// From goRoom, on arrival once the weather question is answered (or straight away if she didn't ask one), and on the
-// first touch in the room if the question was left unanswered
-function introduce(id = state.room) {
-  const intro = { cuddlecore: world.intro, flourish: flWorld.intro, 'sweet-spells': sweetWorld.intro, chiapothecary: chiaWorld.intro }[id];
-  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); inn.say([intro, inn.entryFact(id)].filter(Boolean).join(' '), [], true); }
-}
-function setRoomText() {
-  $('room-title').textContent = room().title;
-  $('cw-title').textContent = `Gemma · ${room().title}`;
-  $('cw-where').textContent = room().where;
-  if ($('front-door').hidden) document.title = `WhiskedAway · ${room().title}`;   // at the front door it stays the Inn's name
-}
-
-// ---------- the magic dial beside every hallway door: any room, or wherever the wander points
-function openDial() {
-  const opts = hallWorld.dial.concat([{ label: 'Wherever my wander points', star: true }]);
-  $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}"${o.blurb ? ` aria-label="${esc(o.label)}: ${esc(o.blurb)}"` : ''}>${o.star ? '✦ ' : ''}${esc(o.label)}${o.blurb ? `<span class="blurb">${esc(o.blurb)}</span>` : ''}</button>`).join('');
-  $('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
-  inn.showDialog('dialdlg');
-}
-function turnDial(o) {
-  inn.hideDialog('dialdlg');
-  record({ kind: 'dial', id: o.star ? 'the star' : o.label });
-  track('dial_turn', { dial_choice: o.star ? 'star' : o.go || 'closed' });
-  // The star opens the room whose reading the wander leans to (the room identities, content stage 3): juices, smoothies,
-  // quick breakfasts and comfort are Cuddlecore's; whole-food meals and busy hands Flourish's; anything sweet, frozen or
-  // baked Sweet Spells'; the pudding superpowers the Chiapothecary's. A wander that hasn't said much yet opens Cuddlecore.
-  const lean = localNavigate(navTrail(), world, { ...inn.steer(), dismissed: state.dismissed }).cluster;
-  const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
-  const starGo = STAR_OVERRIDES[lean] || world.clusters[lean]?.room || 'cuddlecore';
-  const go = o.star ? starGo : o.go;
-  if (!go) return inn.say((LINES.dial?.closed || '{label} is only engraved on the dial. There is no door behind it.').replace('{label}', o.label), [], true);
-  if (go === state.room) return inn.say("You're already here.", [], true);
-  const starSays = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',
-                     chiapothecary: 'Your wander says the Chiapothecary. In you go.' };
-  inn.say(o.star ? (starSays[go] || 'Your wander says Cuddlecore. In you go.') : 'In you go.', [], true);
-  setTimeout(() => goRoom(go), 700);
-}
-$('dial-ok').onclick = () => inn.hideDialog('dialdlg');
 
 
 installChatGlue(inn);   // Gemma's chat glue: say, chips, typing, the sound chip
@@ -1156,13 +992,13 @@ installInnDialogs(inn);   // the Inn's small dialogs: barometer, clock, seasons 
 installCandles(inn);   // the energy candles: the lit flame and chooseEnergy
 
 installArrival(inn);   // arrival: the check-in offer in the foyer, the weather question, settle
-window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle: inn.settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy: inn.chooseEnergy, chooseSeason: inn.chooseSeason, goRoom, lookTo: (y, p) => { inn.look.yaw = y; inn.look.pitch = p; inn.render(); }, navigate: inn.navigate,
+window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle: inn.settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy: inn.chooseEnergy, chooseSeason: inn.chooseSeason, goRoom: inn.goRoom, lookTo: (y, p) => { inn.look.yaw = y; inn.look.pitch = p; inn.render(); }, navigate: inn.navigate,
                     world, spot: id => inn.spots[id] };
 
-setRoomText();
+inn.setRoomText();
 inn.buildHotspots();
 inn.showClock();
-if (state.room !== 'cuddlecore') askHemisphere();
+if (state.room !== 'cuddlecore') inn.askHemisphere();
 inn.look.yaw = room().yaw ?? 0;
 inn.look.pitch = room().pitch ?? -6;
 inn.fillMap();
@@ -1182,7 +1018,7 @@ addEventListener('pagehide', () => { state.look = { yaw: Math.round(inn.look.yaw
   if (!leftFrom) return inn.arrive();
   // Let the film's hand-over (settle) finish, then walk back to the room they left
   setTimeout(() => {
-    goRoom(leftFrom.room, leftFrom.look?.yaw);
+    inn.goRoom(leftFrom.room, leftFrom.look?.yaw);
     if (leftFrom.look) { inn.look.pitch = leftFrom.look.pitch; inn.render(); }
   }, inn.reduceMotion() ? 0 : 1700);
 });
