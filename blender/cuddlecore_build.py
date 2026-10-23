@@ -22,6 +22,7 @@ from mathutils import Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from appliances import APPLIANCES, appliance_mats  # noqa: E402
+from tools import TOOLS, cup_and_saucer, tool_mats, water_glass  # noqa: E402
 from whisked import emission_mat, window_glass  # noqa: E402
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
@@ -834,6 +835,39 @@ def build():
     # the kettle on the left hotplate (where the cover used to sit), spout toward the room a little
     kt = APPLIANCES["kettle"](am, (-0.24, ry + 0.02, 0.94), rot_z=-20, name="app_kettle")
     hotspot("kettle", "The kettle", None, kt, kind="kitchen", appliance="kettle")
+
+    # a little table beside the armchair (between it and the right wall, clear of the throw and Erwina's seat), with a cup and a glass
+    tm = tool_mats()
+    tbl = model("side_table_01", (1.9, -1.85, 0), rot_z=10, scale=0.8)
+    tbl.scale = (0.9, 0.9, 1.0)
+    retint(tbl, "#c9a57a", lo=0.6, hi=1.2)
+    bpy.context.view_layer.update()
+    tpts = [o.matrix_world @ Vector(c) for o in meshes_of(tbl) for c in o.bound_box]
+    ttop = max(p.z for p in tpts)
+    print("[whisked] little table top", round(ttop, 3), "x", round(min(p.x for p in tpts), 2), round(max(p.x for p in tpts), 2),
+          "y", round(min(p.y for p in tpts), 2), round(max(p.y for p in tpts), 2))
+    cup = cup_and_saucer(tm, (1.86, -1.86, ttop), rot_z=200, name="app_cup")
+    gl = water_glass(tm, (2.0, -1.78, ttop), name="app_glass")
+    hotspot("little-table", "The little table", None, meshes_of(tbl) + meshes_of(cup) + meshes_of(gl), kind="ambient")
+
+    # teaching tools on the left wall, behind the candles' end: a peg rail with measuring cups and wooden spoons, a shelf with a timer
+    wx = -HX
+    box("tool_rail", (wx + 0.015, -1.3, 1.58), (0.03, 1.5, 0.06), oak, bevel=0.006)
+    for y in (-1.75, -0.85):
+        cyl(f"tool_peg_{y}", (wx + 0.055, y, 1.58), 0.011, 0.05, oak, rot=(0, math.radians(90), 0))
+    mc = TOOLS["measuring-cups"](tm, (wx + 0.075, -1.75, 1.6), rot_z=-90, name="app_measuring_cups")
+    mc.scale = (1.5, 1.5, 1.5)           # the wall is a long way from the camera
+    hotspot("measuring-cups", "The measuring cups", None, meshes_of(mc), kind="ambient")
+    sp = TOOLS["spoons"](tm, (wx + 0.075, -0.85, 1.6), rot_z=-90, name="app_spoons")
+    sp.scale = (1.3, 1.3, 1.3)
+    hotspot("wooden-spoons", "The wooden spoons", None, meshes_of(sp), kind="ambient")
+    sh = box("tool_shelf", (wx + 0.1, -1.3, 1.1), (0.2, 0.46, 0.03), oak, bevel=0.006)
+    for y in (-1.46, -1.14):
+        box(f"tool_shelf_bracket_{y}", (wx + 0.04, y, 1.04), (0.07, 0.03, 0.1), oak, bevel=0.004)
+    tmr = TOOLS["timer"](tm, (wx + 0.11, -1.3, 1.115), rot_z=-90, name="app_timer")
+    tmr.scale = (1.4, 1.4, 1.4)
+    bpy.context.view_layer.update()
+    hotspot("timer", "The timer", None, meshes_of(tmr), kind="ambient")
 
     # ---- Back wall: cream armchair with a knitted berry throw, rag rug, botanical print, oak door
     door = box("door", (-0.95, -HY + 0.035, 1.025), (0.9, 0.05, 2.05), door_oak, bevel=0.01)

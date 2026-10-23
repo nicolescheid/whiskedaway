@@ -160,6 +160,71 @@
         "Filled before I've said good morning."
       ]
     },
+    "little-table": {
+      "label": "The little table",
+      "ref": "the little table",
+      "type": "ambient",
+      "ideas": [],
+      "themes": [
+        "rest",
+        "calm",
+        "low-spoons",
+        "comfort"
+      ],
+      "moment": "Somewhere to put a cup down. Some days that's all you need from a table.",
+      "moments": [
+        "I keep a glass of water on it. Sip when you remember.",
+        "Close enough to reach from the chair without getting up."
+      ]
+    },
+    "measuring-cups": {
+      "label": "The measuring cups",
+      "ref": "the measuring cups",
+      "type": "ambient",
+      "ideas": [],
+      "themes": [
+        "learning",
+        "simple",
+        "baking"
+      ],
+      "moment": "Four sizes, all a bit dented. I've stopped minding.",
+      "moments": [
+        "Level, not heaped. I'm strict about that.",
+        "A cup is a cup, until it's someone else's cup."
+      ]
+    },
+    "wooden-spoons": {
+      "label": "The wooden spoons",
+      "ref": "the wooden spoons",
+      "type": "ambient",
+      "ideas": [],
+      "themes": [
+        "learning",
+        "cooking",
+        "hands-on"
+      ],
+      "moment": "Three spoons and one favourite. You'll know which after a few meals.",
+      "moments": [
+        "Wood doesn't scratch the pans, and it doesn't get hot to hold.",
+        "The slotted one is for draining and stirring. Not for soup."
+      ]
+    },
+    "timer": {
+      "label": "The timer",
+      "ref": "the timer",
+      "type": "ambient",
+      "ideas": [],
+      "themes": [
+        "learning",
+        "simple",
+        "cooking"
+      ],
+      "moment": "I set it for everything. It remembers better than I do.",
+      "moments": [
+        "A timer means you can stop watching the pot.",
+        "Set it a minute short. You can always add one."
+      ]
+    },
     "armchair": {
       "label": "The armchair",
       "ref": "the armchair",

@@ -84,8 +84,8 @@
           "label": "The kitchen hutch",
           "type": "ambient",
           "overlay": null,
-          "yaw": 158.11,
-          "pitch": -19.94,
+          "yaw": 170.0,
+          "pitch": -12.0,
           "distance": 1.28,
           "visible": true
         },
@@ -164,6 +164,42 @@
           "distance": 5.69,
           "visible": true,
           "appliance": "bbq"
+        },
+        "fl-knife-block": {
+          "label": "The knife block",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 148.28,
+          "pitch": -21.75,
+          "distance": 1.39,
+          "visible": true
+        },
+        "fl-scales": {
+          "label": "The scales",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 137.16,
+          "pitch": -22.13,
+          "distance": 1.62,
+          "visible": true
+        },
+        "fl-colander": {
+          "label": "The colander",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -107.55,
+          "pitch": -1.73,
+          "distance": 2.16,
+          "visible": true
+        },
+        "fl-skillet": {
+          "label": "The skillet",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -88.51,
+          "pitch": -4.95,
+          "distance": 2.08,
+          "visible": true
         }
       }
     }
