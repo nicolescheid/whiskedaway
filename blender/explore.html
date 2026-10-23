@@ -715,6 +715,7 @@ import { install as installServing } from './explore/serving.js';
 import { install as installBasketGlue } from './explore/basket-glue.js';
 import { install as installChiaGlue } from './explore/chia-glue.js';
 import { install as installSweetGlue } from './explore/sweet-glue.js';
+import { install as installCentrepieces } from './explore/centrepieces.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
 Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes, themeNow, fromBook, setAnswer });   // wa-split: main's functions the modules call
@@ -887,7 +888,7 @@ const deviceTime = () => {
   return bucketFor(Math.min(Math.max(d.getHours(), 5), 20));
 };
 const timeNow = () => state.time || deviceTime(); inn.timeNow = timeNow;
-const isNight = () => timeNow() === 'night';
+const isNight = () => timeNow() === 'night'; inn.isNight = isNight;
 /** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */
 // What the visitor told the Inn (the store) stands for the whole visit: it goes last, so it holds however long the trail gets
 // (the trail keeps 40 steps, and a candle picked early used to drop out of it)
@@ -1322,15 +1323,15 @@ function touch(id) {
     inn.holdLine();
     tell.open('kitchen', 'object', { appliance: obj.appliance || null });
   } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
-    if (fortune(obj, noteLine)) noteLine = null;              // pick a star and she reads it, then a surprise sweet idea's card
+    if (inn.fortune(obj, noteLine)) noteLine = null;              // pick a star and she reads it, then a surprise sweet idea's card
   } else if (obj.type === 'ambient' && id === 'notice-board') {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
     inn.say([inn.momentOf(id, obj), obj.ideas && obj.bridge].filter(Boolean).join(' '), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
     if (id === 'wind-chime') sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
     // Food on the counters and the Conservatory's herbs show their idea's card (Nicole, 22 Oct): obj.ideas, best fit first
-    if (obj.ideas?.length) showIdea(pickIdea(obj.ideas.map(x => atomsById[x]).filter(a => a && !inn.dietClash(a)).sort((a, b) => inn.kitchenOk(b) - inn.kitchenOk(a)),
-      { canServe, onCard: a => onCard(a.id), season: room().seasons ? seasonNow() : null }), 'object');
+    if (obj.ideas?.length) inn.showIdea(pickIdea(obj.ideas.map(x => atomsById[x]).filter(a => a && !inn.dietClash(a)).sort((a, b) => inn.kitchenOk(b) - inn.kitchenOk(a)),
+      { canServe: inn.canServe, onCard: a => inn.onCard(a.id), season: room().seasons ? seasonNow() : null }), 'object');
     inn.holdLine();                         // her reading waits, so the object's line stays up long enough to read (QA 9 issue 2)
   } else if (obj.type === 'weather') {
     openWeather();
@@ -1356,8 +1357,8 @@ function touch(id) {
     inn.SWEET_TOOLS[obj.tool]();                                  // Sweet Spells' cabinet, spell books and lectern (sweet-spells.js)
   } else if (inn.CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
     inn.CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
-  } else if (obj.type === 'submit' && obj.tool === 'generate' && CAST_ROOMS[homeOf(state.room)]) {
-    cast(id);                                                 // the spell table, the pot, Lay the Table: this room's best idea, written out
+  } else if (obj.type === 'submit' && obj.tool === 'generate' && inn.CAST_ROOMS[homeOf(state.room)]) {
+    inn.cast(id);                                                 // the spell table, the pot, Lay the Table: this room's best idea, written out
   } else if (obj.type === 'submit') {
     openTool(obj.tool_title || obj.label, obj.tool_text || "I can't open this one for you yet.");
   } else if (TELL_TOOLS[obj.tool]) {
@@ -1453,105 +1454,7 @@ installBasketGlue(inn);   // write-outs, the basket's checkout, cook mode, the l
 const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood']; inn.EVERY_WAY_KEEPS = EVERY_WAY_KEEPS;
 installChiaGlue(inn);   // the Chiapothecary: the Mix, its tools and a jar's own buttons
 installSweetGlue(inn);   // Sweet Spells: its sheets, tools and the swap-the-sugar lines
-// ---------- The centrepieces (hotspot plan B1): Sweet Spells' spell table, Cuddlecore's pot and Flourish's Lay the Table put
-// this room's best idea for the visitor in the basket and open the checkout with it ticked (Stage 1); written out, it's one of
-// today's 3 and the object glows while she writes. Written already: it opens free. At the cap: an honest line, and the leaflet
-// waits in the basket; a failed write stays there too.
-const CAST_ROOMS = { 'sweet-spells': 'spell', cuddlecore: 'pot', flourish: 'table' };
-const CAST_LINES = {                                          // stand-ins: gemma-lines.json cast.{spell,pot,table} has the real ones
-  busy: "Hold on, I'm still writing the last one.", nothing: "I've nothing to write out yet. Have a look around.",
-  atCap: "That's my three written out for today. It's in your basket for tomorrow.",
-  failed: "That one didn't take. It's still in your basket.",
-  added: "It's in your basket. Tick it and I'll write it out.",
-  writing: 'Let me write it out for you.', done: 'Written out. Ready when you are.',
-};
-// This room's recipe ideas the visitor could still be offered: not set aside, not clashing with a dietary need
-// and fitting their kitchen; with none that fit, the kitchen is loosened for the room and Gemma says so
-function roomIdeas() {
-  const all = world.atoms.filter(a => a.room === homeOf(state.room) && a.kind === 'recipe idea' && !state.dismissed.includes(a.id) && !inn.dietClash(a));
-  const { atoms, loosened } = fitKitchen(all, state.kitchenLoose?.[homeOf(state.room)] ? [] : inn.kitchenNow());
-  const line = loosened && inn.loosenKitchen(homeOf(state.room));
-  if (line) { inn.say(line, [], true); inn.holdLine(); }
-  return atoms;
-}
-/** This room's best idea for the visitor (PM 4): the best not kept and not yet written; else the best kept one not yet written;
- *  else the best already written (it opens free). Best = the navigator's top pick, or with nothing to read yet, one already out. */
-function bestHere() {
-  const all = roomIdeas(), unwritten = all.filter(a => !inn.writer.written(a.id));
-  for (const pool of [unwritten.filter(a => !book.has(a.id) && !basket.has(a.id)), unwritten.filter(a => book.has(a.id) || basket.has(a.id)), all]) {
-    if (!pool.length) continue;
-    const top = localNavigate(navTrail(), { ...world, atoms: pool }, { ...inn.steer(), served: [], dismissed: state.dismissed, room: homeOf(state.room) }).serve[0];
-    return top || { atom: state.cards.map(c => c.atom).find(id => pool.some(a => a.id === id)) || pool[0].id, why: '' };
-  }
-  return null;
-}
-// An idea's page in the book: its own page if kept, else a loose page (Keep, Cook this, the write-out)
-// A sheet the visitor opened while she wrote (Check in, Tell Gemma, the Mix, Sweet Spells' sheets, cook mode): what the cast
-// opens waits until it's closed and its history step back has gone, or the book would cover it and leave it inert (Nicole's phone)
-const whenFree = fn => layers.whenFree(fn); inn.whenFree = whenFree;                  // no layer open, and every step back landed (explore/layers.js)
-const ideaPage = (rec, from) => (book.has(rec.id) ? inn.bookView.open(rec.id, { from }) : inn.bookView.open(null, { from, loosePage: rec }));
-function cast(id) {
-  const kind = CAST_ROOMS[homeOf(state.room)], C = LINES.cast || {};
-  const line = k => C[kind]?.[k] || C[k] || CAST_LINES[k];
-  if (inn.casting || inn.checkout.running) return inn.say(line('busy'), [], true);
-  const best = bestHere();
-  if (!best) return inn.say(line('nothing'), [], true);
-  const a = atomsById[best.atom], rec = book.get(a.id) || basket.get(a.id) || snapshot(a, best.why);
-  if (inn.writer.written(rec.id)) { ideaPage(rec, 'cast'); return inn.say(line('done'), [], true); }
-  if (basket.add(rec)) track('basket_add', { from: 'cast', basket_size: inn.sizeBucket(basket.count) });
-  inn.castFor = { atom: rec.id, el: inn.hotspots.find(h => h.id === id)?.el, line };   // the object glows while the checkout writes it
-  inn.say(line(inn.writer.left ? 'added' : 'atCap'), [], true);
-  inn.holdLine();
-  whenFree(() => inn.basketView.open({ from: 'cast', tick: rec.id }));
-}
-// ---------- The star chart reads your fortune (Nicole, 22 Oct: a little mini-game): "Pick a star" (explore/star-chart.js), and
-// Gemma reads it: a line about the visitor's day ({star}, and {weather} when the Inn's weather has words), then the fortune that
-// names a surprise sweet idea from the room ({idea}). She says it once the sheet closes, then the idea's card comes out, and
-// an Inn note found on this tap after that. starChart in gemma-lines.json
-const stars = createStarChart({ lines: LINES.starChart || {}, track, sound,
-  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); } });
-// An idea the page can still serve as a new card: not served this visit, not kept or in the basket, no headline ingredient
-// shared with a card out (serve() refuses those), and not a second away idea
-const onCard = id => state.cards.some(c => c.atom === id);
-function canServe(a) {
-  if (state.served.includes(a.id) || book.has(a.id) || basket.has(a.id)) return false;
-  if (inn.isAway(a) && inn.awayOut() && !state.awayLift?.[homeOf(state.room)]) return false;
-  const head = inn.headline(a);
-  return !head || !state.cards.some(c => atomsById[c.atom] && inn.headline(atomsById[c.atom]) === head);
-}
-/** Bring out the card for `a` (pickIdea): served as a new card, or reopened; else its page in the book (kept, or served earlier) */
-function showIdea(a, from) {
-  if (!a) return;
-  whenFree(() => {
-    if (!onCard(a.id)) inn.serve({ atom: a.id, why: '' }, 'local', { force: true });   // asked for: it makes room
-    if (onCard(a.id)) inn.ideas.open(a.id, { focus: false });
-    else ideaPage(book.get(a.id) || basket.get(a.id) || snapshot(a, ''), from);
-  });
-}
-function fortune(obj, noteLine) {
-  const SC = LINES.starChart || {};
-  // The idea named is always the one that comes out (QA 4 S1): first an idea serve() will take (not served this visit, not
-  // kept, no headline clash with a card out); else one already on a card (it reopens); else any of the room's (its page opens)
-  const a = pickIdea(roomIdeas().sort(() => Math.random() - 0.5), { canServe, onCard: x => onCard(x.id), anyCard: true });
-  const t = a && inn.pickLine('fortune', SC.fortunes || [], { idea: '\u0001' });
-  if (!t) { inn.say(inn.momentOf('star-chart', obj), [], true); return false; }
-  // The title starts a sentence as it's written, and mid-sentence in lower case (not a name: "Anzac biscuits")
-  const title = /(^|[.!?]\s+)\u0001/.test(t) || /^(Anzac|Kiwi|Mānuka)\b/.test(a.title) ? a.title : a.title[0].toLowerCase() + a.title.slice(1);
-  const told = t.replace('\u0001', title);
-  const weather = SC.weather?.[state.weather]?.[isNight() ? 'night' : 'day'];
-  const read = star => [inn.pickLine('star.reading', SC.readings || [], { star, ...(weather ? { weather } : {}) }), told].filter(Boolean).join(' ');
-  stars.open({ read, close: reading => {
-    inn.say(reading, [], true);
-    inn.holdLine();
-    // The fortune stays the moment (Nicole, 22 Oct: opening checkout covered it): the idea's card comes out, and ♥ Keep
-    // puts it in the basket like any other card
-    whenFree(() => {
-      showIdea(a, 'star_chart');
-      if (noteLine) setTimeout(() => { inn.say(noteLine, [], true); inn.holdLine(); }, 4500);   // the reading first, long enough to read
-    });
-  } });
-  return true;
-}
+installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortune
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {}; inn.T = T;
