@@ -713,9 +713,10 @@ import { kitchenPicks, kitchenFits, fitKitchen, kitchenWords, kitchenPayload, NO
 import { install as installChatGlue } from './explore/chat-glue.js';
 import { install as installServing } from './explore/serving.js';
 import { install as installBasketGlue } from './explore/basket-glue.js';
+import { install as installChiaGlue } from './explore/chia-glue.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes, sweetSwapHtml, themeNow, fromBook });   // wa-split: main's functions the modules call
+Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes, sweetSwapHtml, themeNow, fromBook, setAnswer });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1304,11 +1305,11 @@ function touch(id) {
     if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
     inn.say(!sound.on ? obj.moment_quiet || obj.moment : now ? inn.momentOf(id, obj) : obj.moment_stop || obj.moment, [], true);   // playing: its `moments` rotate too
     inn.holdLine();
-  } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
+  } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && inn.chia.data.fromDrawers?.[id]) {
     // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
-    const got = chia.drawer(id);
+    const got = inn.chia.drawer(id);
     // "Goji berries are in", not "Goji berries's in" (QA 4 S2): a label ending in a plural s takes the plural line
-    const CL = chia.data.lines, many = got && /[^s]s$/i.test(got.label);
+    const CL = inn.chia.data.lines, many = got && /[^s]s$/i.test(got.label);
     const add = got ? ((got.step === 'seed' && CL.seedAdded) || (many && CL.drawerAddedMany) || CL.drawerAdded
       || (many ? '{x} are in your Mix, if you make one.' : "{x}'s in your Mix, if you make one.")).replace('{x}', got.label) : '';
     inn.say([obj.moment, add].filter(Boolean).join(' '), [], true);
@@ -1352,8 +1353,8 @@ function touch(id) {
     openDial();
   } else if (SWEET_TOOLS[obj.tool] && state.room === 'sweet-spells') {
     SWEET_TOOLS[obj.tool]();                                  // Sweet Spells' cabinet, spell books and lectern (sweet-spells.js)
-  } else if (CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
-    CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
+  } else if (inn.CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
+    inn.CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
   } else if (obj.type === 'submit' && obj.tool === 'generate' && CAST_ROOMS[homeOf(state.room)]) {
     cast(id);                                                 // the spell table, the pot, Lay the Table: this room's best idea, written out
   } else if (obj.type === 'submit') {
@@ -1446,23 +1447,10 @@ installChatGlue(inn);   // Gemma's chat glue: say, chips, typing, the sound chip
 
 installServing(inn);   // what Gemma serves: the navigator, the filters, serve and keep, the Ideas column
 installBasketGlue(inn);   // write-outs, the basket's checkout, cook mode, the list and the book
-// ---------- the Chiapothecary (explore/chia-mix.js, rooms-views.md Stage A): moods on the flasks, Mix an experiment with
-// Gemma's swaps, then the write-out as a loose page in the book, ready to keep or cook
 // Which sheets keep the visitor's taps on every way out (✕, the dim, Escape, Back), not only on Done (Nicole's call: PM 6 asked
 // 23 Oct; Nicole, 24 Oct: all of them). Sweet Spells' sheets, the star chart and the Mix always do.
-const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood'];
-const chia = createChiaMix({
-  visit, lines: LINES, writer: inn.writer, track, sound, keepEveryWay: EVERY_WAY_KEEPS,
-  words: t => shopWords.text(t),                             // the Mix in the visitor's shopping words (QA 9 issue 3)
-  diets: () => visit.get('dietary'),                           // an add-in that clashes with one gets a plain line
-  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
-  say: t => { inn.say(t, [], true); inn.holdLine(); },
-  onStart: rec => { atomsById[rec.id] = rec; },               // so the notebook, Keep and Cook this treat it like any idea
-  onWritten: rec => {
-    inn.bookView.open(null, { from: 'mix', loosePage: rec });
-    inn.say(chia.data.lines.written, [], true);
-  },
-});
+const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood']; inn.EVERY_WAY_KEEPS = EVERY_WAY_KEEPS;
+installChiaGlue(inn);   // the Chiapothecary: the Mix, its tools and a jar's own buttons
 // ---------- Sweet Spells (explore/sweet-spells.js, rooms-views.md Stage B): the cabinet asks how sweet, the spell books the
 // cravings, the lectern's Occasions book what it's for (suggesting servings and time only where the check-in hasn't answered)
 const sweet = createSweetSheets({
@@ -1590,30 +1578,6 @@ addEventListener('wa-visit-state', e => {
   if (!['dietary', 'sweetness', 'sweeteners', null].includes(e.detail.key)) return;
   document.querySelectorAll('.bk-swapslot').forEach(el => { el.innerHTML = sweetSwapInner(el.dataset.id); });
 });
-const CHIA_TOOLS = { mood: () => chia.open('mood'), superpower: () => chia.open('mood'), generate: () => chia.open('mix'),
-                     milk: () => chia.open('mix', { step: 'base' }), 'add-ins': () => chia.open('mix', { step: 'flavour' }) };
-// A chia jar's own buttons: "Ready by breakfast?" runs cook mode's timer to 7 tomorrow; "Make 4 jars" sets servings and opens the list
-const breakfastAt = () => { const d = new Date(); if (d.getHours() >= 7) d.setDate(d.getDate() + 1); d.setHours(7, 0, 0, 0); return d.getTime(); };
-const chiaActions = [
-  // From 7 in the morning on, the next 7:00 is tomorrow's: say so (the line is "Set it tonight…" otherwise)
-  { label: chia.data.lines.breakfast, do: rec => {
-    const day = new Date().getHours() >= 7 && new Date().getHours() < 17;
-    inn.say(day ? chia.data.lines.breakfastLineDay || "Set it now and it'll be ready by 7 tomorrow morning." : chia.data.lines.breakfastLine, [], true);
-    inn.cook.open(rec, 'breakfast', { until: breakfastAt() });
-  } },
-  // 4 jars is the same servings answer as the check-in's (setAnswer, list scaling). The list is made from the book, so a jar
-  // not kept yet goes in first; and if the check-in said another number, Gemma says it's changed (QA 7)
-  { label: chia.data.lines.jars, do: rec => {
-    if (!book.has(rec.id)) inn.keepIdea(rec.id, rec.why, 'jars');
-    if (book.has(rec.id)) inn.shopList.set(rec.id, true, 'jars');
-    const was = visit.get('servings');
-    setAnswer('servings', '4', { from: 'jars', quiet: true });
-    inn.bookView.open('list', { from: 'jars' });
-    const changed = was && was !== '4'
-      ? (chia.data.lines.jarsChanged || "Four jars, so I've made it four, not {n}. I've scaled your list.").replace('{n}', was === '1' ? 'one' : servingsWords(CW, was)) : '';
-    inn.say(changed || chia.data.lines.jarsLine, [], true); inn.holdLine();
-  } },
-]; inn.chiaActions = chiaActions;
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {}; inn.T = T;
