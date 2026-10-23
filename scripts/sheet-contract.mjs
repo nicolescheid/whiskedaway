@@ -34,7 +34,8 @@ export const SHEETS = [
   { id: 'sweetness', ...SWEET, open: { room: 'sweet-spells', spot: 'potion-cabinet' }, answer: 'press' },
   { id: 'cravings', ...SWEET, open: { room: 'sweet-spells', spot: 'spell-books' }, answer: 'press' },
   { id: 'occasion', ...SWEET, open: { room: 'sweet-spells', spot: 'lectern' }, answer: 'press' },
-  { id: 'star chart', root: '#star-sheet', ways: { done: '.sc-done', x: '.tl-x' }, open: { room: 'sweet-spells', spot: 'star-chart' }, answer: 'star', keep: ALL },
+  { id: 'star chart', root: '#star-sheet', ways: { done: '.sc-done', x: '.tl-x' }, open: { room: 'sweet-spells', spot: 'star-chart' }, answer: 'star', keep: ALL,
+    fresh: true },   // her reading brings the star's idea out: in a used tab it's been served, so its page opens in the book (by design)
   { id: 'basket', root: '#basket-sheet', ways: { done: null, x: '.bk-close' }, open: { chip: '#btn-book' }, answer: null },
   { id: 'book', root: '#book', ways: { done: null, x: '.bk-close' }, open: { chip: '#btn-mybook' }, answer: null },
   { id: 'barometer', ...DIALOG('#weather', '#weather-ok'), open: { room: 'cuddlecore', spot: 'barometer' }, answer: 'weather' },
@@ -110,7 +111,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
         const wasBad = bad; bad = false;
         if (process.env.SHEETS_VERBOSE) console.log(`  · ${size} ${S.id} ${way}`);
         try { await watchdog(async () => {
-          if (wasBad) await fresh();
+          if (wasBad || S.fresh) await fresh();                // fresh: a new tab (a new visit) for each way out
           if (!(await page.evaluate(() => !!window.__explore))) await load();
           await settleClean(page);
           // Escape is tested with the chat at Short, where a second Escape handler would shrink it (A1)
