@@ -710,12 +710,16 @@ import { createStarChart } from './explore/star-chart.js';
 import { pickIdea } from './explore/idea-pick.js';
 import { layers } from './explore/layers.js';
 import { kitchenPicks, kitchenFits, fitKitchen, kitchenWords, kitchenPayload, NONE as NO_COOKING } from './explore/kitchen.js';
+import { install as installChatGlue } from './explore/chat-glue.js';
+const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
+Object.assign(inn, { track });   // wa-split: libs
+Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
-const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
+const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts); inn.AI = AI;
 const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
@@ -730,7 +734,7 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
-]);
+]); inn.world = world;
 // Tell Gemma's lists live in gemma-lines.json `tell` (content editor): cuisines by name, countries {code, name, example}
 useTellData({ cuisines: (LINES.tell?.cuisines || []).map(n => ({ id: n, label: n })),
               countries: (LINES.tell?.countries || []).map(c => ({ id: c.code, label: c.name, example: c.example })) });
@@ -801,17 +805,17 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
 const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null;
-const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = id => document.getElementById(id); inn.$ = $;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); inn.esc = esc;
 
 // ---------- state (session only)
 const store = {
   load() { try { return JSON.parse(sessionStorage.getItem('wa-explore') || 'null'); } catch { return null; } },
   save(s) { try { sessionStorage.setItem('wa-explore', JSON.stringify(s)); } catch { /* private mode */ } },
   clear() { try { sessionStorage.removeItem('wa-explore'); } catch { /* ignore */ } },
-};
+}; inn.store = store;
 const freshVisit = !store.load();
-const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
+const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {}); inn.state = state;
 // A visit saved before a piece was retired still holds its id: drop those quietly
 state.cards = state.cards.filter(c => atomsById[c.atom]);
 state.served = state.served.filter(id => atomsById[id]);
@@ -848,7 +852,7 @@ const leftFrom = window.__door?.active && state.trail?.length && ROOMS[state.roo
 state.room = window.__door?.active ? 'hall-entrance'                  // through the front door: the entrance hall
   : ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
 const room = () => ROOMS[state.room];
-let spots = room().spots;
+inn.spots = room().spots;
 // The address follows the room (NEW-1, UX J11): ?room= always names the room you're in, so a reload or a shared link
 // lands where you are. Room moves replace it rather than adding history: Back is kept for the book and dialogs
 // (recipe-book-ux.md §5), not for walking back through every door.
@@ -1060,7 +1064,7 @@ erwina = createErwina({
   THREE, scene, camera, stage, render, ROOMS, dir, look, saveData, panoTier, sound, track,
   room: () => state.room, weather: () => state.weather, isNight,
   pick: kind => pickLine(`erwina.${kind}`, LINES.erwina?.[kind]?.length ? LINES.erwina[kind] : ERWINA_LINES[kind]),
-  say: t => say(t, [], true),
+  say: t => inn.say(t, [], true),
   notes: () => renderNotes(),
   chatCover: () => document.body.dataset.chat === 'full' ? $('chatwin').getBoundingClientRect() : null,   // under the open chat she isn't being looked at
 });
@@ -1135,7 +1139,7 @@ const handsHour = () => state.time ? world.times[state.time].hour : new Date().g
 let hotspots = [], spotOrder = '';
 function buildHotspots() {
   hotspots.forEach(h => h.el.remove());
-  hotspots = Object.entries(spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
+  hotspots = Object.entries(inn.spots).filter(([id]) => world.objects[id]).map(([id, s]) => {
     const obj = world.objects[id];
     const el = document.createElement('button');
     // Dials and candles show their name on hover only: a row of them would crowd the view
@@ -1263,7 +1267,7 @@ function countAtom(name, atom, more = {}) {
 }
 
 function record(e) {
-  if (SYS[e.kind]) chatLine('sys', SYS[e.kind](e));
+  if (SYS[e.kind]) inn.chatLine('sys', SYS[e.kind](e));
   state.trail.push({ ...e, t: Date.now() });
   state.trail = state.trail.slice(-40);
   store.save(state);
@@ -1296,7 +1300,7 @@ function touch(id) {
     // Something that plays (the music box). With the sound off, the speaker by the bell glows to say where it is
     const now = sound.music(id);
     if (!sound.on) { $('btn-sound').classList.remove('nudge'); void $('btn-sound').offsetWidth; $('btn-sound').classList.add('nudge'); setTimeout(() => $('btn-sound').classList.remove('nudge'), 2200); }
-    say(!sound.on ? obj.moment_quiet || obj.moment : now ? momentOf(id, obj) : obj.moment_stop || obj.moment, [], true);   // playing: its `moments` rotate too
+    inn.say(!sound.on ? obj.moment_quiet || obj.moment : now ? momentOf(id, obj) : obj.moment_stop || obj.moment, [], true);   // playing: its `moments` rotate too
     holdLine();
   } else if (obj.type === 'ambient' && state.room === 'chiapothecary' && chia.data.fromDrawers?.[id]) {
     // A drawer of add-ins: her line, and it goes into the Mix (the fridge's milk is its base the same way)
@@ -1305,12 +1309,12 @@ function touch(id) {
     const CL = chia.data.lines, many = got && /[^s]s$/i.test(got.label);
     const add = got ? ((got.step === 'seed' && CL.seedAdded) || (many && CL.drawerAddedMany) || CL.drawerAdded
       || (many ? '{x} are in your Mix, if you make one.' : "{x}'s in your Mix, if you make one.")).replace('{x}', got.label) : '';
-    say([obj.moment, add].filter(Boolean).join(' '), [], true);
+    inn.say([obj.moment, add].filter(Boolean).join(' '), [], true);
     if (got) holdLine();                                      // her reading waits, so this line is the one you see
   } else if (id === 'fl-range' || obj.type === 'kitchen') {
     // Your kitchen (appliances-chia-plan.md §1): the range, and the appliances art adds (type "kitchen", `appliance` ringed in the sheet)
     const K = LINES.kitchen || {};
-    say([momentOf(id, obj), kitchenNow().length ? '' : pickLine('kitchen.range', [].concat(K.range || []))].filter(Boolean).join(' '), [], true);
+    inn.say([momentOf(id, obj), kitchenNow().length ? '' : pickLine('kitchen.range', [].concat(K.range || []))].filter(Boolean).join(' '), [], true);
     holdLine();
     tell.open('kitchen', 'object', { appliance: obj.appliance || null });
   } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
@@ -1318,7 +1322,7 @@ function touch(id) {
   } else if (obj.type === 'ambient' && id === 'notice-board') {
     noticeBoard(obj);
   } else if (obj.type === 'ambient') {
-    say([momentOf(id, obj), obj.ideas && obj.bridge].filter(Boolean).join(' '), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
+    inn.say([momentOf(id, obj), obj.ideas && obj.bridge].filter(Boolean).join(' '), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
     if (id === 'wind-chime') sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
     // Food on the counters and the Conservatory's herbs show their idea's card (Nicole, 22 Oct): obj.ideas, best fit first
     if (obj.ideas?.length) showIdea(pickIdea(obj.ideas.map(x => atomsById[x]).filter(a => a && !dietClash(a)).sort((a, b) => kitchenOk(b) - kitchenOk(a)),
@@ -1333,12 +1337,12 @@ function touch(id) {
   } else if (obj.type === 'door' || obj.type === 'walk') {
     if (!obj.go) {
       track('door_closed', { room: state.room, object: id });
-      return say(obj.closed || "That one's not open yet.", [], true);
+      return inn.say(obj.closed || "That one's not open yet.", [], true);
     }
     if (obj.type === 'door') sound.door();
     if (obj.go.startsWith('/')) {
       track('leave_to_inn', { room: state.room, step: stepNow() });
-      say(obj.leaving || 'Mind the step, love.', [], true);
+      inn.say(obj.leaving || 'Mind the step, love.', [], true);
       return setTimeout(() => { location.href = obj.go === '/' ? '/?door=1' : obj.go; }, 1200);   // "/" alone would skip the door (J6)
     }
     goRoom(obj.go, obj.arrive_yaw);
@@ -1356,12 +1360,12 @@ function touch(id) {
     // The pantry, the map and the cookbooks (Tell Gemma V1): her line, then the sheet
     // Cuddlecore's "How you're feeling" jars open the check-in (a stand-in line until content writes tell.objects['symptom-jars'])
     const told = T.objects?.[id] || (id === 'symptom-jars' ? "Tell me how much you've got in you today, and I'll cook to suit." : null);
-    if (told) { say(told, [], true); holdLine(); }   // her reading waits, so this line is the one you see
+    if (told) { inn.say(told, [], true); holdLine(); }   // her reading waits, so this line is the one you see
     tell.open(TELL_TOOLS[obj.tool], 'object');
   } else {
     openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
   }
-  if (noteLine) { say(noteLine, [], true); holdLine(); }
+  if (noteLine) { inn.say(noteLine, [], true); holdLine(); }
 }
 
 // ---------- moving between rooms
@@ -1371,7 +1375,7 @@ function goRoom(id, yaw) {
   state.room = id;
   showRoomInUrl();
   sound.place(id);
-  spots = room().spots;
+  inn.spots = room().spots;
   look.yaw = yaw ?? room().yaw ?? 0;
   look.pitch = room().pitch ?? -6;                    // a stop may look a little lower on arrival (Flourish: its low table clears the chat)
   setRoomText();
@@ -1387,19 +1391,19 @@ function goRoom(id, yaw) {
   if (room().seasons && !state.seasonTold) {
     // First time in the Conservatory: say which season it opened in, and that the wheel changes it
     state.seasonTold = true;
-    askHemisphere().then(() => say(state.season
+    askHemisphere().then(() => inn.say(state.season
       ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
       : `It's ${seasonGuess} where you are, I think. The wheel by the door turns it to any season.`, [], true));
   }
   introduce(id);
-  chatUI.flashTags();                          // what you've told Gemma shows for a moment on arrival (Inn rule 11)
+  inn.chatUI.flashTags();                          // what you've told Gemma shows for a moment on arrival (Inn rule 11)
 }
 // First time in a room this visit: Gemma says what it's for, in the words of its blurb (ux-journey J3).
 // From goRoom, on arrival once the weather question is answered (or straight away if she didn't ask one), and on the
 // first touch in the room if the question was left unanswered
 function introduce(id = state.room) {
   const intro = { cuddlecore: world.intro, flourish: flWorld.intro, 'sweet-spells': sweetWorld.intro, chiapothecary: chiaWorld.intro }[id];
-  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); say([intro, entryFact(id)].filter(Boolean).join(' '), [], true); }
+  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); inn.say([intro, entryFact(id)].filter(Boolean).join(' '), [], true); }
 }
 function setRoomText() {
   $('room-title').textContent = room().title;
@@ -1426,11 +1430,11 @@ function turnDial(o) {
   const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
   const starGo = STAR_OVERRIDES[lean] || world.clusters[lean]?.room || 'cuddlecore';
   const go = o.star ? starGo : o.go;
-  if (!go) return say((LINES.dial?.closed || '{label} is only engraved on the dial. There is no door behind it.').replace('{label}', o.label), [], true);
-  if (go === state.room) return say("You're already here.", [], true);
+  if (!go) return inn.say((LINES.dial?.closed || '{label} is only engraved on the dial. There is no door behind it.').replace('{label}', o.label), [], true);
+  if (go === state.room) return inn.say("You're already here.", [], true);
   const starSays = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',
                      chiapothecary: 'Your wander says the Chiapothecary. In you go.' };
-  say(o.star ? (starSays[go] || 'Your wander says Cuddlecore. In you go.') : 'In you go.', [], true);
+  inn.say(o.star ? (starSays[go] || 'Your wander says Cuddlecore. In you go.') : 'In you go.', [], true);
   setTimeout(() => goRoom(go), 700);
 }
 $('dial-ok').onclick = () => hideDialog('dialdlg');
@@ -1446,7 +1450,7 @@ function scheduleNavigate() {
 const AI_MAX_CALLS = 10, AI_EVERY = 30000, AI_MIN_GAP = 10000;
 async function navigate() {
   const seq = ++navSeq;
-  const opts = { ...steer(), dismissed: state.dismissed, here: Object.keys(spots), room: homeOf(state.room), roomName: room().title };
+  const opts = { ...steer(), dismissed: state.dismissed, here: Object.keys(inn.spots), room: homeOf(state.room), roomName: room().title };
   const local = localNavigate(navTrail(), world, opts);
   let r = local;
   // The AI reads the wander at most once on entering a room or every 30 s (never closer than 10 s), and ten times a visit;
@@ -1464,12 +1468,12 @@ async function navigate() {
     state.result = local;
     applyReveal(local.reveal);
     putOut(local);
-    thinking(true);
+    inn.thinking(true);
     renderNotes();
     store.save(state);
     r = await aiNavigate(AI, navTrail(), world, opts);
     if (seq !== navSeq) return;                            // a newer event superseded this one
-    thinking(false);
+    inn.thinking(false);
     if (r.fallback) track('nav_fallback', { reason: /timeout|abort/i.test(r.fallback) ? 'timeout' : /429/.test(r.fallback) ? 'rate_limited'
                                                     : /403/.test(r.fallback) ? 'bot_check' : /navigate 5[0-9][0-9]/.test(r.fallback) ? 'upstream'   // the Worker or the model failed
                                                     : /navigate 4[0-9][0-9]/.test(r.fallback) ? 'rejected' : /fetch|network|load failed/i.test(r.fallback) ? 'network' : 'error' });
@@ -1477,7 +1481,7 @@ async function navigate() {
   }
   state.result = r;
   // No builder words in view (brainstorm #6): if the AI can't help, Gemma says so once a visit, softly, in her own voice
-  if (useAI && r.mode !== 'ai' && !state.aloneSaid) { state.aloneSaid = true; setTimeout(() => chatLine('gemma', LINES.alone || "I'm reading your wander on my own for a bit."), 1200); }
+  if (useAI && r.mode !== 'ai' && !state.aloneSaid) { state.aloneSaid = true; setTimeout(() => inn.chatLine('gemma', LINES.alone || "I'm reading your wander on my own for a bit."), 1200); }
   applyReveal(r.reveal);
   // A chip the visitor just picked is something they told her, not something she worked out (Nicole, 23 Oct):
   // "Ah, something sweet." instead of "I think you're after something sweet."
@@ -1488,19 +1492,19 @@ async function navigate() {
   const speak = () => {
     if (seq !== navSeq || casting) return;                   // a cast's writing line stays until the write ends (B1 QA)
     const empty = emptyRoomLine();
-    if (empty) say(empty, [], true);
+    if (empty) inn.say(empty, [], true);
     else if (state.offerTell) {
       // Once a visit, after two keeps or set-asides, if nothing about them is set (tell-gemma-ux §2.5)
       state.offerTell = false;
-      say(TL.offer, [], true);
-      setTimeout(() => setChips([{ label: TL.offerYes, do: ['tell'] }, { label: TL.offerNo, do: ['later'] }]), 400);
+      inn.say(TL.offer, [], true);
+      setTimeout(() => inn.setChips([{ label: TL.offerYes, do: ['tell'] }, { label: TL.offerNo, do: ['later'] }]), 400);
     } else if (state.askDifferent) {
       // Three set aside in a row: instead of her reading, Gemma asks what they'd like (§9); a pick counts like a choice
       state.askDifferent = false;
-      say(LINES.dismiss?.different || 'Something different?', [], true);
-      setTimeout(() => setChips([['Quick', 'pantry'], ['Proper meal', 'build-up'], ['Sweet', 'treat'], ['Chia', 'energising']]
+      inn.say(LINES.dismiss?.different || 'Something different?', [], true);
+      setTimeout(() => inn.setChips([['Quick', 'pantry'], ['Proper meal', 'build-up'], ['Sweet', 'treat'], ['Chia', 'energising']]
         .filter(([, c]) => world.clusters[c]).map(([label, c]) => ({ label, do: ['choose', c] }))), 400);
-    } else if (gemma) say(gemma, r.fork);              // with the AI on this posts at once: she "typed" while it read
+    } else if (gemma) inn.say(gemma, r.fork);              // with the AI on this posts at once: she "typed" while it read
   };
   const wait = lineHeldUntil - Date.now();
   wait > 0 ? setTimeout(speak, wait) : speak();
@@ -1514,100 +1518,7 @@ function applyReveal(reveal) {
   for (const h of hotspots) h.el.classList.toggle('revealed', ids.has(h.id));
 }
 
-// ---------- Gemma's chat, in three sizes (explore/chat.js): Line, Short and Full; her newest line shows in every size
-const chatUI = createChat({ win: $('chatwin'), track });
-function clockLabel() {
-  // Timestamps follow the kitchen clock: the visitor's own time, or the time they pushed it to
-  let d = new Date();
-  if (state.time) {
-    const h = world.times[state.time].hour;
-    // the pushed time, moving on as real minutes pass since the push (it used to add a minute per message and drift)
-    const since = (Date.now() - (state.timeSetAt || Date.now())) / 60000;
-    d = new Date(); d.setHours(Math.floor(h), Math.round((h % 1) * 60 + since), 0);
-  }
-  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
-}
-function renderChat() {
-  const log = $('cw-log');
-  log.innerHTML = state.chat.map(m => m.who === 'sys'
-    ? `<div class="cw-sys">${esc(m.text)}</div>`
-    : `<div class="cw-who">Gemma · ${esc(m.at)}</div><div class="cw-msg">${esc(m.text)}</div>`).join('');
-  chatUI.update(state.chat);                   // her newest line, and the log follows the bottom unless the visitor scrolled up
-  fitDock();                                // the chat may have grown: a phone that throttles ResizeObserver still gets it
-}
-function chatLine(who, text) {
-  if (!text) return;
-  const last = [...state.chat].reverse().find(m => m.who === who);
-  if (who === 'gemma' && last?.text === text) return;            // don't repeat herself
-  state.chat.push({ who, text, at: clockLabel() });
-  state.chat = state.chat.slice(-60);
-  renderChat();
-  if (who === 'gemma') sound.shimmer();
-  store.save(state);
-}
-// Chips are data ({ label, do: [action, ...args] }), so the last question's answers are kept with the visit and come
-// back after a reload (J9)
-const CHIP_ACTS = {
-  checkin: () => { endCheckinOffer(); tell.open('checkin', 'foyer'); },   // the check-in sheet (the Ideas build's)
-  choose: cluster => record({ kind: 'choose', cluster }),
-  tell: () => tell.openMenu('offer'),                   // "Want to tell me what's in your cupboard…?" [Tell me]
-  later: () => endCheckinOffer(),                                      // [Not now]: the offer is over for the visit
-  weather: id => chooseWeather(id),
-  barometer: () => { const s = spots.barometer; if (s) lookTo(s.yaw, s.pitch); setTimeout(openWeather, 750); },
-  confirm: () => { say("Good. I've set the Inn to match.", [], true); track('weather_guess', { weather: state.weather, outcome: 'confirmed' }); introduce(); },
-};
-function setChips(chips) {
-  const box = $('cw-chips');
-  box.innerHTML = '';
-  state.chips = chips.filter(c => CHIP_ACTS[c.do?.[0]]);
-  store.save(state);
-  for (const c of state.chips) {
-    const b = document.createElement('button');
-    b.textContent = c.label;
-    b.onclick = () => { box.innerHTML = ''; state.chips = []; store.save(state); chatUI.setAsking(false); fitDock(); CHIP_ACTS[c.do[0]](...c.do.slice(1)); };
-    box.appendChild(b);
-  }
-  chatUI.setAsking(state.chips.length > 0);    // a question raises Line to Short until it's answered
-  fitDock();                                // chips change the chat's height (ResizeObserver covers it too, when frames run)
-}
-// "Gemma is typing…" shows while she types a line, or while the AI navigator is reading the wander
-let typingLine = false, aiThinking = false;
-const showTyping = () => { $('cw-typing').hidden = !(typingLine || aiThinking); fitDock(); };
-function typing(on) { typingLine = on; showTyping(); }
-function thinking(on) { aiThinking = on; showTyping(); }
-let sayTimer;
-let sayPending = null;
-function say(text, fork = [], brief = false) {
-  // Locally Gemma takes a beat to "type"; with the AI on, the typing indicator already covered the wait
-  clearTimeout(sayTimer);
-  sayPending?.();                       // a line still waiting (an object's own moment) goes out first, never replaced
-  const post = () => {
-    sayPending = null;
-    typing(false);
-    chatLine('gemma', text);
-    setChips(fork.filter(c => world.clusters[c]).map(c => ({ label: world.clusters[c].label.replace(/^./, x => x.toUpperCase()), do: ['choose', c] })));
-  };
-  if (AI && !brief) return post();
-  typing(true);
-  sayPending = post;
-  sayTimer = setTimeout(post, brief ? 350 : 650);
-}
-
-// Sound (explore/sound.js): off until the visitor turns it on, with the speaker by the bell or here in the chat
-const soundLabel = () => {
-  $('cw-sound').textContent = sound.on ? 'Sound: on' : 'Sound: off';
-  $('btn-sound').setAttribute('aria-pressed', String(sound.on));
-};
-$('cw-sound').onclick = $('btn-sound').onclick = () => sound.toggle();
-addEventListener('wa-sound', soundLabel);
-// Every dial in the Inn clicks round a notch when you turn it
-document.addEventListener('click', e => { if (e.target.closest('.dial button')) sound.tick(); });
-// The grandfather clock ticks in the hallway, and on your own time strikes when the hour turns
-sound.place(state.room);
-let lastHour = new Date().getHours();
-setInterval(() => { const h = new Date().getHours(); if (h !== lastHour && !state.time) sound.strike(h); lastHour = h; }, 20000);
-$('cw-credits').onclick = () => showDialog('credits');
-$('credits-ok').onclick = () => hideDialog('credits');
+installChatGlue(inn);   // Gemma's chat glue: say, chips, typing, the sound chip
 
 // ---------- Gemma's Ideas (explore/ideas.js) and the recipe book (explore/book.js, explore/book-view.js)
 // Lines for ideas and the book come from gemma-lines.json (content editor); these stand in for any it doesn't have yet
@@ -1707,7 +1618,7 @@ function serve({ atom, why, fromKeep }, mode, opts) {
   servedBy[atom] = mode;
   ideas.add({ atom, why }, ideaSource(), opts);
   // An idea that came from a keep says so, unless Gemma has just spoken about that keep (one line per event)
-  if (fromKeep && state.trail.at(-1)?.kind === 'keep' && !state.keepSpoke && LINES.idea?.from_keep) say(pickLine('fromKeep', LINES.idea.from_keep), [], true);
+  if (fromKeep && state.trail.at(-1)?.kind === 'keep' && !state.keepSpoke && LINES.idea?.from_keep) inn.say(pickLine('fromKeep', LINES.idea.from_keep), [], true);
   state.keepSpoke = false;
 }
 // Where a new idea rises from: the object the visitor last touched or lingered by, if it's on screen and not under
@@ -1751,7 +1662,7 @@ function keepIdea(atom, why, method) {
   else if (n === 1) line = first ? L.keepFirstEver : pickLine('keep1', L.keepFirstVisit);
   else if (n === 3) line = pickLine('keep3', L.keepThird, { cluster_label: world.clusters[state.result?.cluster]?.label });
   else if (n > 3 && (n - 3) % 4 === 0) line = pickLine('keepN', L.keepLater);
-  if (line) { say(line, [], true); holdLine(); }
+  if (line) { inn.say(line, [], true); holdLine(); }
   state.keepSpoke = !!line;
   state.dismissRun = 0;
   renderTheme();
@@ -1760,11 +1671,11 @@ function keepIdea(atom, why, method) {
 const ideas = createIdeas({
   state, atoms: atomsById, save: () => store.save(state), here: () => homeOf(state.room),
   avatar: () => $('cw-av'), bookChip: () => $('btn-book'),
-  layout: (what, on) => { if (what === 'highlight') chatUI.hold(on); },
-  onFirst: function first() { const wait = casting ? 500 : lineHeldUntil - Date.now(); if (wait > 0) setTimeout(first, wait); else say(L.ideaFirst, [], true); },   // a held line (an Inn note's, a cast's) is read first
+  layout: (what, on) => { if (what === 'highlight') inn.chatUI.hold(on); },
+  onFirst: function first() { const wait = casting ? 500 : lineHeldUntil - Date.now(); if (wait > 0) setTimeout(first, wait); else inn.say(L.ideaFirst, [], true); },   // a held line (an Inn note's, a cast's) is read first
   // Once per device, the first time a touch visitor opens an idea: how to swipe it
   wantHint: () => !book.hint,
-  onHint: () => { book.hint = true; say(LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
+  onHint: () => { book.hint = true; inn.say(LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
   onHighlight: c => countAtom('atom_highlight', c.atom),
   onShown: c => countAtom('atom_served', c.atom),       // in view for a moment, once each (not when the navigator picks it)
   canShow: () => $('front-door').hidden,
@@ -1779,7 +1690,7 @@ const ideas = createIdeas({
     state.dismissed.push(c.atom);
     state.dismissals = (state.dismissals || 0) + 1;
     record({ kind: 'dismiss', atom: c.atom });
-    if (state.dismissals === 1) { say(L.dismissFirst, [], true); holdLine(); }
+    if (state.dismissals === 1) { inn.say(L.dismissFirst, [], true); holdLine(); }
     maybeOfferTell();
     // Three set aside in a row: Gemma asks what they'd like instead (§9); a pick counts like a choice
     state.dismissRun = (state.dismissRun || 0) + 1;
@@ -1793,7 +1704,7 @@ const ideas = createIdeas({
       if (bumped) state.served = state.served.filter(x => x !== bumped);     // stepped aside for the undo: it can come again
       const i = state.trail.map(e => e.kind === 'dismiss' && e.atom === c.atom).lastIndexOf(true);
       if (i >= 0) state.trail.splice(i, 1);
-      say(L.undo, [], true);
+      inn.say(L.undo, [], true);
       holdLine();
       store.save(state);
       renderNotes();
@@ -1867,16 +1778,16 @@ const checkout = createCheckout({
     if (castFor?.atom !== rec.id) return;
     casting = true;
     castFor.el?.classList.add('casting');
-    say(castFor.line('writing'), [], true);
+    inn.say(castFor.line('writing'), [], true);
     holdLine();
-    thinking(true);
+    inn.thinking(true);
   },
   onWriteEnd: (rec, full) => {
     if (castFor?.atom !== rec.id) return;
-    thinking(false);
+    inn.thinking(false);
     castFor.el?.classList.remove('casting');
     casting = false;
-    say(castFor.line(full ? 'done' : 'failed'), [], true);
+    inn.say(castFor.line(full ? 'done' : 'failed'), [], true);
     holdLine();
     castFor = null;
   },
@@ -1891,7 +1802,7 @@ const basketView = createBasketView({ basket, checkout, chip: $('btn-book'), lin
 // Recipes kept before the basket, never written out, become leaflets: the book holds only written recipes (Nicole, 22 Oct)
 for (const k of book.list()) if (!k.full && !writer.written(k.id)) { const { kept, visit: v, ...snap } = k; basket.add(snap); book.remove(k.id); }
 // Cook mode (explore/cook.js, cook-mode-ux.md §1): one step at a time over everything, with timers
-const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: { ...LINES.cook, shopping_list: LINES.book?.shopping_list },
+const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => inn.say(t, [], true), lines: { ...LINES.cook, shopping_list: LINES.book?.shopping_list },
   // The list opens over the recipe cook mode was started from, once cook mode's step back in history has gone (or the
   // list's own step would be the one popped, and back would skip it)
   isKept: id => book.has(id), onList: rec => {
@@ -1912,7 +1823,7 @@ const bookView = createBookView({
   atoms: atomsById, chip: $('btn-mybook'), notes: $('notes'), track, bucket: sizeBucket,
   onKeep: rec => keepIdea(rec.id, rec.why, 'book'),
   onRead: id => countAtom('atom_open', id, { from: 'book' }),     // a kept recipe opened from Contents
-  onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); say(L.cleared, [], true); },
+  onClear: n => { track('book_clear', { book_size: sizeBucket(n) }); inn.say(L.cleared, [], true); },
   actions: rec => (rec.room === 'chiapothecary' ? chiaActions : []),
   extra: rec => sweetSwapHtml(rec),                              // Sweet Spells' swap-the-sugar lines
   innNotes, noteLines: LINES.innNotes,                           // Inn notes at the back of the book
@@ -1926,20 +1837,20 @@ const chia = createChiaMix({
   visit, lines: LINES, writer, track, sound, keepEveryWay: EVERY_WAY_KEEPS,
   words: t => shopWords.text(t),                             // the Mix in the visitor's shopping words (QA 9 issue 3)
   diets: () => visit.get('dietary'),                           // an add-in that clashes with one gets a plain line
-  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
-  say: t => { say(t, [], true); holdLine(); },
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
+  say: t => { inn.say(t, [], true); holdLine(); },
   onStart: rec => { atomsById[rec.id] = rec; },               // so the notebook, Keep and Cook this treat it like any idea
   onWritten: rec => {
     bookView.open(null, { from: 'mix', loosePage: rec });
-    say(chia.data.lines.written, [], true);
+    inn.say(chia.data.lines.written, [], true);
   },
 });
 // ---------- Sweet Spells (explore/sweet-spells.js, rooms-views.md Stage B): the cabinet asks how sweet, the spell books the
 // cravings, the lectern's Occasions book what it's for (suggesting servings and time only where the check-in hasn't answered)
 const sweet = createSweetSheets({
   visit, lines: LINES, track, sound,
-  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
-  say: t => { say(t, [], true); holdLine(); scheduleNavigate(); },
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
+  say: t => { inn.say(t, [], true); holdLine(); scheduleNavigate(); },
   // With the check-in in, its own setter (the same tag and store); before it, just the store
   answer: (k, v) => {
     if (typeof setAnswer === 'function') setAnswer(k, v, { from: 'occasion', quiet: true });
@@ -1965,7 +1876,7 @@ function roomIdeas() {
   const all = world.atoms.filter(a => a.room === homeOf(state.room) && a.kind === 'recipe idea' && !state.dismissed.includes(a.id) && !dietClash(a));
   const { atoms, loosened } = fitKitchen(all, state.kitchenLoose?.[homeOf(state.room)] ? [] : kitchenNow());
   const line = loosened && loosenKitchen(homeOf(state.room));
-  if (line) { say(line, [], true); holdLine(); }
+  if (line) { inn.say(line, [], true); holdLine(); }
   return atoms;
 }
 /** This room's best idea for the visitor (PM 4): the best not kept and not yet written; else the best kept one not yet written;
@@ -1987,14 +1898,14 @@ const ideaPage = (rec, from) => (book.has(rec.id) ? bookView.open(rec.id, { from
 function cast(id) {
   const kind = CAST_ROOMS[homeOf(state.room)], C = LINES.cast || {};
   const line = k => C[kind]?.[k] || C[k] || CAST_LINES[k];
-  if (casting || checkout.running) return say(line('busy'), [], true);
+  if (casting || checkout.running) return inn.say(line('busy'), [], true);
   const best = bestHere();
-  if (!best) return say(line('nothing'), [], true);
+  if (!best) return inn.say(line('nothing'), [], true);
   const a = atomsById[best.atom], rec = book.get(a.id) || basket.get(a.id) || snapshot(a, best.why);
-  if (writer.written(rec.id)) { ideaPage(rec, 'cast'); return say(line('done'), [], true); }
+  if (writer.written(rec.id)) { ideaPage(rec, 'cast'); return inn.say(line('done'), [], true); }
   if (basket.add(rec)) track('basket_add', { from: 'cast', basket_size: sizeBucket(basket.count) });
   castFor = { atom: rec.id, el: hotspots.find(h => h.id === id)?.el, line };   // the object glows while the checkout writes it
-  say(line(writer.left ? 'added' : 'atCap'), [], true);
+  inn.say(line(writer.left ? 'added' : 'atCap'), [], true);
   holdLine();
   whenFree(() => basketView.open({ from: 'cast', tick: rec.id }));
 }
@@ -2003,7 +1914,7 @@ function cast(id) {
 // names a surprise sweet idea from the room ({idea}). She says it once the sheet closes, then the idea's card comes out, and
 // an Inn note found on this tap after that. starChart in gemma-lines.json
 const stars = createStarChart({ lines: LINES.starChart || {}, track, sound,
-  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); } });
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); } });
 // An idea the page can still serve as a new card: not served this visit, not kept or in the basket, no headline ingredient
 // shared with a card out (serve() refuses those), and not a second away idea
 const onCard = id => state.cards.some(c => c.atom === id);
@@ -2028,20 +1939,20 @@ function fortune(obj, noteLine) {
   // kept, no headline clash with a card out); else one already on a card (it reopens); else any of the room's (its page opens)
   const a = pickIdea(roomIdeas().sort(() => Math.random() - 0.5), { canServe, onCard: x => onCard(x.id), anyCard: true });
   const t = a && pickLine('fortune', SC.fortunes || [], { idea: '\u0001' });
-  if (!t) { say(momentOf('star-chart', obj), [], true); return false; }
+  if (!t) { inn.say(momentOf('star-chart', obj), [], true); return false; }
   // The title starts a sentence as it's written, and mid-sentence in lower case (not a name: "Anzac biscuits")
   const title = /(^|[.!?]\s+)\u0001/.test(t) || /^(Anzac|Kiwi|Mānuka)\b/.test(a.title) ? a.title : a.title[0].toLowerCase() + a.title.slice(1);
   const told = t.replace('\u0001', title);
   const weather = SC.weather?.[state.weather]?.[isNight() ? 'night' : 'day'];
   const read = star => [pickLine('star.reading', SC.readings || [], { star, ...(weather ? { weather } : {}) }), told].filter(Boolean).join(' ');
   stars.open({ read, close: reading => {
-    say(reading, [], true);
+    inn.say(reading, [], true);
     holdLine();
     // The fortune stays the moment (Nicole, 22 Oct: opening checkout covered it): the idea's card comes out, and ♥ Keep
     // puts it in the basket like any other card
     whenFree(() => {
       showIdea(a, 'star_chart');
-      if (noteLine) setTimeout(() => { say(noteLine, [], true); holdLine(); }, 4500);   // the reading first, long enough to read
+      if (noteLine) setTimeout(() => { inn.say(noteLine, [], true); holdLine(); }, 4500);   // the reading first, long enough to read
     });
   } });
   return true;
@@ -2069,7 +1980,7 @@ const chiaActions = [
   // From 7 in the morning on, the next 7:00 is tomorrow's: say so (the line is "Set it tonight…" otherwise)
   { label: chia.data.lines.breakfast, do: rec => {
     const day = new Date().getHours() >= 7 && new Date().getHours() < 17;
-    say(day ? chia.data.lines.breakfastLineDay || "Set it now and it'll be ready by 7 tomorrow morning." : chia.data.lines.breakfastLine, [], true);
+    inn.say(day ? chia.data.lines.breakfastLineDay || "Set it now and it'll be ready by 7 tomorrow morning." : chia.data.lines.breakfastLine, [], true);
     cook.open(rec, 'breakfast', { until: breakfastAt() });
   } },
   // 4 jars is the same servings answer as the check-in's (setAnswer, list scaling). The list is made from the book, so a jar
@@ -2082,7 +1993,7 @@ const chiaActions = [
     bookView.open('list', { from: 'jars' });
     const changed = was && was !== '4'
       ? (chia.data.lines.jarsChanged || "Four jars, so I've made it four, not {n}. I've scaled your list.").replace('{n}', was === '1' ? 'one' : servingsWords(CW, was)) : '';
-    say(changed || chia.data.lines.jarsLine, [], true); holdLine();
+    inn.say(changed || chia.data.lines.jarsLine, [], true); holdLine();
   } },
 ];
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
@@ -2099,7 +2010,7 @@ function setAnswer(key, value, { from = 'tag', quiet = false } = {}) {
   visit.set(key, value ?? null);
   track('tell_set', { kind: key, from });               // single-choice: never a count (analytics-events.js ANSWER_KINDS)
   if (!quiet) answerSound(key, value);                   // the sheet plays its sounds in the tap
-  if (!quiet && value) { say(capFirst(ackLine(CW, key, value) || ''), [], true); holdLine(); }
+  if (!quiet && value) { inn.say(capFirst(ackLine(CW, key, value) || ''), [], true); holdLine(); }
   scheduleNavigate();                                    // the next idea leans on it
   return true;
 }
@@ -2126,7 +2037,7 @@ const capFirst = t => t.replace(/^./, c => c.toUpperCase());
 // The check-in's Done: each answer through its own door's setter, quietly, then one line from Gemma (the answer's own line when
 // only one changed, else her thanks)
 function checkedIn({ after, changed, from, forgot }) {
-  if (forgot) return say(TL.forgot, [], true);
+  if (forgot) return inn.say(TL.forgot, [], true);
   for (const k of changed) {
     if (k === 'energy') { if (after.energy) chooseEnergy(after.energy, { quiet: true, from }); else visit.forget('energy'); }
     else if (k === 'weather') chooseWeather(after.weather, { quiet: true });
@@ -2140,7 +2051,7 @@ function checkedIn({ after, changed, from, forgot }) {
   const named = two.length === 2 ? (CW.ack.checkinTwo || "{a}, and {b}. I'll keep all that in mind.").replace('{a}', two[0]).replace('{b}', two[1]) : '';
   const line = !one ? named || CW.ack.checkin : one === 'energy' ? world.energies?.[after.energy]?.moment : one === 'weather' ? world.weathers[after.weather]?.moment
     : ackLine(CW, one, after[one]);
-  if (line) { say(capFirst(line), [], true); holdLine(); }
+  if (line) { inn.say(capFirst(line), [], true); holdLine(); }
   scheduleNavigate();
 }
 // Your kitchen's Done: her line for one appliance, else "{x}. I'll keep to those." (two named at most), or cleared; each appliance
@@ -2148,20 +2059,20 @@ function checkedIn({ after, changed, from, forgot }) {
 function kitchenSaid({ before, after, forgot }) {
   const K = LINES.kitchen || {}, p = after.picks;
   for (const id of p) if (!before.picks.includes(id)) track('kitchen_pick', { appliance: id });
-  if (forgot) return say(TL.forgot, [], true);
+  if (forgot) return inn.say(TL.forgot, [], true);
   const words = kitchenWords(p, K);
   const line = !p.length ? K.cleared || "Cleared. I'll suggest anything."
     : p.length === 1 ? K.pick?.[p[0]] || `${capFirst(words[0])}.`
     : (K.many || "{x}. I'll keep to those.").replace('{x}', capFirst(listOf(words.slice(0, 2)) + (words.length > 2 ? ' and the rest' : '')));
   // Cards already out stay (PM): say so once when some no longer fit
   const misfit = p.length && state.cards.some(c => atomsById[c.atom] && !kitchenFits(atomsById[c.atom], p));
-  say([line, misfit && K.cards_stay].filter(Boolean).join(' '), [], true);
+  inn.say([line, misfit && K.cards_stay].filter(Boolean).join(' '), [], true);
   holdLine();
   scheduleNavigate();
 }
 function acknowledge(kind, { after, forgot }) {
   const A = T.ack || {};
-  if (forgot) return say(TL.forgot, [], true);
+  if (forgot) return inn.say(TL.forgot, [], true);
   let line = '';
   if (kind === 'pantry') {
     if (after.items.length) sound.answer('pantry');      // the paper bag
@@ -2178,7 +2089,7 @@ function acknowledge(kind, { after, forgot }) {
     const fodmap = after.dietary.includes('low-fodmap') ? `${T.dietary?.fodmapLabel || 'Low-FODMAP'}. ${T.dietary?.fodmapNote || "I'll pass it on when I write your recipe. I only leave out cards I've checked."}` : '';
     line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : fodmap || (A.dietaryOther || "Noted. I'll pass it on when I write your recipe.");
   }
-  say(capFirst(line), [], true);
+  inn.say(capFirst(line), [], true);
   holdLine();
   scheduleNavigate();                                   // the next idea leans on it
 }
@@ -2228,7 +2139,7 @@ function emptyRoomLine() {
 }
 const tell = createTell({
   visit, lines: LINES.tell, kitchenLines: LINES.kitchen || {}, track, defaultCountry: mapDefault, keepEveryWay: EVERY_WAY_KEEPS,
-  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
+  beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
   onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : k === 'kitchen' ? kitchenSaid(r) : acknowledge(k, r); },
   openEnergy: () => tagsUI.openEnergy(),
   checkin: {
@@ -2244,8 +2155,8 @@ const tell = createTell({
     },
   },
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
-});
-const tagsUI = createTags({ el: chatUI.tags, visit, world, kitchenLines: LINES.kitchen || {}, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
+}); inn.tell = tell;
+const tagsUI = createTags({ el: inn.chatUI.tags, visit, world, kitchenLines: LINES.kitchen || {}, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
   chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(sweet.data, (k, src) => sweet.open(k, src)) });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
@@ -2262,7 +2173,7 @@ function renderTheme() {
   const cap = $('ideas-theme');
   cap.textContent = words.join(', ');
   cap.hidden = !words.length;
-  chatUI.setTheme(words);
+  inn.chatUI.setTheme(words);
 }
 const caption = document.createElement('div');
 caption.id = 'ideas-theme';
@@ -2279,8 +2190,8 @@ function noticeBoard(obj) {
   const pin = hallWorld.noticeboard?.[hemi]?.[seasonNow()];
   const n = book.count;
   const bookLine = n ? ` Your book has ${n === 1 ? 'one recipe' : `${n} recipes`} in it.` : '';
-  if (!pin) return say((n ? '' : obj.moment) + bookLine || obj.moment, [], true);
-  say(pin.line + bookLine, [], true);
+  if (!pin) return inn.say((n ? '' : obj.moment) + bookLine || obj.moment, [], true);
+  inn.say(pin.line + bookLine, [], true);
   holdLine();
   const pick = pin.atoms.map(id => atomsById[id]).find(a => a && fits(a) && !state.cards.some(c => c.atom === a.id));
   if (pick) setTimeout(() => serve({ atom: pick.id, why: LINES.noticeboard_why || "Because it's in season." }, 'local'), 600);
@@ -2308,12 +2219,12 @@ function fillMap() {
     const b = document.createElement('button');
     b.textContent = world.objects[id]?.map || label(id);
     if (world.objects[id]?.blurb) { b.insertAdjacentHTML('beforeend', `<span class="blurb">${esc(world.objects[id].blurb)}</span>`); b.setAttribute('aria-label', `${b.firstChild.textContent}: ${world.objects[id].blurb}`); }
-    b.onclick = () => { const s = spots[id]; hasLooked = true; lookTo(s.yaw, s.pitch); record({ kind: 'map', id }); };
+    b.onclick = () => { const s = inn.spots[id]; hasLooked = true; lookTo(s.yaw, s.pitch); record({ kind: 'map', id }); };
     li.appendChild(b);
     return li;
   };
   Object.entries(world.objects).forEach(([id, o]) => {
-    if (!spots[id] || o.map_hide) return;
+    if (!inn.spots[id] || o.map_hide) return;
     $(o.type === 'ambient' ? 'map-room' : 'map-tools').appendChild(item(id));
   });
 }
@@ -2361,7 +2272,7 @@ visit.subscribe(({ part, key, value }) => {
     gone.forEach(c => ideas.remove(c.atom));
     if (gone.length) {
       const a = atomsById[gone[0].atom];
-      say((LINES.diet_clash || "I've taken the {title} away. It isn't {diet}.").replace('{title}', a.short?.toLowerCase() || a.title).replace('{diet}', dietClash(a)), [], true);
+      inn.say((LINES.diet_clash || "I've taken the {title} away. It isn't {diet}.").replace('{title}', a.short?.toLowerCase() || a.title).replace('{diet}', dietClash(a)), [], true);
     }
     bookView.refresh();
   }
@@ -2397,7 +2308,7 @@ $('btn-inn').onclick = e => {
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;          // a new tab or window: let the link be a link
   e.preventDefault();
   track('leave_to_inn', { room: state.room, step: stepNow() });
-  say(hallWorld.objects['front-door']?.leaving || 'Mind the step, love.', [], true);
+  inn.say(hallWorld.objects['front-door']?.leaving || 'Mind the step, love.', [], true);
   setTimeout(() => { location.href = $('btn-inn').href; }, 1200);
 };
 $('forget').onclick = () => {
@@ -2406,11 +2317,11 @@ $('forget').onclick = () => {
   visit.clear();                               // what they told the Inn goes too
   Object.assign(state, { trail: [], served: [], dismissed: [], cards: [], waiting: null, ideaSeen: false, keeps: 0, dismissals: 0, linesUsed: {}, result: null, weather: world.default_weather || 'rain', time: null, season: null, seasonTold: false, introduced: [], asked: false, chat: [] });
   showCandle();
-  renderChat(); setChips([]);
+  inn.renderChat(); inn.setChips([]);
   setHands(handsHour());
   showWeather(state.weather);
   ideas.clearAll(); writer.clear(); renderNotes(); applyReveal([]);
-  chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
+  inn.chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
 };
 
 function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; showDialog('tool'); }
@@ -2459,7 +2370,7 @@ function chooseWeather(id, { quiet = false } = {}) {
   state.weather = id;
   state.weatherFrom = 'visitor';
   showWeather(id);
-  if (!quiet) say(world.weathers[id].moment, [], true);
+  if (!quiet) inn.say(world.weathers[id].moment, [], true);
   record({ kind: 'weather', id });
   track('weather_change', { room: state.room, weather: id });
   introduce();
@@ -2492,11 +2403,11 @@ function chooseTime(id) {
   if ($('clockdlg').classList.contains('open')) renderClock();
   if (id) {
     sound.strike(world.times[id].hour);                              // the grandfather clock, if you're in the hall
-    say(world.times[id].moment, [], true);
+    inn.say(world.times[id].moment, [], true);
     record({ kind: 'time', id });
   } else {
     track('time_change', { room: state.room, time_of_day: 'own' });
-    say(`Back to your own time: ${world.times[deviceTime()].label.toLowerCase()}.`, [], true);
+    inn.say(`Back to your own time: ${world.times[deviceTime()].label.toLowerCase()}.`, [], true);
     state.trail = state.trail.filter(e => e.kind !== 'time');
     store.save(state);
     scheduleNavigate();
@@ -2520,12 +2431,12 @@ function chooseSeason(id) {
   state.season = id;
   if (seasonNow() !== before) showWeather(state.weather);
   if (id) {
-    say(world.seasons[id].moment, [], true);
+    inn.say(world.seasons[id].moment, [], true);
     record({ kind: 'season', id });
     track('season_change', { season: id });
   } else {
     track('season_change', { season: 'own' });
-    say(`Back to your own season: ${seasonGuess}.`, [], true);
+    inn.say(`Back to your own season: ${seasonGuess}.`, [], true);
     state.trail = state.trail.filter(e => e.kind !== 'season');
     store.save(state);
     scheduleNavigate();
@@ -2581,7 +2492,7 @@ const candleSpot = id => Object.keys(world.objects).find(k => world.objects[k].t
 /** Where the chosen candle's flame goes in this room: a kitchen candle's own flame point, or the foyer desk's */
 function flamePoint(id) {
   const key = candleSpot(id);
-  return (key && spots[key]?.flame) || spots['checkin-desk']?.flames?.[id] || null;
+  return (key && inn.spots[key]?.flame) || inn.spots['checkin-desk']?.flames?.[id] || null;
 }
 let flicker = null;
 function placeFlame(f, k = 1) {
@@ -2597,7 +2508,7 @@ function showCandle() {
   const id = visit.get('energy');
   const key = id && candleSpot(id);
   const f = id && flamePoint(id);
-  const s = !f && key && spots[key];                                // no flame point (an old render): glow on the candle
+  const s = !f && key && inn.spots[key];                                // no flame point (an old render): glow on the candle
   candleFlame.visible = !!f;
   candleGlow.visible = !!(f || s);
   clearInterval(flicker);
@@ -2621,7 +2532,7 @@ function chooseEnergy(id, { quiet = false, from = null } = {}) {
   if (from) track('tell_set', { kind: 'energy', from });   // the check-in's candle; in Cuddlecore the candle is a touch
   else track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
   showCandle();
-  if (!quiet) say(e.moment, [], true);
+  if (!quiet) inn.say(e.moment, [], true);
   record({ kind: 'energy', id });
 }
 
@@ -2636,8 +2547,8 @@ const GUESSED = {
   'very-dry': "Hello, love. Hot and dry where you are, by the look of it. Is that right?",
 };
 function confirmGuess(also) {
-  chatLine('gemma', GUESSED[state.weather]);
-  setChips([{ label: "That's right", do: ['confirm'] }, ...also]);
+  inn.chatLine('gemma', GUESSED[state.weather]);
+  inn.setChips([{ label: "That's right", do: ['confirm'] }, ...also]);
 }
 // In through the front door, the first stop is the check-in desk: Gemma offers it, and the weather confirm is one of
 // its rows (checkin-views.md). Walking past is fine
@@ -2653,20 +2564,20 @@ function checkinPill() {
     pill = document.createElement('button');
     pill.type = 'button';
     pill.className = 'cw-checkin';
-    pill.onclick = e => { e.stopPropagation(); CHIP_ACTS.checkin(); };   // not the row's own tap, which opens the chat
+    pill.onclick = e => { e.stopPropagation(); inn.CHIP_ACTS.checkin(); };   // not the row's own tap, which opens the chat
     row.appendChild(pill);
   }
   pill.textContent = OPENER().yes;
   pill.hidden = !state.checkinPill;
   $('chatwin').classList.toggle('has-checkin-pill', !!state.checkinPill);
-  if (state.checkinPill) chatUI.setAsking(false);   // the offer never raises the chat (it would cover the desk)
+  if (state.checkinPill) inn.chatUI.setAsking(false);   // the offer never raises the chat (it would cover the desk)
 }
 // After the film's hand-over (facing down the hall), make sure the desk shows (checkin-ux.md §5): a portrait phone turns
 // to the notice board and the desk; a wider screen that doesn't quite reach the desk turns a little, so the hall and
 // the whole desk both show. Screens that already see it don't move
 const PHONE_FOYER_VIEW = { yaw: 52, pitch: -16 }, WIDE_FOYER_YAW = 20;
 function faceDesk() {
-  const d = spots['checkin-desk'];
+  const d = inn.spots['checkin-desk'];
   if (!d) return;
   if (innerWidth < innerHeight) return lookTo(PHONE_FOYER_VIEW.yaw, PHONE_FOYER_VIEW.pitch);
   const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) * 180 / Math.PI;   // half the view, across
@@ -2677,12 +2588,12 @@ function arrive() {
   if (state.room === 'hall-entrance') {
     state.asked = true;
     store.save(state);
-    chatLine('gemma', OPENER().line);
-    setChips([{ label: OPENER().yes, do: ['checkin'] }, { label: OPENER().no, do: ['later'] }]);
+    inn.chatLine('gemma', OPENER().line);
+    inn.setChips([{ label: OPENER().yes, do: ['checkin'] }, { label: OPENER().no, do: ['later'] }]);
     state.checkinPill = true;
     store.save(state);
     checkinPill();
-    chatUI.setAsking(false);                           // keep the chat at Line: raised to Short it would cover the desk
+    inn.chatUI.setAsking(false);                           // keep the chat at Line: raised to Short it would cover the desk
     setTimeout(faceDesk, reduceMotion() ? 0 : 1100);   // after the film's hand-over has settled
     return;
   }
@@ -2698,15 +2609,15 @@ function arrive() {
   } else if (state.room === 'cuddlecore') {
     state.asked = true;
     store.save(state);
-    chatLine('gemma', "Hello, love. What's the weather like for you today?");
-    setChips([{ label: 'Turn the barometer', do: ['barometer'] }]);
+    inn.chatLine('gemma', "Hello, love. What's the weather like for you today?");
+    inn.setChips([{ label: 'Turn the barometer', do: ['barometer'] }]);
     applyReveal([{ object: 'barometer' }]);
   } else if (state.room === 'hall-entrance') {
     // In through the front door: the barometer is in the kitchen, so the weathers are right there in the chat
     state.asked = true;
     store.save(state);
-    chatLine('gemma', "Hello, love. What's the weather like for you today?");
-    setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, do: ['weather', id] })));
+    inn.chatLine('gemma', "Hello, love. What's the weather like for you today?");
+    inn.setChips(Object.entries(world.weathers).map(([id, w]) => ({ label: w.chip || w.label, do: ['weather', id] })));
   } else {
     introduce();
   }
@@ -2731,14 +2642,14 @@ function settle(fromFov) {
 }
 
 function endCheckinOffer() {
-  if (state.chips?.some(c => c.do?.[0] === 'checkin')) setChips([]);   // the offer's chips go with it (the pill path)
+  if (state.chips?.some(c => c.do?.[0] === 'checkin')) inn.setChips([]);   // the offer's chips go with it (the pill path)
   if (!state.checkinPill) return;
   state.checkinPill = false;
   store.save(state);
   checkinPill();
 }
-window.__explore = { state, visit, lines: LINES, book, ideas, chatUI, bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate,
-                    world, spot: id => spots[id] };
+window.__explore = { state, visit, lines: LINES, book, ideas, chatUI: inn.chatUI, bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate,
+                    world, spot: id => inn.spots[id] };
 
 setRoomText();
 buildHotspots();
@@ -2751,10 +2662,10 @@ shopWords.apply(visit.get('country') || mapDefault());   // before the first ren
 ideas.render();
 renderTheme();
 renderNotes();
-renderChat();
-if (state.chips?.length) setChips(state.chips);
+inn.renderChat();
+if (state.chips?.length) inn.setChips(state.chips);
 checkinPill();                                     // a reload keeps the check-in offer if it's still open   // the last question's answers, if it's still open (J9)
-soundLabel();
+inn.soundLabel();
 if (state.result) applyReveal(state.result.reveal);
 setHands(handsHour(), false);
 // Leaving the page (the Front door chip, About the Inn, a reload) keeps the view, for coming back in (C1)
