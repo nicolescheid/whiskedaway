@@ -51,13 +51,20 @@ export const EXPECTED = {
   'clock back closed': NO_STEP,
   'hall dial back closed': NO_STEP,
   'seasons wheel back closed': NO_STEP,
+  // accessibility-review-1.md, section A (23 Oct)
+  ...Object.fromEntries(['barometer', 'clock', 'hall dial', 'seasons wheel'].flatMap(d => [
+    [`${d} open room behind inert`, 'A3: the Inn dialogs rely on aria-modal and a Tab trap; the room behind them stays live'],
+    [`${d} escape closes only itself`, 'A1: one Escape closes the dialog and also shrinks the chat (two Escape owners)'],
+  ])),
+  'star chart escape closes only itself': 'A1: on phones, Escape on the star chart also shrinks the chat',
+  'opener gone focus has somewhere to go': 'A5: no fallback when the opener has gone, so focus drops to body',
 };
 
 // ---------- page helpers (run in the page)
 const PROBE = `(() => {
   const ex = window.__explore;
   return { about: JSON.stringify(ex.visit.all()), weather: ex.state.weather, time: ex.state.time, season: ex.state.season,
-           chat: ex.state.chat.filter(m => m.who === 'gemma').length };
+           chat: [...ex.state.chat].reverse().find(m => m.who === 'gemma')?.text || '' };   // her newest line (the log keeps 60, so not a count)
 })()`;
 const INERT = `[...document.querySelectorAll('[inert]')].map(e => e.id || e.className || e.tagName).map(String)`;
 
@@ -152,7 +159,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
           }
           if (answered) {
             const now = await page.evaluate(PROBE);
-            const kept = S.answer === 'star' ? now.chat > before.chat : S.answer === 'weather' ? now.weather !== before.weather
+            const kept = S.answer === 'star' ? now.chat !== before.chat : S.answer === 'weather' ? now.weather !== before.weather
               : now.about !== before.about || now.time !== before.time || now.season !== before.season;
             const want = S.keep.includes(way);
             rec(S.id, way, 'kept', kept === want, want ? (kept ? '' : 'the answer was lost') : (kept ? 'kept, though this way out cancels' : ''));
