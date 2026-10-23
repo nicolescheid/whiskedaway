@@ -712,9 +712,10 @@ import { layers } from './explore/layers.js';
 import { kitchenPicks, kitchenFits, fitKitchen, kitchenWords, kitchenPayload, NONE as NO_COOKING } from './explore/kitchen.js';
 import { install as installChatGlue } from './explore/chat-glue.js';
 import { install as installServing } from './explore/serving.js';
+import { install as installBasketGlue } from './explore/basket-glue.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
-Object.assign(inn, { track });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes });   // wa-split: main's functions the modules call
+Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
+Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes, sweetSwapHtml, themeNow, fromBook });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -806,7 +807,7 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a])); inn.atomsById = atomsById;
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
 const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null; inn.homeOf = homeOf;
-const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $;
+const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); inn.esc = esc;
 
 // ---------- state (session only)
@@ -883,7 +884,7 @@ const deviceTime = () => {
   if (h < hours(sun.rise) - 0.5 || h >= hours(sun.set) + 0.5) return 'night';
   return bucketFor(Math.min(Math.max(d.getHours(), 5), 20));
 };
-const timeNow = () => state.time || deviceTime();
+const timeNow = () => state.time || deviceTime(); inn.timeNow = timeNow;
 const isNight = () => timeNow() === 'night';
 /** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */
 // What the visitor told the Inn (the store) stands for the whole visit: it goes last, so it holds however long the trail gets
@@ -1444,136 +1445,21 @@ $('dial-ok').onclick = () => hideDialog('dialdlg');
 installChatGlue(inn);   // Gemma's chat glue: say, chips, typing, the sound chip
 
 installServing(inn);   // what Gemma serves: the navigator, the filters, serve and keep, the Ideas column
-// "Write it out in full" (explore/writeout.js): the genie's recipe route, seeded by the card and the whole visit, 3 a visit
-// A write-out through the genie: the visitor pass first, given up after 20 s (the person check can hang, QA on B1), then 45 s
-// to write. Giving up throws a timeout, so writeout.js says it failed and doesn't count it
-const PASS_WAIT = 20000;
-async function recipeFetch(p) {
-  let timer;
-  try { await Promise.race([getPass(), new Promise((_, no) => { timer = setTimeout(() => no(new Error('timeout: no visitor pass')), PASS_WAIT); })]); }
-  finally { clearTimeout(timer); }
-  return genieFetch(p.rewrite ? '/rewrite' : '/recipe', p, { signal: AbortSignal.timeout(45000) });   // a re-write has its own route and limit
-}
-// The room's own answers as the Worker reads them (four short ones): a real mix's jar size and add-ins go in `mix` instead
-const dishWords = r => { const d = visit.dish(r); return Object.fromEntries(Object.entries(d).filter(([k, v]) => !['mode', 'addins', ...(d.mode === 'real' ? ['topping'] : [])].includes(k) && typeof v === 'string')); };
-// Measurements (recipe-tools): the visitor's choice for this visit, else from the Map's country (the US measures in cups)
-const unitsNow = () => visit.get('units') || ((visit.get('country') || mapDefault()) === 'US' ? 'cups' : 'metric');
-// Swaps on a written recipe's ingredient: Substitutions (Nicole's word; gemma-lines.json substitutions.table, content's), matched on the ingredient's
-// key or a word of its name; sweeteners also offer Sweet Spells' "Sweeten with" list (the sugar-swap table), never free text
-const SWEETENER_KEYS = { sugar: 'sugar', 'caster sugar': 'sugar', 'brown sugar': 'sugar', honey: 'honey', 'maple syrup': 'maple', agave: 'agave', 'agave syrup': 'agave' };
-function swapsFor(ing) {
-  const table = LINES.substitutions?.table || {}, key = String(ing.key || '').toLowerCase(), name = String(ing.item || '').toLowerCase();
-  const hit = table[key] ? key : Object.keys(table).filter(k => !k.startsWith('_')).find(k => new RegExp(`\\b${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}s?\\b`).test(name));
-  const xs = [...(hit ? table[hit] : [])];
-  const sw = SWEETENER_KEYS[key] || SWEETENER_KEYS[hit];
-  if (sw) for (const [id, label] of Object.entries(sweet.data.sweetenWith.options)) if (id !== sw && id !== 'sweeteners' && !xs.includes(label)) xs.push(label);
-  return xs.filter(x => x.toLowerCase() !== name).slice(0, 6);
-}
-const writer = createWriteOut({
-  book, visit, lines: LINES.write_out, track, bucket: n => (n >= 2 ? '2-3' : String(n)),
-  // window.__recipeFetch is a test seam (scripted checks without the Worker); the site always uses the genie
-  fetchRecipe: payload => (window.__recipeFetch || recipeFetch)(payload),
-  fetchRewrite: payload => (window.__recipeFetch || recipeFetch)(payload),      // the seam sees payload.rewrite
-  units: unitsNow, setUnits: u => visit.set('units', u), swapsFor,
-  payloadFor: rec => ({
-    tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room, units: unitsNow(),
-    idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
-            method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why }, mix: rec.mix,   // mix: the Chiapothecary's own jar (labels)
-    energy: world.energies?.[visit.get('energy')]?.label || null, weather: world.weathers[state.weather]?.label, time_of_day: world.times[timeNow()]?.label,
-    theme: themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: pantryNow().items, use_up: pantryNow().useUp,
-    dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
-    country: countryLabel(visit.get('country') || mapDefault()), dish: dishWords(rec.room),
-    // Sweet Spells (Inn-wide): how sweet and what with, as words; the occasion as words (the dish has its id)
-    sweetness: sweet.data.howSweet.options[visit.get('sweetness')] || null,
-    sweeteners: [].concat(visit.get('sweeteners') || []).map(x => sweet.data.sweetenWith.options[x] || x),
-    occasion: rec.room === 'sweet-spells' ? sweet.data.occasions.options[visit.dish('sweet-spells', 'occasion')]?.label || null : null,
-    servings: servingsNumber(visit.get('servings')), confidence: visit.get('confidence') || null, time_available: TIME_LIMIT[visit.get('time')] || null,
-    ...kitchenPayload(inn.kitchenNow(), LINES.kitchen),               // { appliances: ['oven', 'air fryer'] } or { no_cooking: true }
-  }),
-  onWritten: (rec, full) => { record({ kind: 'recipe', atom: rec.id }); intoBook(rec, full); },
-  onChange: () => bookView.refresh(),
-  onLanded: rec => { cook.refresh(rec.id); bookView.refresh(); },              // cook mode open on this recipe picks up the write-out, keeping its step
-}); inn.writer = writer;
-// Whatever Gemma writes out goes into the book, with its leaflet out of the basket (Stage 1)
-function intoBook(rec, full) {
-  if (!book.has(rec.id)) { const { added, kept, visit: v, full: f, ...snap } = rec; book.keep({ ...snap, full }); }
-  basket.remove(rec.id);
-  if (!state.served.includes(rec.id)) state.served.push(rec.id);
-  if (state.cards.some(c => c.atom === rec.id)) inn.ideas.remove(rec.id);
-}
-// The basket's checkout (explore/checkout.js): the book's Basket page. A centrepiece's idea glows its object while she writes it
-let castFor = null;                                           // { atom, el, line } the centrepiece idea the checkout is holding
-const checkout = createCheckout({
-  basket, writer, ribbons: RIBBONS, lines: LINES.basket, track, bucket: n => (n >= 2 ? '2-3' : String(n)),
-  onOpenBook: id => basketView.closeThen(() => bookView.open(id && book.has(id) ? id : 'contents', { from: 'basket' })),
-  onWriteStart: rec => {
-    if (castFor?.atom !== rec.id) return;
-    inn.casting = true;
-    castFor.el?.classList.add('casting');
-    inn.say(castFor.line('writing'), [], true);
-    inn.holdLine();
-    inn.thinking(true);
-  },
-  onWriteEnd: (rec, full) => {
-    if (castFor?.atom !== rec.id) return;
-    inn.thinking(false);
-    castFor.el?.classList.remove('casting');
-    inn.casting = false;
-    inn.say(castFor.line(full ? 'done' : 'failed'), [], true);
-    inn.holdLine();
-    castFor = null;
-  },
-  // The visitor closed the book while she wrote: the first one opens once nothing else is open (whenFree)
-  onBatchDone: ({ count, first }) => {
-    const free = () => !bookView.isOpen && !basketView.isOpen;   // the basket shows its own results
-    if (count && first && free()) whenFree(() => { if (free()) bookView.open(first, { from: 'basket' }); });
-  },
-});
-// The basket's own sheet (basket-view.js): the bar's basket chip opens it; the book has its own chip
-const basketView = createBasketView({ basket, checkout, chip: $('btn-book'), lines: LINES.basket || {}, track, bucket: inn.sizeBucket });
-// Recipes kept before the basket, never written out, become leaflets: the book holds only written recipes (Nicole, 22 Oct)
-for (const k of book.list()) if (!k.full && !writer.written(k.id)) { const { kept, visit: v, ...snap } = k; basket.add(snap); book.remove(k.id); }
-// Cook mode (explore/cook.js, cook-mode-ux.md §1): one step at a time over everything, with timers
-const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => inn.say(t, [], true), lines: { ...LINES.cook, shopping_list: LINES.book?.shopping_list },
-  // The list opens over the recipe cook mode was started from, once cook mode's step back in history has gone (or the
-  // list's own step would be the one popped, and back would skip it)
-  isKept: id => book.has(id), onList: rec => {
-    track('list_open');
-    shopList.set(rec.id, true, 'cook');                         // the recipe being cooked goes on the list
-    layers.afterBack(() => bookView.open('list', { from: 'cook' }));   // once cook mode's step back has landed (layers.js)
-  } });
-// The shopping list (explore/list.js): the written recipes the visitor picks, summed, the pantry set aside, in their shopping words
-const shopList = createList({ title: LINES.book?.shopping_list, lines: LINES.book || {}, book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
-  servings: () => servingsNumber(visit.get('servings')), words: t => shopWords.text(t), track });
-const bookView = createBookView({
-  onCook: (rec, from) => cook.open(rec, from),
-  list: shopList,
-  writeOut: (el, rec, seed) => writer.render(el, rec, seed),
-  themeLine: () => themeNow().sentence, clashNote: rec => inn.CLASH_NOTE[inn.dietClash(rec)] || '',
-  book, basket, basketLines: LINES.basket || {}, bookLines: LINES.book || {},
-  onBasket: () => fromBook(() => basketView.open({ from: 'book' }))(),
-  atoms: atomsById, chip: $('btn-mybook'), notes: $('notes'), track, bucket: inn.sizeBucket,
-  onKeep: rec => inn.keepIdea(rec.id, rec.why, 'book'),
-  onRead: id => countAtom('atom_open', id, { from: 'book' }),     // a kept recipe opened from Contents
-  onClear: n => { track('book_clear', { book_size: inn.sizeBucket(n) }); inn.say(inn.L.cleared, [], true); },
-  actions: rec => (rec.room === 'chiapothecary' ? chiaActions : []),
-  extra: rec => sweetSwapHtml(rec),                              // Sweet Spells' swap-the-sugar lines
-  innNotes, noteLines: LINES.innNotes,                           // Inn notes at the back of the book
-}); inn.bookView = bookView;
+installBasketGlue(inn);   // write-outs, the basket's checkout, cook mode, the list and the book
 // ---------- the Chiapothecary (explore/chia-mix.js, rooms-views.md Stage A): moods on the flasks, Mix an experiment with
 // Gemma's swaps, then the write-out as a loose page in the book, ready to keep or cook
 // Which sheets keep the visitor's taps on every way out (✕, the dim, Escape, Back), not only on Done (Nicole's call: PM 6 asked
 // 23 Oct; Nicole, 24 Oct: all of them). Sweet Spells' sheets, the star chart and the Mix always do.
 const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood'];
 const chia = createChiaMix({
-  visit, lines: LINES, writer, track, sound, keepEveryWay: EVERY_WAY_KEEPS,
+  visit, lines: LINES, writer: inn.writer, track, sound, keepEveryWay: EVERY_WAY_KEEPS,
   words: t => shopWords.text(t),                             // the Mix in the visitor's shopping words (QA 9 issue 3)
   diets: () => visit.get('dietary'),                           // an add-in that clashes with one gets a plain line
-  beforeOpen: () => { inn.ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
+  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
   say: t => { inn.say(t, [], true); inn.holdLine(); },
   onStart: rec => { atomsById[rec.id] = rec; },               // so the notebook, Keep and Cook this treat it like any idea
   onWritten: rec => {
-    bookView.open(null, { from: 'mix', loosePage: rec });
+    inn.bookView.open(null, { from: 'mix', loosePage: rec });
     inn.say(chia.data.lines.written, [], true);
   },
 });
@@ -1581,14 +1467,14 @@ const chia = createChiaMix({
 // cravings, the lectern's Occasions book what it's for (suggesting servings and time only where the check-in hasn't answered)
 const sweet = createSweetSheets({
   visit, lines: LINES, track, sound,
-  beforeOpen: () => { inn.ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
+  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
   say: t => { inn.say(t, [], true); inn.holdLine(); inn.scheduleNavigate(); },
   // With the check-in in, its own setter (the same tag and store); before it, just the store
   answer: (k, v) => {
     if (typeof setAnswer === 'function') setAnswer(k, v, { from: 'occasion', quiet: true });
     else { visit.set(k, v); track('tell_set', { kind: k, from: 'occasion' }); }
   },
-});
+}); inn.sweet = sweet;
 const SWEET_TOOLS = { 'level-up': () => sweet.open('sweet'), flavour: () => sweet.open('cravings'), occasion: () => sweet.open('occasion') };
 // ---------- The centrepieces (hotspot plan B1): Sweet Spells' spell table, Cuddlecore's pot and Flourish's Lay the Table put
 // this room's best idea for the visitor in the basket and open the checkout with it ticked (Stage 1); written out, it's one of
@@ -1614,7 +1500,7 @@ function roomIdeas() {
 /** This room's best idea for the visitor (PM 4): the best not kept and not yet written; else the best kept one not yet written;
  *  else the best already written (it opens free). Best = the navigator's top pick, or with nothing to read yet, one already out. */
 function bestHere() {
-  const all = roomIdeas(), unwritten = all.filter(a => !writer.written(a.id));
+  const all = roomIdeas(), unwritten = all.filter(a => !inn.writer.written(a.id));
   for (const pool of [unwritten.filter(a => !book.has(a.id) && !basket.has(a.id)), unwritten.filter(a => book.has(a.id) || basket.has(a.id)), all]) {
     if (!pool.length) continue;
     const top = localNavigate(navTrail(), { ...world, atoms: pool }, { ...inn.steer(), served: [], dismissed: state.dismissed, room: homeOf(state.room) }).serve[0];
@@ -1625,28 +1511,28 @@ function bestHere() {
 // An idea's page in the book: its own page if kept, else a loose page (Keep, Cook this, the write-out)
 // A sheet the visitor opened while she wrote (Check in, Tell Gemma, the Mix, Sweet Spells' sheets, cook mode): what the cast
 // opens waits until it's closed and its history step back has gone, or the book would cover it and leave it inert (Nicole's phone)
-const whenFree = fn => layers.whenFree(fn);                  // no layer open, and every step back landed (explore/layers.js)
-const ideaPage = (rec, from) => (book.has(rec.id) ? bookView.open(rec.id, { from }) : bookView.open(null, { from, loosePage: rec }));
+const whenFree = fn => layers.whenFree(fn); inn.whenFree = whenFree;                  // no layer open, and every step back landed (explore/layers.js)
+const ideaPage = (rec, from) => (book.has(rec.id) ? inn.bookView.open(rec.id, { from }) : inn.bookView.open(null, { from, loosePage: rec }));
 function cast(id) {
   const kind = CAST_ROOMS[homeOf(state.room)], C = LINES.cast || {};
   const line = k => C[kind]?.[k] || C[k] || CAST_LINES[k];
-  if (inn.casting || checkout.running) return inn.say(line('busy'), [], true);
+  if (inn.casting || inn.checkout.running) return inn.say(line('busy'), [], true);
   const best = bestHere();
   if (!best) return inn.say(line('nothing'), [], true);
   const a = atomsById[best.atom], rec = book.get(a.id) || basket.get(a.id) || snapshot(a, best.why);
-  if (writer.written(rec.id)) { ideaPage(rec, 'cast'); return inn.say(line('done'), [], true); }
+  if (inn.writer.written(rec.id)) { ideaPage(rec, 'cast'); return inn.say(line('done'), [], true); }
   if (basket.add(rec)) track('basket_add', { from: 'cast', basket_size: inn.sizeBucket(basket.count) });
-  castFor = { atom: rec.id, el: inn.hotspots.find(h => h.id === id)?.el, line };   // the object glows while the checkout writes it
-  inn.say(line(writer.left ? 'added' : 'atCap'), [], true);
+  inn.castFor = { atom: rec.id, el: inn.hotspots.find(h => h.id === id)?.el, line };   // the object glows while the checkout writes it
+  inn.say(line(inn.writer.left ? 'added' : 'atCap'), [], true);
   inn.holdLine();
-  whenFree(() => basketView.open({ from: 'cast', tick: rec.id }));
+  whenFree(() => inn.basketView.open({ from: 'cast', tick: rec.id }));
 }
 // ---------- The star chart reads your fortune (Nicole, 22 Oct: a little mini-game): "Pick a star" (explore/star-chart.js), and
 // Gemma reads it: a line about the visitor's day ({star}, and {weather} when the Inn's weather has words), then the fortune that
 // names a surprise sweet idea from the room ({idea}). She says it once the sheet closes, then the idea's card comes out, and
 // an Inn note found on this tap after that. starChart in gemma-lines.json
 const stars = createStarChart({ lines: LINES.starChart || {}, track, sound,
-  beforeOpen: () => { inn.ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); } });
+  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); } });
 // An idea the page can still serve as a new card: not served this visit, not kept or in the basket, no headline ingredient
 // shared with a card out (serve() refuses those), and not a second away idea
 const onCard = id => state.cards.some(c => c.atom === id);
@@ -1713,21 +1599,21 @@ const chiaActions = [
   { label: chia.data.lines.breakfast, do: rec => {
     const day = new Date().getHours() >= 7 && new Date().getHours() < 17;
     inn.say(day ? chia.data.lines.breakfastLineDay || "Set it now and it'll be ready by 7 tomorrow morning." : chia.data.lines.breakfastLine, [], true);
-    cook.open(rec, 'breakfast', { until: breakfastAt() });
+    inn.cook.open(rec, 'breakfast', { until: breakfastAt() });
   } },
   // 4 jars is the same servings answer as the check-in's (setAnswer, list scaling). The list is made from the book, so a jar
   // not kept yet goes in first; and if the check-in said another number, Gemma says it's changed (QA 7)
   { label: chia.data.lines.jars, do: rec => {
     if (!book.has(rec.id)) inn.keepIdea(rec.id, rec.why, 'jars');
-    if (book.has(rec.id)) shopList.set(rec.id, true, 'jars');
+    if (book.has(rec.id)) inn.shopList.set(rec.id, true, 'jars');
     const was = visit.get('servings');
     setAnswer('servings', '4', { from: 'jars', quiet: true });
-    bookView.open('list', { from: 'jars' });
+    inn.bookView.open('list', { from: 'jars' });
     const changed = was && was !== '4'
       ? (chia.data.lines.jarsChanged || "Four jars, so I've made it four, not {n}. I've scaled your list.").replace('{n}', was === '1' ? 'one' : servingsWords(CW, was)) : '';
     inn.say(changed || chia.data.lines.jarsLine, [], true); inn.holdLine();
   } },
-];
+]; inn.chiaActions = chiaActions;
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {}; inn.T = T;
@@ -1754,13 +1640,13 @@ const TL = {
 // A world object with "tool": "checkin" (the foyer desk) opens the check-in; "pantry" (the groceries by the door too) the pantry
 const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary', checkin: 'checkin' };
 // The Map's starting country: the connection's (from /local-weather), else the browser's language region (PM, option b)
-const mapDefault = () => (state.connCountry && countryLabel(state.connCountry) ? state.connCountry : countryFromLanguage());
+const mapDefault = () => (state.connCountry && countryLabel(state.connCountry) ? state.connCountry : countryFromLanguage()); inn.mapDefault = mapDefault;
 // Words that mean the same in the kitchen (tell-data.json groups): each word maps to the rest of its group
 const SYNONYMS = {}; inn.SYNONYMS = SYNONYMS;
 for (const [w, xs] of Object.entries(T.synonyms || {})) SYNONYMS[w.toLowerCase()] = [].concat(xs).map(x => String(x).toLowerCase());
 // Cards and the book show the visitor's country's words once the Map knows it (brainstorm-1 D6): written in NZ words, swapped on display
-const shopWords = createShopWords({ table: T.shopWords, atoms: () => world.atoms });
-const applyShopWords = () => { if (shopWords.apply(visit.get('country') || mapDefault())) { inn.ideas.render(); bookView.refresh(); } };
+const shopWords = createShopWords({ table: T.shopWords, atoms: () => world.atoms }); inn.shopWords = shopWords;
+const applyShopWords = () => { if (shopWords.apply(visit.get('country') || mapDefault())) { inn.ideas.render(); inn.bookView.refresh(); } };
 const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : { items: p?.items || [], useUp: !!p?.useUp }; }; inn.pantryNow = pantryNow;
 const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
 const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free', 'low-fodmap': 'low-FODMAP' };
@@ -1871,7 +1757,7 @@ function emptyRoomLine() {
 }
 const tell = createTell({
   visit, lines: LINES.tell, kitchenLines: LINES.kitchen || {}, track, defaultCountry: mapDefault, keepEveryWay: EVERY_WAY_KEEPS,
-  beforeOpen: () => { inn.ideas.close(false); if (bookView.isOpen) bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
+  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
   onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : k === 'kitchen' ? kitchenSaid(r) : acknowledge(k, r); },
   openEnergy: () => tagsUI.openEnergy(),
   checkin: {
@@ -1988,8 +1874,8 @@ function renderTold() {
 // sheet's own history entry and closes it again (QA 9 issue 1)
 function fromBook(fn) {
   return () => {
-    if (!bookView.isOpen) return fn();
-    bookView.close();
+    if (!inn.bookView.isOpen) return fn();
+    inn.bookView.close();
     layers.afterBack(fn);
   };
 }
@@ -1998,7 +1884,7 @@ visit.subscribe(({ part, key, value }) => {
   if (part === 'all' || key === 'energy') showCandle();               // forgetting the energy puts the candle out
   if (part === 'all' || key === 'kitchen') { state.kitchenLoose = {}; if (part === 'about' && !value) inn.scheduleNavigate(); }
   if (part === 'about' && ['energy', 'time', 'servings', 'confidence'].includes(key) && !value) inn.scheduleNavigate();
-  if ((part === 'about' && key === 'servings') || part === 'all') bookView.refresh();   // the shopping list's amounts
+  if ((part === 'about' && key === 'servings') || part === 'all') inn.bookView.refresh();   // the shopping list's amounts
   if ((part === 'about' && key === 'dietary') || part === 'all') {
     const gone = state.cards.filter(c => atomsById[c.atom] && inn.dietClash(atomsById[c.atom]));
     gone.forEach(c => inn.ideas.remove(c.atom));
@@ -2006,7 +1892,7 @@ visit.subscribe(({ part, key, value }) => {
       const a = atomsById[gone[0].atom];
       inn.say((LINES.diet_clash || "I've taken the {title} away. It isn't {diet}.").replace('{title}', a.short?.toLowerCase() || a.title).replace('{diet}', inn.dietClash(a)), [], true);
     }
-    bookView.refresh();
+    inn.bookView.refresh();
   }
 });
 function renderNotes() {
@@ -2052,7 +1938,7 @@ $('forget').onclick = () => {
   inn.renderChat(); inn.setChips([]);
   setHands(handsHour());
   showWeather(state.weather);
-  inn.ideas.clearAll(); writer.clear(); renderNotes(); inn.applyReveal([]);
+  inn.ideas.clearAll(); inn.writer.clear(); renderNotes(); inn.applyReveal([]);
   inn.chatLine('gemma', 'Forgotten. Fresh start. Have a wander.');
 };
 
@@ -2380,7 +2266,7 @@ function endCheckinOffer() {
   store.save(state);
   checkinPill();
 }
-window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
+window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
                     world, spot: id => inn.spots[id] };
 
 setRoomText();
