@@ -874,7 +874,7 @@ const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 1
 const hours = t => { const [a, b] = t.split(':').map(Number); return a + b / 60; };
 const deviceTime = () => {
   const d = new Date(), h = d.getHours() + d.getMinutes() / 60, sun = state.sun;
-  if (!sun) return bucketFor(d.getHours());
+  if (!sun || hours(sun.set) <= hours(sun.rise)) return bucketFor(d.getHours());   // no sun times, or a sunset past midnight (far north in summer)
   if (h < hours(sun.rise) - 0.5 || h >= hours(sun.set) + 0.5) return 'night';
   return bucketFor(Math.min(Math.max(d.getHours(), 5), 20));
 };
