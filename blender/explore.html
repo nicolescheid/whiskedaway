@@ -1918,8 +1918,11 @@ const bookView = createBookView({
 });
 // ---------- the Chiapothecary (explore/chia-mix.js, rooms-views.md Stage A): moods on the flasks, Mix an experiment with
 // Gemma's swaps, then the write-out as a loose page in the book, ready to keep or cook
+// Which sheets keep the visitor's taps on every way out (✕, the dim, Escape, Back), not only on Done (Nicole's call: PM 6 asked
+// 23 Oct). Sweet Spells' sheets, the star chart and the Mix always do. Add 'pantry', 'map', 'dietary', 'checkin' or 'mood' here
+const EVERY_WAY_KEEPS = ['kitchen'];
 const chia = createChiaMix({
-  visit, lines: LINES, writer, track, sound,
+  visit, lines: LINES, writer, track, sound, keepEveryWay: EVERY_WAY_KEEPS,
   words: t => shopWords.text(t),                             // the Mix in the visitor's shopping words (QA 9 issue 3)
   diets: () => visit.get('dietary'),                           // an add-in that clashes with one gets a plain line
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
@@ -2223,7 +2226,7 @@ function emptyRoomLine() {
   return TL.roomNone.replace('{diet}', listOf(diet.map(x => DIET_WORD[x] || x))).replace('{room}', name);   // "vegan, gluten-free and nut-free"
 }
 const tell = createTell({
-  visit, lines: LINES.tell, kitchenLines: LINES.kitchen || {}, track, defaultCountry: mapDefault,
+  visit, lines: LINES.tell, kitchenLines: LINES.kitchen || {}, track, defaultCountry: mapDefault, keepEveryWay: EVERY_WAY_KEEPS,
   beforeOpen: () => { ideas.close(false); if (bookView.isOpen) bookView.close(); if (chatUI.size === 'full') chatUI.choose('short', 'auto'); },
   onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : k === 'kitchen' ? kitchenSaid(r) : acknowledge(k, r); },
   openEnergy: () => tagsUI.openEnergy(),

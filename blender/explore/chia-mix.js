@@ -154,7 +154,8 @@ export function mixRecipe(D, d) {
   };
 }
 
-export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten, words = t => t, diets = () => [] }) {
+export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten, words = t => t, diets = () => [], keepEveryWay = [] }) {
+  // keepEveryWay: ['mood'] makes ✕, the dim, Escape and Back keep the mood like Done (the Mix itself keeps every tap already)
   // words(text): the visitor's shopping words (shopwords.js) for what the sheet shows; the data keeps the written words
   const D = chiaData(lines), T = D.lines, w = t => words(String(t ?? ''));
   const root = document.createElement('div');
@@ -297,12 +298,12 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
       at += 1; reply = ''; said = ''; draw(); foot.querySelector('.mx-next, .mx-write')?.focus({ preventScroll: true });
     });
     foot.querySelector('.mx-write')?.addEventListener('click', write);
-    foot.querySelector('.mx-done')?.addEventListener('click', doneMood);
+    foot.querySelector('.mx-done')?.addEventListener('click', () => doneMood());
   }
 
-  function doneMood() {
+  function doneMood({ viaBack = false } = {}) {
     const before = visit.dish(ROOM, 'mood');
-    close();
+    close({ viaBack, keep: false });
     if ((before ?? null) === (draft.mood ?? null)) return;
     save('mood', draft.mood);
     track?.('tell_set', { kind: 'mood', from });
@@ -341,8 +342,9 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     track?.('tell_open', { kind: k, from: src });
     (body.querySelector('[aria-pressed="true"]') || body.querySelector('button') || $('.tl-x')).focus({ preventScroll: true });
   }
-  function close({ silent = false, viaBack = false, after = null } = {}) {
+  function close({ silent = false, viaBack = false, after = null, keep = true } = {}) {
     if (root.hidden) return;
+    if (keep && kind === 'mood' && keepEveryWay.includes('mood')) return doneMood({ viaBack });
     root.hidden = true;
     layers.closed(layer, { how: viaBack ? 'back' : 'self', refocus: !silent });
     if (after) layers.afterBack(after);                           // once its step back has landed (what opens next pushes its own)

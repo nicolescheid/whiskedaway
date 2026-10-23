@@ -51,7 +51,8 @@ export function parsePantry(text) {
     .filter(w => w && w.length <= 24);
 }
 
-export function createTell({ visit, lines = {}, kitchenLines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {} }) {
+export function createTell({ visit, lines = {}, kitchenLines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {}, keepEveryWay = ['kitchen'] }) {
+  // keepEveryWay: the sheets whose ✕, the dim, Escape and Back keep the taps like Done does (the others' are Cancel)
   const K = kitchenLines, KS = K.sheet || {};                   // gemma-lines.json `kitchen`
   const W = checkinWords(lines);                               // the check-in's words (checkin.js)
   const P = lines.pantry || {}, M = lines.map || {}, D = lines.dietary || {}, N = lines.menu || {}, B = lines.buttons || {};   // gemma-lines.json `tell`
@@ -241,14 +242,14 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
   }
   function close({ silent = false, viaBack = false, keep = true } = {}) {
     if (root.hidden) return;
-    if (kind === 'kitchen' && keep) return done(false, { viaBack });   // every way out of Your kitchen keeps the taps (✕, the dim, Escape, back)
+    if (keep && keepEveryWay.includes(kind)) return done(false, { viaBack });   // every way out keeps the taps (✕, the dim, Escape, Back)
     root.hidden = true;
     kind = null;
     layers.closed(layer, { how: viaBack ? 'back' : 'self', refocus: !silent });
   }
   const bucket = n => (n <= 0 ? '0' : n === 1 ? '1' : n <= 3 ? '2-3' : '4+');
   function done(forget = false, { viaBack = false } = {}) {
-    if (!kind || kind === 'menu') return close();
+    if (!kind || kind === 'menu') return close({ viaBack, keep: false });
     const k = kind, before = current(k);
     if (k === 'kitchen') {
       const after = { picks: forget ? [] : kitchenPicks(draft.picks) };
@@ -263,7 +264,7 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
       const after = forget ? { ...before, energy: null, time: null, servings: null, confidence: null } : draft;
       const changed = Object.keys(after).filter(x => (before[x] ?? null) !== (after[x] ?? null));
       if (!forget) checkin.onDone?.(after);                       // every Done, changed or not (the weather guess kept)
-      close();
+      close({ viaBack, keep: false });
       if (!changed.length) return;
       setTimeout(() => onDone?.(k, { before, after, changed, from, forgot: forget }), reduce() ? 0 : 200);
       return;
@@ -276,7 +277,7 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
     }
     if (k === 'dietary' && !forget) draft.other = (body.querySelector('.tl-input')?.value || '').trim().slice(0, 60);
     const same = JSON.stringify(before) === JSON.stringify(after);
-    close();
+    close({ viaBack, keep: false });
     if (same && !forget) return;                                   // nothing changed: Gemma says nothing
     if (k === 'pantry') visit.set('pantry', after.items.length ? after : null);
     if (k === 'map') { visit.set('cuisines', after.cuisines.length ? after.cuisines : null); visit.set('country', after.country || null); }
