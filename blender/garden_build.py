@@ -13,7 +13,7 @@ plinth, the glasshouse and the kitchen seen through the door's open top are exac
 Needs the Poly Haven assets:  python -I blender/fetch_assets.py
 Then run headless:
   blender -b --factory-startup --python blender/garden_build.py -- [--stop=patio|camp] [--weather=fair] [--night]
-          [--preview | --quick] [--no-render]          (--stop=all renders both stops from one build)
+          [--preview | --quick | --both] [--no-render]   (--stop=all renders both stops from one build)
 """
 import bpy
 import hashlib
@@ -33,6 +33,7 @@ from whisked import (ASSETS, ART, HERE, OUT, bbox, box_span, center_of, cyl, loo
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 QUICK = "--quick" in ARGS                 # a small, noisy look for checking the layout, never shipped
+BOTH = "--both" in ARGS                   # the 8K and the preview from one build
 NO_RENDER = "--no-render" in ARGS
 NIGHT = "--night" in ARGS
 WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")), "fair")
@@ -358,6 +359,11 @@ def build():
     append_room(fl, ("view_", "wall_garden", "garden_patio", "garden_step"))
     # The glasshouse, moved into place: not its garden view, its gravel, or the Inn wall it leans on (built here)
     append_room(gh, ("garden_view", "ground_", "inn_wall_", "landing_window", "shop_glimpse", "still_"), (GH_DX, GH_DY, 0))
+    if NIGHT:
+        # the barbecue's smoke wisp catches the string lights and reads as a little white ghost: no smoke after dark
+        for o in bpy.data.objects:
+            if o.name.startswith("app_bbq_smoke"):
+                o.hide_render = True
 
     # ---- Materials
     lime = pbr("limewash", "plastered_stone_wall", 2.2, tint=srgb("#efe6d2"), tint_mix=0.55, bump=0.8)
@@ -1123,12 +1129,14 @@ def main():
     if NO_RENDER:
         print("[whisked] done (no render)")
         return
-    suffix = "_quick" if QUICK else "_preview" if PREVIEW else ""
+    sizes = [("", 8192, 384), ("_preview", 2048, 128)] if BOTH else         [("_quick" if QUICK else "_preview" if PREVIEW else "", scene.render.resolution_x, scene.cycles.samples)]
     for stop in (STOPS if STOP == "all" else [STOP]):
         pano_camera(scene, *STOPS[stop])
-        scene.render.filepath = os.path.join(OUT, f"garden_pano_{stop}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
-        bpy.ops.render.render(write_still=True)
-        print(f"[whisked] rendered {stop} {WEATHER}{' night' if NIGHT else ''}")
+        for suffix, res, samples in sizes:
+            scene.render.resolution_x, scene.render.resolution_y, scene.cycles.samples = res, res // 2, samples
+            scene.render.filepath = os.path.join(OUT, f"garden_pano_{stop}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
+            bpy.ops.render.render(write_still=True)
+            print(f"[whisked] rendered {stop} {WEATHER}{' night' if NIGHT else ''}{suffix}")
     print("[whisked] done")
 
 
