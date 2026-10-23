@@ -162,8 +162,9 @@ def scales(m, loc, rot_z=0.0, name="scales"):
     return _group(name, p, loc, rot_z)
 
 
-def colander(m, loc, rot_z=0.0, name="colander"):
-    """A cream enamel colander with two brass-ring handles, hung from a peg by one. 0.30 wide, 0.17 deep, hangs 0.2 below the peg."""
+def colander(m, loc, rot_z=0.0, name="colander", yaw=25, tilt=0):
+    """A cream enamel colander with two brass-ring handles, hung from a peg by one. 0.30 wide, 0.17 deep, hangs 0.2 below the peg.
+    Turned yaw degrees about the peg so the room sees the open, holed bowl and a handle in profile."""
     p = []
     R = 0.125
     prof = [(0.0, 0.0), (0.05, 0.004), (0.09, 0.03), (R, 0.075), (R + 0.006, 0.09)]
@@ -171,21 +172,41 @@ def colander(m, loc, rot_z=0.0, name="colander"):
     body.location = (0.0, 0.0, -0.2)
     body.rotation_euler = _Y
     p.append(body)
-    p.append(cyl(f"{name}_rim", (0, 0.09 - 0.0, -0.2), R + 0.007, 0.008, m["brass"], verts=48, bevel=0.002, rot=_Y))
-    # the holes: rings of small dark dots on the bowl
+    # the rim is a ring, not a disc: a solid one lids the bowl and hides the holes
+    bpy.ops.mesh.primitive_torus_add(major_radius=R + 0.003, minor_radius=0.005, major_segments=48, minor_segments=10,
+                                     location=(0, 0.09, -0.2), rotation=_Y)
+    rim = bpy.context.active_object
+    rim.name = f"{name}_rim"
+    rim.data.materials.append(m["brass"])
+    for pl in rim.data.polygons:
+        pl.use_smooth = True
+    p.append(rim)
+    # the holes: rings of dark dots on the inside of the bowl (y follows the profile, a hair proud of the wall)
     import random
     rnd = random.Random(5)
-    for ring, (r, y, n) in enumerate(((0.035, 0.007, 7), (0.075, 0.021, 12), (0.105, 0.05, 16))):
+
+    def _y_at(r):
+        for (r0, y0), (r1, y1) in zip(prof, prof[1:]):
+            if r0 <= r <= r1:
+                return y0 + (y1 - y0) * (r - r0) / (r1 - r0)
+        return prof[-1][1]
+
+    for ring, (r, n) in enumerate(((0.02, 5), (0.045, 9), (0.07, 13), (0.095, 17), (0.115, 21))):
         for i in range(n):
             a = 2 * math.pi * (i + 0.5 * (ring % 2)) / n
-            p.append(sphere(f"{name}_hole_{ring}_{i}", (r * math.cos(a), y - 0.0 + 0.0, -0.2 + r * math.sin(a)), 0.0045, m["dark"],
+            p.append(sphere(f"{name}_hole_{ring}_{i}", (r * math.cos(a), _y_at(r) + 0.003, -0.2 + r * math.sin(a)), 0.0075, m["dark"],
                             scale=(1, 0.3, 1)))
     # the handle through the top: a brass loop and a peg ring
     for s in (-1, 1):
-        p.append(_rod(f"{name}_loop_{s}", (s * (R + 0.006), 0.09, -0.2), (s * (R + 0.04), 0.09, -0.2 + 0.0), 0.005, m["brass"], verts=8))
+        p.append(_rod(f"{name}_loop_{s}", (s * (R + 0.006), 0.09, -0.2), (s * (R + 0.06), 0.09, -0.2 + 0.0), 0.006, m["brass"], verts=8))
     p.append(_rod(f"{name}_strap", (0.0, 0.09, -0.2 + R + 0.0), (0, 0.04, 0.0), 0.004, m["brass"], verts=8))
     p.append(cyl(f"{name}_foot", (0, 0.0, -0.2 + 0.0), 0.04, 0.008, m["brass"], verts=24, bevel=0.002, rot=_Y))
-    return _group(name, p, loc, rot_z)
+    pivot = bpy.data.objects.new(f"{name}_pivot", None)
+    bpy.context.scene.collection.objects.link(pivot)
+    pivot.rotation_euler = (math.radians(tilt), 0, math.radians(yaw))
+    for q in p:
+        q.parent = pivot
+    return _group(name, [pivot], loc, rot_z)
 
 
 def skillet(m, loc, rot_z=0.0, name="skillet"):

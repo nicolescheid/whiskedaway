@@ -847,6 +847,7 @@ def build():
     print("[whisked] little table top", round(ttop, 3), "x", round(min(p.x for p in tpts), 2), round(max(p.x for p in tpts), 2),
           "y", round(min(p.y for p in tpts), 2), round(max(p.y for p in tpts), 2))
     cup = cup_and_saucer(tm, (1.86, -1.86, ttop), rot_z=200, name="app_cup")
+    cup.scale = (1.5, 1.5, 1.5)
     gl = water_glass(tm, (2.0, -1.78, ttop), name="app_glass")
     hotspot("little-table", "The little table", None, meshes_of(tbl) + meshes_of(cup) + meshes_of(gl), kind="ambient")
 
@@ -856,7 +857,7 @@ def build():
     for y in (-1.75, -0.85):
         cyl(f"tool_peg_{y}", (wx + 0.055, y, 1.58), 0.011, 0.05, oak, rot=(0, math.radians(90), 0))
     mc = TOOLS["measuring-cups"](tm, (wx + 0.075, -1.75, 1.6), rot_z=-90, name="app_measuring_cups")
-    mc.scale = (1.5, 1.5, 1.5)           # the wall is a long way from the camera
+    mc.scale = (2.0, 2.0, 2.0)           # the wall is a long way from the camera
     hotspot("measuring-cups", "The measuring cups", None, meshes_of(mc), kind="ambient")
     sp = TOOLS["spoons"](tm, (wx + 0.075, -0.85, 1.6), rot_z=-90, name="app_spoons")
     sp.scale = (1.3, 1.3, 1.3)
@@ -865,7 +866,7 @@ def build():
     for y in (-1.46, -1.14):
         box(f"tool_shelf_bracket_{y}", (wx + 0.04, y, 1.04), (0.07, 0.03, 0.1), oak, bevel=0.004)
     tmr = TOOLS["timer"](tm, (wx + 0.11, -1.3, 1.115), rot_z=-90, name="app_timer")
-    tmr.scale = (1.4, 1.4, 1.4)
+    tmr.scale = (1.9, 1.9, 1.9)
     bpy.context.view_layer.update()
     hotspot("timer", "The timer", None, meshes_of(tmr), kind="ambient")
 
