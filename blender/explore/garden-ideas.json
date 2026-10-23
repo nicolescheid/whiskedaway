@@ -1,0 +1,721 @@
+{
+  "_about": "DRAFT, not wired in (23 Oct 2026, content editor 4). Recipes for the garden room (garden-plan.md). Same atom format as the other rooms, `room` is 'garden'. Five atoms are COPIES of ones that live elsewhere today (`moved_from` names the room): when the garden opens, delete the originals from cuddlecore-world.json and flourish-world.json in the same commit. Garden atoms add `garden` (the hotspot key whose `ideas` should list the atom). Appliance ids stay the existing eight: a pizza oven or camp oven is tagged 'oven' (every recipe has a home-oven line), and fire-pit cooking is tagged 'bbq' (and 'oven' where it can swap). If the picker should get 'pizza-oven', 'camp-oven' and 'fire', add them to kitchen.js APPLIANCES and re-tag.",
+  "room": "garden",
+  "hotspot_ideas": {
+    "gd-bbq": [
+      "sausage-sizzle",
+      "bbq-lamb-chops",
+      "bbq-fish-parcels",
+      "bbq-charred-corn",
+      "bbq-veg-skewers"
+    ],
+    "gd-pizza-oven": [
+      "pizza-oven-margherita",
+      "yoghurt-flatbreads"
+    ],
+    "gd-camp-oven": [
+      "camp-oven-stew",
+      "camp-oven-damper",
+      "camp-oven-crumble"
+    ],
+    "gd-fire-pit": [
+      "foil-potatoes-embers",
+      "fire-hot-chocolate"
+    ],
+    "gd-table": [
+      "table-salad",
+      "jug-lemonade"
+    ]
+  },
+  "atoms": [
+    {
+      "id": "sausage-sizzle",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "A sausage sizzle at home",
+      "short": "Sausage sizzle",
+      "icon": "🌭",
+      "ref": "the sausage sizzle",
+      "hook": "Sausage and fried onion in a slice of white bread, with sauce.",
+      "time": 20,
+      "key_ingredients": [
+        "sausages",
+        "white bread",
+        "onion",
+        "tomato sauce"
+      ],
+      "method_short": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
+      "diet": [
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "appliances": [
+        "bbq",
+        "stove"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "comfort",
+        "quick",
+        "snack",
+        "hearty",
+        "cooking",
+        "summer",
+        "simple",
+        "garden",
+        "outdoor"
+      ],
+      "seed": {
+        "name": "Sausage sizzle with fried onion",
+        "why": "A Saturday-morning classic, and it works in any back yard."
+      },
+      "body": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
+      "moved_from": "cuddlecore",
+      "garden": "gd-bbq"
+    },
+    {
+      "id": "bbq-lamb-chops",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 2,
+      "title": "Barbecued lamb chops with rosemary and lemon",
+      "short": "Lamb chops",
+      "icon": "🍖",
+      "ref": "the lamb chops",
+      "hook": "Lamb chops with rosemary, garlic and lemon, grilled until browned.",
+      "time": 25,
+      "key_ingredients": [
+        "lamb chops",
+        "rosemary",
+        "garlic",
+        "lemon",
+        "olive oil"
+      ],
+      "method_short": "Rub lamb chops with oil, garlic, chopped rosemary and lemon zest. Grill over a hot barbecue for three or four minutes a side, then rest them under foil. Lemon over the top.",
+      "diet": [
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "appliances": [
+        "bbq",
+        "stove"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "protein",
+        "meal",
+        "cooking",
+        "summer",
+        "evening",
+        "hands-on",
+        "whole-food",
+        "hearty",
+        "garden",
+        "outdoor"
+      ],
+      "seed": {
+        "name": "Barbecued lamb chops with rosemary and lemon",
+        "why": "Lamb needs salt, a hot grill and a bit of patience."
+      },
+      "body": "Rub lamb chops with oil, garlic, chopped rosemary and lemon zest. Grill over a hot barbecue for three or four minutes a side, then rest them under foil. Lemon over the top.",
+      "moved_from": "flourish",
+      "garden": "gd-bbq"
+    },
+    {
+      "id": "bbq-fish-parcels",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Fish in a foil parcel with tomatoes and lemon",
+      "short": "Fish parcels",
+      "icon": "🐠",
+      "ref": "the fish parcels",
+      "hook": "Fish, tomatoes and lemon sealed in foil and steamed on the grill.",
+      "time": 20,
+      "key_ingredients": [
+        "white fish fillets",
+        "cherry tomatoes",
+        "lemon",
+        "olive oil",
+        "parsley"
+      ],
+      "method_short": "Set a fish fillet on foil with halved cherry tomatoes, lemon slices, oil and salt, and fold it into a tight parcel. Barbecue for twelve minutes, and open it away from your face. The steam is hot.",
+      "diet": [
+        "gluten-free",
+        "dairy-free",
+        "nut-free"
+      ],
+      "appliances": [
+        "bbq",
+        "oven"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "fish",
+        "protein",
+        "meal",
+        "cooking",
+        "summer",
+        "light",
+        "fresh",
+        "whole-food",
+        "evening",
+        "garden",
+        "outdoor"
+      ],
+      "seed": {
+        "name": "Barbecued fish parcels with tomatoes and lemon",
+        "why": "One parcel each, and nothing to wash but the plate."
+      },
+      "body": "Set a fish fillet on foil with halved cherry tomatoes, lemon slices, oil and salt, and fold it into a tight parcel. Barbecue for twelve minutes, and open it away from your face. The steam is hot.",
+      "moved_from": "flourish",
+      "garden": "gd-bbq"
+    },
+    {
+      "id": "bbq-charred-corn",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Charred corn with lime butter",
+      "short": "Charred corn",
+      "icon": "🔥",
+      "ref": "the charred corn",
+      "hook": "Sweetcorn grilled until it chars in spots, with lime butter.",
+      "time": 15,
+      "key_ingredients": [
+        "sweetcorn cobs",
+        "butter",
+        "lime",
+        "flaky salt",
+        "coriander"
+      ],
+      "method_short": "Grill the cobs, turning, until charred in spots, about ten minutes. Brush with butter, squeeze lime over and add salt and coriander.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "nut-free"
+      ],
+      "appliances": [
+        "bbq",
+        "stove"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "garden",
+        "summer",
+        "hands-on",
+        "cooking",
+        "fresh",
+        "whole-food",
+        "sunny",
+        "outdoor"
+      ],
+      "seed": {
+        "name": "Barbecued corn with lime butter",
+        "why": "Sweetcorn is at its best with a bit of char on it."
+      },
+      "body": "Grill the cobs, turning, until charred in spots, about ten minutes. Brush with butter, squeeze lime over and add salt and coriander.",
+      "moved_from": "flourish",
+      "garden": "gd-bbq"
+    },
+    {
+      "id": "bbq-veg-skewers",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 2,
+      "title": "Courgette, capsicum and red onion skewers",
+      "short": "Veg skewers",
+      "icon": "🍢",
+      "ref": "the vegetable skewers",
+      "hook": "Chunky vegetables on skewers, charred, with yoghurt and lemon.",
+      "time": 25,
+      "key_ingredients": [
+        "courgettes",
+        "capsicum",
+        "red onion",
+        "olive oil",
+        "dried oregano",
+        "Greek yoghurt"
+      ],
+      "method_short": "Thread chunky courgette, capsicum and red onion on skewers and brush with oil and oregano. Grill, turning, until soft and charred at the edges, then serve with yoghurt and lemon. Soak wooden skewers first so they don't burn.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "nut-free"
+      ],
+      "appliances": [
+        "bbq",
+        "oven",
+        "air-fryer"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "garden",
+        "summer",
+        "hands-on",
+        "cooking",
+        "green",
+        "whole-food",
+        "meal",
+        "light",
+        "outdoor"
+      ],
+      "seed": {
+        "name": "Barbecued vegetable skewers with yoghurt and lemon",
+        "why": "Whatever the garden is overproducing, on a stick."
+      },
+      "body": "Thread chunky courgette, capsicum and red onion on skewers and brush with oil and oregano. Grill, turning, until soft and charred at the edges, then serve with yoghurt and lemon. Soak wooden skewers first so they don't burn.",
+      "moved_from": "flourish",
+      "garden": "gd-bbq"
+    },
+    {
+      "id": "pizza-oven-margherita",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 2,
+      "title": "Margherita from the pizza oven",
+      "short": "Margherita",
+      "icon": "🍕",
+      "ref": "the margherita",
+      "hook": "A thin pizza, blistered in two minutes in a very hot oven.",
+      "time": 30,
+      "wait": "2 minutes in the oven",
+      "key_ingredients": [
+        "pizza dough",
+        "tomato passata",
+        "mozzarella",
+        "basil",
+        "olive oil"
+      ],
+      "method_short": "Stretch a ball of dough thin, spread it with passata and add torn mozzarella. Slide it into the hot oven for about two minutes, turning once, then add basil and oil. In a home oven, use the hottest setting on a preheated tray; it takes about eight minutes.",
+      "diet": [
+        "nut-free"
+      ],
+      "cuisines": [
+        "Italian"
+      ],
+      "appliances": [
+        "oven"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "summer",
+        "evening",
+        "hands-on",
+        "cooking",
+        "meal",
+        "hearty"
+      ],
+      "seed": {
+        "name": "Margherita pizza",
+        "why": "Fire does in two minutes what a home oven does in ten."
+      },
+      "body": "Stretch a ball of dough thin, spread it with passata and add torn mozzarella. Slide it into the hot oven for about two minutes, turning once, then add basil and oil. In a home oven, use the hottest setting on a preheated tray; it takes about eight minutes.",
+      "garden": "gd-pizza-oven"
+    },
+    {
+      "id": "yoghurt-flatbreads",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Yoghurt flatbreads with garlic butter",
+      "short": "Flatbreads",
+      "icon": "🫓",
+      "ref": "the flatbreads",
+      "hook": "Two-ingredient dough, cooked in minutes, brushed with garlic butter.",
+      "time": 20,
+      "key_ingredients": [
+        "self-raising flour",
+        "Greek yoghurt",
+        "garlic",
+        "butter",
+        "parsley"
+      ],
+      "method_short": "Mix equal weights of self-raising flour and yoghurt into a dough, and roll into rounds. Cook for two minutes a side on a very hot surface, then brush with melted garlic butter and parsley.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Middle Eastern"
+      ],
+      "appliances": [
+        "oven",
+        "stove",
+        "bbq"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "summer",
+        "evening",
+        "hands-on",
+        "cooking",
+        "simple",
+        "quick"
+      ],
+      "seed": {
+        "name": "Yoghurt flatbreads with garlic butter",
+        "why": "No yeast and no waiting, so they're ready while the pizza oven's still hot."
+      },
+      "body": "Mix equal weights of self-raising flour and yoghurt into a dough, and roll into rounds. Cook for two minutes a side on a very hot surface, then brush with melted garlic butter and parsley.",
+      "garden": "gd-pizza-oven"
+    },
+    {
+      "id": "camp-oven-stew",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 2,
+      "title": "Camp-oven beef and kūmara stew",
+      "short": "Camp stew",
+      "icon": "🥘",
+      "ref": "the camp-oven stew",
+      "hook": "Beef and vegetables in a cast-iron pot, left in the coals for hours.",
+      "time": 30,
+      "wait": "3 hours in the coals",
+      "key_ingredients": [
+        "beef chuck",
+        "kūmara",
+        "onion",
+        "carrots",
+        "beef stock",
+        "thyme"
+      ],
+      "method_short": "Brown the beef in the camp oven, then add onion, carrots, stock and thyme and put the lid on. Leave it in the coals for about three hours, adding kūmara for the last hour. In a home oven at 160°C it takes the same time.",
+      "diet": [
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "appliances": [
+        "oven",
+        "stove",
+        "slow-cooker"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "evening",
+        "hearty",
+        "warming",
+        "slow",
+        "meal",
+        "winter",
+        "autumn",
+        "cosy"
+      ],
+      "seed": {
+        "name": "Camp-oven beef and kūmara stew",
+        "why": "A heavy lid and a long afternoon do all the work."
+      },
+      "body": "Brown the beef in the camp oven, then add onion, carrots, stock and thyme and put the lid on. Leave it in the coals for about three hours, adding kūmara for the last hour. In a home oven at 160°C it takes the same time.",
+      "garden": "gd-camp-oven"
+    },
+    {
+      "id": "camp-oven-damper",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Damper from the camp oven",
+      "short": "Damper",
+      "icon": "🍞",
+      "ref": "the damper",
+      "hook": "A quick loaf of flour, butter and milk, baked in the pot.",
+      "time": 15,
+      "wait": "30 minutes baking",
+      "key_ingredients": [
+        "self-raising flour",
+        "butter",
+        "milk",
+        "salt"
+      ],
+      "method_short": "Rub butter into self-raising flour with salt, mix in milk to a soft dough and shape it into a round. Bake with the lid on for about thirty minutes, until it sounds hollow when tapped. Eat warm with butter and golden syrup.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "appliances": [
+        "oven",
+        "bbq"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "hands-on",
+        "cooking",
+        "simple",
+        "bread",
+        "warming",
+        "snack"
+      ],
+      "seed": {
+        "name": "Camp-oven damper",
+        "why": "Bread without yeast, from people who were a long way from a bakery."
+      },
+      "body": "Rub butter into self-raising flour with salt, mix in milk to a soft dough and shape it into a round. Bake with the lid on for about thirty minutes, until it sounds hollow when tapped. Eat warm with butter and golden syrup.",
+      "garden": "gd-camp-oven"
+    },
+    {
+      "id": "camp-oven-crumble",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 2,
+      "title": "Apple crumble in the camp oven",
+      "short": "Camp crumble",
+      "icon": "🥧",
+      "ref": "the camp crumble",
+      "hook": "Soft apples under a crumble of oats and butter, baked with the lid on.",
+      "time": 20,
+      "wait": "35 minutes baking",
+      "key_ingredients": [
+        "apples",
+        "rolled oats",
+        "butter",
+        "plain flour",
+        "brown sugar",
+        "cinnamon"
+      ],
+      "method_short": "Slice apples into the pot and top with a crumbly mix of oats, flour, butter and sugar. Put the lid on, with a few coals on top, and bake for about thirty-five minutes until bubbling. In a home oven, use 180°C.",
+      "diet": [
+        "vegetarian",
+        "nut-free"
+      ],
+      "sweetener": "sugar",
+      "added_sugar": true,
+      "cuisines": [
+        "Kiwi classics"
+      ],
+      "appliances": [
+        "oven"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "sweet",
+        "treat",
+        "evening",
+        "warming",
+        "cosy",
+        "hands-on",
+        "cooking",
+        "autumn"
+      ],
+      "seed": {
+        "name": "Camp-oven apple crumble",
+        "why": "Heat from above and below, and the lid keeps it all in."
+      },
+      "body": "Slice apples into the pot and top with a crumbly mix of oats, flour, butter and sugar. Put the lid on, with a few coals on top, and bake for about thirty-five minutes until bubbling. In a home oven, use 180°C.",
+      "garden": "gd-camp-oven"
+    },
+    {
+      "id": "foil-potatoes-embers",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Potatoes baked in foil in the embers",
+      "short": "Foil potatoes",
+      "icon": "🥔",
+      "ref": "the foil potatoes",
+      "hook": "Buttery potatoes wrapped in foil and buried in the embers.",
+      "time": 10,
+      "wait": "45 minutes in the embers",
+      "key_ingredients": [
+        "baby potatoes",
+        "butter",
+        "rosemary",
+        "garlic",
+        "flaky salt"
+      ],
+      "method_short": "Toss halved potatoes with butter, rosemary, garlic and salt, and wrap them in a double layer of foil. Bury in the embers for about forty-five minutes. Open carefully, because the steam is hot.",
+      "diet": [
+        "vegetarian",
+        "gluten-free",
+        "nut-free"
+      ],
+      "appliances": [
+        "bbq",
+        "oven"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "evening",
+        "hands-on",
+        "cooking",
+        "simple",
+        "whole-food",
+        "autumn"
+      ],
+      "seed": {
+        "name": "Foil-baked potatoes with rosemary",
+        "why": "Ten minutes of work, then you sit by the fire."
+      },
+      "body": "Toss halved potatoes with butter, rosemary, garlic and salt, and wrap them in a double layer of foil. Bury in the embers for about forty-five minutes. Open carefully, because the steam is hot.",
+      "garden": "gd-fire-pit"
+    },
+    {
+      "id": "fire-hot-chocolate",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 1,
+      "title": "Hot chocolate by the fire",
+      "short": "Hot chocolate",
+      "icon": "☕",
+      "ref": "the hot chocolate",
+      "hook": "Milk warmed in a pot by the fire, with dark chocolate whisked in.",
+      "time": 10,
+      "key_ingredients": [
+        "milk",
+        "dark chocolate",
+        "sugar",
+        "flaky salt"
+      ],
+      "method_short": "Warm the milk in a small pot over the fire and whisk in chopped dark chocolate until smooth. Add a little sugar to taste, pour into mugs and finish with a pinch of salt.",
+      "diet": [
+        "vegetarian"
+      ],
+      "sweetener": "sugar",
+      "added_sugar": true,
+      "appliances": [
+        "stove",
+        "bbq"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "sweet",
+        "treat",
+        "evening",
+        "night",
+        "warming",
+        "cosy",
+        "chocolate",
+        "simple"
+      ],
+      "seed": {
+        "name": "Hot chocolate with dark chocolate and sea salt",
+        "why": "The pot on the fire makes it taste better, and I won't be argued with."
+      },
+      "body": "Warm the milk in a small pot over the fire and whisk in chopped dark chocolate until smooth. Add a little sugar to taste, pour into mugs and finish with a pinch of salt.",
+      "garden": "gd-fire-pit"
+    },
+    {
+      "id": "table-salad",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Table salad of tomato, cucumber and olives",
+      "short": "Table salad",
+      "icon": "🥗",
+      "ref": "the table salad",
+      "hook": "Big chunks of tomato and cucumber with olives, feta and oregano.",
+      "time": 10,
+      "key_ingredients": [
+        "tomatoes",
+        "cucumber",
+        "red onion",
+        "olives",
+        "feta",
+        "dried oregano"
+      ],
+      "method_short": "Cut tomatoes and cucumber into big chunks and add thin red onion, olives and crumbled feta. Dress with olive oil, lemon and oregano, and put the bowl in the middle of the table.",
+      "diet": [
+        "gluten-free",
+        "nut-free"
+      ],
+      "cuisines": [
+        "Greek"
+      ],
+      "appliances": [],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "summer",
+        "fresh",
+        "simple",
+        "light",
+        "no-cook",
+        "midday",
+        "sunny",
+        "cooling"
+      ],
+      "seed": {
+        "name": "Greek-style table salad",
+        "why": "Nothing to cook, so you can stay outside."
+      },
+      "body": "Cut tomatoes and cucumber into big chunks and add thin red onion, olives and crumbled feta. Dress with olive oil, lemon and oregano, and put the bowl in the middle of the table.",
+      "garden": "gd-table"
+    },
+    {
+      "id": "jug-lemonade",
+      "room": "garden",
+      "kind": "recipe idea",
+      "spoons": 0,
+      "title": "Fresh lemonade by the jug",
+      "short": "Jug lemonade",
+      "icon": "🍋",
+      "ref": "the jug of lemonade",
+      "hook": "Lemon juice, sugar and cold water in a jug, with mint and ice.",
+      "time": 10,
+      "key_ingredients": [
+        "lemons",
+        "sugar",
+        "water",
+        "mint",
+        "ice"
+      ],
+      "method_short": "Stir sugar into a cup of hot water until it dissolves. Add lemon juice, top up the jug with cold water and ice, and tear in some mint.",
+      "diet": [
+        "vegan",
+        "vegetarian",
+        "dairy-free",
+        "gluten-free",
+        "nut-free"
+      ],
+      "sweetener": "sugar",
+      "added_sugar": true,
+      "appliances": [
+        "kettle"
+      ],
+      "appliances_checked": true,
+      "themes": [
+        "outdoor",
+        "garden",
+        "summer",
+        "fresh",
+        "cooling",
+        "light",
+        "simple",
+        "midday",
+        "sunny",
+        "drink"
+      ],
+      "seed": {
+        "name": "Fresh lemonade with mint",
+        "why": "A jug on the table does more than anyone expects."
+      },
+      "body": "Stir sugar into a cup of hot water until it dissolves. Add lemon juice, top up the jug with cold water and ice, and tear in some mint.",
+      "garden": "gd-table"
+    }
+  ]
+}
