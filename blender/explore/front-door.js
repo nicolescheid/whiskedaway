@@ -309,6 +309,8 @@ export function frontDoor({ active, track }) {
     door.classList.add('leaving');
     await wait(reduced ? 250 : 650);
     door.hidden = true;
+    // The door's button went with it (a11y review C3): focus goes to the room, unless the welcome card takes it
+    if (welcomed && (!document.activeElement || document.activeElement === document.body || door.contains(document.activeElement))) document.getElementById('stage')?.focus({ preventScroll: true });
     video?.removeAttribute('src');
     video?.load();
     if (!welcomed) await openWelcome();
