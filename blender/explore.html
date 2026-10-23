@@ -719,9 +719,10 @@ import { install as installCentrepieces } from './explore/centrepieces.js';
 import { install as installTellGlue } from './explore/tell-glue.js';
 import { install as installThemeGlue } from './explore/theme-glue.js';
 import { install as installPanels } from './explore/panels.js';
+import { install as installInnDialogs } from './explore/inn-dialogs.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, chooseEnergy, showWeather, showCandle });   // wa-split: main's functions the modules call
+Object.assign(inn, { lookTo, record, introduce, endCheckinOffer, countAtom, chooseEnergy, showWeather, showCandle });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -813,7 +814,7 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a])); inn.atomsById = atomsById;
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
 const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null; inn.homeOf = homeOf;
-const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
+const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); inn.esc = esc;
 
 // ---------- state (session only)
@@ -889,7 +890,7 @@ const deviceTime = () => {
   if (!sun || hours(sun.set) <= hours(sun.rise)) return bucketFor(d.getHours());   // no sun times, or a sunset past midnight (far north in summer)
   if (h < hours(sun.rise) - 0.5 || h >= hours(sun.set) + 0.5) return 'night';
   return bucketFor(Math.min(Math.max(d.getHours(), 5), 20));
-};
+}; inn.deviceTime = deviceTime;
 const timeNow = () => state.time || deviceTime(); inn.timeNow = timeNow;
 const isNight = () => timeNow() === 'night'; inn.isNight = isNight;
 /** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */
@@ -1337,11 +1338,11 @@ function touch(id) {
       { canServe: inn.canServe, onCard: a => inn.onCard(a.id), season: room().seasons ? seasonNow() : null }), 'object');
     inn.holdLine();                         // her reading waits, so the object's line stays up long enough to read (QA 9 issue 2)
   } else if (obj.type === 'weather') {
-    openWeather();
+    inn.openWeather();
   } else if (obj.type === 'time') {
-    openClock();
+    inn.openClock();
   } else if (obj.type === 'season') {
-    openSeasons();
+    inn.openSeasons();
   } else if (obj.type === 'door' || obj.type === 'walk') {
     if (!obj.go) {
       track('door_closed', { room: state.room, object: id });
@@ -1363,7 +1364,7 @@ function touch(id) {
   } else if (obj.type === 'submit' && obj.tool === 'generate' && inn.CAST_ROOMS[homeOf(state.room)]) {
     inn.cast(id);                                                 // the spell table, the pot, Lay the Table: this room's best idea, written out
   } else if (obj.type === 'submit') {
-    openTool(obj.tool_title || obj.label, obj.tool_text || "I can't open this one for you yet.");
+    inn.openTool(obj.tool_title || obj.label, obj.tool_text || "I can't open this one for you yet.");
   } else if (inn.TELL_TOOLS[obj.tool]) {
     // The pantry, the map and the cookbooks (Tell Gemma V1): her line, then the sheet
     // Cuddlecore's "How you're feeling" jars open the check-in (a stand-in line until content writes tell.objects['symptom-jars'])
@@ -1371,7 +1372,7 @@ function touch(id) {
     if (told) { inn.say(told, [], true); inn.holdLine(); }   // her reading waits, so this line is the one you see
     inn.tell.open(inn.TELL_TOOLS[obj.tool], 'object');
   } else {
-    openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
+    inn.openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
   }
   if (noteLine) { inn.say(noteLine, [], true); inn.holdLine(); }
 }
@@ -1425,10 +1426,10 @@ function openDial() {
   const opts = hallWorld.dial.concat([{ label: 'Wherever my wander points', star: true }]);
   $('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}"${o.blurb ? ` aria-label="${esc(o.label)}: ${esc(o.blurb)}"` : ''}>${o.star ? '✦ ' : ''}${esc(o.label)}${o.blurb ? `<span class="blurb">${esc(o.blurb)}</span>` : ''}</button>`).join('');
   $('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
-  showDialog('dialdlg');
+  inn.showDialog('dialdlg');
 }
 function turnDial(o) {
-  hideDialog('dialdlg');
+  inn.hideDialog('dialdlg');
   record({ kind: 'dial', id: o.star ? 'the star' : o.label });
   track('dial_turn', { dial_choice: o.star ? 'star' : o.go || 'closed' });
   // The star opens the room whose reading the wander leans to (the room identities, content stage 3): juices, smoothies,
@@ -1445,7 +1446,7 @@ function turnDial(o) {
   inn.say(o.star ? (starSays[go] || 'Your wander says Cuddlecore. In you go.') : 'In you go.', [], true);
   setTimeout(() => goRoom(go), 700);
 }
-$('dial-ok').onclick = () => hideDialog('dialdlg');
+$('dial-ok').onclick = () => inn.hideDialog('dialdlg');
 
 
 installChatGlue(inn);   // Gemma's chat glue: say, chips, typing, the sound chip
@@ -1464,126 +1465,7 @@ installThemeGlue(inn);   // the visit's theme caption and the hallway notice boa
 
 installPanels(inn);   // the bar, the Map panel, the notebook and Forget
 
-function openTool(title, text) { $('tool-title').textContent = title; $('tool-text').textContent = text; showDialog('tool'); }
-$('tool-ok').onclick = () => hideDialog('tool');
-
-// ---------- the Inn's small dialogs (.tool: the barometer, clock, dial, seasons wheel, credits): each one a layer
-// (explore/layers.js), which owns their history step, Escape, Tab, inert and focus. The welcome card is front-door.js's own
-function showDialog(id) {
-  const d = $(id);
-  if (!layers.isOpen(d)) {                                  // open already (the seasons wheel redraws itself): just the focus
-    d.classList.add('open');
-    layers.open({ el: d, name: id, close: () => hideDialog(id) });
-  }
-  (d.querySelector('.dial .on') || d.querySelector('.dial button, .ok'))?.focus();
-}
-function hideDialog(id) {
-  const d = $(id);
-  if (!d.classList.contains('open')) return;
-  d.classList.remove('open');
-  layers.closed({ el: d, name: id });
-}
-// The welcome card keeps Tab inside it; Escape with no layer open closes the Map panel
-addEventListener('keydown', e => {
-  const d = $('welcome')?.classList.contains('open') ? $('welcome') : null;
-  if (e.key === 'Tab' && d) {
-    const f = [...d.querySelectorAll('button, a[href]')].filter(x => !x.disabled && x.offsetParent), i = f.indexOf(document.activeElement);
-    if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-  } else if (e.key === 'Escape' && !d) {
-    const p = document.querySelector('.panel.open');
-    if (p) { const btn = $('btn-map'); inn.togglePanel(p.id, btn); btn.focus(); }
-  }
-}, true);
-
-// Test hooks for scripted checks
-// ---------- barometer
-function openWeather() {
-  $('dial').innerHTML = Object.entries(world.weathers).map(([id, w]) =>
-    `<button data-w="${esc(id)}" class="${id === state.weather ? 'on' : ''}" aria-pressed="${id === state.weather}">${esc(w.label)}</button>`).join('');
-  $('dial').querySelectorAll('button').forEach(b => b.onclick = () => chooseWeather(b.dataset.w));
-  showDialog('weather');
-}
-function chooseWeather(id, { quiet = false } = {}) {
-  if (!world.weathers[id]) return;
-  $('dial').querySelectorAll('button').forEach(b => { const on = b.dataset.w === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-  if (id === state.weather) return introduce();
-  state.weather = id;
-  state.weatherFrom = 'visitor';
-  showWeather(id);
-  if (!quiet) inn.say(world.weathers[id].moment, [], true);
-  record({ kind: 'weather', id });
-  track('weather_change', { room: state.room, weather: id });
-  introduce();
-}
-$('weather-ok').onclick = () => hideDialog('weather');
-
-// ---------- clock
-function openClock() {
-  const mine = deviceTime();
-  $('clock-text').textContent = `Where you are it's ${world.times[mine].label.toLowerCase()}. Push the hands to whatever time you're cooking for.`;
-  renderClock();
-  showDialog('clockdlg');
-}
-// The clock's buttons (QA R5): the time in effect is pressed (the pushed one, or the visitor's own when they haven't pushed
-// it), the visitor's own time says so on the button, and "Back to my time" appears as soon as the hands have moved
-function renderClock() {
-  const mine = deviceTime(), now = state.time || mine, focused = document.activeElement?.closest?.('#clockdial button')?.dataset.t;
-  const opts = Object.entries(world.times).map(([id, t]) => ({ id, label: t.label })).concat(state.time ? [{ id: '', label: 'Back to my time' }] : []);
-  $('clockdial').innerHTML = opts.map(o => `<button data-t="${esc(o.id)}" class="${o.id && o.id === state.time ? 'on' : ''}${o.id === mine ? ' mine' : ''}" aria-pressed="${!!o.id && o.id === now}">${esc(o.label)}${o.id === mine ? '<span class="your-time"> (your time)</span>' : ''}</button>`).join('');
-  $('clockdial').querySelectorAll('button').forEach(b => b.onclick = () => chooseTime(b.dataset.t || null));
-  if (focused !== undefined) ($('clockdial').querySelector(`[data-t="${CSS.escape(focused)}"]`) || $('clockdial').querySelector('[aria-pressed="true"]'))?.focus();
-}
-function chooseTime(id) {
-  if (id === state.time) return;
-  state.time = id;
-  state.timeSetAt = id ? Date.now() : null;
-  if (id) track('time_change', { room: state.room, time_of_day: id });
-  setHands(handsHour());
-  showWeather(state.weather);                                        // re-light: tint, or the night render
-  if ($('clockdlg').classList.contains('open')) renderClock();
-  if (id) {
-    sound.strike(world.times[id].hour);                              // the grandfather clock, if you're in the hall
-    inn.say(world.times[id].moment, [], true);
-    record({ kind: 'time', id });
-  } else {
-    track('time_change', { room: state.room, time_of_day: 'own' });
-    inn.say(`Back to your own time: ${world.times[deviceTime()].label.toLowerCase()}.`, [], true);
-    state.trail = state.trail.filter(e => e.kind !== 'time');
-    store.save(state);
-    inn.scheduleNavigate();
-  }
-}
-$('clock-ok').onclick = () => hideDialog('clockdlg');
-
-// ---------- seasons wheel: the Conservatory opens in the visitor's season; the wheel shows any other
-function openSeasons() {
-  $('season-text').textContent = `Where you are it's probably ${inn.seasonGuess}. Turn the wheel to see the Conservatory in any season.`;
-  const opts = Object.entries(world.seasons).map(([id, s]) => ({ id, label: s.label }))
-    .concat(state.season ? [{ id: '', label: 'Back to my season' }] : []);
-  $('seasondial').innerHTML = opts.map(o => `<button data-s="${esc(o.id)}" class="${o.id && o.id === seasonNow() ? 'on' : ''}" aria-pressed="${!!o.id && o.id === seasonNow()}">${esc(o.label)}</button>`).join('');
-  $('seasondial').querySelectorAll('button').forEach(b => b.onclick = () => chooseSeason(b.dataset.s || null));
-  showDialog('seasondlg');
-}
-function chooseSeason(id) {
-  if (id && !world.seasons[id]) return;
-  if (id === state.season) return;
-  const before = seasonNow();
-  state.season = id;
-  if (seasonNow() !== before) showWeather(state.weather);
-  if (id) {
-    inn.say(world.seasons[id].moment, [], true);
-    record({ kind: 'season', id });
-    track('season_change', { season: id });
-  } else {
-    track('season_change', { season: 'own' });
-    inn.say(`Back to your own season: ${inn.seasonGuess}.`, [], true);
-    state.trail = state.trail.filter(e => e.kind !== 'season');
-    store.save(state);
-    inn.scheduleNavigate();
-  }
-  if ($('seasondlg').classList.contains('open')) openSeasons();   // show or drop "Back to my season"
-}
-$('season-ok').onclick = () => hideDialog('seasondlg');
+installInnDialogs(inn);   // the Inn's small dialogs: barometer, clock, seasons wheel, tool cards
 
 // ---------- energy candles: pick the one that matches how much you've got in you today
 // The candles are rendered unlit (the kitchen's five and the foyer desk's five). The chosen one is lit here:
@@ -1788,7 +1670,7 @@ function endCheckinOffer() {
   store.save(state);
   checkinPill();
 }
-window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
+window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy, chooseSeason: inn.chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
                     world, spot: id => inn.spots[id] };
 
 setRoomText();
