@@ -291,6 +291,27 @@ const sameEntry = async (page, want) => { const now = await page.evaluate(() => 
 const back = async page => { await page.evaluate(() => history.back()); await page.waitForTimeout(700); return page.evaluate(() => !!window.__explore).catch(() => false); };
 
 const JOURNEYS = [
+  { id: 'the chat at Full (phones)', async run(page) {
+    if ((await page.evaluate(() => innerWidth)) >= 720) return [];   // on a computer Full is just a bigger window, not a sheet
+    const out = [], entry = await marked(page);
+    for (const way of ['escape', 'back', 'scrim']) {
+      await page.evaluate(() => { const c = window.__explore.chatUI; c.choose('short', 'button'); });
+      await page.waitForTimeout(200);
+      await page.evaluate(() => { document.querySelector('#chatwin .cw-more')?.focus(); window.__explore.chatUI.choose('full', 'button'); });
+      await page.waitForTimeout(300);
+      out.push([`Full is a sheet (${way})`, await page.evaluate(() => !!document.getElementById('stage')?.closest('[inert]'))]);
+      if (way === 'escape') await page.keyboard.press('Escape');
+      else if (way === 'back') out.push(['Back stays in the Inn (chat)', await back(page)]);
+      else await page.click('.cw-scrim', { position: { x: 20, y: 20 } });   // above the chat, which covers its middle
+      await page.waitForTimeout(500);
+      const size = await page.evaluate(() => document.body.dataset.chat);
+      out.push([`${way} goes back to Short`, size === 'short', `at ${size}`]);
+      out.push(...(await clean(page)).map(([c, ok, n]) => [`${c} (${way})`, ok, n]));
+      const [ok, note] = await sameEntry(page, entry);
+      out.push([`history balanced (${way})`, ok, note]);
+    }
+    return out;
+  } },
   { id: 'opener gone', async run(page) {
     const out = [];
     await page.evaluate(async () => { const ex = window.__explore, s = ex.spot('pantry-cabinet'); ex.lookTo(s.yaw, s.pitch); await new Promise(r => setTimeout(r, 100)); document.querySelector('.spot[data-spot="pantry-cabinet"]').focus(); });
