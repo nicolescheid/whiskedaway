@@ -820,12 +820,18 @@ if (freshVisit) {
   const lw = await fetch(`${GENIE_URL}/local-weather`, { signal: AbortSignal.timeout(1500) })
     .then(r => (r.ok ? r.json() : {})).catch(() => ({}));
   const guess = lw.weather || null;
+  state.sun = lw.sun && /^\d\d:\d\d$/.test(lw.sun.rise) && /^\d\d:\d\d$/.test(lw.sun.set) ? lw.sun : null;   // today's local sunrise and sunset
   state.connCountry = /^[A-Z]{2}$/.test(lw.country || '') ? lw.country : null;   // only ever the Map's default; the visitor can change it
   if (world.weathers[guess]) {
     state.weather = guess;
     state.weatherFrom = 'local';
     track('weather_guess', { weather: guess, outcome: 'shown' });
   }
+} else if (!state.sun) {
+  // A visit from before the sun times: ask in the background; the next room shown follows dusk
+  fetch(`${GENIE_URL}/local-weather`, { signal: AbortSignal.timeout(2500) }).then(r => (r.ok ? r.json() : {})).then(lw => {
+    if (lw.sun && /^\d\d:\d\d$/.test(lw.sun.rise) && /^\d\d:\d\d$/.test(lw.sun.set)) state.sun = lw.sun;
+  }).catch(() => {});
 }
 state.time = state.time || null;
 // What the visitor has told the Inn about themselves (the energy candle, later the pantry and location) lives in the
@@ -859,7 +865,16 @@ delete state.sound;                        // sound on or off lives in explore/s
 
 // ---------- time of day: the device's own, unless the visitor pushed the clock
 const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
-const deviceTime = () => bucketFor(new Date().getHours());
+// With today's local sunrise and sunset (from /local-weather), it's night from half an hour after sunset until half an
+// hour before sunrise, so an October evening in Auckland goes dark at about 8.30 pm and a June one at 5.30 pm.
+// Without them, the fixed hours above (night from 9 pm to 5 am).
+const hours = t => { const [a, b] = t.split(':').map(Number); return a + b / 60; };
+const deviceTime = () => {
+  const d = new Date(), h = d.getHours() + d.getMinutes() / 60, sun = state.sun;
+  if (!sun) return bucketFor(d.getHours());
+  if (h < hours(sun.rise) - 0.5 || h >= hours(sun.set) + 0.5) return 'night';
+  return bucketFor(Math.min(Math.max(d.getHours(), 5), 20));
+};
 const timeNow = () => state.time || deviceTime();
 const isNight = () => timeNow() === 'night';
 /** The trail the navigator sees: the device's time of day goes first, unless the visitor chose one. */

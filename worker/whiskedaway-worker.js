@@ -1122,7 +1122,8 @@ async function handleLocalWeather(request, ctx) {
   // The two-letter country Cloudflare attaches to the request goes back too: only the Map's default (Tell Gemma V1),
   // which the visitor can change. It's never cached, logged or kept
   const country = /^[A-Z]{2}$/.test(request.cf?.country || '') && request.cf.country !== 'XX' && request.cf.country !== 'T1' ? request.cf.country : null;
-  const reply = weather => new Response(JSON.stringify({ weather, country }), {
+  // sun: today's local sunrise and sunset ('HH:MM', the area's own clock), so the Inn turns to night at dusk, not at 9 pm
+  const reply = (weather, sun = null) => new Response(JSON.stringify({ weather, country, sun }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' },
   });
   const lat = Number(request.cf?.latitude), lon = Number(request.cf?.longitude);
@@ -1132,18 +1133,22 @@ async function handleLocalWeather(request, ctx) {
   const cacheKey = new Request(`https://local-weather.whiskedaway.internal/${area}`);
   const cache = caches.default;
   const hit = await cache.match(cacheKey).catch(() => null);
-  if (hit) return reply((await hit.json()).weather);
+  if (hit) { const h = await hit.json(); return reply(h.weather, h.sun || null); }
   try {
     const [la, lo] = area.split(',');
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}`
-      + '&current=weather_code,temperature_2m,precipitation,wind_gusts_10m&timezone=auto';
+      + '&current=weather_code,temperature_2m,precipitation,wind_gusts_10m&daily=sunrise,sunset&forecast_days=1&timezone=auto';
     const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
     if (!res.ok) return reply(null);
-    const weather = innWeather((await res.json()).current || {});
-    ctx.waitUntil(cache.put(cacheKey, new Response(JSON.stringify({ weather }), {
+    const data = await res.json();
+    const weather = innWeather(data.current || {});
+    const hhmm = v => (/T(\d\d:\d\d)/.exec(String(v || '')) || [])[1] || null;
+    const rise = hhmm(data.daily?.sunrise?.[0]), set = hhmm(data.daily?.sunset?.[0]);
+    const sun = rise && set ? { rise, set } : null;
+    ctx.waitUntil(cache.put(cacheKey, new Response(JSON.stringify({ weather, sun }), {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=1200' },
     })));
-    return reply(weather);
+    return reply(weather, sun);
   } catch {
     return reply(null);
   }
