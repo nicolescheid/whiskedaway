@@ -38,6 +38,10 @@ NO_RENDER = "--no-render" in ARGS
 NIGHT = "--night" in ARGS
 WEATHER = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--weather=")), "fair")
 STOP = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--stop=")), "patio")   # or "all": both stops from one build
+ROOM = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--room=")), None)   # flourish | glasshouse: that room's own
+                                          # panorama (its camera, light and weather), the real garden outside instead of the plate
+if ROOM:
+    STOP = "patio"
 SEASON = "spring"                         # the glasshouse and the far view; the garden has no seasons yet
 
 os.makedirs(OUT, exist_ok=True)
@@ -48,6 +52,8 @@ GROUND = -0.1                              # the lawn; the patio flags are at -0
 STOPS = {"patio": ((6.5, 3.0, EYE), 90),   # just out of the stable door; the middle of the panorama looks over the garden
          "camp": ((11.0, 3.3, EYE), 45)}   # by the fire pit; the middle looks at the tent and the sea
 CAM, CAM_YAW = STOPS["patio" if STOP == "all" else STOP]
+ROOM_CAMS = {"flourish": ((2.2, 1.4, EYE), 0),                  # flourish_build.py's camera
+             "glasshouse": ((0.8 + 4.8, 3.15 - 4.65, EYE), 90)}   # glasshouse_build.py's, moved into place
 
 GH_DX, GH_DY = 4.8, -4.65                  # glasshouse coordinates -> these
 SD_Y, SD_W, SD_H = 3.8, 0.9, 2.05          # Flourish's stable door (flourish_build.py)
@@ -327,10 +333,10 @@ def room_blend(script, args):
     return dest
 
 
-def append_room(path, skip, offset=(0, 0, 0)):
+def append_room(path, skip, offset=(0, 0, 0), keep_sun=False):
     """Append a room's objects (not its cameras or sun, nor anything named in skip) and shift them by offset."""
     with bpy.data.libraries.load(path, link=False) as (src, dst):
-        dst.objects = [n for n in src.objects if n != "sun" and not n.startswith(skip)]
+        dst.objects = [n for n in src.objects if (keep_sun or n != "sun") and not n.startswith(skip)]
     objs = [o for o in dst.objects if o is not None and o.type != "CAMERA"]
     names = {o.name for o in objs}
     shift = Matrix.Translation(offset)
@@ -356,9 +362,13 @@ def build():
     gh = room_blend("glasshouse_build.py", room_args + [f"--season={SEASON}"])
     # Flourish: the room, its stable door, the barbecue on its plinth; not its window views, its garden wall (built
     # here with the Inn's outside face) or its patio (here, as one piece with the rest of the flags)
-    append_room(fl, ("view_", "wall_garden", "garden_patio", "garden_step"))
+    # (--room=flourish keeps its sea window and its own sun; only the garden plate goes)
+    append_room(fl, ("view_garden", "wall_garden", "garden_patio", "garden_step") if ROOM == "flourish"
+                else ("view_", "wall_garden", "garden_patio", "garden_step"), keep_sun=ROOM == "flourish")
     # The glasshouse, moved into place: not its garden view, its gravel, or the Inn wall it leans on (built here)
-    append_room(gh, ("garden_view", "ground_", "inn_wall_", "landing_window", "shop_glimpse", "still_"), (GH_DX, GH_DY, 0))
+    # (--room=glasshouse keeps its Inn wall, landing window and the shop seen through the glazed door)
+    append_room(gh, ("garden_view", "ground_") if ROOM == "glasshouse"
+                else ("garden_view", "ground_", "inn_wall_", "landing_window", "shop_glimpse", "still_"), (GH_DX, GH_DY, 0))
     if NIGHT:
         # the barbecue's smoke wisp catches the string lights and reads as a little white ghost: no smoke after dark
         for o in bpy.data.objects:
@@ -610,6 +620,11 @@ def build():
             go="patio")
 
     light_and_render(scene)
+    if ROOM:
+        adopt_room_look(scene, fl if ROOM == "flourish" else gh)
+        if ROOM == "glasshouse":
+            for name in ("inn_garden_wall", "chia_dim"):       # the glasshouse's own Inn wall, door and shop take their place
+                bpy.data.objects[name].hide_render = True
     return camp
 
 
@@ -1088,6 +1103,19 @@ def light_and_render(scene):
     scene.render.image_settings.quality = 90
 
 
+def adopt_room_look(scene, path):
+    """--room: the room's own sky, sun lamp and colour settings, as its build left them (the garden's outdoor look stays)."""
+    with bpy.data.libraries.load(path, link=False) as (src, dst):
+        dst.worlds, dst.scenes = list(src.worlds), list(src.scenes)
+    world = next(w for w in dst.worlds if w is not None)
+    src_scene = dst.scenes[0]
+    scene.world = world
+    scene.view_settings.exposure = src_scene.view_settings.exposure
+    scene.view_settings.look = src_scene.view_settings.look
+    scene.cycles.max_bounces = src_scene.cycles.max_bounces
+    bpy.data.scenes.remove(src_scene)
+
+
 # ---------------------------------------------------------------- hotspots and render
 
 def visible_from(cam, hs):
@@ -1118,10 +1146,29 @@ def stop_hotspots(stop):
     return out
 
 
+def render_room(scene):
+    """--room: a panorama from the room's own camera, saved under the room's own file name."""
+    if NO_RENDER:
+        return
+    sizes = [("", 8192, 384), ("_preview", 2048, 128)] if BOTH else [("_quick" if QUICK else "_preview" if PREVIEW else "",
+                                                                      scene.render.resolution_x, scene.cycles.samples)]
+    pano_camera(scene, *ROOM_CAMS[ROOM])
+    stem = "flourish_pano" if ROOM == "flourish" else f"glasshouse_pano_{SEASON}"
+    for suffix, res, samples in sizes:
+        scene.render.resolution_x, scene.render.resolution_y, scene.cycles.samples = res, res // 2, samples
+        scene.render.filepath = os.path.join(OUT, f"{stem}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
+        bpy.ops.render.render(write_still=True)
+        print(f"[whisked] rendered {ROOM} {WEATHER}{' night' if NIGHT else ''}{suffix}")
+    print("[whisked] done")
+
+
 def main():
     build()
     scene = bpy.context.scene
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "garden.blend"))
+    if ROOM:
+        render_room(scene)
+        return
     data = {"room": "garden", "stops": {s: {"position": list(STOPS[s][0]), "yaw": STOPS[s][1], "hotspots": stop_hotspots(s)}
                                         for s in STOPS}}
     with open(os.path.join(OUT, "garden_hotspots.json"), "w") as fh:
