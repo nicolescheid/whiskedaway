@@ -9,6 +9,7 @@ import { DIETS } from './writeout.js';
 import { SERVINGS, checkinWords } from './checkin.js';
 import { patienceString, confidenceDial } from './checkin-controls.js';
 import { APPLIANCES, NONE, kitchenPicks, togglePick, kitchenWords } from './kitchen.js';
+import { layers } from './layers.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,7 +51,8 @@ export function parsePantry(text) {
     .filter(w => w && w.length <= 24);
 }
 
-export function createTell({ visit, lines = {}, kitchenLines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {} }) {
+export function createTell({ visit, lines = {}, kitchenLines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {}, keepEveryWay = ['kitchen'] }) {
+  // keepEveryWay: the sheets whose ✕, the dim, Escape and Back keep the taps like Done does (the others' are Cancel)
   const K = kitchenLines, KS = K.sheet || {};                   // gemma-lines.json `kitchen`
   const W = checkinWords(lines);                               // the check-in's words (checkin.js)
   const P = lines.pantry || {}, M = lines.map || {}, D = lines.dietary || {}, N = lines.menu || {}, B = lines.buttons || {};   // gemma-lines.json `tell`
@@ -83,7 +85,7 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const body = $('.tl-body');
-  let kind = null, from = null, draft = null, opener = null, pushed = false, here = null;
+  let kind = null, from = null, draft = null, opener = null, layer = null, here = null;
 
   const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : (p || { items: [], useUp: false }); };
   const current = k => ({
@@ -230,26 +232,24 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
     const was = !root.hidden;
     root.hidden = false;
     root.className = `tell ${mode()}${k === 'menu' ? ' menu' : ''}`;
-    for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.tellInert = '1'; }
     DRAW[k]();
     fit();
-    if (!pushed) { history.pushState({ ...(history.state || {}), tell: true }, ''); pushed = true; }
+    // A layer (layers.js): its history step, inert behind it, Escape, Tab and focus back to what opened it
+    layer = layers.open({ el: root, name: 'tell', opener, close: how => close({ viaBack: how === 'back' }) });   // the menu into a sheet: the same layer
     if (!was && !reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     if (k !== 'menu') track?.('tell_open', { kind: k, from: src });
     (body.querySelector('.kt-here') || body.querySelector('input, button') || $('.tl-x')).focus({ preventScroll: true });
   }
   function close({ silent = false, viaBack = false, keep = true } = {}) {
     if (root.hidden) return;
-    if (kind === 'kitchen' && keep) return done(false, { viaBack });   // every way out of Your kitchen keeps the taps (✕, the dim, Escape, back)
+    if (keep && keepEveryWay.includes(kind)) return done(false, { viaBack });   // every way out keeps the taps (✕, the dim, Escape, Back)
     root.hidden = true;
-    for (const el of document.body.children) if (el.dataset.tellInert) { el.inert = false; delete el.dataset.tellInert; }
-    if (pushed) { pushed = false; if (!viaBack && history.state?.tell) history.back(); }
     kind = null;
-    if (!silent && opener?.isConnected) opener.focus({ preventScroll: true });
+    layers.closed(layer, { how: viaBack ? 'back' : 'self', refocus: !silent });
   }
   const bucket = n => (n <= 0 ? '0' : n === 1 ? '1' : n <= 3 ? '2-3' : '4+');
   function done(forget = false, { viaBack = false } = {}) {
-    if (!kind || kind === 'menu') return close();
+    if (!kind || kind === 'menu') return close({ viaBack, keep: false });
     const k = kind, before = current(k);
     if (k === 'kitchen') {
       const after = { picks: forget ? [] : kitchenPicks(draft.picks) };
@@ -264,7 +264,7 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
       const after = forget ? { ...before, energy: null, time: null, servings: null, confidence: null } : draft;
       const changed = Object.keys(after).filter(x => (before[x] ?? null) !== (after[x] ?? null));
       if (!forget) checkin.onDone?.(after);                       // every Done, changed or not (the weather guess kept)
-      close();
+      close({ viaBack, keep: false });
       if (!changed.length) return;
       setTimeout(() => onDone?.(k, { before, after, changed, from, forgot: forget }), reduce() ? 0 : 200);
       return;
@@ -277,7 +277,7 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
     }
     if (k === 'dietary' && !forget) draft.other = (body.querySelector('.tl-input')?.value || '').trim().slice(0, 60);
     const same = JSON.stringify(before) === JSON.stringify(after);
-    close();
+    close({ viaBack, keep: false });
     if (same && !forget) return;                                   // nothing changed: Gemma says nothing
     if (k === 'pantry') visit.set('pantry', after.items.length ? after : null);
     if (k === 'map') { visit.set('cuisines', after.cuisines.length ? after.cuisines : null); visit.set('country', after.country || null); }
@@ -291,15 +291,6 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
   $('.tl-forget').onclick = () => done(true);
   $('.tl-x').onclick = () => close();
   $('.tl-dim').onclick = () => close();
-  addEventListener('popstate', () => { if (pushed && !history.state?.tell) { pushed = false; close({ viaBack: true }); } });
-  root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return close(); }
-    if (e.key === 'Tab') {
-      const f = [...root.querySelectorAll('button, input, select, [tabindex="0"]')].filter(x => !x.disabled && x.offsetParent);
-      const i = f.indexOf(document.activeElement);
-      if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-    }
-  });
 
   // iOS Safari ignores interactive-widget and doesn't shrink the layout viewport for the keyboard: follow visualViewport
   function fit() {

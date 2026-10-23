@@ -5,6 +5,8 @@
 // the reading, and the idea's card comes out (explore.html fortune).
 // Words: gemma-lines.json starChart. Fortunes are kitchen-sized: no health, money or love, nothing that sounds like real prediction.
 
+import { layers } from './layers.js';
+
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)').matches ? 'land'
@@ -31,7 +33,7 @@ export function createStarChart({ lines: L = {}, track, sound, beforeOpen }) {
     </div>`;
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
-  let stars = [], picked = null, reading = '', readFor = null, onClose = null, opener = null, pushed = false, typing = null;
+  let stars = [], picked = null, reading = '', readFor = null, onClose = null, layer = null, typing = null;
 
   function pick(i, how = 'tap') {
     if (picked !== null) return;
@@ -55,7 +57,7 @@ export function createStarChart({ lines: L = {}, track, sound, beforeOpen }) {
 
   /** open({ read, close }): read(star name) → the reading's text; close(reading) runs once the sheet has gone */
   function open({ read, close: after }) {
-    opener = document.activeElement;
+    const opener = document.activeElement;                       // before beforeOpen() moves anything
     beforeOpen?.();
     const pool = [].concat(L.constellations || ['The Whisk', 'The Teapot', 'The Lantern']);
     stars = shuffle(pool).slice(0, 3);
@@ -66,8 +68,8 @@ export function createStarChart({ lines: L = {}, track, sound, beforeOpen }) {
     $('.sc-said').textContent = '';
     root.hidden = false;
     root.className = `tell ${mode()} sc-sheet`;
-    for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.starInert = '1'; }
-    if (!pushed) { history.pushState({ ...(history.state || {}), stars: true }, ''); pushed = true; }
+    // A layer (layers.js): its history step, inert behind it, Escape, Tab and focus back to what opened it
+    layer = layers.open({ el: root, name: 'stars', opener, close: how => done({ viaBack: how === 'back' }) });
     if (!reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     root.querySelector('.sc-star').focus({ preventScroll: true });
   }
@@ -77,9 +79,7 @@ export function createStarChart({ lines: L = {}, track, sound, beforeOpen }) {
     if (picked === null) pick(Math.floor(Math.random() * stars.length), 'auto');
     clearInterval(typing);
     root.hidden = true;
-    for (const el of document.body.children) if (el.dataset.starInert) { el.inert = false; delete el.dataset.starInert; }
-    if (pushed) { pushed = false; if (!viaBack && history.state?.stars) history.back(); }
-    if (opener?.isConnected) opener.focus({ preventScroll: true });
+    layers.closed(layer, { how: viaBack ? 'back' : 'self' });
     const f = onClose, t = reading;
     onClose = null;
     setTimeout(() => f?.(t), reduce() ? 0 : 200);                  // after the sheet has gone, so her line isn't behind it
@@ -87,15 +87,6 @@ export function createStarChart({ lines: L = {}, track, sound, beforeOpen }) {
   $('.sc-done').onclick = () => done();
   $('.tl-x').onclick = () => done();
   $('.tl-dim').onclick = () => done();
-  addEventListener('popstate', () => { if (pushed && !history.state?.stars) { pushed = false; done({ viaBack: true }); } });
-  root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return done(); }
-    if (e.key === 'Tab') {
-      const f = [...root.querySelectorAll('button')].filter(x => !x.disabled && x.offsetParent);
-      const i = f.indexOf(document.activeElement);
-      if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-    }
-  });
   addEventListener('resize', () => { if (!root.hidden) root.className = `tell ${mode()} sc-sheet`; });
   return { open, get isOpen() { return !root.hidden; } };
 }

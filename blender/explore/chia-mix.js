@@ -8,6 +8,8 @@
 // swaps the one topping for add-ins in groups (chia.addins), any number, with Gemma's line at the soft cap (never a block).
 // Drawer taps add to the add-ins rather than replacing the choice. The add-ins have their own swap rules (chia.addinSwaps).
 
+import { layers } from './layers.js';
+
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)').matches ? 'land'
@@ -152,7 +154,8 @@ export function mixRecipe(D, d) {
   };
 }
 
-export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten, words = t => t, diets = () => [] }) {
+export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeOpen, say, onStart, onWritten, words = t => t, diets = () => [], keepEveryWay = [] }) {
+  // keepEveryWay: ['mood'] makes ✕, the dim, Escape and Back keep the mood like Done (the Mix itself keeps every tap already)
   // words(text): the visitor's shopping words (shopwords.js) for what the sheet shows; the data keeps the written words
   const D = chiaData(lines), T = D.lines, w = t => words(String(t ?? ''));
   const root = document.createElement('div');
@@ -170,7 +173,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const body = $('.tl-body'), foot = $('.mx-foot');
-  let kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, pushed = false, then = null, reply = '', prefilled = false, said = '';
+  let kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, layer = null, reply = '', prefilled = false, said = '';
   const steps = () => stepsFor(draft);
 
   const save = (step, v) => { visit.setDish(ROOM, step, v ?? null); };
@@ -295,12 +298,12 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
       at += 1; reply = ''; said = ''; draw(); foot.querySelector('.mx-next, .mx-write')?.focus({ preventScroll: true });
     });
     foot.querySelector('.mx-write')?.addEventListener('click', write);
-    foot.querySelector('.mx-done')?.addEventListener('click', doneMood);
+    foot.querySelector('.mx-done')?.addEventListener('click', () => doneMood());
   }
 
-  function doneMood() {
+  function doneMood({ viaBack = false } = {}) {
     const before = visit.dish(ROOM, 'mood');
-    close();
+    close({ viaBack, keep: false });
     if ((before ?? null) === (draft.mood ?? null)) return;
     save('mood', draft.mood);
     track?.('tell_set', { kind: 'mood', from });
@@ -332,38 +335,22 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     at = to ? Math.max(0, steps().indexOf(to)) : 0;
     root.hidden = false;
     root.className = `tell ${mode()} mx-${k}`;
-    for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.mixInert = '1'; }
     draw();
-    if (!pushed) { history.pushState({ ...(history.state || {}), mix: true }, ''); pushed = true; }
+    // A layer (layers.js): its history step, inert behind it, Escape, Tab and focus back to what opened it
+    layer = layers.open({ el: root, name: 'mix', opener, close: how => close({ viaBack: how === 'back' }) });
     if (!reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     track?.('tell_open', { kind: k, from: src });
     (body.querySelector('[aria-pressed="true"]') || body.querySelector('button') || $('.tl-x')).focus({ preventScroll: true });
   }
-  function close({ silent = false, viaBack = false, after = null } = {}) {
+  function close({ silent = false, viaBack = false, after = null, keep = true } = {}) {
     if (root.hidden) return;
+    if (keep && kind === 'mood' && keepEveryWay.includes('mood')) return doneMood({ viaBack });
     root.hidden = true;
-    for (const el of document.body.children) if (el.dataset.mixInert) { el.inert = false; delete el.dataset.mixInert; }
-    if (pushed) {
-      pushed = false;
-      if (!viaBack && history.state?.mix) { then = after; after = null; history.back(); }
-    }
-    if (!silent && opener?.isConnected) opener.focus({ preventScroll: true });
-    after?.();
+    layers.closed(layer, { how: viaBack ? 'back' : 'self', refocus: !silent });
+    if (after) layers.afterBack(after);                           // once its step back has landed (what opens next pushes its own)
   }
   $('.tl-x').onclick = () => close();
   $('.tl-dim').onclick = () => close();
-  addEventListener('popstate', () => {
-    if (then) { const f = then; then = null; return f(); }
-    if (pushed && !history.state?.mix) { pushed = false; close({ viaBack: true }); }
-  });
-  root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return close(); }
-    if (e.key === 'Tab') {
-      const f = [...root.querySelectorAll('button')].filter(x => !x.disabled && x.offsetParent);
-      const i = f.indexOf(document.activeElement);
-      if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-    }
-  });
   addEventListener('resize', () => { if (!root.hidden) root.className = `tell ${mode()} mx-${kind}`; });
 
   /** A drawer tapped (chia.fromDrawers: drawer id → a flavour, topping, add-in or seed id): it goes into the Mix, as the fridge's milk

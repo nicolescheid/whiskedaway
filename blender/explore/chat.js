@@ -4,6 +4,8 @@
 // Change size by dragging or tapping the handle, the ▴ ▾ buttons, tapping her line, Escape or back (down one size).
 // The page keeps the log (state.chat) and calls update() when it changes; this module owns the window's size and scroll.
 
+import { layers } from './layers.js';
+
 export const SIZES = ['line', 'short', 'full'];
 const KEY = 'wa-chat';
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -60,7 +62,7 @@ export function createChat({ win, track, onSize }) {
   try { saved = JSON.parse(sessionStorage.getItem(KEY) || '{}') || {}; } catch { /* storage blocked */ }
   let chosen = SIZES.includes(saved.chosen) ? saved.chosen : null;   // what the visitor picked, for the visit
   let called = false;
-  let size = null, asking = false, held = false, prevSize = null, lastGemma = null, pinned = true, fullPushed = false;
+  let size = null, asking = false, held = false, prevSize = null, lastGemma = null, pinned = true, fullLayer = null, closing = 'self';
   const persist = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ chosen })); } catch { /* storage blocked */ } };
   const base = () => chosen || 'line';
   // What the size should be now: the visitor's choice, else the screen's default, raised to Short while she's asking
@@ -141,24 +143,22 @@ export function createChat({ win, track, onSize }) {
   addEventListener('keydown', e => {
     if (e.key !== 'Escape' || size === 'line') return;
     if (document.querySelector('.tool.open, #book.open, .panel.open, .tag-pick:not([hidden])') || document.getElementById('idea-hl')?.hidden === false) return;
-    if (size === 'full' && fullPushed) return history.back();
     step(-1);
   });
 
-  // Full on a phone is a sheet: the room is dimmed and inert, back closes it
+  // Full on a phone is a sheet: a layer (layers.js), so the room is dimmed and inert, and Back or Escape goes back a size.
+  // The scrim and an idea's Undo stay live with it
   function sheet(on) {
     scrim.hidden = !on;
-    for (const el of document.body.children) {
-      if (el === win || el === scrim || el.matches('.tool, #book, .sr-only, script, .idea-undo')) continue;
-      if (on) { if (!el.inert) { el.inert = true; el.dataset.chatInert = '1'; } }
-      else if (el.dataset.chatInert) { el.inert = false; delete el.dataset.chatInert; }
+    if (on && !fullLayer) {
+      fullLayer = layers.open({ el: win, name: 'chat-full', keep: [scrim, document.querySelector('.idea-undo')].filter(Boolean),
+        close: how => { closing = how; choose(prevSize && prevSize !== 'full' ? prevSize : 'short', 'button'); } });
+    } else if (!on && fullLayer) {
+      const L = fullLayer, how = closing;
+      fullLayer = null; closing = 'self';
+      layers.closed(L, { how: how === 'back' ? 'back' : 'self', refocus: how !== 'self' });
     }
-    if (on && !fullPushed) { history.pushState({ ...(history.state || {}), chat: 'full' }, ''); fullPushed = true; }
-    else if (!on && fullPushed) { fullPushed = false; if (history.state?.chat === 'full') history.back(); }
   }
-  addEventListener('popstate', () => {
-    if (fullPushed && history.state?.chat !== 'full') { fullPushed = false; choose(prevSize && prevSize !== 'full' ? prevSize : 'short', 'button'); }
-  });
 
   // The log: follow the newest message unless the visitor has scrolled up; then "Newest ▾" carries her line
   log.addEventListener('scroll', () => {

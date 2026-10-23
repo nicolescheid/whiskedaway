@@ -6,6 +6,7 @@
 
 import { RIBBONS, metaLine } from './ideas.js';
 import { pageSwipe } from './swipe.js';
+import { layers } from './layers.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -74,8 +75,8 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
 
   // The shopping list remembers where it was opened from (Nicole's test, 22 Oct): a recipe's id, 'contents', or null (from
   // outside the book: back leaves the book). It has its own history step, so the back gesture and Escape return there
-  let listFrom = null, listTok = null;
-  let at = 'visit', loose = null, opener = null, pushed = false, filter = null, undo = null, undoTimer = null, undoSettled = null;
+  let listFrom = null, listLayer = null;                        // the list's own layer: Back and Escape go back to where it came from
+  let at = 'visit', loose = null, layer = null, filter = null, undo = null, undoTimer = null, undoSettled = null;
   // A note's page is `note:<object id>`; only notes that still have words are shown
   const noteIds = () => (innNotes && noteLines?.notes ? innNotes.list().filter(id => noteLines.notes[id]) : []);
   const seq = () => { const n = noteIds(); return ['visit', 'contents', ...book.ids(), ...(n.length ? ['notes', ...n.map(id => `note:${id}`)] : [])]; };
@@ -280,19 +281,22 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
       left.querySelector('.bk-gotit').onclick = () => { introShown = false; book.introSeen = true; draw(); left.focus({ preventScroll: true }); };
     }
   }
-  /** Open the shopping list from `from` (a page of the book, or null from outside it), with its own history step */
+  /** Open the shopping list from `from` (a page of the book, or null from outside it), as a layer over the book's own */
   function enterList(from) {
     listFrom = from;
-    if (!listTok && pushed) { listTok = Math.random().toString(36).slice(2, 8); history.pushState({ ...(history.state || {}), book: true, bookList: listTok }, ''); }
+    if (!listLayer && layer) listLayer = layers.open({ el: root, name: 'book-list', opener: null, close: how => leaveList({ viaBack: how === 'back' }) });
     go('list', { keepList: true });
   }
-  /** Leave the list for where it came from: its history step back does it (popstate below), or straight away if it has none */
-  function listBack() {
-    if (listTok && history.state?.bookList === listTok) return history.back();
-    leaveList();
+  /** Leave the list for where it came from */
+  function listBack() { leaveList(); }
+  function dropList(how = 'self') {
+    if (!listLayer) return;
+    const L = listLayer;
+    listLayer = null;
+    layers.closed(L, { how, refocus: false });                    // the page it goes back to takes the focus
   }
-  function leaveList() {
-    listTok = null;
+  function leaveList({ viaBack = false } = {}) {
+    dropList(viaBack ? 'back' : 'self');
     const to = listFrom;
     listFrom = null;
     if (to === null) return close();
@@ -300,7 +304,7 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
   }
   function go(page, { keepList = false } = {}) {
     // Leaving the list another way (the tabs, ‹ ›): drop its history step quietly
-    if (!keepList && at === 'list' && page !== 'list' && listTok) { const t = listTok; listTok = null; listFrom = null; if (history.state?.bookList === t) history.back(); }
+    if (!keepList && at === 'list' && page !== 'list' && listLayer) { listFrom = null; dropList(); }
     loose = null;
     at = page;
     const flip = left.closest('.bk-spread');
@@ -349,7 +353,6 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
   // ---------- open and close
   /** Open at a page: 'visit', 'contents', a kept recipe's id, or a loose page { ...snapshot } */
   function open(page = 'visit', { from = 'chip', loosePage = null } = {}) {
-    opener = document.activeElement;
     const was = isOpen();
     // The list opened from a page of the open book (cook mode's, the jars') goes back to that page; from outside, out of the book
     if (page === 'list' && !loosePage) {
@@ -365,10 +368,10 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
     root.classList.add('open');
     chip.setAttribute('aria-expanded', 'true');
     chip.classList.add('on');
-    for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.bookInert = '1'; }
     draw();
     if (!was) {
-      if (!pushed) { history.pushState({ ...(history.state || {}), book: true }, ''); pushed = true; }
+      // A layer (layers.js): its history step, inert behind it, Escape, Tab; closed, focus goes to the chip (where the book lives, QA P3-6)
+      layer = layers.open({ el: root, name: 'book', opener: chip, close: how => close(how === 'back') });
       if (!reduce()) $('.bk-box').animate(isDesk() ? [{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }] : [{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' });
       track?.('book_open', { from, book_size: bucket(book.count) });
     }
@@ -380,26 +383,16 @@ export function createBookView({ book, basket, onBasket, basketLines = {}, bookL
     root.classList.remove('open');
     chip.setAttribute('aria-expanded', 'false');
     chip.classList.remove('on');
-    for (const el of document.body.children) if (el.dataset.bookInert) { el.inert = false; delete el.dataset.bookInert; }
     loose = null;
     if (introShown) { introShown = false; book.introSeen = true; }  // seen once is enough
-    const steps = listTok && history.state?.bookList === listTok ? 2 : 1;   // the list's own step, then the book's
-    listTok = null; listFrom = null;
-    if (pushed) { pushed = false; if (!viaBack && history.state?.book) history.go(-steps); }
-    chip.focus({ preventScroll: true });                           // where the book lives (QA P3-6)
+    listFrom = null;
+    dropList();                                                    // the list's step first, then the book's
+    const L = layer;
+    layer = null;
+    layers.closed(L, { how: viaBack ? 'back' : 'self' });
   }
-  addEventListener('popstate', () => {
-    if (pushed && !history.state?.book) { pushed = false; close(true); return; }
-    if (listTok && history.state?.bookList !== listTok && at === 'list') leaveList();   // back from the list: where it came from
-  });
   root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return at === 'list' && !loose ? listBack() : close(); }
     if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.target.closest('input, textarea, select')) { e.preventDefault(); turn(e.key === 'ArrowLeft' ? -1 : 1); }
-    if (e.key === 'Tab') {
-      const f = [...root.querySelectorAll('button, a[href], [tabindex="0"]')].filter(x => !x.disabled && x.offsetParent);
-      const i = f.indexOf(document.activeElement);
-      if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-    }
   });
   addEventListener('resize', () => { if (isOpen()) draw(); });
   book.subscribe(() => { chipCount(); if (isOpen()) draw(); });

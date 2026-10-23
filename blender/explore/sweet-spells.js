@@ -7,6 +7,8 @@
 // And the swap-the-sugar lines on Sweet Spells recipe pages: a fixed, content-owned table, never invented ratios.
 // Words come from gemma-lines.json `sweet` (content editor); these stand in where it has none.
 
+import { layers } from './layers.js';
+
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)').matches ? 'land'
@@ -134,7 +136,7 @@ export function createSweetSheets({ visit, lines = {}, track, sound, beforeOpen,
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const body = $('.tl-body');
-  let kind = null, from = null, draft = {}, opener = null, pushed = false;
+  let kind = null, from = null, draft = {}, opener = null, layer = null;
 
   const chips = (group, opts, on, multi) => `<div class="tl-chips tl-pick" role="group" aria-label="${esc(group)}">${Object.entries(opts).map(([id, o], i) =>
     `<button data-v="${esc(id)}" data-i="${i}" aria-pressed="${multi ? on.includes(id) : on === id}">${esc(typeof o === 'string' ? o : o.label)}</button>`).join('')}</div>`;
@@ -229,9 +231,9 @@ export function createSweetSheets({ visit, lines = {}, track, sound, beforeOpen,
               cravings: [].concat(visit.dish(ROOM, 'cravings') || []), occasion: visit.dish(ROOM, 'occasion') };
     root.hidden = false;
     root.className = `tell ${mode()} sw-${k}`;
-    for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.sweetInert = '1'; }
     draw();
-    if (!pushed) { history.pushState({ ...(history.state || {}), sweet: true }, ''); pushed = true; }
+    // A layer (layers.js): its history step, inert behind it, Escape, Tab and focus back to what opened it
+    layer = layers.open({ el: root, name: 'sweet', opener, close: how => done({ viaBack: how === 'back' }) });
     if (!reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     if (k === 'occasion') sound?.page?.();
     track?.('tell_open', { kind: { sweet: 'sweetness', cravings: 'craving', occasion: 'occasion' }[k], from: src });
@@ -240,22 +242,11 @@ export function createSweetSheets({ visit, lines = {}, track, sound, beforeOpen,
   function close({ viaBack = false } = {}) {
     if (root.hidden) return;
     root.hidden = true;
-    for (const el of document.body.children) if (el.dataset.sweetInert) { el.inert = false; delete el.dataset.sweetInert; }
-    if (pushed) { pushed = false; if (!viaBack && history.state?.sweet) history.back(); }
-    if (opener?.isConnected) opener.focus({ preventScroll: true });
+    layers.closed(layer, { how: viaBack ? 'back' : 'self' });
   }
   $('.sw-done').onclick = () => done();
   $('.tl-x').onclick = () => done();
   $('.tl-dim').onclick = () => done();
-  addEventListener('popstate', () => { if (pushed && !history.state?.sweet) { pushed = false; done({ viaBack: true }); } });
-  root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return done(); }
-    if (e.key === 'Tab') {
-      const f = [...root.querySelectorAll('button')].filter(x => !x.disabled && x.offsetParent);
-      const i = f.indexOf(document.activeElement);
-      if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-    }
-  });
   addEventListener('resize', () => { if (!root.hidden) root.className = `tell ${mode()} sw-${kind}`; });
 
   return { open, close, data: D, get isOpen() { return !root.hidden; } };
