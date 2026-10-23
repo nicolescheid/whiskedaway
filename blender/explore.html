@@ -716,9 +716,10 @@ import { install as installBasketGlue } from './explore/basket-glue.js';
 import { install as installChiaGlue } from './explore/chia-glue.js';
 import { install as installSweetGlue } from './explore/sweet-glue.js';
 import { install as installCentrepieces } from './explore/centrepieces.js';
+import { install as installTellGlue } from './explore/tell-glue.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes, themeNow, fromBook, setAnswer });   // wa-split: main's functions the modules call
+Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, renderTheme, renderNotes, themeNow, fromBook, chooseEnergy });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1321,7 +1322,7 @@ function touch(id) {
     const K = LINES.kitchen || {};
     inn.say([inn.momentOf(id, obj), inn.kitchenNow().length ? '' : inn.pickLine('kitchen.range', [].concat(K.range || []))].filter(Boolean).join(' '), [], true);
     inn.holdLine();
-    tell.open('kitchen', 'object', { appliance: obj.appliance || null });
+    inn.tell.open('kitchen', 'object', { appliance: obj.appliance || null });
   } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
     if (inn.fortune(obj, noteLine)) noteLine = null;              // pick a star and she reads it, then a surprise sweet idea's card
   } else if (obj.type === 'ambient' && id === 'notice-board') {
@@ -1361,12 +1362,12 @@ function touch(id) {
     inn.cast(id);                                                 // the spell table, the pot, Lay the Table: this room's best idea, written out
   } else if (obj.type === 'submit') {
     openTool(obj.tool_title || obj.label, obj.tool_text || "I can't open this one for you yet.");
-  } else if (TELL_TOOLS[obj.tool]) {
+  } else if (inn.TELL_TOOLS[obj.tool]) {
     // The pantry, the map and the cookbooks (Tell Gemma V1): her line, then the sheet
     // Cuddlecore's "How you're feeling" jars open the check-in (a stand-in line until content writes tell.objects['symptom-jars'])
-    const told = T.objects?.[id] || (id === 'symptom-jars' ? "Tell me how much you've got in you today, and I'll cook to suit." : null);
+    const told = inn.T.objects?.[id] || (id === 'symptom-jars' ? "Tell me how much you've got in you today, and I'll cook to suit." : null);
     if (told) { inn.say(told, [], true); inn.holdLine(); }   // her reading waits, so this line is the one you see
-    tell.open(TELL_TOOLS[obj.tool], 'object');
+    inn.tell.open(inn.TELL_TOOLS[obj.tool], 'object');
   } else {
     openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
   }
@@ -1408,7 +1409,7 @@ function goRoom(id, yaw) {
 // first touch in the room if the question was left unanswered
 function introduce(id = state.room) {
   const intro = { cuddlecore: world.intro, flourish: flWorld.intro, 'sweet-spells': sweetWorld.intro, chiapothecary: chiaWorld.intro }[id];
-  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); inn.say([intro, entryFact(id)].filter(Boolean).join(' '), [], true); }
+  if (intro && !(state.introduced ||= []).includes(id)) { state.introduced.push(id); inn.say([intro, inn.entryFact(id)].filter(Boolean).join(' '), [], true); }
 }
 function setRoomText() {
   $('room-title').textContent = room().title;
@@ -1455,168 +1456,7 @@ const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood
 installChiaGlue(inn);   // the Chiapothecary: the Mix, its tools and a jar's own buttons
 installSweetGlue(inn);   // Sweet Spells: its sheets, tools and the swap-the-sugar lines
 installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortune
-// What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
-// ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
-const T = LINES.tell || {}; inn.T = T;
-const CW = checkinWords(T); inn.CW = CW;
-// Each answer's sound, whichever door (sound.js: the same family for every object that sets one answer)
-const answerSound = (key, value, prev = null) => (value ? sound.answer(key, { change: key === 'energy' && !!prev, count: servingsNumber(value) || 1 })
-  : sound.unanswer(key));                              // the check-in's words (checkin.js; gemma-lines.json tell.checkin)
-// The one setter for the check-in's answers, whichever door they come through (the desk's sheet, a tag): the same key, the same
-// tag, the same line from Gemma (checkin-views.md: one home per answer, many doors to it). `quiet` when the sheet says one line for all.
-function setAnswer(key, value, { from = 'tag', quiet = false } = {}) {
-  if (visit.get(key) === (value ?? null)) return false;
-  visit.set(key, value ?? null);
-  track('tell_set', { kind: key, from });               // single-choice: never a count (analytics-events.js ANSWER_KINDS)
-  if (!quiet) answerSound(key, value);                   // the sheet plays its sounds in the tap
-  if (!quiet && value) { inn.say(capFirst(ackLine(CW, key, value) || ''), [], true); inn.holdLine(); }
-  inn.scheduleNavigate();                                    // the next idea leans on it
-  return true;
-}
-const TL = {
-  offer: T.offer || "Want to tell me what's in your cupboard, or anything to avoid?", offerYes: T.offerYes || 'Tell me', offerNo: T.offerNo || 'Not now',
-  forgot: T.forgot || 'Forgotten.', nothingAnywhere: T.nothingAnywhere || "I can't find anything on my shelves that fits all of that.",
-  roomNone: T.roomNone || "Nothing in here fits {diet}, I'm afraid. {room} has a few.",
-}; inn.TL = TL;
-// A world object with "tool": "checkin" (the foyer desk) opens the check-in; "pantry" (the groceries by the door too) the pantry
-const TELL_TOOLS = { pantry: 'pantry', locale: 'map', dietary: 'dietary', checkin: 'checkin' };
-// The Map's starting country: the connection's (from /local-weather), else the browser's language region (PM, option b)
-const mapDefault = () => (state.connCountry && countryLabel(state.connCountry) ? state.connCountry : countryFromLanguage()); inn.mapDefault = mapDefault;
-// Words that mean the same in the kitchen (tell-data.json groups): each word maps to the rest of its group
-const SYNONYMS = {}; inn.SYNONYMS = SYNONYMS;
-for (const [w, xs] of Object.entries(T.synonyms || {})) SYNONYMS[w.toLowerCase()] = [].concat(xs).map(x => String(x).toLowerCase());
-// Cards and the book show the visitor's country's words once the Map knows it (brainstorm-1 D6): written in NZ words, swapped on display
-const shopWords = createShopWords({ table: T.shopWords, atoms: () => world.atoms }); inn.shopWords = shopWords;
-const applyShopWords = () => { if (shopWords.apply(visit.get('country') || mapDefault())) { inn.ideas.render(); inn.bookView.refresh(); } };
-const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : { items: p?.items || [], useUp: !!p?.useUp }; }; inn.pantryNow = pantryNow;
-const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
-const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free', 'low-fodmap': 'low-FODMAP' };
-const capFirst = t => t.replace(/^./, c => c.toUpperCase());
-// Her one line on Done, naming two things at most, never the list (tell-gemma-ux §4); {two} {many} {c} {d} {country}
-// The check-in's Done: each answer through its own door's setter, quietly, then one line from Gemma (the answer's own line when
-// only one changed, else her thanks)
-function checkedIn({ after, changed, from, forgot }) {
-  if (forgot) return inn.say(TL.forgot, [], true);
-  for (const k of changed) {
-    if (k === 'energy') { if (after.energy) chooseEnergy(after.energy, { quiet: true, from }); else visit.forget('energy'); }
-    else if (k === 'weather') chooseWeather(after.weather, { quiet: true });
-    else setAnswer(k, after[k], { from, quiet: true });
-  }
-  const one = changed.length === 1 && after[changed[0]] ? changed[0] : null;
-  // Several answers: name two of them (QA 6/7), servings, then time, then confidence; the candle and weather say their own
-  const PHRASE = { servings: v => heardWords(CW, 'servings', v), time: v => heardWords(CW, 'time', v) || timeWords(CW, v),
-                   confidence: v => heardWords(CW, 'confidence', v) || String(CW.confidence?.[v] || '').toLowerCase() };
-  const two = ['servings', 'time', 'confidence'].filter(k => changed.includes(k) && after[k]).map(k => PHRASE[k](after[k])).filter(Boolean).slice(0, 2);
-  const named = two.length === 2 ? (CW.ack.checkinTwo || "{a}, and {b}. I'll keep all that in mind.").replace('{a}', two[0]).replace('{b}', two[1]) : '';
-  const line = !one ? named || CW.ack.checkin : one === 'energy' ? world.energies?.[after.energy]?.moment : one === 'weather' ? world.weathers[after.weather]?.moment
-    : ackLine(CW, one, after[one]);
-  if (line) { inn.say(capFirst(line), [], true); inn.holdLine(); }
-  inn.scheduleNavigate();
-}
-// Your kitchen's Done: her line for one appliance, else "{x}. I'll keep to those." (two named at most), or cleared; each appliance
-// picked is counted (kitchen_pick: its id, nothing else)
-function kitchenSaid({ before, after, forgot }) {
-  const K = LINES.kitchen || {}, p = after.picks;
-  for (const id of p) if (!before.picks.includes(id)) track('kitchen_pick', { appliance: id });
-  if (forgot) return inn.say(TL.forgot, [], true);
-  const words = kitchenWords(p, K);
-  const line = !p.length ? K.cleared || "Cleared. I'll suggest anything."
-    : p.length === 1 ? K.pick?.[p[0]] || `${capFirst(words[0])}.`
-    : (K.many || "{x}. I'll keep to those.").replace('{x}', capFirst(listOf(words.slice(0, 2)) + (words.length > 2 ? ' and the rest' : '')));
-  // Cards already out stay (PM): say so once when some no longer fit
-  const misfit = p.length && state.cards.some(c => atomsById[c.atom] && !kitchenFits(atomsById[c.atom], p));
-  inn.say([line, misfit && K.cards_stay].filter(Boolean).join(' '), [], true);
-  inn.holdLine();
-  inn.scheduleNavigate();
-}
-function acknowledge(kind, { after, forgot }) {
-  const A = T.ack || {};
-  if (forgot) return inn.say(TL.forgot, [], true);
-  let line = '';
-  if (kind === 'pantry') {
-    if (after.items.length) sound.answer('pantry');      // the paper bag
-    const xs = after.items, two = listOf(xs.slice(0, 2)), many = `${xs[0]}, ${xs[1]} and a few more`;
-    line = after.useUp ? (A.pantryUseUp || '{two} first, then.').replace('{two}', two)
-      : xs.length >= 3 ? (A.pantryMany || '{many}. Noted.').replace('{many}', many) : (A.pantry || "{two}. I'll work with those.").replace('{two}', two);
-  } else if (kind === 'map') {
-    const xs = after.cuisines.map(cuisineLabel);
-    line = xs.length ? (A.map || "{c} it is. I'll lean that way.").replace('{c}', listOf(xs.slice(0, 2)))
-      : (A.country || 'Shopping words for {country}, then.').replace('{country}', countryLabel(after.country) || 'everywhere');
-  } else if (kind === 'dietary') {
-    const xs = after.dietary.filter(d => !inn.PASS_ONLY.has(d)).map(d => DIET_WORD[d] || d);
-    // every need is named, so none seems dropped (QA pass 4); low-FODMAP isn't kept to (no cards checked yet), only passed on
-    const fodmap = after.dietary.includes('low-fodmap') ? `${T.dietary?.fodmapLabel || 'Low-FODMAP'}. ${T.dietary?.fodmapNote || "I'll pass it on when I write your recipe. I only leave out cards I've checked."}` : '';
-    line = xs.length ? (A.dietary || "{d}. I'll keep to that.").replace('{d}', listOf(xs)) : fodmap || (A.dietaryOther || "Noted. I'll pass it on when I write your recipe.");
-  }
-  inn.say(capFirst(line), [], true);
-  inn.holdLine();
-  inn.scheduleNavigate();                                   // the next idea leans on it
-}
-// One fact on a room's first visit: dietary, then the pantry (in the kitchens that cook), then a cuisine (Inn rule 11)
-function entryFact(id) {
-  const F = T.entry || {};
-  const d = [].concat(visit.get('dietary') || []).filter(x => !inn.PASS_ONLY.has(x)), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
-  if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', listOf(d.map(x => DIET_WORD[x] || x)));
-  if (p.length && ['cuddlecore', 'flourish'].includes(id)) return (F.pantry || "I'll look for things that use your {p}.").replace('{p}', listOf(p.slice(0, 2)));
-  if (c.length) return (F.cuisine || "I'll lean {c} where I can.").replace('{c}', cuisineLabel(c[0]));
-  return '';
-}
-function maybeOfferTell() {
-  if (state.tellOffered || (state.keeps || 0) + (state.dismissals || 0) < 2) return;
-  if (pantryNow().items.length || visit.get('cuisines') || visit.get('dietary') || visit.get('dietaryOther')) return;
-  state.tellOffered = true;
-  state.offerTell = true;                               // she asks in her next line (navigate), after the keep line's 3 s
-}
-// When the diet filter (or the visit) has emptied this room: once per room, name the room with most that fit, and let other
-// rooms' ideas in here; once per visit, say when nothing anywhere fits. Never a bubble that breaks the filter (§5)
-const fitsDiet = a => !inn.dietClash(a) && !state.served.includes(a.id) && !state.dismissed.includes(a.id) && !book.has(a.id);
-const fits = a => fitsDiet(a) && inn.kitchenOk(a);
-function emptyRoomLine() {
-  const home = homeOf(state.room);
-  if (!inn.hasOwn()) return null;
-  if (world.atoms.some(a => a.room === home && fits(a))) return null;
-  // The kitchen first: if the room still has ideas for their diet, loosen the kitchen here and serve again
-  if (world.atoms.some(a => a.room === home && fitsDiet(a))) {
-    const line = inn.loosenKitchen(home);
-    if (line) { inn.scheduleNavigate(); return line; }
-  }
-  const diet = [].concat(visit.get('dietary') || []).filter(x => !inn.PASS_ONLY.has(x));   // not a filter yet (no cards checked), so never the reason
-  if (!world.atoms.some(fits)) {
-    if (!diet.length || state.nothingSaid) return null;
-    state.nothingSaid = true;
-    return TL.nothingAnywhere;
-  }
-  if ((state.emptySaid ||= {})[home]) return null;
-  state.emptySaid[home] = true;
-  (state.awayLift ||= {})[home] = true;
-  const counts = {};
-  world.atoms.filter(fits).forEach(a => { counts[a.room] = (counts[a.room] || 0) + 1; });
-  const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const name = { cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'The Chiapothecary' }[best] || 'Next door';
-  if (!diet.length) return LINES.room_empty || "That's everything I've got in here. Try next door.";
-  return TL.roomNone.replace('{diet}', listOf(diet.map(x => DIET_WORD[x] || x))).replace('{room}', name);   // "vegan, gluten-free and nut-free"
-}
-const tell = createTell({
-  visit, lines: LINES.tell, kitchenLines: LINES.kitchen || {}, track, defaultCountry: mapDefault, keepEveryWay: EVERY_WAY_KEEPS,
-  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
-  onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : k === 'kitchen' ? kitchenSaid(r) : acknowledge(k, r); },
-  openEnergy: () => tagsUI.openEnergy(),
-  checkin: {
-    energies: () => Object.entries(world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
-    weathers: () => Object.entries(world.weathers || {}).map(([id, w]) => ({ id, label: w.label })),
-    weather: () => state.weather || null,
-    onTap: (k, v, prev) => k !== 'weather' && answerSound(k, v, prev),
-    // Done with the weather still on the local guess: the guess was right (analytics; once a visit, like the old "That's right")
-    onDone: after => {
-      if (state.weatherFrom !== 'local' || after.weather !== state.weather || state.guessKept) return;
-      state.guessKept = true;
-      track('weather_guess', { weather: state.weather, outcome: 'kept' });
-    },
-  },
-  energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
-}); inn.tell = tell;
-const tagsUI = createTags({ el: inn.chatUI.tags, visit, world, kitchenLines: LINES.kitchen || {}, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
-  chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(inn.sweet.data, (k, src) => inn.sweet.open(k, src)) });
+installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary and kitchen sheets, the tags
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
 // the book's "This visit" page and the hallway notice board, once something's been kept
@@ -1652,7 +1492,7 @@ function noticeBoard(obj) {
   if (!pin) return inn.say((n ? '' : obj.moment) + bookLine || obj.moment, [], true);
   inn.say(pin.line + bookLine, [], true);
   inn.holdLine();
-  const pick = pin.atoms.map(id => atomsById[id]).find(a => a && fits(a) && !state.cards.some(c => c.atom === a.id));
+  const pick = pin.atoms.map(id => atomsById[id]).find(a => a && inn.fits(a) && !state.cards.some(c => c.atom === a.id));
   if (pick) setTimeout(() => inn.serve({ atom: pick.id, why: LINES.noticeboard_why || "Because it's in season." }, 'local'), 600);
 }
 
@@ -1694,22 +1534,22 @@ const TOLD_ENERGY = { 'burnt-out': "You're running on empty today.", low: "You'r
                       half: "You've got about half your energy today.", 'three-quarters': "You've got plenty in you today.",
                       full: "You're full of beans today." };
 const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TOLD_ENERGY[v]),
-               dietary: v => [].concat(v || []).length && `You're eating ${listOf([].concat(v).map(d => DIET_WORD[d] || d))}.`,
+               dietary: v => [].concat(v || []).length && `You're eating ${listOf([].concat(v).map(d => inn.DIET_WORD[d] || d))}.`,
                dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
                cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
                country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
                kitchen: v => kitchenPicks(v).length && `${LINES.kitchen?.visit_row || 'Your kitchen'}: ${kitchenPicks(v)[0] === NO_COOKING ? kitchenWords(v, LINES.kitchen)[0] : listOf(kitchenWords(v, LINES.kitchen))}.`,
-               time: v => toldLine(CW, 'time', v), servings: v => toldLine(CW, 'servings', v), confidence: v => toldLine(CW, 'confidence', v), ...sweetTold(inn.sweet.data) };
+               time: v => toldLine(inn.CW, 'time', v), servings: v => toldLine(inn.CW, 'servings', v), confidence: v => toldLine(inn.CW, 'confidence', v), ...sweetTold(inn.sweet.data) };
 const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet' };
-const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
+const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`); inn.listOf = listOf;
 function renderTold() {
   const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
   $('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
     : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
   $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
-  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : tell.open(b.dataset.change, 'book'))));
-  $('told').querySelector('[data-menu]')?.addEventListener('click', fromBook(() => tell.openMenu('book')));
+  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : inn.tell.open(b.dataset.change, 'book'))));
+  $('told').querySelector('[data-menu]')?.addEventListener('click', fromBook(() => inn.tell.openMenu('book')));
 }
 // A sheet opened from inside the book waits for the book's step back in history: otherwise that late step lands on the
 // sheet's own history entry and closes it again (QA 9 issue 1)
@@ -1987,7 +1827,7 @@ function chooseEnergy(id, { quiet = false, from = null } = {}) {
   if (!e || id === visit.get('energy')) return;
   const prev = visit.get('energy');
   visit.set('energy', id);
-  if (!quiet) answerSound('energy', id, prev);
+  if (!quiet) inn.answerSound('energy', id, prev);
   if (from) track('tell_set', { kind: 'energy', from });   // the check-in's candle; in Cuddlecore the candle is a touch
   else track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
   showCandle();
@@ -2107,7 +1947,7 @@ function endCheckinOffer() {
   store.save(state);
   checkinPill();
 }
-window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle, checkin: (from = 'foyer') => tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
+window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch, chooseWeather, chooseTime, chooseEnergy, chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
                     world, spot: id => inn.spots[id] };
 
 setRoomText();
@@ -2117,7 +1957,7 @@ if (state.room !== 'cuddlecore') askHemisphere();
 look.yaw = room().yaw ?? 0;
 look.pitch = room().pitch ?? -6;
 fillMap();
-shopWords.apply(visit.get('country') || mapDefault());   // before the first render
+inn.shopWords.apply(visit.get('country') || inn.mapDefault());   // before the first render
 inn.ideas.render();
 renderTheme();
 renderNotes();
