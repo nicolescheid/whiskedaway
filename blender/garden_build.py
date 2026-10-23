@@ -363,7 +363,7 @@ def build():
     # Flourish: the room, its stable door, the barbecue on its plinth; not its window views, its garden wall (built
     # here with the Inn's outside face) or its patio (here, as one piece with the rest of the flags)
     # (--room=flourish keeps its sea window and its own sun; only the garden plate goes)
-    append_room(fl, ("view_garden", "wall_garden", "garden_patio", "garden_step") if ROOM == "flourish"
+    append_room(fl, ("view_garden", "garden_patio", "garden_step") if ROOM == "flourish"
                 else ("view_", "wall_garden", "garden_patio", "garden_step"), keep_sun=ROOM == "flourish")
     # The glasshouse, moved into place: not its garden view, its gravel, or the Inn wall it leans on (built here)
     # (--room=glasshouse keeps its Inn wall, landing window and the shop seen through the glazed door)
@@ -622,9 +622,10 @@ def build():
     light_and_render(scene)
     if ROOM:
         adopt_room_look(scene, fl if ROOM == "flourish" else gh)
-        if ROOM == "glasshouse":
-            for name in ("inn_garden_wall", "chia_dim"):       # the glasshouse's own Inn wall, door and shop take their place
-                bpy.data.objects[name].hide_render = True
+        # the room keeps its own walls (Flourish's plaster inside the stable door; the glasshouse's Inn wall, door and shop),
+        # so the garden's Inn wall, which sits on them, is hidden
+        for name in ("inn_garden_wall", "chia_dim") if ROOM == "glasshouse" else ("inn_garden_wall",):
+            bpy.data.objects[name].hide_render = True
     return camp
 
 
