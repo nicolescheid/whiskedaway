@@ -1008,6 +1008,13 @@ def build_lawn(rnd, wet):
     print(f"[whisked] lawn: {len(faces)} cells, {n} tufts")
 
 
+def indoors(p):
+    """Inside Flourish's room or the glasshouse (--room): no rain falls there."""
+    in_flourish = p.x < 4.8 and 0 <= p.y <= 4.8 and p.z < 2.8
+    in_glasshouse = GH_DX <= p.x <= GH_DX + 1.9 and GH_DY <= p.y <= GH_DY + 6.4 and p.z < 3.2
+    return in_flourish or in_glasshouse
+
+
 def build_rain(rnd, heavy):
     """Rain: thin streaks facing the camera, falling a little slanted, thick near the camera and out to ~16 m."""
     n = 7000 if heavy == 1 else 13000
@@ -1019,7 +1026,7 @@ def build_rain(rnd, heavy):
         r = 0.7 + (rnd.random() ** 1.6) * 15.5
         a = rnd.uniform(0, 2 * math.pi)
         p = cam + Vector((r * math.cos(a), r * math.sin(a), rnd.uniform(-1.6, 4.5)))
-        if p.z < GROUND:
+        if p.z < GROUND or (ROOM and indoors(p)):
             continue
         d = (Vector((0, 0, -1)) + wind * slant).normalized() * length * rnd.uniform(0.7, 1.2)
         w = 0.0009 + 0.0005 * r / 8
