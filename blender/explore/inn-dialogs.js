@@ -25,15 +25,12 @@ export function install(inn) {
     d.classList.remove('open');
     layers.closed({ el: d, name: id });
   }
-  // The welcome card keeps Tab inside it; Escape with no layer open closes the Map panel
+  // The welcome card keeps Tab inside it
   addEventListener('keydown', e => {
     const d = inn.$('welcome')?.classList.contains('open') ? inn.$('welcome') : null;
     if (e.key === 'Tab' && d) {
       const f = [...d.querySelectorAll('button, a[href]')].filter(x => !x.disabled && x.offsetParent), i = f.indexOf(document.activeElement);
       if (f.length && (e.shiftKey ? i <= 0 : i === -1 || i === f.length - 1)) { e.preventDefault(); f[e.shiftKey ? f.length - 1 : 0].focus(); }
-    } else if (e.key === 'Escape' && !d) {
-      const p = document.querySelector('.panel.open');
-      if (p) { const btn = inn.$('btn-map'); inn.togglePanel(p.id, btn); btn.focus(); }
     }
   }, true);
 

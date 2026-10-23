@@ -1,6 +1,6 @@
 // Rooms and the wander (moved out of explore.html, architecture step 3): the time of day (deviceTime, timeNow, isNight),
 // the season and hemisphere (seasonNow, askHemisphere), the trail the navigator reads (navTrail, record, lingering,
-// countAtom), moving between rooms (goRoom, introduce, setRoomText) and the magic dial by every hallway door.
+// countAtom), moving between rooms (goRoom, introduce, setRoomText) and where the wander points (wanderRoom).
 // The ROOMS table itself is the bootstrap's. Shared through `inn` (docs/code-map.md).
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { localNavigate } from './navigator.js';
@@ -8,7 +8,7 @@ import { visit } from './visit-state.js';
 import { sound } from './sound.js';
 
 export function install(inn) {
-  Object.assign(inn, { askHemisphere, countAtom, record, goRoom, introduce, setRoomText, openDial, wanderRoom });   // its functions, for the other modules (hoisted)
+  Object.assign(inn, { askHemisphere, countAtom, record, goRoom, introduce, setRoomText, wanderRoom });   // its functions, for the other modules (hoisted)
   // ---------- time of day: the device's own, unless the visitor pushed the clock
   const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
   // With today's local sunrise and sunset (from /local-weather), it's night from half an hour after sunset until half an
@@ -117,7 +117,6 @@ export function install(inn) {
     inn.look.pitch = inn.room().pitch ?? -6;                    // a stop may look a little lower on arrival (Flourish: its low table clears the chat)
     setRoomText();
     inn.buildHotspots();
-    inn.fillMap();
     inn.showClock();
     inn.showWeather(inn.state.weather);
     record({ kind: 'room', id });
@@ -149,13 +148,7 @@ export function install(inn) {
     if (inn.$('front-door').hidden) document.title = `WhiskedAway · ${inn.room().title}`;   // at the front door it stays the Inn's name
   }
 
-  // ---------- the magic dial beside every hallway door: any room, or wherever the wander points
-  function openDial() {
-    const opts = inn.hallWorld.dial.concat([{ label: 'Wherever my wander points', star: true }]);
-    inn.$('roomdial').innerHTML = opts.map((o, i) => `<button data-i="${i}"${o.blurb ? ` aria-label="${inn.esc(o.label)}: ${inn.esc(o.blurb)}"` : ''}>${o.star ? '✦ ' : ''}${inn.esc(o.label)}${o.blurb ? `<span class="blurb">${inn.esc(o.blurb)}</span>` : ''}</button>`).join('');
-    inn.$('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
-    inn.showDialog('dialdlg');
-  }
+  // ---------- where the wander points (the Inn map's ✦; it was the hallway dial's star)
   // The room the wander leans to (the room identities, content stage 3): juices, smoothies, quick breakfasts and comfort are
   // Cuddlecore's; whole-food meals and busy hands Flourish's; anything sweet, frozen or baked Sweet Spells'; the pudding
   // superpowers the Chiapothecary's. A wander that hasn't said much yet opens Cuddlecore. The Inn map's ✦ walks there
@@ -164,22 +157,8 @@ export function install(inn) {
     const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
     return STAR_OVERRIDES[lean] || inn.world.clusters[lean]?.room || 'cuddlecore';
   }
-  function turnDial(o) {
-    inn.hideDialog('dialdlg');
-    record({ kind: 'dial', id: o.star ? 'the star' : o.label });
-    inn.track('dial_turn', { dial_choice: o.star ? 'star' : o.go || 'closed' });
-    const go = o.star ? wanderRoom() : o.go;
-    if (!go) return inn.say((inn.LINES.dial?.closed || '{label} is only engraved on the dial. There is no door behind it.').replace('{label}', o.label), [], true);
-    if (go === inn.state.room) return inn.say("You're already here.", [], true);
-    const starSays = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',
-                       chiapothecary: 'Your wander says the Chiapothecary. In you go.' };
-    inn.say(o.star ? (starSays[go] || 'Your wander says Cuddlecore. In you go.') : 'In you go.', [], true);
-    setTimeout(() => goRoom(go), 700);
-  }
-  inn.$('dial-ok').onclick = () => inn.hideDialog('dialdlg');
 
-  // Taps (explore/touch.js): doors and walks (a closed door says so; a door out of the Inn says goodbye first), and the
-  // hallway's magic dial
+  // Taps (explore/touch.js): doors and walks (a closed door says so; a door out of the Inn says goodbye first)
   inn.onTouch(80, obj => obj.type === 'door' || obj.type === 'walk', (obj, id) => {
     if (!obj.go) {
       inn.track('door_closed', { room: inn.state.room, object: id });
@@ -195,5 +174,4 @@ export function install(inn) {
     }
     goRoom(obj.go, obj.arrive_yaw);
   });
-  inn.onTouch(90, obj => obj.type === 'dial', () => { openDial(); });
 }

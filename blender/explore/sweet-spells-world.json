@@ -39,8 +39,7 @@
                      "moment": "Best seat in the house for watching the lane go by.", "moments": ["There's a dent in the cushion that's mine, and a smaller one that isn't.", "The lane's never quiet for long."] },
     "star-chart": { "label": "The star chart", "ref": "the star chart", "type": "ambient", "themes": ["night", "learning"],
                     "moment": "The kitchen constellations. That one's the Great Whisk.", "moments": ["The Great Whisk. Every kitchen's got one overhead.", "That faint cluster is the Sieve."] },
-    "ss-exit-door": { "label": "Into the hallway", "ref": "the door to the hallway", "type": "door", "go": "hall-middle", "arrive_yaw": 0, "themes": [] },
-    "ss-dial": { "label": "The dial", "map": "The dial by the hallway door", "ref": "the dial in Sweet Spells", "type": "dial", "themes": [] }
+    "ss-exit-door": { "label": "Into the hallway", "ref": "the door to the hallway", "type": "door", "go": "hall-middle", "arrive_yaw": 0, "themes": [] }
   },
   "atoms": [
     { "id": "banana-pancakes", "room": "sweet-spells", "kind": "recipe idea", "spoons": 1, "title": "Banana and oat pancakes",

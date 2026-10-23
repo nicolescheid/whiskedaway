@@ -1,6 +1,6 @@
-// The fixed navigation (moved out of explore.html, architecture step 3): the bar's and chat's heights (fitDock), the Map
-// panel (fillMap, togglePanel), the notebook (renderTold: what you've told me; renderNotes: the trail), the bar's Front door
-// and Forget, and what follows a change to the visit store. Shared through `inn` (docs/code-map.md).
+// The fixed navigation (moved out of explore.html, architecture step 3): the bar's and chat's heights (fitDock), the
+// notebook (renderTold: what you've told me; renderNotes: the trail), the bar's Front door and Forget, and what follows
+// a change to the visit store. The Map button is the Inn map's (inn-map.js). Shared through `inn` (docs/code-map.md).
 import { visit } from './visit-state.js';
 import { sweetTold } from './sweet-spells.js';
 import { toldLine } from './checkin.js';
@@ -9,7 +9,7 @@ import { layers } from './layers.js';
 import { kitchenPicks, kitchenWords, NONE as NO_COOKING } from './kitchen.js';
 
 export function install(inn) {
-  Object.assign(inn, { fitDock, fillMap, fromBook, renderNotes, togglePanel });   // its functions, for the other modules (hoisted)
+  Object.assign(inn, { fitDock, fromBook, renderNotes });   // its functions, for the other modules (hoisted)
   // The top bar's and the chat's heights: the highlight, the undo and Turnstile's box sit between them on phones
   function fitDock() {
     const s = document.documentElement.style;
@@ -24,23 +24,7 @@ export function install(inn) {
   fitter.observe(inn.ideas.el);
   addEventListener('resize', fitDock);
 
-  // ---------- map + notebook (the fixed navigation)
-  function fillMap() {
-    inn.$('map-tools').innerHTML = inn.$('map-room').innerHTML = '';
-    const item = id => {
-      const li = document.createElement('li');
-      const b = document.createElement('button');
-      b.textContent = inn.world.objects[id]?.map || inn.label(id);
-      if (inn.world.objects[id]?.blurb) { b.insertAdjacentHTML('beforeend', `<span class="blurb">${inn.esc(inn.world.objects[id].blurb)}</span>`); b.setAttribute('aria-label', `${b.firstChild.textContent}: ${inn.world.objects[id].blurb}`); }
-      b.onclick = () => { const s = inn.spots[id]; inn.hasLooked = true; inn.lookTo(s.yaw, s.pitch); inn.record({ kind: 'map', id }); };
-      li.appendChild(b);
-      return li;
-    };
-    Object.entries(inn.world.objects).forEach(([id, o]) => {
-      if (!inn.spots[id] || o.map_hide) return;
-      inn.$(o.type === 'ambient' ? 'map-room' : 'map-tools').appendChild(item(id));
-    });
-  }
+  // ---------- the notebook
   // The notebook's "What you've told me" (its own block: it becomes the book's "This visit" page): what the visitor told
   // the Inn about themselves, in Gemma's words, each with its own "forget". An energy's line is its "told" in
   // cuddlecore-world.json when the content editor adds one; until then these.
@@ -108,14 +92,6 @@ export function install(inn) {
       `<li>${verbs[e.kind]} ${inn.esc(e.kind === 'weather' ? inn.world.weathers[e.id]?.label : e.kind === 'time' ? inn.world.times[e.id]?.label.toLowerCase() : e.kind === 'energy' ? inn.world.energies[e.id]?.candle : e.kind === 'season' ? inn.world.seasons[e.id]?.label.toLowerCase() : e.kind === 'room' ? inn.ROOMS[e.id]?.title.replace(/^The /, 'the ') : e.kind === 'dial' ? e.id : e.id ? (inn.world.objects[e.id]?.ref || inn.label(e.id)) : e.atom ? inn.atomsById[e.atom]?.title : inn.world.clusters[e.cluster]?.label)}</li>` })).concat(cat)
       .sort((a, b) => b.t - a.t).slice(0, 25).map(i => i.html).join('');
   }
-  function togglePanel(id, btn) {
-    const p = inn.$(id), open = !p.classList.contains('open');
-    document.querySelectorAll('.panel').forEach(x => x.classList.remove('open'));
-    document.querySelectorAll('.bar .chip').forEach(x => { x.classList.remove('on'); x.setAttribute('aria-expanded', 'false'); });
-    if (open) { p.classList.add('open'); btn.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); }
-    if (open) inn.track('map_open', { room: inn.state.room });
-  }
-  inn.$('btn-map').onclick = e => togglePanel('map', e.currentTarget);
   // The bar's "Front door" does what the hall's front door does (J6): Gemma says goodbye, then the door picture
   inn.$('btn-inn').onclick = e => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;          // a new tab or window: let the link be a link

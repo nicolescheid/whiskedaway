@@ -18,10 +18,6 @@
     "door-sweet-spells": { "label": "Sweet Spells", "blurb": "For the sweet tooth", "ref": "the Sweet Spells door", "type": "door", "go": "sweet-spells", "themes": [] },
     "door-chiapothecary": { "label": "Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": 10,
                             "themes": [], "always_visible": true },
-    "dial-cuddlecore": { "label": "The dial", "map": "The dial by the Cuddlecore door", "ref": "the dial by the Cuddlecore door", "type": "dial", "door": "door-cuddlecore", "themes": [] },
-    "dial-flourish": { "label": "The dial", "map": "The dial by the Flourish door", "ref": "the dial by the Flourish door", "type": "dial", "door": "door-flourish", "themes": [] },
-    "dial-sweet-spells": { "label": "The dial", "map": "The dial by the Sweet Spells door", "ref": "the dial by the Sweet Spells door", "type": "dial", "door": "door-sweet-spells", "themes": [] },
-    "dial-chiapothecary": { "label": "The dial", "map": "The dial by the Chiapothecary door", "ref": "the dial by the Chiapothecary door", "type": "dial", "door": "door-chiapothecary", "themes": [] },
     "grandfather-clock": { "label": "The clock", "ref": "the grandfather clock", "type": "time", "tool": "time", "themes": [] },
     "front-door": { "label": "Exit out the front door", "ref": "the front door", "type": "door", "go": "/", "themes": [],
                     "leaving": "Off out? Mind the step, love." },
@@ -38,16 +34,6 @@
     "sea-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": [],
                     "moment": "The same bay you can see from Cuddlecore.", "moments": ["Stand here long enough and you can hear the water.", "Some days the bay looks painted on."] }
   },
-  "dial": [
-    { "label": "Cuddlecore", "go": "cuddlecore", "blurb": "Gentle food for days you're not at your best" },
-    { "label": "Flourish", "go": "flourish", "blurb": "Proper meals from whole foods" },
-    { "label": "Sweet Spells", "go": "sweet-spells", "blurb": "For the sweet tooth" },
-    { "label": "Chiapothecary", "go": "chiapothecary", "blurb": "Your chia routine" },
-    { "label": "Conservatory", "go": "glasshouse", "blurb": "What's growing this season" },
-    { "label": "Nourish Academy" },
-    { "label": "Cravings Decoded" },
-    { "label": "The foyer", "go": "hall-entrance" }
-  ],
   "noticeboard": {
     "_when": "The hallway notice board: touching it says the line for the visitor's hemisphere and season, and serves one of its ideas.",
     "south": {

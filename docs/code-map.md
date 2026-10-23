@@ -27,13 +27,13 @@ write-out cache serves the old wording for up to 30 days.
 | Role | Files |
 |---|---|
 | Ideas build (main coder) | ideas.js, idea-pick.js, basket.js, basket-view.js, checkout.js, book.js, book-view.js, writeout.js, list.js, cook.js, kitchen.js, chia-mix.js, tell.js, tags.js, checkin.js, checkin-controls.js, navigator.js, theme.js, shopwords.js, serving.js, basket-glue.js, tell-glue.js, chia-glue.js, centrepieces.js, theme-glue.js |
-| Inn architecture / whoever holds the bootstrap | explore.html (bootstrap only), layers.js, touch.js, rooms.js, panorama.js, chat-glue.js, panels.js, inn-dialogs.js, candles.js, arrival.js, scripts/check.mjs, scripts/sheet-contract.mjs |
+| Inn architecture / whoever holds the bootstrap | explore.html (bootstrap only), layers.js, touch.js, rooms.js, panorama.js, chat-glue.js, panels.js, inn-map.js, inn-dialogs.js, candles.js, arrival.js, scripts/check.mjs, scripts/sheet-contract.mjs |
 | Phones / mobile lead | chat.js, edge-hints.js, tilt.js, swipe.js, data-budget.js |
 | Sound | sound.js |
 | Front door / homepage story | front-door.js, the door markup and story in explore.html (copy is content's) |
 | Erwina | erwina.js |
 | Sweet Spells, star chart | sweet-spells.js, star-chart.js, sweet-glue.js |
-| Content editor (data only) | `*-world.json`, gemma-lines.json, notes.js's lines (in gemma-lines.json) |
+| Content editor (data only) | `*-world.json`, gemma-lines.json, inn-map.json (its words; art keeps its shapes), notes.js's lines (in gemma-lines.json) |
 | Art (data and renders only) | `out/*_hotspots.json`, renders, `blender/*_build.py` |
 | Worker | worker/whiskedaway-worker.js, worker/inn-extras.js, worker/writeout-cache.js |
 
@@ -57,13 +57,13 @@ explore.html. A value several modules reassign is a field of `inn` (`inn.spots`,
 
 **Install order matters only for what a module does at load** (its `create*()` calls, which also fix the order sheets are
 added to the page). Today's order: touch, rooms, panorama, chat-glue, serving, basket-glue, chia-glue, sweet-glue,
-centrepieces, tell-glue, theme-glue, panels, inn-dialogs, candles, arrival. A new module goes after the ones whose
+centrepieces, tell-glue, theme-glue, panels, inn-map, inn-dialogs, candles, arrival. A new module goes after the ones whose
 values it reads at load.
 
 | Module | What it holds |
 |---|---|
 | `touch.js` | `touch(id)`: what every tap does (intro, trail, count, Inn note), then a table of handlers. Each feature registers its own with `inn.onTouch(order, when, run)`; the order numbers are listed at the top of touch.js |
-| `rooms.js` | time of day, season and hemisphere, navTrail, the trail (record, lingering, countAtom), goRoom, introduce, setRoomText, the hallway dial; door and dial taps |
+| `rooms.js` | time of day, season and hemisphere, navTrail, the trail (record, lingering, countAtom), goRoom, introduce, setRoomText, wanderRoom (where the wander points); door taps |
 | `panorama.js` | the renderer and texture cache, showWeather, crossFade, the theme colour, the clocks, the hotspots, render, resize, looking around (drag, keys, wheel, lookTo), Erwina's wiring |
 | `chat-glue.js` | say, chatLine, setChips, CHIP_ACTS, typing, chatUI, the sound chip |
 | `serving.js` | the navigator's timing (scheduleNavigate, navigate, applyReveal), L, pickLine, momentOf, innNoteLine, steer, the filters (dietClash, kitchenOk, the away rule, headline), serve, keepIdea, `ideas = createIdeas` |
@@ -73,15 +73,16 @@ values it reads at load.
 | `centrepieces.js` | roomIdeas, bestHere, cast, the star chart's fortune, canServe, onCard, showIdea, ideaPage, whenFree; star chart and cast taps |
 | `tell-glue.js` | setAnswer, checkedIn, kitchenSaid, acknowledge, entryFact, maybeOfferTell, emptyRoomLine, mapDefault, shopWords, `tell = createTell`, the tags; kitchen and Tell Gemma taps |
 | `theme-glue.js` | themeNow, renderTheme, the theme caption, the notice board (and its tap) |
-| `panels.js` | fitDock, the Map panel (fillMap, togglePanel), the notebook (renderTold, renderNotes), fromBook, the bar's Front door, Forget, what follows a change to the visit store |
+| `panels.js` | fitDock, the notebook (renderTold, renderNotes), fromBook, the bar's Front door, Forget, what follows a change to the visit store |
+| `inn-map.js` | the Inn map (24 Oct): the bar's Map button opens a plan of the Inn drawn from `inn-map.json` (content and art edit it); tap a room to walk there, ✦ Where my wander points, and "In this room" (every hotspot here, for keyboards and screen readers). A layer |
 | `inn-dialogs.js` | showDialog, hideDialog, openTool, the barometer, clock and seasons wheel (and their taps) |
 | `candles.js` | spriteFrom (on `inn`, for any overlay drawn into the room), the candle's flame and glow, showCandle, chooseEnergy |
 | `arrival.js` | arrive (the foyer's check-in offer, the weather question), checkinPill, endCheckinOffer, faceDesk, settle |
 
 ## Where new features go (the queue, 23 Oct)
 
-- **The Inn map** (replaces the bar's Map list and the hallway "teleporter" hotspots): `explore/inn-map.js`, a layer. Its
-  opener is the bar's Map chip (today panels.js's togglePanel). Rooms are read from `inn.ROOMS`; moving is `inn.goRoom`.
+- **The Inn map**: live (24 Oct), `explore/inn-map.js` and `inn-map.json`. The teleporter dials are gone; the garden is on
+  the plan as Coming soon and lights up once its ROOMS entry exists.
 - **Cuddlecore's "How you like it" tray, cage and bell jar**: `explore/how-you-like-it.js` (a layer and its sheet). The cage's
   overlay is drawn like the candle flames (`inn.spriteFrom`, from candles.js). Its filter goes in serving.js next to dietClash and
   kitchenOk, and the cage always wins.

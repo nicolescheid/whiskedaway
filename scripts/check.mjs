@@ -147,7 +147,7 @@ step('front door and star dial');
   if (h1 !== 1) fail(`${where} front door: ${h1} h1 elements (want 1)`);
   await context.close();
 }
-// The star on the hallway dial opens the room the wander leans to
+// The Inn map's ✦ Where my wander points opens the room the wander leans to
 {
   const { page, context, where } = await openPage({ width: 1280, height: 800, time: 'midday', path: '/?room=hall-middle', phone: false });
   await page.waitForFunction(() => window.__explore?.goRoom, null, { timeout: 15000 });
@@ -157,13 +157,13 @@ step('front door and star dial');
       const ex = window.__explore, wait = ms => new Promise(r => setTimeout(r, ms));
       ex.goRoom('hall-middle'); await wait(300);
       ex.state.trail = lean ? [{ kind: 'choose', cluster: lean }, { kind: 'choose', cluster: lean }] : [];
-      ex.touch('dial-cuddlecore'); await wait(200);
-      const star = [...document.querySelectorAll('#roomdial button')].at(-1);
-      if (!star) return 'no dial';
-      star.click(); await wait(1200);
+      document.getElementById('btn-map').click(); await wait(300);
+      const star = document.querySelector('#inn-map .im-star');
+      if (!star) return 'no star';
+      star.click(); await wait(1500);
       return ex.state.room;
     }, lean);
-    if (got !== want) fail(`${where} star dial: a "${lean || 'quiet'}" wander opened ${got} (want ${want})`);
+    if (got !== want) fail(`${where} the map's star: a "${lean || 'quiet'}" wander opened ${got} (want ${want})`);
   }
   await context.close();
 }

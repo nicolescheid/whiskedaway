@@ -41,7 +41,6 @@ export const SHEETS = [
   { id: 'inn map', root: '#inn-map', ways: { done: null, x: '.tl-x' }, open: { chip: '#btn-map' }, answer: null },
   { id: 'barometer', ...DIALOG('#weather', '#weather-ok'), open: { room: 'cuddlecore', spot: 'barometer' }, answer: 'weather' },
   { id: 'clock', ...DIALOG('#clockdlg', '#clock-ok'), open: { room: 'cuddlecore', spot: 'clock' }, answer: 'press' },
-  { id: 'hall dial', ...DIALOG('#dialdlg', '#dial-ok'), open: { room: 'hall-middle', spot: 'dial-cuddlecore' }, answer: null },
   { id: 'seasons wheel', ...DIALOG('#seasondlg', '#season-ok'), open: { room: 'glasshouse', spot: 'seasons-wheel' }, answer: 'press' },
 ];
 
