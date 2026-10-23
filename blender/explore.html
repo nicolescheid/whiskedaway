@@ -717,9 +717,10 @@ import { install as installChiaGlue } from './explore/chia-glue.js';
 import { install as installSweetGlue } from './explore/sweet-glue.js';
 import { install as installCentrepieces } from './explore/centrepieces.js';
 import { install as installTellGlue } from './explore/tell-glue.js';
+import { install as installThemeGlue } from './explore/theme-glue.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, renderTheme, renderNotes, themeNow, fromBook, chooseEnergy });   // wa-split: main's functions the modules call
+Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, renderNotes, fromBook, chooseEnergy });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -740,7 +741,7 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
-]); inn.LINES = LINES; inn.world = world;
+]); inn.hallWorld = hallWorld; inn.LINES = LINES; inn.world = world;
 // Tell Gemma's lists live in gemma-lines.json `tell` (content editor): cuisines by name, countries {code, name, example}
 useTellData({ cuisines: (LINES.tell?.cuisines || []).map(n => ({ id: n, label: n })),
               countries: (LINES.tell?.countries || []).map(c => ({ id: c.code, label: c.name, example: c.example })) });
@@ -811,7 +812,7 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a])); inn.atomsById = atomsById;
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
 const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null; inn.homeOf = homeOf;
-const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $;
+const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); inn.esc = esc;
 
 // ---------- state (session only)
@@ -906,12 +907,12 @@ const navTrail = () => {
 // North of the equator March to May is spring; south of it, September to November. Only the guess is used, in the page.
 const NORTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
 const FLIP = { spring: 'autumn', summer: 'winter', autumn: 'spring', winter: 'summer' };
-const seasonFor = hemi => { const n = NORTH[new Date().getMonth()]; return hemi === 'south' ? FLIP[n] : n; };
+const seasonFor = hemi => { const n = NORTH[new Date().getMonth()]; return hemi === 'south' ? FLIP[n] : n; }; inn.seasonFor = seasonFor;
 const SOUTH_TZ = /^(Australia\/|Antarctica\/|Pacific\/(Auckland|Chatham|Fiji|Tongatapu|Apia|Noumea|Efate|Norfolk|Tahiti|Rarotonga|Pago_Pago|Port_Moresby|Guadalcanal|Niue|Wallis|Funafuti|Easter)|America\/(Argentina\/|Sao_Paulo|Santiago|Montevideo|Asuncion|La_Paz|Lima|Bahia|Recife|Fortaleza|Belem|Maceio|Araguaina|Campo_Grande|Cuiaba|Porto_Velho|Rio_Branco|Punta_Arenas|Noronha)|Africa\/(Johannesburg|Maputo|Harare|Lusaka|Windhoek|Gaborone|Maseru|Mbabane|Blantyre|Lubumbashi|Luanda|Dar_es_Salaam|Kinshasa|Kigali|Bujumbura)|Indian\/(Mauritius|Reunion|Antananarivo|Comoro|Mayotte)|Atlantic\/(St_Helena|Stanley|South_Georgia))/;
 const tzHemisphere = () => { try { return SOUTH_TZ.test(Intl.DateTimeFormat().resolvedOptions().timeZone || '') ? 'south' : 'north'; } catch { return 'north'; } };
-let seasonGuess = seasonFor(tzHemisphere());
+inn.seasonGuess = seasonFor(tzHemisphere());
 state.season = state.season || null;        // a season the visitor turned the wheel to, or null for their own
-const seasonNow = () => state.season || seasonGuess;
+const seasonNow = () => state.season || inn.seasonGuess; inn.seasonNow = seasonNow;
 // The rough latitude Cloudflare attaches to the visit (via the Worker) beats the time zone, when it answers.
 // Asked once, on the way to the Conservatory; nothing about it is kept.
 let hemiAsked = null;
@@ -922,8 +923,8 @@ function askHemisphere() {
       const { hemisphere } = r.ok ? await r.json() : {};
       if (hemisphere !== 'north' && hemisphere !== 'south') return;
       const guess = seasonFor(hemisphere);
-      if (guess === seasonGuess) return;
-      seasonGuess = guess;
+      if (guess === inn.seasonGuess) return;
+      inn.seasonGuess = guess;
       if (!state.season && room().seasons) showWeather(state.weather);
     } catch { /* the time zone's guess stands */ }
   })());
@@ -1326,7 +1327,7 @@ function touch(id) {
   } else if (obj.type === 'ambient' && id === 'star-chart' && LINES.starChart?.fortunes?.length) {
     if (inn.fortune(obj, noteLine)) noteLine = null;              // pick a star and she reads it, then a surprise sweet idea's card
   } else if (obj.type === 'ambient' && id === 'notice-board') {
-    noticeBoard(obj);
+    inn.noticeBoard(obj);
   } else if (obj.type === 'ambient') {
     inn.say([inn.momentOf(id, obj), obj.ideas && obj.bridge].filter(Boolean).join(' '), [], true);   // a content `moments` list rotates with the base line, never repeating in a visit
     if (id === 'wind-chime') sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
@@ -1399,7 +1400,7 @@ function goRoom(id, yaw) {
     state.seasonTold = true;
     askHemisphere().then(() => inn.say(state.season
       ? `It's set to ${state.season}. The wheel by the door turns it to any season.`
-      : `It's ${seasonGuess} where you are, I think. The wheel by the door turns it to any season.`, [], true));
+      : `It's ${inn.seasonGuess} where you are, I think. The wheel by the door turns it to any season.`, [], true));
   }
   introduce(id);
   inn.chatUI.flashTags();                          // what you've told Gemma shows for a moment on arrival (Inn rule 11)
@@ -1458,43 +1459,7 @@ installSweetGlue(inn);   // Sweet Spells: its sheets, tools and the swap-the-sug
 installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortune
 installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary and kitchen sheets, the tags
 
-// ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
-// the book's "This visit" page and the hallway notice board, once something's been kept
-function themeNow() {
-  const kept = book.list(), now = kept.filter(k => k.visit === book.visitId);
-  const { words } = visitTheme({ keptNow: now, keptBefore: kept.filter(k => k.visit !== book.visitId),
-    dismissed: state.dismissed.map(id => atomsById[id]).filter(Boolean), lean: world.clusters[state.result?.cluster]?.themes || [] });
-  const roomName = r => ({ cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'the Chiapothecary' }[r] || r);
-  return { words, now, sentence: themeSentence(words, now, roomName, LINES.book?.theme) };
-}
-function renderTheme() {
-  const { words } = themeNow();
-  const cap = $('ideas-theme');
-  cap.textContent = words.join(', ');
-  cap.hidden = !words.length;
-  inn.chatUI.setTheme(words);
-}
-const caption = document.createElement('div');
-caption.id = 'ideas-theme';
-caption.className = 'ideas-theme';
-caption.hidden = true;
-caption.setAttribute('aria-label', "Today's theme");
-document.body.appendChild(caption);
-book.subscribe(renderTheme);
-// The hallway notice board shows the book once something's in it: the visit's theme and how many are kept (§5, §6)
-// The hallway notice board: what's in season for the visitor's hemisphere (hallway-world.json `noticeboard`), and one of its
-// ideas served; once there's a book, how many are in it
-function noticeBoard(obj) {
-  const hemi = seasonFor('south') === seasonGuess ? 'south' : 'north';
-  const pin = hallWorld.noticeboard?.[hemi]?.[seasonNow()];
-  const n = book.count;
-  const bookLine = n ? ` Your book has ${n === 1 ? 'one recipe' : `${n} recipes`} in it.` : '';
-  if (!pin) return inn.say((n ? '' : obj.moment) + bookLine || obj.moment, [], true);
-  inn.say(pin.line + bookLine, [], true);
-  inn.holdLine();
-  const pick = pin.atoms.map(id => atomsById[id]).find(a => a && inn.fits(a) && !state.cards.some(c => c.atom === a.id));
-  if (pick) setTimeout(() => inn.serve({ atom: pick.id, why: LINES.noticeboard_why || "Because it's in season." }, 'local'), 600);
-}
+installThemeGlue(inn);   // the visit's theme caption and the hallway notice board
 
 // The top bar's and the chat's heights: the highlight, the undo and Turnstile's box sit between them on phones
 function fitDock() {
@@ -1716,7 +1681,7 @@ $('clock-ok').onclick = () => hideDialog('clockdlg');
 
 // ---------- seasons wheel: the Conservatory opens in the visitor's season; the wheel shows any other
 function openSeasons() {
-  $('season-text').textContent = `Where you are it's probably ${seasonGuess}. Turn the wheel to see the Conservatory in any season.`;
+  $('season-text').textContent = `Where you are it's probably ${inn.seasonGuess}. Turn the wheel to see the Conservatory in any season.`;
   const opts = Object.entries(world.seasons).map(([id, s]) => ({ id, label: s.label }))
     .concat(state.season ? [{ id: '', label: 'Back to my season' }] : []);
   $('seasondial').innerHTML = opts.map(o => `<button data-s="${esc(o.id)}" class="${o.id && o.id === seasonNow() ? 'on' : ''}" aria-pressed="${!!o.id && o.id === seasonNow()}">${esc(o.label)}</button>`).join('');
@@ -1735,7 +1700,7 @@ function chooseSeason(id) {
     track('season_change', { season: id });
   } else {
     track('season_change', { season: 'own' });
-    inn.say(`Back to your own season: ${seasonGuess}.`, [], true);
+    inn.say(`Back to your own season: ${inn.seasonGuess}.`, [], true);
     state.trail = state.trail.filter(e => e.kind !== 'season');
     store.save(state);
     inn.scheduleNavigate();
@@ -1959,7 +1924,7 @@ look.pitch = room().pitch ?? -6;
 fillMap();
 inn.shopWords.apply(visit.get('country') || inn.mapDefault());   // before the first render
 inn.ideas.render();
-renderTheme();
+inn.renderTheme();
 renderNotes();
 inn.renderChat();
 if (state.chips?.length) inn.setChips(state.chips);
