@@ -1,8 +1,8 @@
 # The Inn's code map
 
 Which file does what, which role owns it, and where a new feature goes. The PM points every brief at this page.
-Written 23 Oct 2026 by the Inn architecture session (code-health-plan.md steps 1, 2 and 4). Step 3, the split of
-`blender/explore.html`, is planned below. Update the "Lives in" column as each block moves.
+Written 23 Oct 2026 by the Inn architecture session (code-health-plan.md steps 1, 2 and 4); updated 24 Oct for step 3, the
+split of `blender/explore.html` into feature modules.
 
 ## The three rules
 
@@ -26,13 +26,13 @@ write-out cache serves the old wording for up to 30 days.
 
 | Role | Files |
 |---|---|
-| Ideas build (main coder) | ideas.js, idea-pick.js, basket.js, basket-view.js, checkout.js, book.js, book-view.js, writeout.js, list.js, cook.js, kitchen.js, chia-mix.js, tell.js, tags.js, checkin.js, checkin-controls.js, navigator.js, theme.js, shopwords.js; after the split serving.js, tell-glue.js, basket-glue.js |
-| Inn architecture / whoever holds the bootstrap | explore.html (bootstrap only), layers.js, scripts/check.mjs, scripts/sheet-contract.mjs; after the split touch.js, rooms.js |
+| Ideas build (main coder) | ideas.js, idea-pick.js, basket.js, basket-view.js, checkout.js, book.js, book-view.js, writeout.js, list.js, cook.js, kitchen.js, chia-mix.js, tell.js, tags.js, checkin.js, checkin-controls.js, navigator.js, theme.js, shopwords.js, serving.js, basket-glue.js, tell-glue.js, chia-glue.js, centrepieces.js, theme-glue.js |
+| Inn architecture / whoever holds the bootstrap | explore.html (bootstrap only), layers.js, touch.js, rooms.js, panorama.js, chat-glue.js, panels.js, inn-dialogs.js, candles.js, arrival.js, scripts/check.mjs, scripts/sheet-contract.mjs |
 | Phones / mobile lead | chat.js, edge-hints.js, tilt.js, swipe.js, data-budget.js |
 | Sound | sound.js |
 | Front door / homepage story | front-door.js, the door markup and story in explore.html (copy is content's) |
 | Erwina | erwina.js |
-| Sweet Spells, star chart | sweet-spells.js, star-chart.js |
+| Sweet Spells, star chart | sweet-spells.js, star-chart.js, sweet-glue.js |
 | Content editor (data only) | `*-world.json`, gemma-lines.json, notes.js's lines (in gemma-lines.json) |
 | Art (data and renders only) | `out/*_hotspots.json`, renders, `blender/*_build.py` |
 | Worker | worker/whiskedaway-worker.js, worker/inn-extras.js, worker/writeout-cache.js |
@@ -40,54 +40,57 @@ write-out cache serves the old wording for up to 30 days.
 Data-only work (world JSON, gemma-lines.json, renders, hotspots) never needs a code owner's sign-off, and nobody reformats those
 files.
 
-## explore.html today, and where each block goes (step 3)
+## explore.html and its modules (after step 3)
 
-The module script in explore.html is one closure: every block reads `state`, `world`, `LINES`, `say`, `record` and friends
-directly. The split keeps that working with one shared object. explore.html builds `inn = { state, world, LINES, visit, book,
-basket, ... }` and each new module exports `install(inn)`, which adds its functions to `inn` and reads the others from `inn`
-when it is called, not when it is loaded. That avoids import cycles, and it changes no behaviour.
+explore.html's module script is now only the bootstrap: the data loads (the six worlds, their hotspots, gemma-lines.json),
+the merged `world`, the ROOMS table, the visit's `state` and `store`, `showRoomInUrl`, the keep-the-answer policy
+(`EVERY_WAY_KEEPS`), the test hooks (`window.__explore`) and the start-up calls. It builds one shared object, `inn`, puts
+those on it, then calls each module's `install(inn)` in turn.
 
-| Block (explore.html today) | Goes to | Notes |
-|---|---|---|
-| Rooms table (ROOMS from the six worlds), state load/save, showRoomInUrl | bootstrap (stays) | the data every module needs |
-| Time of day, season and hemisphere, navTrail | `rooms.js` | deviceTime, seasonNow, askHemisphere |
-| Panorama: renderer, texture cache, showWeather, crossFade, theme colour | `rooms.js` | three.js setup could stay in the bootstrap if simpler |
-| The clocks (makeClock, setHands, showClock) | `rooms.js` | |
-| Hotspots (buildHotspots, render, resize, drag, keyboard look, lookTo) | `rooms.js` | |
-| Trail, lingering, counting (record, countAtom) | `rooms.js` or bootstrap | everyone calls record() |
-| `touch(id)`: the long if/else by object type | `touch.js` | a table `{ type or tool → handler }`; each feature registers its own handler |
-| goRoom, introduce, setRoomText, the hallway dial | `rooms.js` | |
-| Navigator: scheduleNavigate, navigate, applyReveal | `serving.js` | |
-| Gemma's chat glue (chatLine, setChips, CHIP_ACTS, say, typing) | bootstrap, or `chat-glue.js` | used by everything |
-| Ideas: L lines, pickLine, momentOf, innNoteLine, steer, dietClash, kitchenOk, serve, canServe, showIdea, keepIdea, ideas = createIdeas | `serving.js` | the filters (dietary, kitchen, away rule, headline) live together here |
-| Write-outs: recipeFetch, unitsNow, swapsFor, writer = createWriteOut, intoBook | `basket-glue.js` | |
-| Checkout, basketView, cook, shopList, bookView | `basket-glue.js` | |
-| Centrepieces: roomIdeas, bestHere, cast, CAST_LINES | `serving.js` | |
-| Star chart glue (fortune) | `serving.js` (or sweet-spells' own glue) | |
-| Chiapothecary glue (chia, CHIA_TOOLS, chiaActions) | `basket-glue.js` or its own `chia-glue.js` | |
-| Sweet Spells glue (sweet, SWEET_TOOLS, sweetSwapHtml) | `serving.js` | |
-| Tell Gemma: setAnswer, checkedIn, kitchenSaid, acknowledge, entryFact, maybeOfferTell, emptyRoomLine, tell = createTell, tagsUI, TOLD lines | `tell-glue.js` | EVERY_WAY_KEEPS lives here |
-| Theme caption, notice board | `serving.js` | |
-| fitDock, Map panel (fillMap, togglePanel), notebook (renderTold, renderNotes), fromBook | bootstrap, or `rooms.js` | |
-| Inn dialogs: showDialog/hideDialog, barometer, clock, seasons wheel | `rooms.js` | already layers |
-| Energy candles (flame sprites, showCandle, chooseEnergy) | `rooms.js` | |
-| Arrival: the weather question, the check-in offer, faceDesk, settle | `rooms.js` | the first-visit tour (tour.js) hooks in here |
-| `window.__explore` test hooks, the start-up calls | bootstrap (stays) | |
+**How a module works.** `export function install(inn) { ... }`. It adds what others need to `inn` (`inn.say = say`, or
+`Object.assign(inn, { ... })` for its functions) and reads everything else from `inn` **when it's called**:
+`inn.say(...)`, `inn.state.room`. Modules never import each other, so there are no cycles. A module imports its own
+pieces from `explore/*.js` directly (`import { createTell } from './tell.js'`); the `../src/lib` helpers (track,
+genieFetch, getPass, GENIE_URL, stepBucket) come through `inn`, because build-explore.mjs only rewrites those paths in
+explore.html. A value several modules reassign is a field of `inn` (`inn.spots`, `inn.hotspots`, `inn.casting`,
+`inn.castFor`, `inn.erwina`, `inn.hasLooked`, `inn.drag`, `inn.lastMove`, `inn.seasonGuess`).
 
-Target: explore.html under about 600 lines. Most of that is markup, the door's story and the page's own CSS.
+**Install order matters only for what a module does at load** (its `create*()` calls, which also fix the order sheets are
+added to the page). Today's order: touch, rooms, panorama, chat-glue, serving, basket-glue, chia-glue, sweet-glue,
+centrepieces, tell-glue, theme-glue, panels, inn-dialogs, candles, arrival. A new module goes after the ones whose
+values it reads at load.
+
+| Module | What it holds |
+|---|---|
+| `touch.js` | `touch(id)`: what every tap does (intro, trail, count, Inn note), then a table of handlers. Each feature registers its own with `inn.onTouch(order, when, run)`; the order numbers are listed at the top of touch.js |
+| `rooms.js` | time of day, season and hemisphere, navTrail, the trail (record, lingering, countAtom), goRoom, introduce, setRoomText, the hallway dial; door and dial taps |
+| `panorama.js` | the renderer and texture cache, showWeather, crossFade, the theme colour, the clocks, the hotspots, render, resize, looking around (drag, keys, wheel, lookTo), Erwina's wiring |
+| `chat-glue.js` | say, chatLine, setChips, CHIP_ACTS, typing, chatUI, the sound chip |
+| `serving.js` | the navigator's timing (scheduleNavigate, navigate, applyReveal), L, pickLine, momentOf, innNoteLine, steer, the filters (dietClash, kitchenOk, the away rule, headline), serve, keepIdea, `ideas = createIdeas` |
+| `basket-glue.js` | write-outs (recipeFetch, unitsNow, swapsFor, writer), intoBook, checkout, basketView, cook, shopList, bookView |
+| `chia-glue.js` | chia (the Mix), CHIA_TOOLS, chiaActions; drawer and tool taps |
+| `sweet-glue.js` | sweet (its sheets), SWEET_TOOLS, sweetSwapHtml; tool taps |
+| `centrepieces.js` | roomIdeas, bestHere, cast, the star chart's fortune, canServe, onCard, showIdea, ideaPage, whenFree; star chart and cast taps |
+| `tell-glue.js` | setAnswer, checkedIn, kitchenSaid, acknowledge, entryFact, maybeOfferTell, emptyRoomLine, mapDefault, shopWords, `tell = createTell`, the tags; kitchen and Tell Gemma taps |
+| `theme-glue.js` | themeNow, renderTheme, the theme caption, the notice board (and its tap) |
+| `panels.js` | fitDock, the Map panel (fillMap, togglePanel), the notebook (renderTold, renderNotes), fromBook, the bar's Front door, Forget, what follows a change to the visit store |
+| `inn-dialogs.js` | showDialog, hideDialog, openTool, the barometer, clock and seasons wheel (and their taps) |
+| `candles.js` | spriteFrom (on `inn`, for any overlay drawn into the room), the candle's flame and glow, showCandle, chooseEnergy |
+| `arrival.js` | arrive (the foyer's check-in offer, the weather question), checkinPill, endCheckinOffer, faceDesk, settle |
 
 ## Where new features go (the queue, 23 Oct)
 
 - **The Inn map** (replaces the bar's Map list and the hallway "teleporter" hotspots): `explore/inn-map.js`, a layer. Its
-  opener is the bar's Map chip. Rooms are read from the ROOMS table.
+  opener is the bar's Map chip (today panels.js's togglePanel). Rooms are read from `inn.ROOMS`; moving is `inn.goRoom`.
 - **Cuddlecore's "How you like it" tray, cage and bell jar**: `explore/how-you-like-it.js` (a layer and its sheet). The cage's
-  overlay is drawn like the candle flames (rooms.js has the sprite helper). Its filter goes in serving.js next to dietClash and
+  overlay is drawn like the candle flames (`inn.spriteFrom`, from candles.js). Its filter goes in serving.js next to dietClash and
   kitchenOk, and the cage always wins.
 - **The Food map adventure dial**: part of inn-map.js or its own sheet. Its filter goes in serving.js.
-- **The first-visit tour**: `explore/tour.js`, a `modal: false` layer, started from arrival in rooms.js. Skip and Escape end it.
-- **The garden**: a world JSON plus renders. ROOMS picks it up in the bootstrap, and touch.js routes its objects by type.
+- **The first-visit tour**: `explore/tour.js`, a `modal: false` layer, started from arrival.js. Skip and Escape end it.
+- **The garden**: a world JSON plus renders. ROOMS picks it up in the bootstrap; a new kind of object registers its tap with
+  `inn.onTouch`.
 
-Each one: its own module, a layer (rule 2), a contract row (rule 3), and a line in the table above.
+Each one: its own module with `install(inn)`, a layer (rule 2), a contract row (rule 3), and a line in the table above.
 
 ## Tests
 

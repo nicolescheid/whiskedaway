@@ -677,39 +677,12 @@ import { frontDoor } from './explore/front-door.js';
 window.__door = frontDoor({ active: window.__doorActive, track });
 </script>
 <script type="text/wa-module" id="wa-main">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { localNavigate, aiNavigate } from './explore/navigator.js';
 import { visit } from './explore/visit-state.js';
 import { genieFetch, getPass, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
-import { sound } from './explore/sound.js';
-import { createEdgeHints } from './explore/edge-hints.js';
-import { createTilt } from './explore/tilt.js';
-import { saveData } from './explore/data-budget.js';
-import { createIdeas, RIBBONS } from './explore/ideas.js';
-import { createChat } from './explore/chat.js';
-import { createTags } from './explore/tags.js';
-import { book, snapshot } from './explore/book.js';
-import { basket } from './explore/basket.js';
-import { createCheckout } from './explore/checkout.js';
-import { createBasketView } from './explore/basket-view.js';
-import { createBookView } from './explore/book-view.js';
-import { notes as innNotes } from './explore/notes.js';
-import { visitTheme, themeSentence } from './explore/theme.js';
-import { createWriteOut, WRITE_ONLY, CARB_DIETS } from './explore/writeout.js';
-import { createCook } from './explore/cook.js';
-import { createChiaMix, chiaData } from './explore/chia-mix.js';
-import { createSweetSheets, sweetData, swapLines, sweetSteer, sweetTold, sweetTags } from './explore/sweet-spells.js';
-import { createList } from './explore/list.js';
-import { TIME_LIMIT, servingsNumber, checkinWords, timeWords, ackLine, toldLine, servingsWords, heardWords } from './explore/checkin.js';
-import { createTell, countryFromLanguage, useTellData, cuisineLabel, countryLabel } from './explore/tell.js';
-import { createErwina } from './explore/erwina.js';
-import { createShopWords } from './explore/shopwords.js';
-import { createStarChart } from './explore/star-chart.js';
-import { pickIdea } from './explore/idea-pick.js';
-import { layers } from './explore/layers.js';
-import { kitchenPicks, kitchenFits, fitKitchen, kitchenWords, kitchenPayload, NONE as NO_COOKING } from './explore/kitchen.js';
+import { book } from './explore/book.js';
+import { useTellData } from './explore/tell.js';
 import { install as installTouch } from './explore/touch.js';
 import { install as installChatGlue } from './explore/chat-glue.js';
 import { install as installServing } from './explore/serving.js';
@@ -726,13 +699,12 @@ import { install as installArrival } from './explore/arrival.js';
 import { install as installPanorama } from './explore/panorama.js';
 import { install as installRooms } from './explore/rooms.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
-Object.assign(inn, { track, genieFetch, getPass, GENIE_URL, stepBucket });   // wa-split: libs
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
-const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts); inn.AI = AI;
+const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
 const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
@@ -747,7 +719,7 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
-]); inn.chiaWorld = chiaWorld; inn.sweetWorld = sweetWorld; inn.flWorld = flWorld; inn.kitchenSpots = kitchenSpots; inn.hallWorld = hallWorld; inn.LINES = LINES; inn.world = world;
+]);
 // Tell Gemma's lists live in gemma-lines.json `tell` (content editor): cuisines by name, countries {code, name, example}
 useTellData({ cuisines: (LINES.tell?.cuisines || []).map(n => ({ id: n, label: n })),
               countries: (LINES.tell?.countries || []).map(c => ({ id: c.code, label: c.name, example: c.example })) });
@@ -774,7 +746,7 @@ world.atoms.push(...(glassWorld.atoms || []));
 const ROOMS = {
   cuddlecore: { title: 'Cuddlecore', where: 'In Cuddlecore', eye: [0, 0, 1.6], spots: kitchenSpots, yaw: world.yaw,
                 pano: (w, night, full) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` },
-}; inn.ROOMS = ROOMS;
+};
 for (const [id, st] of Object.entries(hallWorld.stops)) {
   const stop = hallSpots.stops[st.stop];
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
@@ -815,20 +787,20 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw,
                 pano: (w, night, full) => `out/chiapothecary_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
-const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a])); inn.atomsById = atomsById;
+const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
-const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null; inn.homeOf = homeOf;
-const $ = id => document.getElementById(id); inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $; inn.$ = $;
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); inn.esc = esc;
+const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------- state (session only)
 const store = {
   load() { try { return JSON.parse(sessionStorage.getItem('wa-explore') || 'null'); } catch { return null; } },
   save(s) { try { sessionStorage.setItem('wa-explore', JSON.stringify(s)); } catch { /* private mode */ } },
   clear() { try { sessionStorage.removeItem('wa-explore'); } catch { /* ignore */ } },
-}; inn.store = store;
+};
 const freshVisit = !store.load();
-const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {}); inn.state = state;
+const state = Object.assign({ trail: [], served: [], dismissed: [], cards: [], result: null, weather: null }, store.load() || {});
 // A visit saved before a piece was retired still holds its id: drop those quietly
 state.cards = state.cards.filter(c => atomsById[c.atom]);
 state.served = state.served.filter(id => atomsById[id]);
@@ -864,7 +836,7 @@ const leftFrom = window.__door?.active && state.trail?.length && ROOMS[state.roo
   ? { room: state.room, look: state.look } : null;
 state.room = window.__door?.active ? 'hall-entrance'                  // through the front door: the entrance hall
   : ROOMS[params.get('room')] ? params.get('room') : ROOMS[state.room] ? state.room : 'cuddlecore';
-const room = () => ROOMS[state.room]; inn.room = room;
+const room = () => ROOMS[state.room];
 inn.spots = room().spots;
 // The address follows the room (NEW-1, UX J11): ?room= always names the room you're in, so a reload or a shared link
 // lands where you are. Room moves replace it rather than adding history: Back is kept for the book and dialogs
@@ -874,7 +846,7 @@ const showRoomInUrl = () => {
   u.searchParams.set('room', state.room);
   u.searchParams.delete('door');                         // the door has been decided for this load
   history.replaceState(history.state, '', u.pathname + u.search + u.hash);
-}; inn.showRoomInUrl = showRoomInUrl;
+};
 // A room link walks straight in, so the front door counts as done for this tab
 if (params.has('room') && !window.__door?.active) try { sessionStorage.setItem('wa-door-done', '1'); } catch { /* storage blocked */ }
 // At the front door the address stays "/" (a reload or a copied link gets the door and its story); front-door.js
@@ -883,32 +855,29 @@ if (!window.__door?.active) showRoomInUrl();
 state.chat = state.chat || [];             // Gemma's chat log for this visit
 delete state.sound;                        // sound on or off lives in explore/sound.js now, off by default
 
-installTouch(inn);   // what a tap on a hotspot does: each module registers its own (inn.onTouch)
-installRooms(inn);   // time, season, the trail, moving between rooms, the hallway dial
-
-installPanorama(inn);   // the 360° view: renderer, weathers, clocks, hotspots, looking around, Erwina
-
-installChatGlue(inn);   // Gemma's chat glue: say, chips, typing, the sound chip
-
-installServing(inn);   // what Gemma serves: the navigator, the filters, serve and keep, the Ideas column
-installBasketGlue(inn);   // write-outs, the basket's checkout, cook mode, the list and the book
 // Which sheets keep the visitor's taps on every way out (✕, the dim, Escape, Back), not only on Done (Nicole's call: PM 6 asked
 // 23 Oct; Nicole, 24 Oct: all of them). Sweet Spells' sheets, the star chart and the Mix always do.
-const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood']; inn.EVERY_WAY_KEEPS = EVERY_WAY_KEEPS;
+const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood'];
+// What every module reads from the bootstrap (docs/code-map.md): the data, the visit, and a few helpers
+Object.assign(inn, { track, genieFetch, getPass, GENIE_URL, stepBucket,
+                      AI, chiaWorld, sweetWorld, flWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
+installTouch(inn);   // what a tap on a hotspot does: each module registers its own (inn.onTouch)
+installRooms(inn);   // time, season, the trail, moving between rooms, the hallway dial
+installPanorama(inn);   // the 360° view: renderer, weathers, clocks, hotspots, looking around, Erwina
+installChatGlue(inn);   // Gemma's chat glue: say, chips, typing, the sound chip
+installServing(inn);   // what Gemma serves: the navigator, the filters, serve and keep, the Ideas column
+installBasketGlue(inn);   // write-outs, the basket's checkout, cook mode, the list and the book
 installChiaGlue(inn);   // the Chiapothecary: the Mix, its tools and a jar's own buttons
 installSweetGlue(inn);   // Sweet Spells: its sheets, tools and the swap-the-sugar lines
 installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortune
 installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary and kitchen sheets, the tags
-
 installThemeGlue(inn);   // the visit's theme caption and the hallway notice board
-
 installPanels(inn);   // the bar, the Map panel, the notebook and Forget
-
 installInnDialogs(inn);   // the Inn's small dialogs: barometer, clock, seasons wheel, tool cards
-
 installCandles(inn);   // the energy candles: the lit flame and chooseEnergy
-
 installArrival(inn);   // arrival: the check-in offer in the foyer, the weather question, settle
+
+// Test hooks for scripted checks (the room walk, the sheet contract)
 window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle: inn.settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch: inn.touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy: inn.chooseEnergy, chooseSeason: inn.chooseSeason, goRoom: inn.goRoom, lookTo: (y, p) => { inn.look.yaw = y; inn.look.pitch = p; inn.render(); }, navigate: inn.navigate,
                     world, spot: id => inn.spots[id] };
 
