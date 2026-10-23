@@ -245,17 +245,25 @@ async function shown(page, root) {
   } catch { return false; }
 }
 
-/** Tap something in the sheet that changes an answer; true if there was one to tap */
+/** Tap something in the sheet that changes an answer; true if there was one to tap. It must be a change from what's already
+ *  kept: a way out that keeps is told apart from one that cancels by the answer changing, and the cases share a page */
 async function answer(page, S) {
   if (!S.answer) return false;
-  if (S.answer === 'pantry') { await page.fill(`${S.root} .tl-input`, 'lentils'); return true; }
+  if (S.answer === 'pantry') {                                  // a word not in the pantry yet (the last way out kept the one before)
+    const have = await page.evaluate(root => [...document.querySelectorAll(`${root} .tl-chip`)].map(x => x.firstChild.textContent.trim()), S.root);
+    await page.fill(`${S.root} .tl-input`, ['lentils', 'barley', 'quinoa', 'chickpeas', 'couscous'].find(w => !have.includes(w)));
+    return true;
+  }
   if (S.answer === 'star') { await page.click(`${S.root} .sc-star`); await page.waitForTimeout(300); return true; }
-  // the first unpressed choice in the sheet's body (not a close, Done, Back or Next)
+  // the first unpressed choice in the sheet's body (not a close, Done, Back or Next); where that's past a limit (the map's three
+  // cuisines) and doesn't press, the first pressed one unpressed instead
   const did = await page.evaluate(root => {
     const el = document.querySelector(root);
-    const b = [...el.querySelectorAll('button[aria-pressed="false"]')].find(x => x.offsetParent && !x.closest('header, footer, .tl-foot') && !x.disabled);
+    const pick = p => [...el.querySelectorAll(`button[aria-pressed="${p}"]`)].find(x => x.offsetParent && !x.closest('header, footer, .tl-foot') && !x.disabled);
+    const b = pick('false');
     if (!b) return false;
     b.click();
+    if (b.isConnected && b.getAttribute('aria-pressed') === 'false') pick('true')?.click();
     return true;
   }, S.root);
   await page.waitForTimeout(150);
