@@ -74,7 +74,7 @@ WEATHERS = {
     "very-dry": dict(hdri=HIGH, sky=1.05, sun_az=25, plate="dry", strength=1.05, sat=0.88, mul=(1.07, 1.0, 0.84), haze=0.12,
                      wet=0.0, rain=0, fire=True, shut=False, lawn=("#a99a5a", 0.55), exposure=0.25),
     "change":   dict(hdri=MISTY, sky=1.1, sun_az=40, plate="dry", strength=0.9, sat=1.0, mul=(0.95, 0.97, 1.0), haze=0.05,
-                     wet=0.1, rain=0, fire=True, shut=False, lawn=("#6a8a48", 0.35), exposure=0.5),
+                     wet=0.1, rain=0, fire=True, shut=False, lawn=("#6a8a48", 0.35), exposure=0.3),
     "rain":     dict(hdri=OVERCAST, sky=1.1, sun_az=0, plate="wet", strength=0.95, sat=1.0, mul=None, haze=0.0, wet=0.6,
                      rain=1, fire=False, shut=False, lawn=("#58763f", 0.4), exposure=0.6),
     "stormy":   dict(hdri=OVERCAST, sky=0.55, sun_az=0, plate="wet", strength=0.6, sat=0.9, mul=(0.85, 0.9, 1.0), haze=0.0,
