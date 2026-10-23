@@ -20,16 +20,16 @@ import { join } from 'node:path';
 // to it); { chip } is a bar chip; a function is a journey of real clicks. ways: a selector for Done and ✕ (null: the
 // sheet has none). answer: a tap that changes something (null: nothing to keep). keep: the ways out that keep the answer.
 const ALL = ['done', 'x', 'escape', 'back'];
-const TELL = { root: '#tell', ways: { done: '.tl-done-bottom', x: '.tl-x' }, keep: ['done'] };
+const TELL = { root: '#tell', ways: { done: '.tl-done-bottom', x: '.tl-x' }, keep: ALL };   // every way out keeps (Nicole, 24 Oct)
 const SWEET = { root: '#sweet-sheet', ways: { done: '.sw-done', x: '.tl-x' }, keep: ALL };
 const DIALOG = (root, ok) => ({ root, ways: { done: ok, x: null }, keep: ALL, dialog: true });
 export const SHEETS = [
   { id: 'pantry', ...TELL, open: { room: 'cuddlecore', spot: 'pantry-cabinet' }, answer: 'pantry' },
   { id: 'map', ...TELL, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'press' },
   { id: 'dietary', ...TELL, open: { room: 'cuddlecore', spot: 'dietary-shelf' }, answer: 'press' },
-  { id: 'kitchen', ...TELL, open: { room: 'cuddlecore', spot: 'kettle' }, answer: 'press', keep: ALL },
+  { id: 'kitchen', ...TELL, open: { room: 'cuddlecore', spot: 'kettle' }, answer: 'press' },
   { id: 'check-in', ...TELL, open: { room: 'hall-entrance', spot: 'checkin-desk' }, answer: 'press' },
-  { id: 'chia mood', root: '#chia-mix', ways: { done: '.mx-done', x: '.tl-x' }, open: { room: 'chiapothecary', spot: 'flasks' }, answer: 'press', keep: ['done'] },
+  { id: 'chia mood', root: '#chia-mix', ways: { done: '.mx-done', x: '.tl-x' }, open: { room: 'chiapothecary', spot: 'flasks' }, answer: 'press', keep: ALL },
   { id: 'the Mix', root: '#chia-mix', ways: { done: null, x: '.tl-x' }, open: { room: 'chiapothecary', spot: 'pudding-jars' }, answer: 'press', keep: ALL },
   { id: 'sweetness', ...SWEET, open: { room: 'sweet-spells', spot: 'potion-cabinet' }, answer: 'press' },
   { id: 'cravings', ...SWEET, open: { room: 'sweet-spells', spot: 'spell-books' }, answer: 'press' },
