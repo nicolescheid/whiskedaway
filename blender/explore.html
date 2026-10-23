@@ -720,9 +720,10 @@ import { install as installTellGlue } from './explore/tell-glue.js';
 import { install as installThemeGlue } from './explore/theme-glue.js';
 import { install as installPanels } from './explore/panels.js';
 import { install as installInnDialogs } from './explore/inn-dialogs.js';
+import { install as installCandles } from './explore/candles.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, endCheckinOffer, countAtom, chooseEnergy, showWeather, showCandle });   // wa-split: main's functions the modules call
+Object.assign(inn, { lookTo, record, introduce, endCheckinOffer, countAtom, showWeather, render });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -940,7 +941,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffe
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 stage.appendChild(renderer.domElement);
-const scene = new THREE.Scene();
+const scene = new THREE.Scene(); inn.scene = scene;
 const camera = new THREE.PerspectiveCamera(72, 1, 0.1, 100);
 const geo = new THREE.SphereGeometry(50, 96, 64);
 geo.scale(-1, 1, 1);
@@ -1057,7 +1058,7 @@ firstView.then(() => {
 const dir = (yaw, pitch) => {
   const y = THREE.MathUtils.degToRad(yaw), p = THREE.MathUtils.degToRad(pitch);
   return new THREE.Vector3(Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p));
-};
+}; inn.dir = dir;
 const look = { yaw: 0, pitch: -6 };
 createTilt({ stage, look, render });                       // phones: an opt-in chip, the room follows the phone
 // Erwina, the Inn cat: there only once you look (explore/erwina.js). Her lines are content's (gemma-lines.json `erwina`),
@@ -1161,7 +1162,7 @@ function buildHotspots() {
     document.body.appendChild(el);
     return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
   });
-  showCandle();
+  inn.showCandle();
 }
 
 let ideasCol = null;
@@ -1301,7 +1302,7 @@ function touch(id) {
   // A visitor who skipped the weather question and started looking around still hears what this room is for, before
   // the object's own line (the barometer answers the question itself; a door introduces the room it opens)
   if (!['weather', 'door', 'walk'].includes(obj.type)) introduce();
-  if (obj.type === 'energy') return chooseEnergy(obj.energy);   // the candle is the event: no separate touch
+  if (obj.type === 'energy') return inn.chooseEnergy(obj.energy);   // the candle is the event: no separate touch
   record({ kind: 'touch', id });
   track('hotspot_touch', { room: state.room, object: id, object_type: obj.type });
   let noteLine = inn.innNoteLine(id);                            // an Inn note: said after the object's own line
@@ -1467,96 +1468,7 @@ installPanels(inn);   // the bar, the Map panel, the notebook and Forget
 
 installInnDialogs(inn);   // the Inn's small dialogs: barometer, clock, seasons wheel, tool cards
 
-// ---------- energy candles: pick the one that matches how much you've got in you today
-// The candles are rendered unlit (the kitchen's five and the foyer desk's five). The chosen one is lit here:
-// a flame drawn at its wick, sized for its real distance, with a warm glow behind it. It's a standing signal, like the weather.
-const spriteFrom = (draw, additive) => {
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  draw(c.getContext('2d'));
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false,
-                                                             blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
-  sprite.visible = false;
-  scene.add(sprite);
-  return sprite;
-};
-const candleGlow = spriteFrom(g => {
-  const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-  grad.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
-  grad.addColorStop(0.4, 'rgba(255, 176, 90, 0.22)');
-  grad.addColorStop(1, 'rgba(255, 150, 60, 0)');
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 256, 256);
-}, true);
-candleGlow.renderOrder = 10;
-const candleFlame = spriteFrom(g => {
-  // a teardrop: round at the base, drawn up to a point; hot white-yellow core, orange edge, a blue foot
-  g.translate(128, 150);
-  const body = new Path2D();
-  body.moveTo(0, -128); body.bezierCurveTo(46, -48, 58, 30, 0, 74); body.bezierCurveTo(-58, 30, -46, -48, 0, -128);
-  const edge = g.createRadialGradient(0, 30, 4, 0, 10, 120);
-  edge.addColorStop(0, 'rgba(255, 252, 235, 1)');
-  edge.addColorStop(0.35, 'rgba(255, 220, 120, 0.95)');
-  edge.addColorStop(0.75, 'rgba(255, 140, 40, 0.7)');
-  edge.addColorStop(1, 'rgba(230, 90, 20, 0)');
-  g.fillStyle = edge;
-  g.fill(body);
-  const foot = g.createRadialGradient(0, 62, 0, 0, 62, 24);
-  foot.addColorStop(0, 'rgba(90, 120, 255, 0.55)');
-  foot.addColorStop(1, 'rgba(90, 120, 255, 0)');
-  g.fillStyle = foot;
-  g.fillRect(-30, 38, 60, 48);
-}, true);
-candleFlame.renderOrder = 11;
-const candleSpot = id => Object.keys(world.objects).find(k => world.objects[k].type === 'energy' && world.objects[k].energy === id);
-/** Where the chosen candle's flame goes in this room: a kitchen candle's own flame point, or the foyer desk's */
-function flamePoint(id) {
-  const key = candleSpot(id);
-  return (key && inn.spots[key]?.flame) || inn.spots['checkin-desk']?.flames?.[id] || null;
-}
-let flicker = null;
-function placeFlame(f, k = 1) {
-  const near = 10 / Math.max(f.distance || 2.5, 0.4);          // the sphere sits at 10 units: scale real metres to it
-  const small = visit.get('energy') === 'burnt-out' ? 0.55 : 1;    // a guttering stub
-  candleFlame.scale.set(0.024 * near * small * (2 - k), 0.05 * near * small * k, 1);
-  candleFlame.position.copy(dir(f.yaw, f.pitch).multiplyScalar(10));
-  candleGlow.scale.set(0.3 * near * small, 0.36 * near * small, 1);
-  candleGlow.position.copy(candleFlame.position);
-  candleFlame.material.opacity = 0.85 + 0.15 * k;
-}
-function showCandle() {
-  const id = visit.get('energy');
-  const key = id && candleSpot(id);
-  const f = id && flamePoint(id);
-  const s = !f && key && inn.spots[key];                                // no flame point (an old render): glow on the candle
-  candleFlame.visible = !!f;
-  candleGlow.visible = !!(f || s);
-  clearInterval(flicker);
-  if (f) {
-    placeFlame(f);
-    // a slow, small flicker while a flame shows (about 11 frames a second, nothing when the tab is hidden)
-    flicker = setInterval(() => { if (!document.hidden) { placeFlame(f, 0.93 + Math.random() * 0.12); render(); } }, 90);
-  } else if (s) {
-    candleGlow.scale.set(0.95, 1.4, 1);
-    candleGlow.position.copy(dir(s.yaw, s.pitch).multiplyScalar(10));
-  }
-  for (const h of inn.hotspots) h.el.classList.toggle('chosen', !!key && h.id === key);
-  render();
-}
-function chooseEnergy(id, { quiet = false, from = null } = {}) {
-  const e = world.energies?.[id];
-  if (!e || id === visit.get('energy')) return;
-  const prev = visit.get('energy');
-  visit.set('energy', id);
-  if (!quiet) inn.answerSound('energy', id, prev);
-  if (from) track('tell_set', { kind: 'energy', from });   // the check-in's candle; in Cuddlecore the candle is a touch
-  else track('hotspot_touch', { room: state.room, object_type: 'energy' });   // that a candle was picked, never which
-  showCandle();
-  if (!quiet) inn.say(e.moment, [], true);
-  record({ kind: 'energy', id });
-}
+installCandles(inn);   // the energy candles: the lit flame and chooseEnergy
 
 // ---------- arrival: Gemma asks once about the visitor's weather
 // Gemma checks her guess at the visitor's weather, rather than asking from scratch (docs/gemma-voice-guide.md:
@@ -1670,7 +1582,7 @@ function endCheckinOffer() {
   store.save(state);
   checkinPill();
 }
-window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy, chooseSeason: inn.chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
+window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy: inn.chooseEnergy, chooseSeason: inn.chooseSeason, goRoom, lookTo: (y, p) => { look.yaw = y; look.pitch = p; render(); }, navigate: inn.navigate,
                     world, spot: id => inn.spots[id] };
 
 setRoomText();
