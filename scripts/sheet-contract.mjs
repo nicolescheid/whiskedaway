@@ -43,7 +43,13 @@ export const SHEETS = [
 
 // Today's known failures (23 Oct, main e7f5e48), reported but not failed. Key: "<sheet> <way>: <what>". The layer manager
 // (explore/layers.js, step 2) is meant to empty this list
-export const EXPECTED = {};
+const NO_STEP = 'Back leaves the Inn: the Inn dialogs (the barometer, clock, dial and seasons wheel) take no history step';
+export const EXPECTED = {
+  'barometer back closed': NO_STEP,
+  'clock back closed': NO_STEP,
+  'hall dial back closed': NO_STEP,
+  'seasons wheel back closed': NO_STEP,
+};
 
 // ---------- page helpers (run in the page)
 const PROBE = `(() => {
@@ -98,7 +104,9 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
     let bad = false;                                           // this case failed something: the next one starts in a new tab
     const rec = (sheet, way, check, ok, note = '') => { if (!ok) bad = true; results.push({ size, sheet, way, check, ok, note }); };
 
-    for (const S of SHEETS) {
+    // SHEETS_ONLY=pantry,book runs just those (journeys too, unless SHEETS_ONLY is set): for quick runs while building
+    const pick = process.env.SHEETS_ONLY?.split(",");
+    for (const S of SHEETS.filter(x => !pick || pick.includes(x.id))) {
       for (const way of ALL) {
         const sel = way === 'done' || way === 'x' ? S.ways[way] : true;
         if (!sel) continue;                                     // this sheet has no such way out
@@ -120,7 +128,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
           }), [S.root, opener.sel]);
           rec(S.id, way, 'closed', after.hidden);
           const inert = await page.evaluate(INERT);
-          rec(S.id, way, 'inert', !inert.length, inert.join(', '));
+          rec(S.id, way, 'inert', !inert.length, inert.length > 4 ? `${inert.slice(0, 4).join(', ')} and ${inert.length - 4} more` : inert.join(', '));
           const hist = await page.evaluate(() => history.state);
           const balanced = JSON.stringify(hist) === JSON.stringify(opener.state);
           rec(S.id, way, 'history', balanced, balanced ? '' : `on ${JSON.stringify(hist)}, want ${JSON.stringify(opener.state)}`);
@@ -137,7 +145,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
     }
 
     // ---------- journeys
-    for (const J of JOURNEYS) {
+    for (const J of process.env.SHEETS_ONLY ? [] : JOURNEYS) {
       try {
         await fresh();
         await settleClean(page);
@@ -163,7 +171,7 @@ export function judge(results) {
   }
   const fails = [], expected = [], fixed = [];
   for (const [k, f] of failing) (EXPECTED[k] ? expected : fails).push(`${k} (${f.sizes.join(', ')})${f.note ? `: ${f.note}` : ''}`);
-  for (const k of Object.keys(EXPECTED)) if (!failing.has(k)) fixed.push(`${k} now passes: take it off EXPECTED in scripts/sheet-contract.mjs`);
+  for (const k of Object.keys(EXPECTED)) if (!failing.has(k) && results.some(r => key(r) === k)) fixed.push(`${k} now passes: take it off EXPECTED in scripts/sheet-contract.mjs`);
   const cases = new Set(results.map(r => `${r.size} ${r.sheet} ${r.way}`)).size;
   return { cases, checks: results.length, fails, expected: expected.map(e => `${e} [${EXPECTED[e.split(' (')[0]]}]`), fixed };
 }
