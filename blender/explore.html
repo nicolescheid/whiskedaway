@@ -714,9 +714,10 @@ import { install as installChatGlue } from './explore/chat-glue.js';
 import { install as installServing } from './explore/serving.js';
 import { install as installBasketGlue } from './explore/basket-glue.js';
 import { install as installChiaGlue } from './explore/chia-glue.js';
+import { install as installSweetGlue } from './explore/sweet-glue.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 Object.assign(inn, { track, genieFetch, getPass });   // wa-split: libs
-Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes, sweetSwapHtml, themeNow, fromBook, setAnswer });   // wa-split: main's functions the modules call
+Object.assign(inn, { lookTo, record, introduce, fitDock, showDialog, hideDialog, openWeather, chooseWeather, endCheckinOffer, countAtom, maybeOfferTell, emptyRoomLine, renderTheme, renderNotes, themeNow, fromBook, setAnswer });   // wa-split: main's functions the modules call
 
 const params = new URLSearchParams(location.search);
 // ?ai=1 uses the live Worker with a visitor pass; ?ai=<url> calls that URL directly (local testing)
@@ -1351,8 +1352,8 @@ function touch(id) {
     goRoom(obj.go, obj.arrive_yaw);
   } else if (obj.type === 'dial') {
     openDial();
-  } else if (SWEET_TOOLS[obj.tool] && state.room === 'sweet-spells') {
-    SWEET_TOOLS[obj.tool]();                                  // Sweet Spells' cabinet, spell books and lectern (sweet-spells.js)
+  } else if (inn.SWEET_TOOLS[obj.tool] && state.room === 'sweet-spells') {
+    inn.SWEET_TOOLS[obj.tool]();                                  // Sweet Spells' cabinet, spell books and lectern (sweet-spells.js)
   } else if (inn.CHIA_TOOLS[obj.tool] && state.room === 'chiapothecary') {
     inn.CHIA_TOOLS[obj.tool]();                                   // the Chiapothecary's flasks, Mix, fridge and drawers (chia-mix.js)
   } else if (obj.type === 'submit' && obj.tool === 'generate' && CAST_ROOMS[homeOf(state.room)]) {
@@ -1451,19 +1452,7 @@ installBasketGlue(inn);   // write-outs, the basket's checkout, cook mode, the l
 // 23 Oct; Nicole, 24 Oct: all of them). Sweet Spells' sheets, the star chart and the Mix always do.
 const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood']; inn.EVERY_WAY_KEEPS = EVERY_WAY_KEEPS;
 installChiaGlue(inn);   // the Chiapothecary: the Mix, its tools and a jar's own buttons
-// ---------- Sweet Spells (explore/sweet-spells.js, rooms-views.md Stage B): the cabinet asks how sweet, the spell books the
-// cravings, the lectern's Occasions book what it's for (suggesting servings and time only where the check-in hasn't answered)
-const sweet = createSweetSheets({
-  visit, lines: LINES, track, sound,
-  beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
-  say: t => { inn.say(t, [], true); inn.holdLine(); inn.scheduleNavigate(); },
-  // With the check-in in, its own setter (the same tag and store); before it, just the store
-  answer: (k, v) => {
-    if (typeof setAnswer === 'function') setAnswer(k, v, { from: 'occasion', quiet: true });
-    else { visit.set(k, v); track('tell_set', { kind: k, from: 'occasion' }); }
-  },
-}); inn.sweet = sweet;
-const SWEET_TOOLS = { 'level-up': () => sweet.open('sweet'), flavour: () => sweet.open('cravings'), occasion: () => sweet.open('occasion') };
+installSweetGlue(inn);   // Sweet Spells: its sheets, tools and the swap-the-sugar lines
 // ---------- The centrepieces (hotspot plan B1): Sweet Spells' spell table, Cuddlecore's pot and Flourish's Lay the Table put
 // this room's best idea for the visitor in the basket and open the checkout with it ticked (Stage 1); written out, it's one of
 // today's 3 and the object glows while she writes. Written already: it opens free. At the cap: an honest line, and the leaflet
@@ -1563,21 +1552,6 @@ function fortune(obj, noteLine) {
   } });
   return true;
 }
-// The swap-the-sugar lines on a Sweet Spells recipe page, when the visitor's sweetener differs from the recipe's (read from the
-// atom: a page's snapshot doesn't carry sweetener or added_sugar)
-function sweetSwapHtml(rec) {
-  if (rec.room !== 'sweet-spells') return '';
-  return `<div class="bk-swapslot" data-id="${esc(rec.id)}">${sweetSwapInner(rec.id)}</div>`;
-}
-function sweetSwapInner(id) {
-  const xs = swapLines(sweet.data, atomsById[id] || {}, { sweetness: visit.get('sweetness'), sweeteners: visit.get('sweeteners'), dietary: visit.get('dietary') });
-  return xs.length ? `<div class="bk-swap"><h4>${esc(sweet.data.swap.title)}</h4>${xs.map(x => `<p>${esc(x)}</p>`).join('')}</div>` : '';
-}
-// Low-FODMAP chosen on the page itself (Anything to avoid?): the swap line follows, without redrawing the page's diet chips
-addEventListener('wa-visit-state', e => {
-  if (!['dietary', 'sweetness', 'sweeteners', null].includes(e.detail.key)) return;
-  document.querySelectorAll('.bk-swapslot').forEach(el => { el.innerHTML = sweetSwapInner(el.dataset.id); });
-});
 // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
 // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
 const T = LINES.tell || {}; inn.T = T;
@@ -1739,7 +1713,7 @@ const tell = createTell({
   energyLabel: () => world.energies?.[visit.get('energy')]?.label || '',
 }); inn.tell = tell;
 const tagsUI = createTags({ el: inn.chatUI.tags, visit, world, kitchenLines: LINES.kitchen || {}, choose: { energy: id => chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
-  chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(sweet.data, (k, src) => sweet.open(k, src)) });
+  chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(inn.sweet.data, (k, src) => inn.sweet.open(k, src)) });
 
 // ---------- the visit's theme (explore/theme.js): the Ideas column's caption on desktop, a line in the chat on phones,
 // the book's "This visit" page and the hallway notice board, once something's been kept
@@ -1823,7 +1797,7 @@ const TOLD = { energy: v => world.energies?.[v] && (world.energies[v].told || TO
                cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
                country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
                kitchen: v => kitchenPicks(v).length && `${LINES.kitchen?.visit_row || 'Your kitchen'}: ${kitchenPicks(v)[0] === NO_COOKING ? kitchenWords(v, LINES.kitchen)[0] : listOf(kitchenWords(v, LINES.kitchen))}.`,
-               time: v => toldLine(CW, 'time', v), servings: v => toldLine(CW, 'servings', v), confidence: v => toldLine(CW, 'confidence', v), ...sweetTold(sweet.data) };
+               time: v => toldLine(CW, 'time', v), servings: v => toldLine(CW, 'servings', v), confidence: v => toldLine(CW, 'confidence', v), ...sweetTold(inn.sweet.data) };
 const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet' };
 const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 function renderTold() {
@@ -1831,7 +1805,7 @@ function renderTold() {
   $('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${esc(k)}" aria-label="Forget this: ${esc(text)}">forget</button></li>`).join('')
     : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
   $('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
-  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? sweet.open('sweet', 'book') : tell.open(b.dataset.change, 'book'))));
+  $('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : tell.open(b.dataset.change, 'book'))));
   $('told').querySelector('[data-menu]')?.addEventListener('click', fromBook(() => tell.openMenu('book')));
 }
 // A sheet opened from inside the book waits for the book's step back in history: otherwise that late step lands on the
