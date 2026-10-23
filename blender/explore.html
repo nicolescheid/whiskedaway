@@ -1893,15 +1893,10 @@ for (const k of book.list()) if (!k.full && !writer.written(k.id)) { const { kep
 const cook = createCook({ written: id => writer.written(id), writer, sound, track, say: t => say(t, [], true), lines: { ...LINES.cook, shopping_list: LINES.book?.shopping_list },
   // The list opens over the recipe cook mode was started from, once cook mode's step back in history has gone (or the
   // list's own step would be the one popped, and back would skip it)
-  isKept: id => book.has(id), onList: (rec, stepped) => {
+  isKept: id => book.has(id), onList: rec => {
     track('list_open');
     shopList.set(rec.id, true, 'cook');                         // the recipe being cooked goes on the list
-    const go = () => bookView.open('list', { from: 'cook' });
-    if (!stepped) return go();
-    let ran = false;
-    const once = () => { if (!ran) { ran = true; go(); } };
-    addEventListener('popstate', () => setTimeout(once), { once: true });
-    setTimeout(once, 400);
+    layers.afterBack(() => bookView.open('list', { from: 'cook' }));   // once cook mode's step back has landed (layers.js)
   } });
 // The shopping list (explore/list.js): the written recipes the visitor picks, summed, the pantry set aside, in their shopping words
 const shopList = createList({ title: LINES.book?.shopping_list, lines: LINES.book || {}, book, written: id => writer.written(id), pantry: () => pantryNow().items, synonyms: () => SYNONYMS,
@@ -1983,18 +1978,7 @@ function bestHere() {
 // An idea's page in the book: its own page if kept, else a loose page (Keep, Cook this, the write-out)
 // A sheet the visitor opened while she wrote (Check in, Tell Gemma, the Mix, Sweet Spells' sheets, cook mode): what the cast
 // opens waits until it's closed and its history step back has gone, or the book would cover it and leave it inert (Nicole's phone)
-const sheetOpen = () => tell.isOpen || chia.isOpen || sweet.isOpen || cook.isOpen || stars.isOpen;
-function whenFree(fn) {
-  if (!sheetOpen()) return fn();
-  const iv = setInterval(() => {
-    if (sheetOpen()) return;
-    clearInterval(iv);
-    let ran = false;
-    const go = () => { if (!ran) { ran = true; fn(); } };
-    addEventListener('popstate', () => setTimeout(go), { once: true });
-    setTimeout(go, 400);                                     // the step back may already have gone
-  }, 300);
-}
+const whenFree = fn => layers.whenFree(fn);                  // no layer open, and every step back landed (explore/layers.js)
 const ideaPage = (rec, from) => (book.has(rec.id) ? bookView.open(rec.id, { from }) : bookView.open(null, { from, loosePage: rec }));
 function cast(id) {
   const kind = CAST_ROOMS[homeOf(state.room)], C = LINES.cast || {};
@@ -2358,11 +2342,8 @@ function renderTold() {
 function fromBook(fn) {
   return () => {
     if (!bookView.isOpen) return fn();
-    let ran = false;
-    const go = () => { if (!ran) { ran = true; fn(); } };
-    addEventListener('popstate', () => setTimeout(go), { once: true });
-    setTimeout(go, 400);                                     // no step back to wait for (the book had no history entry)
     bookView.close();
+    layers.afterBack(fn);
   };
 }
 visit.subscribe(({ part, key, value }) => {

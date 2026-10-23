@@ -4,6 +4,7 @@
 // Inn's sound off: the visitor asked for it) and keeps ringing gently until tapped. The screen is kept awake where the browser allows.
 
 import { pageSwipe } from './swipe.js';
+import { layers } from './layers.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -79,7 +80,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     <div class="ck-peekbox" hidden></div>`;
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
-  let rec = null, steps = [], needs = [], at = 0, pushed = false, lock = null, opener = null, firstTimerSaid = false, lastTap = 0;
+  let rec = null, steps = [], needs = [], at = 0, layer = null, lock = null, opener = null, firstTimerSaid = false, lastTap = 0;
   const timers = [];                                               // { step, label, end, left (ms while paused), paused, rang, ringUntil, nextRing }
 
   const big = () => { try { return localStorage.getItem(BIG) === '1'; } catch { return false; } };
@@ -102,7 +103,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
         + (inflight ? `<div class="ck-offer"><p>${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
           : !hasFull && failedWrite ? `<p class="ck-quiet">${esc(L.failed)}</p>` : '')
         + (onList && isKept?.(rec.id) ? `<p><button class="bk-outline ck-list">${esc(lines.shopping_list || 'Shopping list')}</button></p>` : '');
-      step.querySelector('.ck-list')?.addEventListener('click', () => { const was = pushed; close(); onList(rec, was); });
+      step.querySelector('.ck-list')?.addEventListener('click', () => { close(); onList(rec); });
       step.classList.remove('long');
     } else {
       const last = at === n;
@@ -226,7 +227,6 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     if (k > 0.4) next(); else if (k < 0.25) back();
   });
   root.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); return close(); }
     if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
     if (e.key === 'ArrowLeft') { e.preventDefault(); back(); }
   });
@@ -286,10 +286,8 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     wake();                                                       // in the tap, as the mobile lead asked
     root.hidden = false;
     root.className = `cook${big() ? ' big' : ''}`;
-    // The book makes every other child of body inert while it's open, this layer included: lift that, or nothing in here responds (QA pass 5)
-    root.inert = false; delete root.dataset.bookInert;
-    for (const el of document.body.children) if (el !== root && !el.matches('script, .sr-only') && !el.inert) { el.inert = true; el.dataset.cookInert = '1'; }
-    if (!pushed) { history.pushState({ ...(history.state || {}), cook: true }, ''); pushed = true; }
+    // A layer (layers.js): over the book too, which goes inert under it; its history step, Escape, Tab and focus back
+    layer = layers.open({ el: root, name: 'cook', opener, close: how => close(how === 'back') });
     draw();
     $('.ck-next').focus({ preventScroll: true });
     track?.('cook_open', { from });
@@ -298,11 +296,11 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     if (root.hidden) return;
     root.hidden = true;
     $('.ck-peekbox').hidden = true;
-    for (const el of document.body.children) if (el.dataset.cookInert) { el.inert = false; delete el.dataset.cookInert; }
     try { lock?.release(); } catch { /* already released */ }
     lock = null;
-    if (pushed) { pushed = false; if (!viaBack && history.state?.cook) history.back(); }
-    if (opener?.isConnected) opener.focus({ preventScroll: true });
+    const L = layer;
+    layer = null;
+    layers.closed(L, { how: viaBack ? 'back' : 'self' });
   }
   function done() {
     track?.('cook_done');
@@ -310,7 +308,6 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     close();
     say?.(L.done);
   }
-  addEventListener('popstate', () => { if (pushed && !history.state?.cook) { pushed = false; close(true); } });
 
   /** A write-out landed (or failed) for a recipe: if it's the one open, reload its steps and timers, keeping the step */
   function refresh(id) {

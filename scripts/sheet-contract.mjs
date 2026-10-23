@@ -45,11 +45,7 @@ export const SHEETS = [
 
 // Today's known failures (23 Oct, main e7f5e48), reported but not failed. Key: "<sheet> <way>: <what>". The layer manager
 // (explore/layers.js, step 2) is meant to empty this list
-// Moved onto layers.js and off this list: the Inn dialogs' Back, inert and Escape (23 Oct)
-export const EXPECTED = {
-  // accessibility-review-1.md, section A (23 Oct)
-  'opener gone focus has somewhere to go': 'A5: no fallback when the opener has gone, so focus drops to body',
-};
+export const EXPECTED = {};   // empty since every sheet and dialog moved onto layers.js (23 Oct); new known failures go here, with a note
 
 // ---------- page helpers (run in the page)
 const PROBE = `(() => {
