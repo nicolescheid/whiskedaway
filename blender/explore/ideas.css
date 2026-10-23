@@ -78,7 +78,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 
 /* ---------- Gemma's chat: three sizes */
 .cw-sizes { display: flex; gap: 3px; }
-.cw-bar .cw-sizes button { width: 24px; height: 20px; font: 700 12px/1 'Quicksand'; }
+.cw-bar .cw-sizes button { width: 24px; height: 24px; font: 700 12px/1 'Quicksand'; }
 .cw-bar .cw-sizes button:disabled { opacity: .35; cursor: default; }
 .cw-grip { display: none; }
 .cw-line { display: none; }
@@ -349,7 +349,7 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bk-steps { margin: 0; padding-left: 22px; }
 .bk-steps li { margin: 0 0 6px; }
 .bk-tip { margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; background: rgba(139, 77, 92, .07); }
-@media (prefers-reduced-motion: reduce) { .bk-writing .dots { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bk-writing .dots, .ck-offer .dots { animation: none; } }
 
 /* "Take it out" is the page's one destructive action: a 44 px target */
 .bk-keepbar .link { position: relative; }

@@ -70,7 +70,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
     <p class="ck-dim small" hidden></p>
     <p class="ck-said" role="status" hidden></p>
     <div class="ck-timers" aria-label="Running timers"></div>
-    <div class="ck-progress"><span class="ck-dots" aria-hidden="true"></span><span class="ck-count" aria-live="polite"></span></div>
+    <div class="ck-progress"><span class="ck-dots" aria-hidden="true"></span><span class="ck-count"></span></div>
     <main class="ck-main">
       <section class="ck-step" aria-live="polite"></section>
       <aside class="ck-side"><div class="ck-timer-slot"></div><p class="ck-uses"></p>

@@ -80,7 +80,7 @@ export function patienceString({ ids, labels, value = null, name, unset, hint, o
   track.addEventListener('pointercancel', end);
   track.addEventListener('keydown', e => {
     const i = idxOf(value);
-    const move = { ArrowRight: i + 1, ArrowUp: i + 1, ArrowLeft: i - 1, ArrowDown: i - 1, Home: -1, End: ids.length - 1, Delete: -1, Backspace: -1 }[e.key];
+    const move = { ArrowRight: i + 1, ArrowUp: i + 1, ArrowLeft: i - 1, ArrowDown: i - 1, Home: 0, End: ids.length - 1, Delete: -1, Backspace: -1 }[e.key];
     if (move === undefined) return;
     e.preventDefault();
     apply(clamp(move, -1, ids.length - 1));

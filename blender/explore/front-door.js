@@ -203,6 +203,11 @@ export function frontDoor({ active, track }) {
     hint.className = 'fd-skip'; hint.textContent = 'Tap to skip'; hint.hidden = true; hint.setAttribute('aria-hidden', 'true');
     door.querySelector('.fd-first').appendChild(hint);
     const hintT = setTimeout(() => { hint.hidden = false; }, 2000);
+    // The same, for screen readers (the hint above is aria-hidden)
+    const say = document.createElement('p');
+    say.className = 'sr-only'; say.setAttribute('role', 'status');
+    door.querySelector('.fd-first').appendChild(say);
+    setTimeout(() => { say.textContent = 'The film is playing. Press Escape to skip it.'; }, 300);
     const failed = new Promise(r => v.addEventListener('error', r, { once: true }));
     let ok = true;
     try { await v.play(); } catch { ok = false; }
@@ -212,7 +217,7 @@ export function frontDoor({ active, track }) {
     ]) : 'failed';
     removeEventListener('keydown', onKey);
     button.removeEventListener('click', skip);
-    clearTimeout(hintT); hint.remove();
+    clearTimeout(hintT); hint.remove(); say.remove();
     if (how !== 'ended') { hush(); v.pause(); await showHall(); }
   }
 

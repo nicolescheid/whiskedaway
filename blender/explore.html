@@ -138,7 +138,7 @@
   .spot { position: fixed; transform: translate(-6px, -50%); border: 0; background: none; padding: 0;
           display: flex; align-items: center; gap: 8px; z-index: 5; }
   .spot .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(244, 239, 228, 0.7);
-               box-shadow: 0 0 0 3px rgba(244, 239, 228, 0.18); transition: all .4s; flex: none; }
+               box-shadow: 0 0 0 3px rgba(244, 239, 228, 0.18), 0 0 0 4px rgba(44, 36, 22, .45); transition: all .4s; flex: none; }
   .spot .name { background: var(--parchment-90); border: 1px solid var(--line); border-radius: 999px;
                 padding: 5px 12px; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.25);
                 opacity: 0; transform: translateX(-4px); transition: all .25s; pointer-events: none;
@@ -153,6 +153,7 @@
   @keyframes spot-cast { 50% { box-shadow: 0 0 0 8px rgba(244, 239, 228, .35), 0 0 18px 6px rgba(255, 214, 140, .55); } }
   @media (prefers-reduced-motion: reduce) { .spot.casting .dot { animation: none; box-shadow: 0 0 14px 4px rgba(255, 214, 140, .55); } }
   .spot.ambient .dot { width: 9px; height: 9px; }
+  .spot.ambient::before { inset: -8px; }   /* 25 px to tap (2.5.8) */
   .spot.revealed .dot { background: var(--amber-glow); width: 14px; height: 14px; animation: glow 1.8s ease-in-out infinite; }
   .spot.revealed .name { border-color: var(--amber); }
   .spot.revealed .name::before { content: '✦ '; color: var(--amber); }
@@ -172,7 +173,7 @@
   .mode { font-size: 12px; color: var(--parchment); opacity: .85; }
 
   /* Panels */
-  .panel { position: fixed; top: 56px; left: calc(16px + env(safe-area-inset-left, 0px)); width: min(320px, calc(100vw - 32px)); max-height: calc(100vh - 220px); overflow: auto;
+  .panel { position: fixed; top: 56px; left: calc(16px + env(safe-area-inset-left, 0px)); width: min(320px, calc(100vw - 32px)); max-height: max(40vh, calc(100vh - 220px)); overflow: auto;
            background: var(--parchment-90); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; z-index: 19;
            box-shadow: 0 10px 30px rgba(0,0,0,.3); display: none; }
   .panel.open { display: block; }
@@ -556,11 +557,11 @@
 <div class="bar">
   <p class="room-title" id="room-title">Cuddlecore</p>   <!-- not a heading: the page has one h1, on the front door -->
   <a class="chip" id="btn-inn" href="/?door=1"><span class="long">Front door</span><span class="short">Door</span></a>
-  <button class="chip" id="btn-map" aria-expanded="false">Map</button>
+  <button class="chip" id="btn-map" aria-expanded="false" aria-controls="map">Map</button>
   <button class="chip" id="btn-book" aria-haspopup="dialog" aria-expanded="false"><span class="long">Your basket</span><span class="short">Basket</span><span class="badge" hidden></span></button>   <!-- the basket's (ideas fly here) -->
   <button class="chip" id="btn-mybook" aria-haspopup="dialog" aria-expanded="false"><span class="long">My recipe book</span><span class="short">Book</span><span class="badge" hidden></span></button>
   <button class="chip bell" id="btn-bell" aria-label="Ring for Gemma: welcome and help" aria-haspopup="dialog"><img src="explore/assets/front-door/bell.webp" alt=""></button>
-  <button class="chip speaker" id="btn-sound" aria-pressed="false" aria-label="Sound off. Turn the Inn's sounds on" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg></button>
+  <button class="chip speaker" id="btn-sound" aria-pressed="false" aria-label="Sound" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg></button>
 </div>
 
 <aside class="panel" id="map" aria-label="Map">
@@ -1138,7 +1139,8 @@ function buildHotspots() {
     // Dials and candles show their name on hover only: a row of them would crowd the view
     el.className = `spot ${obj.type === 'ambient' ? 'ambient' : obj.type === 'dial' || obj.type === 'energy' ? '' : 'is-tool'} ${obj.type}`;
     el.innerHTML = `<span class="dot"></span><span class="name">${esc(obj.label)}${obj.blurb ? `<span class="blurb">${esc(obj.blurb)}</span>` : ''}</span>`;
-    el.setAttribute('aria-label', obj.blurb ? `${obj.label}: ${obj.blurb}` : obj.label);
+    const hname = obj.map || obj.label;   // the Map's name, so the three dials aren't all "The dial" (a11y review 1, B4)
+    el.setAttribute('aria-label', obj.blurb ? `${hname}: ${obj.blurb}` : hname);
     el.addEventListener('click', e => { e.stopPropagation(); touch(id); });
     document.body.appendChild(el);
     return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
@@ -1593,7 +1595,6 @@ function say(text, fork = [], brief = false) {
 const soundLabel = () => {
   $('cw-sound').textContent = sound.on ? 'Sound: on' : 'Sound: off';
   $('btn-sound').setAttribute('aria-pressed', String(sound.on));
-  $('btn-sound').setAttribute('aria-label', sound.on ? "Sound on. Turn the Inn's sounds off" : "Sound off. Turn the Inn's sounds on");
 };
 $('cw-sound').onclick = $('btn-sound').onclick = () => sound.toggle();
 addEventListener('wa-sound', soundLabel);

@@ -20,7 +20,7 @@ export function createChat({ win, track, onSize }) {
   bar.insertAdjacentHTML('afterbegin', '<span class="cw-grip" aria-hidden="true"></span>');
   const btns = document.createElement('span');
   btns.className = 'cw-sizes';
-  btns.innerHTML = `<button class="cw-less" aria-label="Less of Gemma's chat"><span aria-hidden="true">▾</span></button><button class="cw-more" aria-label="More of Gemma's chat"><span aria-hidden="true">▴</span></button>`;
+  btns.innerHTML = `<button class="cw-less" aria-label="Show less of Gemma's chat"><span aria-hidden="true">▾</span></button><button class="cw-more" aria-label="More of Gemma's chat"><span aria-hidden="true">▴</span></button>`;
   bar.appendChild(btns);
   const less = btns.querySelector('.cw-less'), more = btns.querySelector('.cw-more');
   // Her newest line (the Line size), with "…more" when it runs past three lines
@@ -29,6 +29,13 @@ export function createChat({ win, track, onSize }) {
   line.innerHTML = '<p class="cw-said" aria-hidden="true"></p><button class="cw-moreline" hidden>…more</button>';
   body.insertBefore(line, log);
   const said = line.querySelector('.cw-said'), moreLine = line.querySelector('.cw-moreline');
+  // Her newest line for screen readers at Line size: the log is display:none there and the line above is aria-hidden
+  // (in Short and Full the log itself announces, so this stays quiet)
+  const live = document.createElement('div');
+  live.className = 'sr-only';
+  live.setAttribute('aria-live', 'polite');
+  live.setAttribute('aria-atomic', 'true');
+  win.appendChild(live);
   // The visitor's tags (tags.js fills it)
   const tags = document.createElement('div');
   tags.className = 'cw-tags';
@@ -52,6 +59,7 @@ export function createChat({ win, track, onSize }) {
   let saved = {};
   try { saved = JSON.parse(sessionStorage.getItem(KEY) || '{}') || {}; } catch { /* storage blocked */ }
   let chosen = SIZES.includes(saved.chosen) ? saved.chosen : null;   // what the visitor picked, for the visit
+  let called = false;
   let size = null, asking = false, held = false, prevSize = null, lastGemma = null, pinned = true, fullPushed = false;
   const persist = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ chosen })); } catch { /* storage blocked */ } };
   const base = () => chosen || 'line';
@@ -71,10 +79,8 @@ export function createChat({ win, track, onSize }) {
     document.body.dataset.chat = size;
     const i = SIZES.indexOf(size);
     less.setAttribute('aria-disabled', String(i === 0));   // still focusable, so focus isn't lost at Line
-    more.setAttribute('aria-label', size === 'full' ? "Gemma's chat: full. Back to her newest line" : `More of Gemma's chat (now ${size})`);
-    less.setAttribute('aria-label', `Less of Gemma's chat (now ${size})`);
+    more.setAttribute('aria-label', size === 'full' ? "Gemma's chat: full. Back to her newest line" : "Show more of Gemma's chat");
     more.setAttribute('aria-expanded', String(size !== 'line'));
-    win.setAttribute('aria-label', `Chat with Gemma: ${size}`);
     sheet(size === 'full' && screenMode() !== 'desk');
     if (size !== 'line') requestAnimationFrame(() => { if (pinned) log.scrollTop = log.scrollHeight; });
     if (was && !reduce()) win.animate([{ opacity: 0.85 }, { opacity: 1 }], { duration: 180 });
@@ -169,6 +175,8 @@ export function createChat({ win, track, onSize }) {
     const g = [...messages].reverse().find(m => m.who === 'gemma');
     const text = g?.text || '';
     const isNew = text && g !== lastGemma && lastGemma !== null;
+    if (text && g !== lastGemma && called && size === 'line') live.textContent = text;   // not the first call: that is the restored log
+    called = true;
     lastGemma = g || null;
     said.textContent = text;
     said.scrollTop = 0;
