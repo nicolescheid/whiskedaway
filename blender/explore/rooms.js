@@ -8,7 +8,7 @@ import { visit } from './visit-state.js';
 import { sound } from './sound.js';
 
 export function install(inn) {
-  Object.assign(inn, { askHemisphere, countAtom, record, goRoom, introduce, setRoomText, openDial });   // its functions, for the other modules (hoisted)
+  Object.assign(inn, { askHemisphere, countAtom, record, goRoom, introduce, setRoomText, openDial, wanderRoom });   // its functions, for the other modules (hoisted)
   // ---------- time of day: the device's own, unless the visitor pushed the clock
   const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
   // With today's local sunrise and sunset (from /local-weather), it's night from half an hour after sunset until half an
@@ -156,17 +156,19 @@ export function install(inn) {
     inn.$('roomdial').querySelectorAll('button').forEach(b => b.onclick = () => turnDial(opts[+b.dataset.i]));
     inn.showDialog('dialdlg');
   }
+  // The room the wander leans to (the room identities, content stage 3): juices, smoothies, quick breakfasts and comfort are
+  // Cuddlecore's; whole-food meals and busy hands Flourish's; anything sweet, frozen or baked Sweet Spells'; the pudding
+  // superpowers the Chiapothecary's. A wander that hasn't said much yet opens Cuddlecore. The Inn map's ✦ walks there
+  function wanderRoom() {
+    const lean = localNavigate(navTrail(), inn.world, { ...inn.steer(), dismissed: inn.state.dismissed }).cluster;
+    const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
+    return STAR_OVERRIDES[lean] || inn.world.clusters[lean]?.room || 'cuddlecore';
+  }
   function turnDial(o) {
     inn.hideDialog('dialdlg');
     record({ kind: 'dial', id: o.star ? 'the star' : o.label });
     inn.track('dial_turn', { dial_choice: o.star ? 'star' : o.go || 'closed' });
-    // The star opens the room whose reading the wander leans to (the room identities, content stage 3): juices, smoothies,
-    // quick breakfasts and comfort are Cuddlecore's; whole-food meals and busy hands Flourish's; anything sweet, frozen or
-    // baked Sweet Spells'; the pudding superpowers the Chiapothecary's. A wander that hasn't said much yet opens Cuddlecore.
-    const lean = localNavigate(navTrail(), inn.world, { ...inn.steer(), dismissed: inn.state.dismissed }).cluster;
-    const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
-    const starGo = STAR_OVERRIDES[lean] || inn.world.clusters[lean]?.room || 'cuddlecore';
-    const go = o.star ? starGo : o.go;
+    const go = o.star ? wanderRoom() : o.go;
     if (!go) return inn.say((inn.LINES.dial?.closed || '{label} is only engraved on the dial. There is no door behind it.').replace('{label}', o.label), [], true);
     if (go === inn.state.room) return inn.say("You're already here.", [], true);
     const starSays = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',

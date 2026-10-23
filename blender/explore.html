@@ -401,6 +401,7 @@
 </style>
 <!-- Ideas, Gemma's chat sizes, the visitor's tags and the recipe book (recipe-book-ux.md v4) -->
 <link rel="stylesheet" href="explore/ideas.css">
+<link rel="stylesheet" href="explore/inn-map.css">
 </head>
 <body>
 <!-- The front door: shown at / on a new visit (or with ?door=1), never with ?room= -->
@@ -558,7 +559,7 @@
 <div class="bar">
   <p class="room-title" id="room-title">Cuddlecore</p>   <!-- not a heading: the page has one h1, on the front door -->
   <a class="chip" id="btn-inn" href="/?door=1"><span class="long">Front door</span><span class="short">Door</span></a>
-  <button class="chip" id="btn-map" aria-expanded="false" aria-controls="map">Map</button>
+  <button class="chip" id="btn-map" aria-expanded="false" aria-controls="inn-map"><svg class="map-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</button>
   <button class="chip" id="btn-book" aria-haspopup="dialog" aria-expanded="false"><span class="long">Your basket</span><span class="short">Basket</span><span class="badge" hidden></span></button>   <!-- the basket's (ideas fly here) -->
   <button class="chip" id="btn-mybook" aria-haspopup="dialog" aria-expanded="false"><span class="long">My recipe book</span><span class="short">Book</span><span class="badge" hidden></span></button>
   <button class="chip bell" id="btn-bell" aria-label="Ring for Gemma: welcome and help" aria-haspopup="dialog"><img src="explore/assets/front-door/bell.webp" alt=""></button>
@@ -698,6 +699,7 @@ import { install as installCandles } from './explore/candles.js';
 import { install as installArrival } from './explore/arrival.js';
 import { install as installPanorama } from './explore/panorama.js';
 import { install as installRooms } from './explore/rooms.js';
+import { install as installInnMap } from './explore/inn-map.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 
 const params = new URLSearchParams(location.search);
@@ -705,7 +707,7 @@ const params = new URLSearchParams(location.search);
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES, innMapData] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
   fetch('explore/hallway-world.json').then(r => r.json()),
@@ -719,6 +721,7 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
+  fetch('explore/inn-map.json').then(r => r.json()).catch(() => ({})),        // the Inn map's plan (content and art)
 ]);
 // Tell Gemma's lists live in gemma-lines.json `tell` (content editor): cuisines by name, countries {code, name, example}
 useTellData({ cuisines: (LINES.tell?.cuisines || []).map(n => ({ id: n, label: n })),
@@ -860,7 +863,7 @@ delete state.sound;                        // sound on or off lives in explore/s
 const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood'];
 // What every module reads from the bootstrap (docs/code-map.md): the data, the visit, and a few helpers
 Object.assign(inn, { track, genieFetch, getPass, GENIE_URL, stepBucket,
-                      AI, chiaWorld, sweetWorld, flWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
+                      AI, chiaWorld, sweetWorld, flWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, innMapData, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
 installTouch(inn);   // what a tap on a hotspot does: each module registers its own (inn.onTouch)
 installRooms(inn);   // time, season, the trail, moving between rooms, the hallway dial
 installPanorama(inn);   // the 360° view: renderer, weathers, clocks, hotspots, looking around, Erwina
@@ -873,6 +876,7 @@ installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortu
 installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary and kitchen sheets, the tags
 installThemeGlue(inn);   // the visit's theme caption and the hallway notice board
 installPanels(inn);   // the bar, the Map panel, the notebook and Forget
+installInnMap(inn);   // the Inn map: the bar's Map button, a plan of the Inn, and In this room
 installInnDialogs(inn);   // the Inn's small dialogs: barometer, clock, seasons wheel, tool cards
 installCandles(inn);   // the energy candles: the lit flame and chooseEnergy
 installArrival(inn);   // arrival: the check-in offer in the foyer, the weather question, settle

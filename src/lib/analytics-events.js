@@ -25,7 +25,9 @@ export const EVENTS = {
   atom_dismiss: ['atom', 'atom_kind', 'nav_mode', 'room', 'method', 'undone'],     // sent when the 5 s undo closes; undone: yes or no
   pass_ready: ['load_ms'],                 // the visitor pass arrived (bucketed seconds since the page loaded); visits that never get one send nothing, see docs/analytics-plan.md
   nav_fallback: ['reason'],                // reason: timeout, rate_limited, bot_check, upstream (the Worker answered 5xx), rejected (4xx), network, error
-  map_open: ['room'],
+  map_open: ['room'],                     // the Inn map (the bar's Map button)
+  inn_map_go: ['from_room', 'room'],      // a room tapped on the Inn map
+  inn_map_star: ['room'],                 // the Inn map's ✦ Where my wander points
   notebook_open: ['room'],
   visit_forget: [],
   leave_to_inn: ['room', 'step'],         // "Front door": back out to the picture

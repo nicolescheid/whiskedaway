@@ -1,0 +1,28 @@
+{
+  "_about": "The Inn map (explore/inn-map.js): the ground floor, drawn in a 340 x 330 box. Content and art edit this file. go = the ROOMS key the room walks to; a room whose go isn't built yet shows its 'soon' line and can't be entered. Keep each line short (two lines of about 18 letters at 375 px). shape = [x, y, width, height]; upright: the name runs up the room; at = where the name sits, if not the middle.",
+  "title": "The Inn",
+  "sub": "Tap a room to walk there.",
+  "here": "You're here",
+  "star": "Where my wander points",
+  "inThisRoom": "In this room",
+  "inThisRoomSub": "Everything in this room, always in the same place.",
+  "tools": "Tools",
+  "things": "In the room",
+  "rooms": [
+    { "go": "cuddlecore", "label": "Cuddlecore", "line": "Gentle food, little effort", "shape": [8, 30, 110, 98] },
+    { "go": "hall-middle", "label": "Hallway", "shape": [118, 30, 34, 196], "upright": true },
+    { "go": "flourish", "label": "Flourish", "line": "Proper whole-food meals", "shape": [152, 30, 104, 98] },
+    { "go": "sweet-spells", "label": "Sweet Spells", "line": "For the sweet tooth", "shape": [8, 128, 110, 98] },
+    { "go": "chiapothecary", "label": "Chiapothecary", "line": "Your chia routine", "shape": [152, 128, 104, 98] },
+    { "go": "glasshouse", "label": "Conservatory", "shape": [256, 62, 40, 164], "upright": true },
+    { "go": "hall-entrance", "label": "The foyer", "line": "Check in at the desk", "shape": [8, 226, 248, 78], "at": [176, 258] },
+    { "go": "garden-patio", "label": "Garden", "soon": "Coming soon", "soonSay": "The garden isn't open yet. Soon.", "shape": [300, 26, 36, 278], "upright": true }
+  ],
+  "stairs": { "shape": [16, 234, 70, 62], "label": "Upstairs", "line": "not open yet", "say": "Upstairs isn't open yet, love. Not today." },
+  "outside": [
+    { "kind": "sea", "shape": [0, 0, 340, 22], "label": "The sea" },
+    { "kind": "green", "shape": [256, 22, 84, 286] },
+    { "kind": "lane", "shape": [0, 308, 340, 22], "label": "Village lane" }
+  ],
+  "doors": [[116, 70, 4, 18], [150, 70, 4, 18], [116, 168, 4, 18], [150, 168, 4, 18], [254, 168, 4, 18], [254, 38, 4, 16], [160, 302, 24, 4], [126, 224, 18, 4]]
+}

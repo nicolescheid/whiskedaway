@@ -38,6 +38,7 @@ export const SHEETS = [
     fresh: true },   // her reading brings the star's idea out: in a used tab it's been served, so its page opens in the book (by design)
   { id: 'basket', root: '#basket-sheet', ways: { done: null, x: '.bk-close' }, open: { chip: '#btn-book' }, answer: null },
   { id: 'book', root: '#book', ways: { done: null, x: '.bk-close' }, open: { chip: '#btn-mybook' }, answer: null },
+  { id: 'inn map', root: '#inn-map', ways: { done: null, x: '.tl-x' }, open: { chip: '#btn-map' }, answer: null },
   { id: 'barometer', ...DIALOG('#weather', '#weather-ok'), open: { room: 'cuddlecore', spot: 'barometer' }, answer: 'weather' },
   { id: 'clock', ...DIALOG('#clockdlg', '#clock-ok'), open: { room: 'cuddlecore', spot: 'clock' }, answer: 'press' },
   { id: 'hall dial', ...DIALOG('#dialdlg', '#dial-ok'), open: { room: 'hall-middle', spot: 'dial-cuddlecore' }, answer: null },
@@ -289,7 +290,7 @@ async function closeBy(page, S, way) {
 
 // ---------- journeys: [check, ok, note] rows
 const clean = async page => {
-  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet']
+  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map']
     .filter(s => { const el = document.querySelector(s); return el && !el.hidden; }) })`);
   return [['nothing open', !r.open.length, r.open.join(', ')], ['inert', !r.inert.length, r.inert.join(', ')]];
 };
@@ -300,6 +301,37 @@ const sameEntry = async (page, want) => { const now = await page.evaluate(() => 
 const back = async page => { await page.evaluate(() => history.back()); await page.waitForTimeout(700); return page.evaluate(() => !!window.__explore).catch(() => false); };
 
 const JOURNEYS = [
+  // The Inn map: tap a room and you walk there, with the map closed and its history step gone
+  { id: 'inn map walks to a room', async run(page) {
+    const out = [];
+    await page.evaluate(async () => { const ex = window.__explore; if (ex.state.room !== 'cuddlecore') { ex.goRoom('cuddlecore'); await new Promise(r => setTimeout(r, 500)); } });
+    const entry = await marked(page);
+    await page.click('#btn-map');
+    out.push(['the Inn map opens', await shown(page, '#inn-map')]);
+    out.push(['the room is inert behind it', await page.evaluate(() => !!document.getElementById('stage')?.closest('[inert]'))]);
+    await page.click('#inn-map .im-room[data-go="flourish"]');
+    await page.waitForTimeout(1500);                          // its step back, "In you go." and the 0.7 s walk
+    const room = await page.evaluate(() => window.__explore.state.room);
+    out.push(['walked to Flourish', room === 'flourish', `in ${room}`]);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
+  // "In this room": a hotspot from the list closes the map and turns the view to it
+  { id: 'inn map: in this room', async run(page) {
+    const out = [], entry = await marked(page);
+    await page.click('#btn-map');
+    await shown(page, '#inn-map');
+    const id = await page.evaluate(() => { const b = document.querySelector('#inn-map .im-list button'); b?.click(); return b?.textContent || ''; });
+    await page.waitForTimeout(1200);
+    out.push(['a hotspot in the list', !!id]);
+    out.push(['the view turned to it', await page.evaluate(() => window.__explore.state.trail.at(-1)?.kind === 'map')]);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
   { id: 'the chat at Full (phones)', async run(page) {
     if ((await page.evaluate(() => innerWidth)) >= 720) return [];   // on a computer Full is just a bigger window, not a sheet
     const out = [], entry = await marked(page);

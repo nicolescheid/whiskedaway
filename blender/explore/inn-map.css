@@ -1,0 +1,41 @@
+/* The Inn map (explore/inn-map.js): a sheet like Tell Gemma's (.tell, ideas.css), opening on the left on a computer where the
+   old Map list was, from the bottom on phones. The plan is an SVG in the Inn's parchment and berry. */
+.im-sheet.desk .tl-box { left: calc(16px + env(safe-area-inset-left, 0px)); top: calc(var(--bar-h, 56px) + 8px); transform: none;
+  width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - var(--bar-h, 56px) - 24px); border-radius: 16px; }
+.im-sheet.phone .tl-box { max-height: 88dvh; }
+.im-sheet .tl-body { padding-bottom: 16px; }
+.im-sub { margin: 0 0 6px; }
+.im-plan { margin: 0 -6px; }
+.im-svg { display: block; width: 100%; height: auto; font-family: 'Quicksand', system-ui, sans-serif; }
+.im-svg .im-sea { fill: #b9cdd3; }
+.im-svg .im-lane { fill: #ddd3c2; }
+.im-svg .im-green { fill: #cfdcbc; }
+.im-svg .im-edge { font-size: 10px; fill: #5c5040; letter-spacing: .04em; }
+.im-svg .im-shape { fill: #fbf7ee; stroke: #6b5a46; stroke-width: 1.4; }
+.im-svg .im-door { fill: #f4efe4; }
+.im-svg .im-name { font: 600 13.5px 'Crimson Pro', Georgia, serif; fill: var(--ink); }
+.im-svg .im-line { font-size: 10.5px; fill: var(--ink-soft); }
+.im-svg .im-line.strong { font-weight: 600; }
+.im-svg .im-here { font-size: 10px; font-weight: 600; fill: var(--berry); }
+.im-svg .im-dot { fill: var(--berry); }
+.im-svg .im-room { cursor: pointer; outline: none; }
+.im-svg .im-room:hover .im-shape, .im-svg .im-room:focus-visible .im-shape { fill: #f3e4e2; }
+.im-svg .im-room:focus-visible .im-shape, .im-svg .im-stairs:focus-visible .im-shape { stroke: var(--berry); stroke-width: 3; }
+.im-svg .im-room.here .im-shape { fill: #f1dcdc; stroke: var(--berry); stroke-width: 2.2; }
+.im-svg .im-room.soon { cursor: default; }
+.im-svg .im-room.soon .im-shape { fill: #e3ead6; stroke-dasharray: 4 3; }
+.im-svg .im-stairs { cursor: pointer; outline: none; }
+.im-svg .im-stairs .im-shape { fill: #efe7d8; stroke-width: 1; }
+.im-svg .im-stairs line { stroke: #b9a98f; stroke-width: 1; }
+.im-said { min-height: 1.4em; margin: 6px 0 0; color: var(--berry); }
+.im-star { display: block; width: 100%; min-height: 44px; margin: 4px 0 6px; border: 1px solid var(--line); border-radius: 999px;
+  background: none; color: var(--berry); font: 600 14px 'Quicksand', system-ui, sans-serif; }
+.im-star:hover { background: rgba(139, 77, 92, .08); }
+.im-h { margin: 18px 0 2px; font: 600 14px 'Quicksand', system-ui, sans-serif; color: var(--berry); text-transform: uppercase; letter-spacing: .06em; }
+.im-sub2 { margin: 12px 0 4px; font: 600 12px 'Quicksand', system-ui, sans-serif; color: var(--ink-soft); }
+.im-list { list-style: none; margin: 0; padding: 0; }
+.im-list button { width: 100%; min-height: 44px; text-align: left; background: none; border: 0; padding: 6px 4px; border-radius: 8px; font-size: 14px; color: var(--ink); }
+.im-list button:hover { background: rgba(139, 77, 92, .08); }
+.im-list .blurb { display: block; font-size: 12px; color: var(--ink-soft); }
+.chip .map-ico { width: 15px; height: 15px; margin: 0 5px -2px 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) { .im-sheet .tl-box { transition: none; } }
