@@ -5,6 +5,34 @@
 // when art adds renders, regenerate it with
 //   node scripts/pano-times-list.mjs
 export const EXISTS = new Set([
+  'chiapothecary_pano_change_dawn',
+  'chiapothecary_pano_change_dusk',
+  'chiapothecary_pano_fair_dawn',
+  'chiapothecary_pano_fair_dusk',
+  'cuddlecore_pano_change_dawn',
+  'cuddlecore_pano_change_dusk',
+  'cuddlecore_pano_fair_dawn',
+  'cuddlecore_pano_fair_dusk',
+  'flourish_pano_fair_dawn',
+  'flourish_pano_fair_dusk',
+  'garden_pano_camp_fair_dawn',
+  'garden_pano_camp_fair_dusk',
+  'garden_pano_patio_fair_dawn',
+  'garden_pano_patio_fair_dusk',
+  'glasshouse_pano_spring_fair_dawn',
+  'glasshouse_pano_spring_fair_dusk',
+  'hallway_pano_entrance_change_dawn',
+  'hallway_pano_entrance_change_dusk',
+  'hallway_pano_entrance_fair_dawn',
+  'hallway_pano_entrance_fair_dusk',
+  'hallway_pano_middle_change_dawn',
+  'hallway_pano_middle_change_dusk',
+  'hallway_pano_middle_fair_dawn',
+  'hallway_pano_middle_fair_dusk',
+  'sweet_spells_pano_change_dawn',
+  'sweet_spells_pano_change_dusk',
+  'sweet_spells_pano_fair_dawn',
+  'sweet_spells_pano_fair_dusk',
 ]);
 const FILE = /(?:^|\/)([a-z_]+_pano_(?:[a-z-]+_)?(?:rain|fair|change|stormy|very-dry)_(?:dawn|dusk))(?:_preview|_4k)?\.jpg$/;
 
