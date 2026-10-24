@@ -28,6 +28,7 @@ from whisked import (ART, ASSETS, GLAZED_DOOR_H, GLAZED_DOOR_W, OUT, area_light,
                      glimpse_plate, image_mat, look, mat, meshes_of, model, old_glass, pano_camera, pbr, plate_target,
                      point_light, sage_paint, sphere, srgb, text, use_gpu, window_glass)
 
+import timeofday  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
@@ -80,6 +81,16 @@ if NIGHT:
               tint=(0.55, 0.62, 1.0), clamp=None, sun=0.0, exposure=0.8, lamps=True)
     if WEATHER not in ("rain", "stormy"):
         WX.update(wet=0.0, roof_wet=S["wet"])
+# Dawn and dusk: --dawn / --dusk (timeofday.py), like night but warm: the garden plate regraded, a low warm sky,
+# the lamps lit, and a low sun from the lane end (dawn, east) or the sea end (dusk, west) along the house.
+TIME = "dawn" if "--dawn" in ARGS and not GLIMPSE else "dusk" if "--dusk" in ARGS and not GLIMPSE else None
+if TIME:
+    _t = timeofday.TIMES[TIME]
+    _day = WX["plate"]
+    WX.update(plate=timeofday.plate(os.path.join(PACK, _day), os.path.join(PACK, NIGHT_VIEWS[SEASON]), TIME, f"glasshouse_{SEASON}_{WEATHER}"),
+              strength=0.9, sat=1.0, mul=None, haze=0.0, hdri=OVERCAST, sky=_t["sky"] * 1.2, tint=tuple(c ** 2 for c in _t["tint"]), clamp=None,
+              exposure=WX["exposure"] + 0.3, lamps=True, sun=3.0 if WEATHER in ("fair", "very-dry") else 0.0,
+              sun_el=7.0, sun_col=_t["sun"][0], sun_az=-90 if TIME == "dawn" else 90)
 ORDER = ["spring", "summer", "autumn", "winter"]   # the wheel, clockwise from the top plate
 
 W, L = 1.8, 6.3              # inside: Inn wall to garden glass, lane end to sea end
@@ -1472,12 +1483,13 @@ def build():
     wnt.links.new(sky_col, wnt.nodes["Background"].inputs["Color"])
     wnt.nodes["Background"].inputs["Strength"].default_value = WX["sky"]
     if WX["sun"]:                                                   # sunny intervals: a softer sun from the same place
-        el = math.radians(sun_turn.elevation)
-        to_sun = Vector((math.cos(el) * math.cos(math.radians(SUN_AZ)), math.cos(el) * math.sin(math.radians(SUN_AZ)), math.sin(el)))
+        el = math.radians(WX.get("sun_el", sun_turn.elevation))
+        saz = math.radians(WX.get("sun_az", SUN_AZ))
+        to_sun = Vector((math.cos(el) * math.cos(saz), math.cos(el) * math.sin(saz), math.sin(el)))
         sd = bpy.data.lights.new("sun_soft", "SUN")
         sd.energy = WX["sun"]
         sd.angle = math.radians(4)
-        sd.color = (1.0, 0.95, 0.86)
+        sd.color = WX.get("sun_col", (1.0, 0.95, 0.86))
         so = bpy.data.objects.new("sun_soft", sd)
         so.rotation_euler = Vector((0, 0, -1)).rotation_difference(-to_sun).to_euler()
         scene.collection.objects.link(so)
@@ -1624,7 +1636,7 @@ def main():
         print(f"[whisked] rendered the glimpse for the Chiapothecary, {SEASON}")
         return
     pano_camera(scene, CAM, CAM_YAW)
-    scene.render.filepath = os.path.join(OUT, f"glasshouse_pano_{SEASON}_{WEATHER}{'_night' if NIGHT else ''}"
+    scene.render.filepath = os.path.join(OUT, f"glasshouse_pano_{SEASON}_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}"
                                               f"{'_preview' if PREVIEW else ''}.jpg")
     bpy.ops.render.render(write_still=True)
     if BOTH and not PREVIEW:

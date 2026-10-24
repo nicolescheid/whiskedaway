@@ -30,6 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from whisked import (ASSETS, ART, HERE, OUT, bbox, box_span, center_of, cyl, look, mat, meshes_of, model,  # noqa: E402
                      pano_camera, pbr, point_light, retint, sphere, srgb, use_gpu)
 
+import timeofday  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 QUICK = "--quick" in ARGS                 # a small, noisy look for checking the layout, never shipped
@@ -92,7 +93,20 @@ PLATES = {"dry": "13-outside-spring.png", "wet": "20-outside-spring-wet.png", "n
 if NIGHT:
     # Late night: the same weather after dark, the string lights and the tent's lantern lit, embers in the oven
     WX.update(plate="night", strength=0.9, sat=1.0, mul=None, haze=0.0, sky=0.04, exposure=0.9)
-LIT = NIGHT                                # string lights, lantern, the Inn's windows
+# Dawn and dusk: --dawn / --dusk (timeofday.py). The garden is the sunny (north) side; the lane is east, the sea west.
+# Dawn: a low sun from the north-east over the lane hedge. Dusk: from the north-west over the sea. The sky is the
+# overcast one turned down and warm (no high sun in it), the far view regraded, the string lights and lantern lit.
+TIME = "dawn" if "--dawn" in ARGS else "dusk" if "--dusk" in ARGS else None
+TOD_TINT = (1, 1, 1, 1)
+TOD_SUN = None
+if TIME and not NIGHT:
+    _t = timeofday.TIMES[TIME]
+    PLATES["tod"] = timeofday.plate(os.path.join(GH_PACK, PLATES["dry"]), os.path.join(GH_PACK, PLATES["night"]), TIME, "garden_spring")
+    WX.update(plate="tod", strength=0.9, sat=1.0, mul=None, haze=0.0, hdri=OVERCAST, sky=_t["sky"] * 1.3, exposure=0.5,
+              wet=0.0, rain=0, fire=True, shut=False)
+    TOD_TINT = (*(c ** 2 for c in _t["tint"]), 1)
+    TOD_SUN = (_t["sun"][0], _t["sun"][1], -45 if TIME == "dawn" else 45)
+LIT = NIGHT or bool(TIME)                  # string lights, lantern, the Inn's windows
 
 HOTSPOTS = {}
 
@@ -357,7 +371,7 @@ def build():
     rnd = random.Random(23)
     wet = WX["wet"]
 
-    room_args = [f"--weather={WEATHER}"] + (["--night"] if NIGHT else [])
+    room_args = [f"--weather={WEATHER}"] + (["--night"] if NIGHT else [f"--{TIME}"] if TIME else [])
     fl = room_blend("flourish_build.py", room_args)
     gh = room_blend("glasshouse_build.py", room_args + [f"--season={SEASON}"])
     # Flourish: the room, its stable door, the barbecue on its plinth; not its window views, its garden wall (built
@@ -369,7 +383,7 @@ def build():
     # (--room=glasshouse keeps its Inn wall, landing window and the shop seen through the glazed door)
     append_room(gh, ("garden_view", "ground_") if ROOM == "glasshouse"
                 else ("garden_view", "ground_", "inn_wall_", "landing_window", "shop_glimpse", "still_"), (GH_DX, GH_DY, 0))
-    if NIGHT:
+    if NIGHT or TIME:
         # the barbecue's smoke wisp catches the string lights and reads as a little white ghost: no smoke after dark
         for o in bpy.data.objects:
             if o.name.startswith("app_bbq_smoke"):
@@ -1082,7 +1096,7 @@ def light_and_render(scene):
     tint = wnt.nodes.new("ShaderNodeMix")
     tint.data_type, tint.blend_type = "RGBA", "MULTIPLY"
     tint.inputs["Factor"].default_value = 1.0
-    tint.inputs[7].default_value = (0.55, 0.62, 1.0, 1) if NIGHT else (1, 1, 1, 1)
+    tint.inputs[7].default_value = (0.55, 0.62, 1.0, 1) if NIGHT else TOD_TINT
     wnt.links.new(env.outputs["Color"], tint.inputs[6])
     wnt.links.new(tint.outputs[2], wnt.nodes["Background"].inputs["Color"])
     wnt.nodes["Background"].inputs["Strength"].default_value = WX["sky"]
@@ -1094,6 +1108,15 @@ def light_and_render(scene):
         e, a = math.radians(35), math.radians(120)
         mo.rotation_euler = Vector((-math.cos(e) * math.cos(a), -math.cos(e) * math.sin(a), -math.sin(e))).to_track_quat("-Z", "Y").to_euler()
         scene.collection.objects.link(mo)
+
+    if TOD_SUN and not ROOM:
+        col, elev, azim = TOD_SUN
+        sun = bpy.data.lights.new("tod_sun", "SUN")
+        sun.energy, sun.color, sun.angle = 6.0, col, math.radians(1.5)
+        so = bpy.data.objects.new("tod_sun", sun)
+        e, a = math.radians(elev), math.radians(azim)
+        so.rotation_euler = Vector((-math.cos(e) * math.cos(a), -math.cos(e) * math.sin(a), -math.sin(e))).to_track_quat("-Z", "Y").to_euler()
+        scene.collection.objects.link(so)
 
     scene.render.engine = "CYCLES"
     use_gpu(scene)
@@ -1164,9 +1187,9 @@ def render_room(scene):
     stem = "flourish_pano" if ROOM == "flourish" else f"glasshouse_pano_{SEASON}"
     for suffix, res, samples in sizes:
         scene.render.resolution_x, scene.render.resolution_y, scene.cycles.samples = res, res // 2, samples
-        scene.render.filepath = os.path.join(OUT, f"{stem}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
+        scene.render.filepath = os.path.join(OUT, f"{stem}_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}{suffix}.jpg")
         bpy.ops.render.render(write_still=True)
-        print(f"[whisked] rendered {ROOM} {WEATHER}{' night' if NIGHT else ''}{suffix}")
+        print(f"[whisked] rendered {ROOM} {WEATHER}{' night' if NIGHT else ' ' + TIME if TIME else ''}{suffix}")
     print("[whisked] done")
 
 
@@ -1189,9 +1212,9 @@ def main():
         pano_camera(scene, *STOPS[stop])
         for suffix, res, samples in sizes:
             scene.render.resolution_x, scene.render.resolution_y, scene.cycles.samples = res, res // 2, samples
-            scene.render.filepath = os.path.join(OUT, f"garden_pano_{stop}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
+            scene.render.filepath = os.path.join(OUT, f"garden_pano_{stop}_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}{suffix}.jpg")
             bpy.ops.render.render(write_still=True)
-            print(f"[whisked] rendered {stop} {WEATHER}{' night' if NIGHT else ''}{suffix}")
+            print(f"[whisked] rendered {stop} {WEATHER}{' night' if NIGHT else ' ' + TIME if TIME else ''}{suffix}")
     print("[whisked] done")
 
 
