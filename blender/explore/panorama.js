@@ -152,7 +152,7 @@ export function install(inn) {
     THREE, scene, camera, stage, render, ROOMS: inn.ROOMS, dir, look, saveData, panoTier, sound, track: inn.track,
     room: () => inn.state.room, weather: () => inn.state.weather, isNight: inn.isNight,
     pick: kind => inn.pickLine(`erwina.${kind}`, inn.LINES.erwina?.[kind]?.length ? inn.LINES.erwina[kind] : ERWINA_LINES[kind]),
-    say: t => inn.say(t, [], true),
+    say: t => inn.say(t, [], true, { keep: true }),   // she never takes away the question Gemma has just asked
     notes: () => inn.renderNotes(),
     chatCover: () => document.body.dataset.chat === 'full' ? inn.$('chatwin').getBoundingClientRect() : null,   // under the open chat she isn't being looked at
   });

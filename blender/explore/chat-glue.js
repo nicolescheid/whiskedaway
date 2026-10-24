@@ -69,7 +69,8 @@ export function install(inn) {
   function thinking(on) { aiThinking = on; showTyping(); }
   let sayTimer;
   let sayPending = null;
-  function say(text, fork = [], brief = false) {
+  // keep: an aside that answers nothing (Erwina passing) leaves an open question's chips where they are (the tour's offer)
+  function say(text, fork = [], brief = false, { keep = false } = {}) {
     // Locally Gemma takes a beat to "type"; with the AI on, the typing indicator already covered the wait
     clearTimeout(sayTimer);
     sayPending?.();                       // a line still waiting (an object's own moment) goes out first, never replaced
@@ -77,7 +78,7 @@ export function install(inn) {
       sayPending = null;
       typing(false);
       chatLine('gemma', text);
-      setChips(fork.filter(c => inn.world.clusters[c]).map(c => ({ label: inn.world.clusters[c].label.replace(/^./, x => x.toUpperCase()), do: ['choose', c] })));
+      if (!keep || fork.length) setChips(fork.filter(c => inn.world.clusters[c]).map(c => ({ label: inn.world.clusters[c].label.replace(/^./, x => x.toUpperCase()), do: ['choose', c] })));
     };
     if (inn.AI && !brief) return post();
     typing(true);
