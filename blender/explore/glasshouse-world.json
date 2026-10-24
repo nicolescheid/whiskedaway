@@ -9,7 +9,7 @@
     "gh-chiapothecary-door": { "label": "Into the Chiapothecary", "blurb": "Your chia routine", "ref": "the Chiapothecary door", "type": "door", "go": "chiapothecary", "arrive_yaw": -15,
                                "themes": [], "always_visible": true },
     "garden-door": { "label": "The garden door", "ref": "the garden door", "type": "door", "themes": [],
-                     "closed": "The garden's for another day. You can see most of it from here." },
+                     "go": "garden-patio" },
     "plant-lavender": { "ideas": ["lavender-shortbread"], "label": "Lavender", "ref": "the lavender", "type": "ambient", "themes": ["calm", "evening", "tea", "rest"],
                         "moment": "Run your hand over it and you'll smell it for hours." },
     "plant-rosemary": { "ideas": ["rosemary-potatoes"], "label": "Rosemary", "ref": "the rosemary", "type": "ambient", "themes": ["herbs", "warming", "hearty", "cooking"],

@@ -5,7 +5,7 @@
   "intro": "This is the garden. Everything out here gets cooked outside: the barbecue, the pizza oven, and the fire down at the camp.",
   "stops": {
     "garden-patio": { "stop": "patio", "title": "The garden", "where": "On the patio", "yaw": -15, "pitch": -8 },
-    "garden-camp": { "stop": "camp", "title": "The garden", "where": "At the camp", "yaw": -10, "pitch": -8 }
+    "garden-camp": { "stop": "camp", "title": "The garden", "where": "At the camp", "yaw": -10, "pitch": -14 }
   },
   "walks": {
     "garden-patio": { "gd-to-camp": { "yaw": 0, "pitch": -7 } }

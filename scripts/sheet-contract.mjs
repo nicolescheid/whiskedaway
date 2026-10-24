@@ -31,6 +31,8 @@ export const SHEETS = [
   { id: 'how you like it', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'feels-tray' }, answer: 'press', keep: ALL },
   { id: 'little cage', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'cage' }, answer: null, keep: ALL },
   { id: 'kitchen', ...TELL, open: { room: 'cuddlecore', spot: 'kettle' }, answer: 'press' },
+  { id: 'garden kitchen', ...TELL, open: { room: 'garden-patio', spot: 'gd-bbq' }, answer: 'press',
+    fresh: true },   // once Your kitchen has a barbecue, the garden's barbecue brings out an idea instead (explore/garden.js)
   { id: 'check-in', ...TELL, open: { room: 'hall-entrance', spot: 'checkin-desk' }, answer: 'press' },
   { id: 'chia mood', root: '#chia-mix', ways: { done: '.mx-done', x: '.tl-x' }, open: { room: 'chiapothecary', spot: 'flasks' }, answer: 'press', keep: ALL },
   { id: 'the Mix', root: '#chia-mix', ways: { done: null, x: '.tl-x' }, open: { room: 'chiapothecary', spot: 'pudding-jars' }, answer: 'press', keep: ALL },
@@ -303,7 +305,37 @@ const marked = async page => page.evaluate(() => { history.replaceState({ ...(hi
 const sameEntry = async (page, want) => { const now = await page.evaluate(() => JSON.stringify(history.state)); return [now === want, now === want ? '' : `on ${now}, want ${want}`]; };
 const back = async page => { await page.evaluate(() => history.back()); await page.waitForTimeout(700); return page.evaluate(() => !!window.__explore).catch(() => false); };
 
+// A hotspot pressed as a keyboard visitor would: the view turned to it, focused, Enter
+const press = async (page, spot) => {
+  await page.evaluate(async id => { const ex = window.__explore, s = ex.spot(id); ex.lookTo(s.yaw, s.pitch); await new Promise(r => setTimeout(r, 100)); document.querySelector(`.spot[data-spot="${id}"]`).focus(); }, spot);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(700);
+  return page.evaluate(() => window.__explore.state.room);
+};
+
 const JOURNEYS = [
+  // The garden (24 Oct): out through Flourish's stable door to the patio, down to the camp and back, home through the
+  // stable door; and the Inn map walks there now it's built
+  { id: 'the garden walk', async run(page) {
+    const out = [];
+    await page.evaluate(async () => { const ex = window.__explore; if (ex.state.room !== 'flourish') { ex.goRoom('flourish'); await new Promise(r => setTimeout(r, 500)); } });
+    for (const [spot, want] of [['fl-back-door', 'garden-patio'], ['gd-to-camp', 'garden-camp'], ['gd-to-patio', 'garden-patio'], ['gd-flourish-door', 'flourish']]) {
+      const room = await press(page, spot);
+      out.push([`${spot} goes to ${want}`, room === want, `in ${room}`]);
+    }
+    const entry = await marked(page);
+    await page.click('#btn-map');
+    await shown(page, '#inn-map');
+    out.push(['the garden is open on the Inn map', await page.evaluate(() => { const b = document.querySelector('#inn-map .im-room[data-go="garden-patio"]'); return !!b && !/soon/i.test(b.className + b.textContent); })]);
+    await page.click('#inn-map .im-room[data-go="garden-patio"]');
+    await page.waitForTimeout(1500);
+    const room = await page.evaluate(() => window.__explore.state.room);
+    out.push(['the Inn map walks to the garden', room === 'garden-patio', `in ${room}`]);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
   // The Inn map: tap a room and you walk there, with the map closed and its history step gone
   { id: 'inn map walks to a room', async run(page) {
     const out = [];

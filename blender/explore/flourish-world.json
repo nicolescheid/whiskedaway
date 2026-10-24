@@ -44,7 +44,7 @@
     "fl-window": { "label": "The sea", "ref": "the sea window", "type": "ambient", "themes": ["sunny", "fresh", "light"],
                    "moment": "The same bay you see from Cuddlecore, from the other side of the Inn.", "moments": ["The bay looks different from this side. Same water, though.", "I wash this window more than the others. Don't ask me why."] },
     "fl-back-door": { "label": "The garden door", "ref": "the garden door", "type": "door", "themes": [],
-                      "closed": "The kitchen garden's for another day. Breathe in, though. That's the rosemary." },
+                      "go": "garden-patio" },
     "fl-hall-door": { "label": "Into the hallway", "ref": "the door to the hallway", "type": "door", "go": "hall-middle", "arrive_yaw": 0, "themes": [] },
     "fl-barometer": { "label": "The weather", "map": "The barometer", "ref": "the barometer", "type": "weather", "tool": "weather", "themes": [] },
     "fl-clock": { "label": "The time", "map": "The clock", "ref": "the clock", "type": "time", "tool": "time", "themes": [] }
