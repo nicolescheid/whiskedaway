@@ -48,7 +48,7 @@ export function install(inn) {
   let layer = null;
 
   // Which room on the plan the visitor is in: a ROOMS key, or the plan room whose go it is (the hallway's two stops)
-  const here = () => inn.state.room;
+  const here = () => (inn.homeOf(inn.state.room) === 'garden' ? 'garden-patio' : inn.state.room);   // the camp is in the garden too
   const built = r => !!inn.ROOMS[r.go];
 
   function el(name, attrs = {}, text) {

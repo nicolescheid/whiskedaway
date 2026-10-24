@@ -872,6 +872,8 @@ function buildUserMessage(payload) {
       chiapothecary: 'From the Chiapothecary: always a chia jar set ahead, overnight or for a few hours in the fridge. Give the setting time. '
         + 'Moods, not medicine: you may name what is in the jar (fibre, protein, vitamin C, caffeine in matcha) as plain facts, but never say what it does '
         + 'for energy, focus, mood, skin, gut, sleep or health.',
+      garden: 'From the garden: cooked outside, on the barbecue, in the pizza oven, in a camp oven or over a fire. Always give an indoor way too '
+        + '(oven, stovetop or grill, with its temperature and time), and a short, plain safety note where there is fire or hot metal.',
     };
     if (ROOM_RULES[payload.room]) parts.push(ROOM_RULES[payload.room]);
     // Mix an experiment (rooms-views.md): the visitor's own mood, base, flavour and topping; keep to them
