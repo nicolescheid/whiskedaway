@@ -36,11 +36,12 @@ export function install(inn) {
                  dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                  pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
                  foodMap: v => inn.foodMap.told(v),
+                 adventure: v => v && `${inn.LINES.foodMap?.dialTold || 'How far tonight'}: ${(inn.LINES.foodMap?.steps || {})[v] || ['', 'close to home', 'familiar, with a twist', 'a little further', 'further afield', 'somewhere new'][v] || v}.`,
                  country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
                  kitchen: v => kitchenPicks(v).length && `${inn.LINES.kitchen?.visit_row || 'Your kitchen'}: ${kitchenPicks(v)[0] === NO_COOKING ? kitchenWords(v, inn.LINES.kitchen)[0] : listOf(kitchenWords(v, inn.LINES.kitchen))}.`,
                  feels: v => inn.howYouLike.told(v), keepingOff: v => inn.howYouLike.toldJar(v),
                  time: v => toldLine(inn.CW, 'time', v), servings: v => toldLine(inn.CW, 'servings', v), confidence: v => toldLine(inn.CW, 'confidence', v), ...sweetTold(inn.sweet.data) };
-  const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', foodMap: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet', feels: 'feels', keepingOff: 'jar' };
+  const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', foodMap: 'map', adventure: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet', feels: 'feels', keepingOff: 'jar' };
   const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`); inn.listOf = listOf;
   function renderTold() {
     const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);

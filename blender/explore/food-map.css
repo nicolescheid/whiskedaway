@@ -25,3 +25,19 @@
 .fm-t { width: 44px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 16px; opacity: .5; }
 .fm-t[aria-pressed="true"] { opacity: 1; border: 2px solid var(--berry); background: #fbf3ee; }
 .fm-shop { margin-top: 10px; }
+/* The adventure dial: a brass gauge (the hallway's dials' colours) over five steps; unset, the needle rests up and dimmed */
+.fm-dial { margin: 10px 0 6px; text-align: center; }
+.fm-gauge { display: block; width: min(260px, 70%); margin: 0 auto -4px; }
+.fm-arc { fill: none; stroke: #b08d48; stroke-width: 6; stroke-linecap: round; }
+.fm-notch { fill: #fffaf0; stroke: #8a6a2c; stroke-width: 2; }
+.fm-notch.on { fill: #b08d48; }
+.fm-needle { transform-origin: 100px 100px; transition: transform .4s ease; }
+.fm-needle line { stroke: var(--berry); stroke-width: 4; stroke-linecap: round; }
+.fm-needle circle { fill: #8a6a2c; }
+.fm-dial.unset .fm-needle { opacity: .35; }
+.fm-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.fm-steps button { position: relative; min-height: 44px; padding: 2px 4px; border-radius: 10px; border: 1px solid var(--berry); background: #fff; color: var(--berry);
+  font: 500 12px/1.2 'Quicksand'; }
+.fm-steps button[aria-pressed="true"] { background: var(--berry); color: var(--parchment); }
+.fm-unset { margin-top: 6px; min-height: 32px; }
+@media (prefers-reduced-motion: reduce) { .fm-needle { transition: none; } }

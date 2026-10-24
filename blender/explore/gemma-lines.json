@@ -514,7 +514,7 @@
     "_why": "Reasons for the navigator's 'Because you …' line, when a pantry or cuisine match is the strongest reason.",
     "objects": {
       "pantry-cabinet": "Tell me what's in the cupboard, and I'll cook around it.",
-      "locale-map": "Pick a few places to cook from, and where you do your shopping.",
+      "locale-map": "My old map. Pin where you're from, colour in the food you love, and tell me how far to go.",
       "dietary-shelf": "Tell me what to steer clear of, and I'll keep to it.",
       "symptom-jars": "Tell me how you're feeling today, and I'll cook to suit."
     },

@@ -23,6 +23,9 @@
  *   book:  { now: [snapshot], before: [snapshot] }   this visit's keeps (×3 on their themes) and older ones (×1)
  *   about: { pantry: [...], useUp, cuisines: [...], synonyms }   a bonus per key ingredient they have (+2 each, max +4; doubled
  *                                                                with "use these up first"), and for a chosen cuisine (+2)
+ *          adventure: { step, familiar, near }        the food map's adventure dial (1 close to home .. 5 somewhere new): a score
+ *                                                     on cards with a `cuisines` tag (see ADVENTURE), never a filter
+ *          heritage: [...]                            the family pins' cuisines, for the reason ("you grew up with Italian cooking")
  *          timeLimit, confidence                      the check-in's "how long have you got" (minutes, or none for no rush) and
  *                                                     cooking confidence ('starting' | 'happy' | 'confident'): see TIME_OVER, CONFIDENCE
  * Dietary needs are a hard filter: the page leaves clashing atoms out (they arrive as served).
@@ -44,6 +47,22 @@ const ROOM_LEAN = 4;          // an atom from the room the visitor is in (if it 
 const AI_HOME = 30, AI_AWAY = 10;
 const KEEP_NOW = 3, KEEP_BEFORE = 1, KEEP_BEFORE_MAX = 10;   // keeps weigh more than touches and don't fade; older ones only nudge
 const PANTRY_EACH = 2, PANTRY_MAX = 4, CUISINE = 2;
+// The food map's adventure dial: what each step adds to a card from a familiar, near or new cuisine, and to a card content marks as a
+// mild way in (mild_way_in) from a cuisine that isn't familiar. A score, never a filter: untagged cards get 0, and anything the page left
+// out (the cage, the bell jar, dietary needs: they arrive as `served`) stays out whatever the dial says
+const ADVENTURE = { 1: { familiar: 4, fresh: -2 }, 2: { familiar: 3, near: 2 }, 3: { near: 4, mild: 2 }, 4: { fresh: 3, near: 1, mild: 2 }, 5: { fresh: 4, familiar: -2 } };
+/** Where a card sits for the dial: 'familiar', 'near', 'fresh' (a cuisine not pinned, coloured in or next door), or null untagged */
+export function adventureKind(a, adv) {
+  const cs = a.cuisines || [];
+  if (!cs.length) return null;
+  return cs.some(c => adv.familiar?.includes(c)) ? 'familiar' : cs.some(c => adv.near?.includes(c)) ? 'near' : 'fresh';
+}
+export function adventureScore(a, adv) {
+  const w = adv?.step && ADVENTURE[adv.step];
+  const kind = w && adventureKind(a, adv);
+  if (!kind) return 0;
+  return (w[kind] || 0) + (w.mild && a.mild_way_in && kind !== 'familiar' ? w.mild : 0);
+}
 // How long they've got is soft, never a filter: an idea whose active `time` runs over loses up to 6 (3 per 100% over), so a
 // visitor with 15 minutes still gets ideas, just the quick ones first. `wait` is hands-off and doesn't count (an overnight chia is quick)
 const TIME_OVER = 3, TIME_OVER_MAX = 6;
@@ -226,7 +245,7 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
     .filter(a => awayOk || !room || a.room === room || !world.atoms.some(x => x.room === room))   // an away idea only while none is out
     .map(a => ({ a, s: score(a.themes, weights) - (lowSpoons > 3 ? a.spoons * 1.5 : 0) + spoonBias * a.spoons
                        + Math.min(PANTRY_MAX * (about.useUp ? 2 : 1), pantryHits(a, about.pantry, about.synonyms).length * PANTRY_EACH * (about.useUp ? 2 : 1))
-                       + (cuisineHit(a, about.cuisines) ? CUISINE : 0)
+                       + (cuisineHit(a, about.cuisines) ? CUISINE : 0) + adventureScore(a, about.adventure)
                        - timePenalty(a, about.timeLimit) + (CONFIDENCE[about.confidence] || 0) * a.spoons }))
     .map(x => (room && x.a.room === room && x.s > 0 ? { ...x, s: x.s + ROOM_LEAN } : x))   // a.room: from the room's *-world.json
     .map(x => ({ ...x, s: x.s + Math.min(MOOD_MAX, x.a.themes.filter(t => moodThemes.includes(t)).length * MOOD_EACH) }))
@@ -242,12 +261,17 @@ export function localNavigate(trail, world, { served = [], dismissed = [], room 
       const hits = pantryHits(a, about.pantry, about.synonyms);
       const kept = keptReason(a, book);
       const cuisine = !hits.length && !kept && (about.cuisines || []).find(c => cuisineHit(a, [c]));
-      const W = about.why || {};                                   // gemma-lines.json tell.why: "you've got {a} to use", "you chose {a} on the map"
+      const W = about.why || {};
+      // The dial's reason, where it's the one that brought the card: a short trip (step 3), or somewhere new (4 and 5)
+      const adv = about.adventure?.step >= 3 && !hits.length && !kept && !cuisine && adventureKind(a, about.adventure);
+      const advWhy = adv === 'near' && about.adventure.step === 3 ? (W.adventureNear || 'you fancied a short trip')
+        : adv === 'fresh' && about.adventure.step >= 4 ? (W.adventureNew || 'you asked to go somewhere new') : null;                                   // gemma-lines.json tell.why: "you've got {a} to use", "you chose {a} on the map"
       const fillWhy = (t, a) => t.replace(/^you've/, "'ve").replace(/^you're/, "'re").replace(/^you\s+/, '').replace(/\{[apc]\}/, a);   // "Because you" comes first
       // A short time is a reason when the idea fits inside it ("Because you've got about 15 minutes")
-      const quick = !hits.length && !kept && !cuisine && about.timeLimit && about.timeLimit <= 30 && a.time <= about.timeLimit && about.timeWords;
+      const quick = !hits.length && !kept && !cuisine && !advWhy && about.timeLimit && about.timeLimit <= 30 && a.time <= about.timeLimit && about.timeWords;
       const first = [...(hits.length ? [fillWhy(W.pantry || "you've got {p} to use", listJoin(hits.slice(0, 2)))] : []), ...(kept ? [kept] : []),
-                     ...(cuisine ? [fillWhy(W.cuisine || 'you chose {c} on the map', about.cuisineLabel?.(cuisine) || cuisine)] : []),
+                     ...(cuisine ? [fillWhy((about.heritage || []).includes(cuisine) ? W.heritage || 'you grew up with {c} cooking' : W.cuisine || 'you chose {c} on the map', about.cuisineLabel?.(cuisine) || cuisine)] : []),
+                     ...(advWhy ? [fillWhy(advWhy, '')] : []),
                      ...(quick ? [/^you/.test(about.timeWords) ? fillWhy(about.timeWords, '') : fillWhy(W.time || "you've got {t}", about.timeWords).replace('{t}', about.timeWords)] : [])];
       const { why, context } = reasonsFor(a.themes, trail, world, a.spoons, first.slice(0, 2));
       const parts = shareVerbs(why.slice(0, 2));

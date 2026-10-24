@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { localNavigate, roomClusters, listJoin } from '../blender/explore/navigator.js';
+import { localNavigate, roomClusters, listJoin, adventureScore, adventureKind } from '../blender/explore/navigator.js';
 
 const read = f => JSON.parse(readFileSync(new URL(`../blender/explore/${f}-world.json`, import.meta.url), 'utf8'));
 const homes = ['cuddlecore', 'flourish', 'sweet-spells', 'chiapothecary'].map(read);
@@ -97,4 +97,38 @@ test('no added sugar lowers sugary atoms but leaves them in', () => {
   // With every unsweetened atom already out, the sugary ones still come
   const served = world.atoms.filter(a => a.room === 'sweet-spells' && !a.added_sugar).map(a => a.id);
   assert.ok(localNavigate(trail, world, { room: 'sweet-spells', noAddedSugar: true, served }).serve.length > 0);
+});
+
+// ---------- the food map's adventure dial: a score, never a filter, and the cage always wins
+const ADV = step => ({ step, familiar: ['Italian'], near: ['Greek', 'French'] });
+const card = (cuisines, more = {}) => ({ id: 'x', cuisines, themes: [], ...more });
+
+test('adventure: familiar, near, new and untagged', () => {
+  assert.equal(adventureKind(card(['Italian']), ADV(1)), 'familiar');
+  assert.equal(adventureKind(card(['Greek']), ADV(1)), 'near');
+  assert.equal(adventureKind(card(['Korean']), ADV(1)), 'fresh');
+  assert.equal(adventureKind(card([]), ADV(1)), null);
+  assert.equal(adventureScore(card([]), ADV(5)), 0, 'an untagged card is never moved by the dial');
+  assert.equal(adventureScore(card(['Korean']), null), 0, 'unset: the Inn serves as it always has');
+});
+
+test('adventure: close to home leans familiar, somewhere new leans new, mild ways in help the middle steps', () => {
+  assert.ok(adventureScore(card(['Italian']), ADV(1)) > adventureScore(card(['Korean']), ADV(1)));
+  assert.ok(adventureScore(card(['Korean']), ADV(5)) > adventureScore(card(['Italian']), ADV(5)));
+  assert.ok(adventureScore(card(['Greek']), ADV(3)) > adventureScore(card(['Italian']), ADV(3)));
+  assert.ok(adventureScore(card(['Korean'], { mild_way_in: 'Korean' }), ADV(4)) > adventureScore(card(['Korean']), ADV(4)));
+});
+
+test('adventure: the cage always wins (a card the page left out is never served, whatever the dial)', () => {
+  const wander = [{ kind: 'weather', id: 'rain' }, { kind: 'time', id: Object.keys(world.times)[0] }];
+  for (const step of [1, 2, 3, 4, 5]) {
+    const free = localNavigate(wander, world, { about: { adventure: { step, familiar: [], near: [] } } });
+    assert.ok(free.serve.length, `step ${step} serves something to cage`);
+    for (const s of free.serve) {
+      // Cage the very card the dial picked: it must not come back, and nothing caged may take its place
+      const caged = [s.atom, ...world.atoms.filter(a => (a.cuisines || []).length).map(a => a.id)];
+      const r = localNavigate(wander, world, { served: caged, about: { adventure: { step, familiar: [], near: [] } } });
+      for (const t of r.serve) assert.ok(!caged.includes(t.atom), `step ${step}: ${t.atom} was caged`);
+    }
+  }
 });
