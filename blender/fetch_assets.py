@@ -25,12 +25,17 @@ MODELS = ["pot_enamel_01", "painted_wooden_cabinet", "wooden_bookshelf_worn", "A
           "watering_can_metal_01", "garden_gloves_01", "nettle_plant", "dandelion_01",
           # Flourish (Oct 2026): four mismatched chairs, the phonograph's side table, herb pots, bowls
           "WoodenChair_01", "dining_chair_02", "painted_wooden_chair_01", "gallinera_chair", "side_table_01",
-          "planter_pot_clay", "wooden_bowl_02"]
+          "planter_pot_clay", "wooden_bowl_02",
+          # The garden (Oct 2026): the camp's fire pit and lantern, the patio table, a water butt, grass and planting
+          "stone_fire_pit", "Lantern_01", "outdoor_table_chair_set_01", "Barrel_01", "folding_wooden_stool",
+          "grass_medium_01", "shrub_01", "shrub_02", "shrub_03", "shrub_04", "fern_02", "tree_small_02"]
 # Models whose glTF download is broken on Poly Haven (the .bin is short), fetched as .blend instead
 BLEND_MODELS = ["vintage_grandfather_clock_01"]
 TEXTURES = ["old_wooden_floor_01", "white_plaster_rough_01", "medieval_wood", "wood_table_worn",
             "rough_linen", "knitted_fleece",
-            "terracotta_floor_tiles", "worn_planks", "forest_ground_06", "gravel_floor_02"]
+            "terracotta_floor_tiles", "worn_planks", "forest_ground_06", "gravel_floor_02",
+            # The garden: dry-stone walls, the slate roof, the lime-washed Inn, the lawn, bed soil, the oven's brick arch
+            "stacked_stone_wall", "roof_slates_02", "plastered_stone_wall", "leafy_grass", "farm_soil", "brick_4"]
 # Glasshouse skies, by season: spring 38 deg sun, summer 48, autumn 28 misty, winter overcast
 HDRIS = ["kloofendal_overcast_puresky", "kloofendal_38d_partly_cloudy_puresky",
          "kloofendal_48d_partly_cloudy_puresky", "kloofendal_28d_misty_puresky"]
