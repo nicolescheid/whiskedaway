@@ -247,7 +247,7 @@ export function install(inn) {
   // ---------- the cage's overlay: what's skipped, drawn inside the cage like the candle flames (inn.spriteFrom, candles.js).
   // At the hotspot's `inside` point (art adds it with the render; until then the hotspot itself, 2.4 m away). Until the cage
   // is painted into the render, a wire cage is drawn too (CAGE_PAINTED, docs/art-brief-cuddlecore-tray.md)
-  const CAGE_PAINTED = false;
+  const CAGE_PAINTED = true;
   // Made on first use: spriteFrom is candles.js's, installed after this module
   let cageSprite = null;
   function drawCage(ids) {
