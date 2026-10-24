@@ -17,6 +17,7 @@ const OFFERED = 'wa-tour-offered';
 const STAND_IN = {
   offer: "First time at the Inn? I can show you round. It takes a minute.",
   yes: 'Yes, give me the tour',
+  started: 'This way, then.',
   no: "It's ok, I'll explore by myself",
   declined: "Right you are. Check in at the desk if you like. It helps me pick for you.",
   skipped: "Right you are. Ring the bell for the tour any time. Check in at the desk if you like.",
@@ -121,6 +122,7 @@ export function install(inn) {
     root.hidden = false;
     layer = layers.open({ el: root, name: 'tour', modal: false, close: how => end(how === 'outside' ? 'skip' : how) });
     inn.track('tour_start', { from: src });
+    inn.chatLine('gemma', T.started);                 // her chat moves on from the offer (its line would sit there all tour)
     go(0);
     if (!reduce()) $('.tr-card').animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 250, easing: 'ease-out' });
     $('.tr-next').focus({ preventScroll: true });

@@ -2057,6 +2057,7 @@
     "_about": "The first-visit tour (explore/tour.js, tour-plan.md): the offer after the door film, one line at each stop, and her lines when it's declined, skipped or ends at the desk. The chips (yes, no) are Nicole's words. Every line under 100 characters, no health claims.",
     "offer": "First time at the Inn? I can show you round. It takes a minute.",
     "yes": "Yes, give me the tour",
+    "started": "This way, then.",
     "no": "It's ok, I'll explore by myself",
     "declined": "Right you are. Check in at the desk if you like. It helps me pick for you.",
     "skipped": "Right you are. Ring the bell for the tour any time. Check in at the desk if you like.",

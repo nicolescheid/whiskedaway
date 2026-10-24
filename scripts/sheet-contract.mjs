@@ -333,6 +333,7 @@ const JOURNEYS = [
     const trail = await page.evaluate(() => window.__explore.state.trail.length);   // after the walk to the foyer, which is a real move
     out.push(['the room stays live behind it', await page.evaluate(() => !document.getElementById('stage')?.closest('[inert]'))]);
     out.push(['focus on Next', await page.evaluate(() => document.activeElement?.classList.contains('tr-next'))]);
+    out.push(['her chat moves on as it starts', await page.evaluate(() => { const ex = window.__explore; return [...ex.state.chat].reverse().find(m => m.who === 'gemma')?.text === (ex.lines.tour?.started || 'This way, then.'); })]);
     const rooms = [];
     for (let i = 0; i < 6; i++) { rooms.push(await page.evaluate(() => window.__explore.state.room)); await page.click('#tour .tr-next'); await page.waitForTimeout(500); }
     rooms.push(await page.evaluate(() => window.__explore.state.room));
