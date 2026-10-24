@@ -2060,6 +2060,18 @@
       ]
     }
   },
+  "howYouLikeIt": {
+    "_about": "Cuddlecore's tray, cage and bell jar (explore/how-you-like-it.js). The bell jar is framed as: the visitor has been told by their doctor or pharmacist to keep off something, and Gemma just keeps it out of the cooking. She never says why, names no drugs, gives no advice, and points to the pharmacist or doctor once (jarNote). Lines under 100 characters.",
+    "skipMany": "{x}. Kept out for you.",
+    "cageSub": "Kept out for you. Let any of it back in whenever you like.",
+    "jarSub": "Told by your doctor or pharmacist to keep off something? Tap it and I'll leave it out.",
+    "jarNote": "I can't give advice on this. Your pharmacist or doctor is the one to ask.",
+    "keepOff": "Keeping off",
+    "jarLine": "Right, I'll keep {x} out of the cooking.",
+    "jarCleared": "Nothing kept off, then.",
+    "jarTap": "Told to keep off something? Tap what it is and I'll leave it out of the cooking.",
+    "jar": { "aged-cheese": { "short": "aged cheese, cured meats" } }
+  },
   "tour": {
     "_about": "The first-visit tour (explore/tour.js, tour-plan.md): the offer after the door film, one line at each stop, and her lines when it's declined, skipped or ends at the desk. The chips (yes, no) are Nicole's words. Every line under 100 characters, no health claims.",
     "offer": "First time at the Inn? I can show you round. It takes a minute.",
@@ -2068,7 +2080,7 @@
     "no": "It's ok, I'll explore by myself",
     "declined": "Right you are. Check in at the desk if you like, and I can pick things that suit.",
     "skipped": "Right you are. Ring the bell for the tour any time. Check in at the desk if you like.",
-    "later": "Right you are. The desk's here whenever you want it.",
+    "later": "Right you are. Check in at the desk whenever you like, and I can pick things that suit.",
     "stops": {
       "cuddlecore": "Cuddlecore. For days you're not at your best: gentle food, little effort.",
       "flourish": "Flourish. Proper meals from whole foods, when you've a bit more time.",

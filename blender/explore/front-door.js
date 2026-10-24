@@ -62,8 +62,7 @@ export function frontDoor({ active, track }) {
             <li>Touch anything that glows. A door takes you through to the next room.</li>
             <li>The Map shows the whole Inn. Tap a room to go there, or the star to follow your wander.</li>
             <li>Open My recipe book and pick This visit to see what I've noticed. "Forget this visit" clears it.</li>
-            <li>"Front door" takes you back outside.</li>
-            <li>The speaker beside the bell turns the Inn's sounds on. They start off.</li>
+            <li>The speaker beside the bell turns the sounds on. "Front door" takes you back outside.</li>
           </ul>
           <p><a href="/?door=1#story">About the Inn</a>: what it is, where the weather comes from, and what's kept.</p>
         </div>

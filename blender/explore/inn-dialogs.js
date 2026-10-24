@@ -58,7 +58,7 @@ export function install(inn) {
   // ---------- clock
   function openClock() {
     const mine = inn.deviceTime();
-    inn.$('clock-text').textContent = `Where you are it's ${inn.world.times[mine].label.toLowerCase()}. Push the hands to whatever time you're cooking for.`;
+    inn.$('clock-text').textContent = `Where you are, it's ${inn.world.times[mine].label.toLowerCase()}. Push the hands to whatever time you're cooking for.`;
     renderClock();
     showDialog('clockdlg');
   }
@@ -95,7 +95,7 @@ export function install(inn) {
 
   // ---------- seasons wheel: the Conservatory opens in the visitor's season; the wheel shows any other
   function openSeasons() {
-    inn.$('season-text').textContent = `Where you are it's probably ${inn.seasonGuess}. Turn the wheel to see the Conservatory in any season.`;
+    inn.$('season-text').textContent = `Where you are, it's probably ${inn.seasonGuess}. Turn the wheel to see the Conservatory in any season.`;
     const opts = Object.entries(inn.world.seasons).map(([id, s]) => ({ id, label: s.label }))
       .concat(inn.state.season ? [{ id: '', label: 'Back to my season' }] : []);
     inn.$('seasondial').innerHTML = opts.map(o => `<button data-s="${inn.esc(o.id)}" class="${o.id && o.id === inn.seasonNow() ? 'on' : ''}" aria-pressed="${!!o.id && o.id === inn.seasonNow()}">${inn.esc(o.label)}</button>`).join('');
