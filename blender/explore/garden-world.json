@@ -78,7 +78,8 @@
         "nut-free"
       ],
       "cuisines": [
-        "Kiwi classics"
+        "Kiwi classics",
+        "Australian"
       ],
       "feels": [],
       "appliances": [
@@ -483,7 +484,8 @@
         "nut-free"
       ],
       "cuisines": [
-        "Kiwi classics"
+        "Kiwi classics",
+        "Australian"
       ],
       "feels": [],
       "appliances": [
@@ -536,7 +538,8 @@
       "sweetener": "sugar",
       "added_sugar": true,
       "cuisines": [
-        "Kiwi classics"
+        "Kiwi classics",
+        "British"
       ],
       "feels": ["crunchy"],
       "appliances": [
