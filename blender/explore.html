@@ -671,6 +671,7 @@ window.__door = frontDoor({ active: window.__doorActive, track });
 </script>
 <script type="text/wa-module" id="wa-main">
 import { visit } from './explore/visit-state.js';
+import { sfx } from './explore/pano-times.js';
 import { genieFetch, getPass, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
@@ -751,7 +752,7 @@ world.atoms.push(...gardenWorld.atoms);
 // ---------- rooms: the kitchen, and the hallway's two camera stops
 const ROOMS = {
   cuddlecore: { title: 'Cuddlecore', where: 'In Cuddlecore', eye: [0, 0, 1.6], spots: kitchenSpots, yaw: world.yaw,
-                pano: (w, night, full) => `out/cuddlecore_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` },
+                pano: (w, night, full) => `out/cuddlecore_pano_${w}${sfx(night)}${full ? '' : '_preview'}.jpg` },
 };
 for (const [id, st] of Object.entries(hallWorld.stops)) {
   const stop = hallSpots.stops[st.stop];
@@ -759,7 +760,7 @@ for (const [id, st] of Object.entries(hallWorld.stops)) {
     .filter(([k, h]) => hallWorld.objects[k] && (h.visible || hallWorld.objects[k].always_visible)));
   Object.assign(stopSpots, hallWorld.walks[id] || {});
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, clock: hallWorld.clock,
-                pano: (w, night, full) => `out/hallway_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+                pano: (w, night, full) => `out/hallway_pano_${st.stop}_${w}${sfx(night)}${full ? '' : '_preview'}.jpg` };
 }
 // The Conservatory (id glasshouse): every season, in every weather, by day and night
 for (const [id, st] of Object.entries(glassWorld.stops)) {
@@ -767,7 +768,7 @@ for (const [id, st] of Object.entries(glassWorld.stops)) {
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => glassWorld.objects[k] && (h.visible || glassWorld.objects[k].always_visible)));
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, seasons: true,
-                pano: (w, night, full) => `out/glasshouse_pano_${inn.seasonNow()}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+                pano: (w, night, full) => `out/glasshouse_pano_${inn.seasonNow()}_${w}${sfx(night)}${full ? '' : '_preview'}.jpg` };
 }
 // Flourish: the second kitchen, in every weather by day and night, like Cuddlecore
 for (const [id, st] of Object.entries(flWorld.stops)) {
@@ -775,7 +776,7 @@ for (const [id, st] of Object.entries(flWorld.stops)) {
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => flWorld.objects[k] && (h.visible || flWorld.objects[k].always_visible)));
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, pitch: st.pitch, clock: flSpots.clock,
-                pano: (w, night, full) => `out/flourish_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+                pano: (w, night, full) => `out/flourish_pano_${w}${sfx(night)}${full ? '' : '_preview'}.jpg` };
 }
 // Sweet Spells: the lane in every weather, by day and late at night, like the kitchen
 for (const [id, st] of Object.entries(sweetWorld.stops)) {
@@ -783,7 +784,7 @@ for (const [id, st] of Object.entries(sweetWorld.stops)) {
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => sweetWorld.objects[k] && (h.visible || sweetWorld.objects[k].always_visible)));
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw,
-                pano: (w, night, full) => `out/sweet_spells_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+                pano: (w, night, full) => `out/sweet_spells_pano_${w}${sfx(night)}${full ? '' : '_preview'}.jpg` };
 }
 // The Chiapothecary: the lane in every weather, by day and late at night, like Sweet Spells across the hall
 for (const [id, st] of Object.entries(chiaWorld.stops)) {
@@ -791,7 +792,7 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
   const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
     .filter(([k, h]) => chiaWorld.objects[k] && (h.visible || chiaWorld.objects[k].always_visible)));
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw,
-                pano: (w, night, full) => `out/chiapothecary_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+                pano: (w, night, full) => `out/chiapothecary_pano_${w}${sfx(night)}${full ? '' : '_preview'}.jpg` };
 }
 // The garden: the patio and the camp, in every weather by day and night, like Flourish next door
 for (const [id, st] of Object.entries(gardenWorld.stops)) {
@@ -800,7 +801,7 @@ for (const [id, st] of Object.entries(gardenWorld.stops)) {
     .filter(([k, h]) => gardenWorld.objects[k] && (h.visible || gardenWorld.objects[k].always_visible)));
   Object.assign(stopSpots, gardenWorld.walks[id] || {});
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, pitch: st.pitch,
-                pano: (w, night, full) => `out/garden_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+                pano: (w, night, full) => `out/garden_pano_${st.stop}_${w}${sfx(night)}${full ? '' : '_preview'}.jpg` };
 }
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room

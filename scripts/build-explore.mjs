@@ -26,13 +26,13 @@ cpSync(join(src, 'explore'), join(out, 'explore'), { recursive: true });
 
 // Renders: every room and weather by day and night, the Conservatory's four seasons in every weather, their previews and the hotspots
 const keep = new RegExp([
-  /^cuddlecore_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
-  /^hallway_pano_(entrance|middle)_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
-  /^glasshouse_pano_(spring|summer|autumn|winter)_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
-  /^flourish_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
-  /^sweet_spells_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
-  /^chiapothecary_pano_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
-  /^garden_pano_(patio|camp)_(rain|fair|change|stormy|very-dry)(_night)?(_preview)?\.jpg$/.source,
+  /^cuddlecore_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
+  /^hallway_pano_(entrance|middle)_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
+  /^glasshouse_pano_(spring|summer|autumn|winter)_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
+  /^flourish_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
+  /^sweet_spells_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
+  /^chiapothecary_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
+  /^garden_pano_(patio|camp)_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
   /^(cuddlecore|hallway|glasshouse|flourish|sweet_spells|chiapothecary|garden)_hotspots\.json$/.source,
 ].join('|'));
 const files = readdirSync(join(src, 'out')).filter(f => keep.test(f));

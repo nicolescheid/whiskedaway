@@ -1968,6 +1968,12 @@
   },
   "default_weather": "rain",
   "times": {
+    "dawn": {
+      "label": "Dawn",
+      "hour": 6,
+      "themes": ["breakfast", "gentle", "tea", "fresh", "simple"],
+      "moment": "Up with the light. Kettle on, and something small to start?"
+    },
     "morning": {
       "label": "Morning",
       "hour": 8,
@@ -2001,6 +2007,12 @@
         "slow"
       ],
       "moment": "Evening's drawing in. Time for a proper meal?"
+    },
+    "dusk": {
+      "label": "Dusk",
+      "hour": 20,
+      "themes": ["warming", "cooking", "slow", "sharing", "evening"],
+      "moment": "The light's going gold. Lovely time for a drink and something warm."
     },
     "night": {
       "label": "Late night",
