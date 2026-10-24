@@ -4,7 +4,7 @@
 import { visit } from './visit-state.js';
 import { sweetTold } from './sweet-spells.js';
 import { toldLine } from './checkin.js';
-import { cuisineLabel, countryLabel } from './tell.js';
+import { countryLabel } from './tell.js';
 import { layers } from './layers.js';
 import { kitchenPicks, kitchenWords, NONE as NO_COOKING } from './kitchen.js';
 
@@ -35,12 +35,12 @@ export function install(inn) {
                  dietary: v => [].concat(v || []).length && `You're eating ${listOf([].concat(v).map(d => inn.DIET_WORD[d] || d))}.`,
                  dietaryOther: v => v && `And you'd rather avoid: ${v}.`,
                  pantry: v => (Array.isArray(v) ? v : v?.items || []).length && `You've got ${listOf(Array.isArray(v) ? v : v.items)}${v?.useUp ? ' to use up' : ''}.`,
-                 cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
+                 foodMap: v => inn.foodMap.told(v),
                  country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
                  kitchen: v => kitchenPicks(v).length && `${inn.LINES.kitchen?.visit_row || 'Your kitchen'}: ${kitchenPicks(v)[0] === NO_COOKING ? kitchenWords(v, inn.LINES.kitchen)[0] : listOf(kitchenWords(v, inn.LINES.kitchen))}.`,
                  feels: v => inn.howYouLike.told(v), keepingOff: v => inn.howYouLike.toldJar(v),
                  time: v => toldLine(inn.CW, 'time', v), servings: v => toldLine(inn.CW, 'servings', v), confidence: v => toldLine(inn.CW, 'confidence', v), ...sweetTold(inn.sweet.data) };
-  const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet', feels: 'feels', keepingOff: 'jar' };
+  const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', foodMap: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet', feels: 'feels', keepingOff: 'jar' };
   const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`); inn.listOf = listOf;
   function renderTold() {
     const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);

@@ -14,7 +14,7 @@ import { createShopWords } from './shopwords.js';
 import { kitchenFits, kitchenWords } from './kitchen.js';
 
 export function install(inn) {
-  Object.assign(inn, { setAnswer, entryFact, maybeOfferTell, emptyRoomLine });   // its functions, for the other modules (hoisted)
+  Object.assign(inn, { setAnswer, entryFact, maybeOfferTell, emptyRoomLine, applyShopWords });   // its functions, for the other modules (hoisted)
   // What the visitor has told Gemma, as tags in her chat (explore/tags.js): change or forget from any room
   // ---------- Tell Gemma about you (explore/tell.js, tell-gemma-ux.md): the pantry, the map and dietary needs
   const T = inn.LINES.tell || {}; inn.T = T;
@@ -47,7 +47,7 @@ export function install(inn) {
   for (const [w, xs] of Object.entries(T.synonyms || {})) SYNONYMS[w.toLowerCase()] = [].concat(xs).map(x => String(x).toLowerCase());
   // Cards and the book show the visitor's country's words once the Map knows it (brainstorm-1 D6): written in NZ words, swapped on display
   const shopWords = createShopWords({ table: T.shopWords, atoms: () => inn.world.atoms }); inn.shopWords = shopWords;
-  const applyShopWords = () => { if (shopWords.apply(visit.get('country') || mapDefault())) { inn.ideas.render(); inn.bookView.refresh(); } };
+  function applyShopWords() { if (shopWords.apply(visit.get('country') || mapDefault())) { inn.ideas.render(); inn.bookView.refresh(); } }
   const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : { items: p?.items || [], useUp: !!p?.useUp }; }; inn.pantryNow = pantryNow;
   const titleCase = s => s.charAt(0).toUpperCase() + s.slice(1);
   const DIET_WORD = { vegetarian: 'vegetarian', vegan: 'vegan', 'gluten-free': 'gluten-free', 'dairy-free': 'dairy-free', 'nut-free': 'nut-free', 'low-fodmap': 'low-FODMAP' }; inn.DIET_WORD = DIET_WORD;
@@ -98,10 +98,6 @@ export function install(inn) {
       const xs = after.items, two = inn.listOf(xs.slice(0, 2)), many = `${xs[0]}, ${xs[1]} and a few more`;
       line = after.useUp ? (A.pantryUseUp || '{two} first, then.').replace('{two}', two)
         : xs.length >= 3 ? (A.pantryMany || '{many}. Noted.').replace('{many}', many) : (A.pantry || "{two}. I'll work with those.").replace('{two}', two);
-    } else if (kind === 'map') {
-      const xs = after.cuisines.map(cuisineLabel);
-      line = xs.length ? (A.map || "{c} it is. I'll lean that way.").replace('{c}', inn.listOf(xs.slice(0, 2)))
-        : (A.country || 'Shopping words for {country}, then.').replace('{country}', countryLabel(after.country) || 'everywhere');
     } else if (kind === 'dietary') {
       const xs = after.dietary.filter(d => !inn.PASS_ONLY.has(d)).map(d => DIET_WORD[d] || d);
       // every need is named, so none seems dropped (QA pass 4); low-FODMAP isn't kept to (no cards checked yet), only passed on
@@ -115,7 +111,7 @@ export function install(inn) {
   // One fact on a room's first visit: dietary, then the pantry (in the kitchens that cook), then a cuisine (Inn rule 11)
   function entryFact(id) {
     const F = T.entry || {};
-    const d = [].concat(visit.get('dietary') || []).filter(x => !inn.PASS_ONLY.has(x)), p = pantryNow().items, c = [].concat(visit.get('cuisines') || []);
+    const d = [].concat(visit.get('dietary') || []).filter(x => !inn.PASS_ONLY.has(x)), p = pantryNow().items, c = inn.cuisinesNow();
     if (d.length) return (F.dietary || "I'll keep to {d} in here too.").replace('{d}', inn.listOf(d.map(x => DIET_WORD[x] || x)));
     if (p.length && ['cuddlecore', 'flourish'].includes(id)) return (F.pantry || "I'll look for things that use your {p}.").replace('{p}', inn.listOf(p.slice(0, 2)));
     if (c.length) return (F.cuisine || "I'll lean {c} where I can.").replace('{c}', cuisineLabel(c[0]));
@@ -123,7 +119,7 @@ export function install(inn) {
   }
   function maybeOfferTell() {
     if (inn.state.tellOffered || (inn.state.keeps || 0) + (inn.state.dismissals || 0) < 2) return;
-    if (pantryNow().items.length || visit.get('cuisines') || visit.get('dietary') || visit.get('dietaryOther')) return;
+    if (pantryNow().items.length || visit.get('foodMap') || visit.get('dietary') || visit.get('dietaryOther')) return;
     inn.state.tellOffered = true;
     inn.state.offerTell = true;                               // she asks in her next line (navigate), after the keep line's 3 s
   }
@@ -163,9 +159,10 @@ export function install(inn) {
     return TL.roomNone.replace('{diet}', inn.listOf(diet.map(x => DIET_WORD[x] || x))).replace('{room}', name);   // "vegan, gluten-free and nut-free"
   }
   const tell = createTell({
-    visit, lines: inn.LINES.tell, kitchenLines: inn.LINES.kitchen || {}, track: inn.track, defaultCountry: mapDefault, keepEveryWay: inn.EVERY_WAY_KEEPS,
+    visit, lines: inn.LINES.tell, kitchenLines: inn.LINES.kitchen || {}, track: inn.track, keepEveryWay: inn.EVERY_WAY_KEEPS,
+    openMap: src => inn.foodMap.open(src), mapWords: () => inn.foodMap?.word(visit.get('foodMap')) || '',   // the food map (food-map.js)
     beforeOpen: () => { inn.ideas.close(false); if (inn.bookView.isOpen) inn.bookView.close(); if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto'); },
-    onDone: (k, r) => { if (k === 'map') applyShopWords(); return k === 'checkin' ? checkedIn(r) : k === 'kitchen' ? kitchenSaid(r) : acknowledge(k, r); },
+    onDone: (k, r) => (k === 'checkin' ? checkedIn(r) : k === 'kitchen' ? kitchenSaid(r) : acknowledge(k, r)),
     openEnergy: () => tagsUI.openEnergy(),
     checkin: {
       energies: () => Object.entries(inn.world.energies || {}).map(([id, e]) => ({ id, label: e.label })),
@@ -182,7 +179,8 @@ export function install(inn) {
     energyLabel: () => inn.world.energies?.[visit.get('energy')]?.label || '',
   }); inn.tell = tell;
   const tagsUI = createTags({ el: inn.chatUI.tags, visit, world: inn.world, kitchenLines: inn.LINES.kitchen || {}, choose: { energy: id => inn.chooseEnergy(id), answer: (k, v) => setAnswer(k, v, { from: 'tag' }) }, tell,
-    chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: sweetTags(inn.sweet.data, (k, src) => inn.sweet.open(k, src)) });
+    chipLabel: `+ ${T.menu?.title || 'Tell me about you'}`, lines: T, extra: { ...sweetTags(inn.sweet.data, (k, src) => inn.sweet.open(k, src)),
+      foodMap: { icon: '🗺', name: inn.LINES.foodMap?.title || 'The food map', word: v => inn.foodMap?.word(v) || '', open: () => inn.foodMap.open('tag') } } });
 
   // Taps (explore/touch.js): the range and the appliances open Your kitchen (appliances-chia-plan.md §1); the pantry, the map,
   // the cookbooks and the desk open their sheets after her line

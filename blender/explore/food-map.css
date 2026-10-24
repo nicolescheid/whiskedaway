@@ -1,0 +1,27 @@
+/* The food map (explore/food-map.js): a Tell Gemma sheet (.tell, .tl-box in ideas.css) with an old map, three pens and a list */
+.tell.desk .fm-box { width: min(720px, calc(100vw - 32px)); }
+.tell.phone .fm-box { max-height: 85dvh; }
+.fm-pens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 8px; }
+.fm-pens button { display: flex; flex-direction: column; align-items: center; gap: 1px; min-height: 52px; padding: 4px 6px; border-radius: 12px;
+  border: 1px solid var(--line); background: #fff; color: var(--ink); font: 500 14px 'Quicksand'; }
+.fm-pens button[aria-checked="true"] { border: 2px solid var(--berry); background: #fbf3ee; }
+.fm-pen-mark { font-size: 16px; line-height: 1; }
+.fm-pen-note { font-size: 11px; color: var(--ink-soft); line-height: 1.2; text-align: center; }
+.fm-scroll { overflow-x: auto; margin: 0 -18px; padding: 0 18px; -webkit-overflow-scrolling: touch; }
+.fm-map { display: block; width: 100%; min-width: 660px; height: auto; background: #efe3c8; border-radius: 10px; box-shadow: inset 0 0 24px rgba(120, 84, 40, .25); }
+.tell.desk .fm-map { min-width: 0; }
+.fm-land { fill: #e2d1a8; stroke: #c9b07c; stroke-width: .6; }
+.fm-c { cursor: pointer; outline: none; }
+.fm-hit { fill: transparent; }
+.fm-stamp { fill: #fffaf0; stroke: var(--berry); stroke-width: .8; }
+.fm-c.loved .fm-stamp { fill: #e8a76f; stroke: #b5652e; }
+.fm-name { font: 600 5px 'Quicksand'; fill: var(--ink); text-anchor: middle; pointer-events: none; }
+.fm-heart { font-size: 6px; fill: var(--berry); visibility: hidden; pointer-events: none; }
+.fm-pin { font-size: 7px; visibility: hidden; pointer-events: none; }
+.fm-c.heritage .fm-heart, .fm-c.home .fm-pin { visibility: visible; }
+.fm-c:hover .fm-stamp { stroke-width: 1.4; }
+.fm-list { list-style: none; margin: 0; padding: 0; }
+.fm-row { display: grid; grid-template-columns: 1fr repeat(3, 44px); align-items: center; gap: 4px; padding: 2px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.fm-t { width: 44px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 16px; opacity: .5; }
+.fm-t[aria-pressed="true"] { opacity: 1; border: 2px solid var(--berry); background: #fbf3ee; }
+.fm-shop { margin-top: 10px; }

@@ -229,7 +229,7 @@ export function install(inn) {
   // mild, once a visit and never pushed. Content marks a card `mild_way_in: "<cuisine>"`; until one is marked, nothing happens
   function offerMild(was, now) {
     if (inn.state.mildOffered || !HEAT.some(id => now[id] === 'skip' && was[id] !== 'skip')) return;
-    const fancy = [].concat(visit.get('cuisines') || []);
+    const fancy = inn.cuisinesNow();
     const ok = a => a.mild_way_in && !likeClash(a) && !inn.dietClash(a) && inn.canServe(a);
     const a = inn.world.atoms.find(x => ok(x) && fancy.includes(x.mild_way_in)) || inn.world.atoms.find(ok);
     if (!a) return;

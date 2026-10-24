@@ -403,6 +403,7 @@
 <link rel="stylesheet" href="explore/ideas.css">
 <link rel="stylesheet" href="explore/inn-map.css">
 <link rel="stylesheet" href="explore/how-you-like-it.css">
+<link rel="stylesheet" href="explore/food-map.css">
 </head>
 <body>
 <!-- The front door: shown at / on a new visit (or with ?door=1), never with ?room= -->
@@ -691,6 +692,7 @@ import { install as installPanorama } from './explore/panorama.js';
 import { install as installRooms } from './explore/rooms.js';
 import { install as installInnMap } from './explore/inn-map.js';
 import { install as installHowYouLike } from './explore/how-you-like-it.js';
+import { install as installFoodMap } from './explore/food-map.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 
 const params = new URLSearchParams(location.search);
@@ -698,7 +700,7 @@ const params = new URLSearchParams(location.search);
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES, innMapData] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES, innMapData, foodMapData] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
   fetch('explore/hallway-world.json').then(r => r.json()),
@@ -713,6 +715,7 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
   fetch('explore/inn-map.json').then(r => r.json()).catch(() => ({})),        // the Inn map's plan (content and art)
+  fetch('explore/food-map.json').then(r => r.json()).catch(() => ({})),       // the food map's countries (content and art)
 ]);
 // Tell Gemma's lists live in gemma-lines.json `tell` (content editor): cuisines by name, countries {code, name, example}
 useTellData({ cuisines: (LINES.tell?.cuisines || []).map(n => ({ id: n, label: n })),
@@ -854,7 +857,7 @@ delete state.sound;                        // sound on or off lives in explore/s
 const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood'];
 // What every module reads from the bootstrap (docs/code-map.md): the data, the visit, and a few helpers
 Object.assign(inn, { track, genieFetch, getPass, GENIE_URL, stepBucket,
-                      AI, chiaWorld, sweetWorld, flWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, innMapData, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
+                      AI, chiaWorld, sweetWorld, flWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, innMapData, foodMapData, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
 installTouch(inn);   // what a tap on a hotspot does: each module registers its own (inn.onTouch)
 installRooms(inn);   // time, season, the trail, moving between rooms, the hallway dial
 installPanorama(inn);   // the 360° view: renderer, weathers, clocks, hotspots, looking around, Erwina
@@ -866,6 +869,7 @@ installSweetGlue(inn);   // Sweet Spells: its sheets, tools and the swap-the-sug
 installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortune
 installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary and kitchen sheets, the tags
 installHowYouLike(inn);   // Cuddlecore's How you like it tray, the little cage and the bell jar
+installFoodMap(inn);   // the food map: home, family and loved countries (Tell Gemma's map)
 installThemeGlue(inn);   // the visit's theme caption and the hallway notice board
 installPanels(inn);   // the bar, the notebook and Forget
 installInnMap(inn);   // the Inn map: the bar's Map button, a plan of the Inn, and In this room

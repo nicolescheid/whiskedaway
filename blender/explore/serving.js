@@ -150,7 +150,7 @@ export function install(inn) {
       ...sweetSteer(visit),                                                                    // Sweet Spells' cravings and "no added sugar"
       served: [...inn.state.served, ...kept.map(k => k.id), ...inn.world.atoms.filter(a => dietClash(a) || inn.likeClash?.(a) || !kitchenOk(a)).map(a => a.id)],
       book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
-      about: { pantry: inn.pantryNow().items, useUp: inn.pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: inn.SYNONYMS,
+      about: { pantry: inn.pantryNow().items, useUp: inn.pantryNow().useUp, cuisines: inn.cuisinesNow(), synonyms: inn.SYNONYMS,
                why: { ...inn.CW.why, ...inn.T.why }, cuisineLabel,
                timeLimit: TIME_LIMIT[visit.get('time')] || null, timeWords: timeWords(inn.CW, visit.get('time')), confidence: visit.get('confidence') },
     };

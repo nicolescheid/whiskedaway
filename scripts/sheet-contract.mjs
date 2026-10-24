@@ -25,7 +25,7 @@ const SWEET = { root: '#sweet-sheet', ways: { done: '.sw-done', x: '.tl-x' }, ke
 const DIALOG = (root, ok) => ({ root, ways: { done: ok, x: null }, keep: ALL, dialog: true });
 export const SHEETS = [
   { id: 'pantry', ...TELL, open: { room: 'cuddlecore', spot: 'pantry-cabinet' }, answer: 'pantry' },
-  { id: 'map', ...TELL, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'press' },
+  { id: 'food map', root: '#food-map', ways: { done: '.fm-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'press', keep: ALL },
   { id: 'dietary', ...TELL, open: { room: 'cuddlecore', spot: 'dietary-shelf' }, answer: 'press' },
   { id: 'how you like it', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'feels-tray' }, answer: 'press', keep: ALL },
   { id: 'little cage', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'cage' }, answer: null, keep: ALL },
@@ -291,7 +291,7 @@ async function closeBy(page, S, way) {
 
 // ---------- journeys: [check, ok, note] rows
 const clean = async page => {
-  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map', '#hyli']
+  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map', '#hyli', '#food-map']
     .filter(s => { const el = document.querySelector(s); return el && !el.hidden; }) })`);
   return [['nothing open', !r.open.length, r.open.join(', ')], ['inert', !r.inert.length, r.inert.join(', ')]];
 };

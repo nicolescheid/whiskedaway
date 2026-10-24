@@ -29,7 +29,9 @@ export function useTellData(data) {
 }
 export const cuisineLabel = id => CUISINES.find(c => c.id === id)?.label || id;
 export const countryLabel = id => COUNTRIES.find(([c]) => c === id)?.[1] || '';
-const MAX_PANTRY = 12, MAX_CUISINES = 3;
+/** The shopping words' example for a country (tell-data.json), for the food map's select */
+export const shopExample = id => SHOP_WORDS[id] || '';
+const MAX_PANTRY = 12;
 const FILLER = /^(some|a|an|the|leftover|left over|half(?: a)?|a bit of|bit of|bits of|a few|few|lots of|a lot of|bag of|tin of|can of|jar of|bunch of|fresh|frozen|old)\s+/;
 
 /** The country the browser's language names ("en-NZ" → NZ), or null. Not the connection: see tell-gemma-ux.md §3 */
@@ -51,7 +53,8 @@ export function parsePantry(text) {
     .filter(w => w && w.length <= 24);
 }
 
-export function createTell({ visit, lines = {}, kitchenLines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, defaultCountry = countryFromLanguage, checkin = {}, keepEveryWay = ['kitchen'] }) {
+export function createTell({ visit, lines = {}, kitchenLines = {}, track, beforeOpen, onDone, openEnergy, energyLabel, openMap, mapWords, checkin = {}, keepEveryWay = ['kitchen'] }) {
+  // openMap(from): the food map (food-map.js) has its own sheet; the menu's map row and open('map') hand over to it
   // keepEveryWay: the sheets whose ✕, the dim, Escape and Back keep the taps like Done does (the others' are Cancel)
   const K = kitchenLines, KS = K.sheet || {};                   // gemma-lines.json `kitchen`
   const W = checkinWords(lines);                               // the check-in's words (checkin.js)
@@ -90,7 +93,6 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
   const pantryNow = () => { const p = visit.get('pantry'); return Array.isArray(p) ? { items: p, useUp: false } : (p || { items: [], useUp: false }); };
   const current = k => ({
     pantry: pantryNow(),
-    map: { cuisines: [].concat(visit.get('cuisines') || []), country: visit.get('country') || defaultCountry() },
     dietary: { dietary: [].concat(visit.get('dietary') || []), other: visit.get('dietaryOther') || '' },
     checkin: { energy: visit.get('energy'), time: visit.get('time'), servings: visit.get('servings'), confidence: visit.get('confidence'),
                weather: checkin.weather?.() || null },
@@ -120,22 +122,6 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
     input.addEventListener('blur', () => { if (input.isConnected && input.value.trim()) take(); });
     body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { d.items.splice(+b.dataset.rm, 1); drawPantry(); body.querySelector('.tl-input').focus(); });
     body.querySelector('.tl-switch input').onchange = e => { d.useUp = e.target.checked; };
-  }
-  function drawMap() {
-    const d = draft;
-    body.innerHTML = `${L.map.helper ? `<p class="small">${esc(L.map.helper)}</p>` : ''}<div class="tl-chips tl-pick" role="group" aria-label="${esc(L.map.title)}">${CUISINES.map(c => `<button data-c="${esc(c.id)}" aria-pressed="${d.cuisines.includes(c.id)}">${esc(c.label)}</button>`).join('')}</div>
-      <hr>
-      <label class="tl-row">${esc(L.map.shop)}: <select class="tl-country">${d.country ? '' : `<option value="">${esc(L.map.choose)}</option>`}
-        ${COUNTRIES.map(([c, n]) => `<option value="${c}" ${d.country === c ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
-      <p class="small tl-example">${d.country ? `"${esc(SHOP_WORDS[d.country] || '')}"` : ''}</p>`;
-    body.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
-      const c = b.dataset.c, on = d.cuisines.includes(c);
-      if (on) d.cuisines = d.cuisines.filter(x => x !== c);
-      else if (d.cuisines.length < MAX_CUISINES) d.cuisines.push(c);
-      else return;                                            // three at most
-      b.setAttribute('aria-pressed', String(!on));
-    });
-    body.querySelector('.tl-country').onchange = e => { d.country = e.target.value || null; body.querySelector('.tl-example').textContent = d.country ? `"${SHOP_WORDS[d.country] || ''}"` : ''; };
   }
   function drawDietary() {
     const d = draft;
@@ -204,11 +190,11 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
     body.querySelector('.kt-clear').onclick = () => { d.picks = []; drawKitchen(K.cleared || ''); body.querySelector('[data-ap]')?.focus({ preventScroll: true }); };
   }
   function drawMenu() {
-    const p = pantryNow(), cu = [].concat(visit.get('cuisines') || []), di = [].concat(visit.get('dietary') || []);
+    const p = pantryNow(), di = [].concat(visit.get('dietary') || []);
     const t = visit.get('time'), sv = visit.get('servings'), cf = visit.get('confidence');
     const rows = [['checkin', L.menu.checkin, [t && W.time[t], sv && W.servings[sv], cf && W.confidence[cf]].filter(Boolean).join(', ')],
       ['energy', L.menu.energy, energyLabel?.() || ''], ['pantry', L.menu.pantry, p.items.slice(0, 2).join(', ') + (p.items.length > 2 ? ` +${p.items.length - 2}` : '')],
-      ['map', L.menu.map, cu.map(cuisineLabel).join(', ')], ['dietary', L.menu.dietary, di.join(', ') + (visit.get('dietaryOther') ? (di.length ? ' +1' : 'something else') : '')],
+      ['map', L.menu.map, mapWords?.() || ''], ['dietary', L.menu.dietary, di.join(', ') + (visit.get('dietaryOther') ? (di.length ? ' +1' : 'something else') : '')],
       ['kitchen', L.menu.kitchen, kitchenWords(visit.get('kitchen'), K).join(', ') || L.menu.kitchenNone]];
     body.innerHTML = `<ul class="tl-menu">${rows.map(([k, n, v]) => `<li><button data-k="${k}"><b>${esc(n)}</b><span>${esc(v || L.menu.none)}</span><i aria-hidden="true">›</i></button></li>`).join('')}</ul>`;
     body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
@@ -216,10 +202,11 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
       open(b.dataset.k, 'menu', { keepOpener: true });
     });
   }
-  const DRAW = { pantry: drawPantry, map: drawMap, dietary: drawDietary, checkin: drawCheckin, kitchen: () => drawKitchen(), menu: drawMenu };
+  const DRAW = { pantry: drawPantry, dietary: drawDietary, checkin: drawCheckin, kitchen: () => drawKitchen(), menu: drawMenu };
 
   // ---------- open, Done, forget, close
   function open(k, src = 'tag', { keepOpener = false, appliance = null } = {}) {
+    if (k === 'map' && openMap) { if (!root.hidden) close({ silent: true }); return openMap(src); }   // the food map's own sheet
     if (!DRAW[k]) return;
     if (!keepOpener) opener = document.activeElement;
     beforeOpen?.();                                               // the chat's Full sheet or a highlight gives way: one sheet at a time
@@ -269,7 +256,7 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
       setTimeout(() => onDone?.(k, { before, after, changed, from, forgot: forget }), reduce() ? 0 : 200);
       return;
     }
-    const empty = { pantry: { items: [], useUp: false }, map: { cuisines: [], country: null }, dietary: { dietary: [], other: '' } }[k];
+    const empty = { pantry: { items: [], useUp: false }, dietary: { dietary: [], other: '' } }[k];
     const after = forget ? empty : draft;
     if (k === 'pantry' && !forget) {                               // a word still in the box counts
       const input = body.querySelector('.tl-input');
@@ -280,12 +267,11 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
     close({ viaBack, keep: false });
     if (same && !forget) return;                                   // nothing changed: Gemma says nothing
     if (k === 'pantry') visit.set('pantry', after.items.length ? after : null);
-    if (k === 'map') { visit.set('cuisines', after.cuisines.length ? after.cuisines : null); visit.set('country', after.country || null); }
     if (k === 'dietary') { visit.set('dietary', after.dietary.length ? after.dietary : null); visit.set('dietaryOther', after.other || null); }
-    const count = k === 'pantry' ? after.items.length : k === 'map' ? after.cuisines.length : after.dietary.length + (after.other ? 1 : 0);
+    const count = k === 'pantry' ? after.items.length : after.dietary.length + (after.other ? 1 : 0);
     track?.('tell_set', { kind: k, count: bucket(count), ...(k === 'pantry' ? { use_up: after.useUp ? 'yes' : 'no' } : {}) });
     // After the sheet has gone, so her line isn't hidden behind it
-    setTimeout(() => onDone?.(k, { before, after, forgot: !count && !(k === 'map' && after.country) }), reduce() ? 0 : 200);
+    setTimeout(() => onDone?.(k, { before, after, forgot: !count }), reduce() ? 0 : 200);
   }
   root.querySelectorAll('.tl-done').forEach(b => b.onclick = () => done(false));
   $('.tl-forget').onclick = () => done(true);

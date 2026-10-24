@@ -1,0 +1,39 @@
+{
+  "_about": "The food map (explore/food-map.js). Content edits the words (label, cuisines, neighbours); art edits the drawing (at, land). at is where a country's stamp sits on the 340 x 150 map, placed like an old illustrated map rather than to scale. cuisines are the labels cards carry in their own cuisines. shop is a shopping-words country (gemma-lines tell.countries), where there is one.",
+  "countries": [
+    { "id": "ca", "label": "Canada", "cuisines": [], "neighbours": ["us"], "shop": "CA", "at": [58, 22] },
+    { "id": "us", "label": "United States", "cuisines": ["American"], "neighbours": ["ca", "mx"], "shop": "US", "at": [62, 42] },
+    { "id": "mx", "label": "Mexico", "cuisines": ["Mexican"], "neighbours": ["us", "es"], "shop": null, "at": [56, 63] },
+    { "id": "ie", "label": "Ireland", "cuisines": [], "neighbours": ["gb"], "shop": "IE", "at": [128, 27] },
+    { "id": "gb", "label": "United Kingdom", "cuisines": [], "neighbours": ["ie", "fr"], "shop": "GB", "at": [143, 20] },
+    { "id": "fr", "label": "France", "cuisines": ["French"], "neighbours": ["gb", "es", "it"], "shop": null, "at": [147, 38] },
+    { "id": "es", "label": "Spain", "cuisines": [], "neighbours": ["fr", "it", "mx"], "shop": null, "at": [132, 51] },
+    { "id": "it", "label": "Italy", "cuisines": ["Italian"], "neighbours": ["fr", "gr", "es"], "shop": null, "at": [160, 51] },
+    { "id": "gr", "label": "Greece", "cuisines": ["Greek"], "neighbours": ["it", "tr"], "shop": null, "at": [175, 62] },
+    { "id": "tr", "label": "Türkiye", "cuisines": ["Middle Eastern"], "neighbours": ["gr", "lb", "ir"], "shop": null, "at": [191, 46] },
+    { "id": "lb", "label": "Lebanon", "cuisines": ["Middle Eastern"], "neighbours": ["tr", "gr", "ir"], "shop": null, "at": [192, 64] },
+    { "id": "ir", "label": "Iran", "cuisines": ["Middle Eastern"], "neighbours": ["tr", "lb", "in"], "shop": null, "at": [210, 55] },
+    { "id": "in", "label": "India", "cuisines": ["Indian"], "neighbours": ["ir", "th", "cn"], "shop": null, "at": [226, 78] },
+    { "id": "cn", "label": "China", "cuisines": ["Chinese"], "neighbours": ["kr", "jp", "vn", "in"], "shop": null, "at": [250, 47] },
+    { "id": "kr", "label": "Korea", "cuisines": ["Korean"], "neighbours": ["cn", "jp"], "shop": null, "at": [272, 38] },
+    { "id": "jp", "label": "Japan", "cuisines": ["Japanese"], "neighbours": ["kr", "cn"], "shop": null, "at": [291, 47] },
+    { "id": "vn", "label": "Vietnam", "cuisines": [], "neighbours": ["cn", "th"], "shop": null, "at": [264, 68] },
+    { "id": "th", "label": "Thailand", "cuisines": ["Thai"], "neighbours": ["vn", "in", "id"], "shop": null, "at": [248, 82] },
+    { "id": "id", "label": "Indonesia", "cuisines": [], "neighbours": ["th", "au"], "shop": null, "at": [266, 98] },
+    { "id": "au", "label": "Australia", "cuisines": [], "neighbours": ["nz", "id", "fj"], "shop": "AU", "at": [276, 121] },
+    { "id": "nz", "label": "Aotearoa New Zealand", "cuisines": ["Kiwi classics"], "neighbours": ["au", "fj", "ws", "to"], "shop": "NZ", "at": [312, 136] },
+    { "id": "fj", "label": "Fiji", "cuisines": ["Pacific Islands"], "neighbours": ["nz", "ws", "to"], "shop": null, "at": [318, 108] },
+    { "id": "to", "label": "Tonga", "cuisines": ["Pacific Islands"], "neighbours": ["nz", "fj", "ws"], "shop": null, "at": [333, 122] },
+    { "id": "ws", "label": "Samoa", "cuisines": ["Pacific Islands"], "neighbours": ["fj", "to"], "shop": null, "at": [333, 97] }
+  ],
+  "land": [
+    "M20 12 C40 4 90 6 100 14 C104 26 92 40 80 50 C74 58 70 66 62 72 C54 74 46 66 44 58 C36 50 26 40 22 30 C18 22 16 16 20 12 Z",
+    "M66 76 C76 74 88 80 92 92 C94 106 86 124 78 140 C72 142 70 130 68 118 C64 104 60 88 66 76 Z",
+    "M122 22 C126 14 136 10 150 10 C166 10 178 14 186 22 C184 32 176 40 168 44 C160 56 150 58 140 58 C130 58 124 50 124 40 C122 32 120 28 122 22 Z",
+    "M128 64 C140 60 160 62 176 70 C190 74 196 86 192 100 C186 116 176 130 166 136 C158 132 152 118 148 104 C140 96 128 92 124 80 C122 72 124 66 128 64 Z",
+    "M180 14 C210 6 260 6 300 14 C312 20 310 32 300 40 C296 50 290 58 280 62 C276 74 268 86 258 90 C248 94 238 92 230 88 C222 84 214 72 204 70 C196 68 188 60 184 52 C180 40 176 26 180 14 Z",
+    "M256 92 C262 90 270 94 278 96 C282 100 276 104 268 104 C262 104 256 100 256 92 Z",
+    "M258 112 C268 106 284 106 294 112 C300 120 298 132 288 136 C276 138 264 134 258 126 C254 120 254 116 258 112 Z",
+    "M306 126 C310 124 314 128 314 132 C312 138 308 142 304 144 C300 142 302 134 306 126 Z"
+  ]
+}

@@ -56,7 +56,7 @@ export function install(inn) {
       idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
               method_short: rec.method_short || rec.body, time: rec.seed?.time || (rec.time ? `${rec.time} min` : ''), why: rec.why }, mix: rec.mix,   // mix: the Chiapothecary's own jar (labels)
       energy: inn.world.energies?.[visit.get('energy')]?.label || null, weather: inn.world.weathers[inn.state.weather]?.label, time_of_day: inn.world.times[inn.timeNow()]?.label,
-      theme: inn.themeNow().words, cuisines: visit.get('cuisines') || [], pantry_ingredients: inn.pantryNow().items, use_up: inn.pantryNow().useUp,
+      theme: inn.themeNow().words, cuisines: inn.cuisinesNow().slice(0, 4), pantry_ingredients: inn.pantryNow().items, use_up: inn.pantryNow().useUp,
       dietary_restrictions: [].concat(visit.get('dietary') || []), dietary_other: visit.get('dietaryOther') || '',
       country: countryLabel(visit.get('country') || inn.mapDefault()), dish: dishWords(rec.room),
       // Sweet Spells (Inn-wide): how sweet and what with, as words; the occasion as words (the dish has its id)
