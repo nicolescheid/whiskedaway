@@ -31,7 +31,7 @@ export const EVENTS = {
   // The first-visit tour (explore/tour.js): offered, started, and how it ended at which stop
   tour_offer: [],                         // Gemma offered it (a first visit, in the foyer after the door film)
   tour_start: ['from'],                   // from: arrival (the offer), bell (Show me round) or bar (the top bar's Tour button)
-  tour_end: ['how', 'stop'],              // how: finished, skip, escape, back, door, tap, walk, declined (stop 0); stop: 1-7, the stop it ended at
+  tour_end: ['how', 'stop'],              // how: finished, skip, escape, back, door, tap, walk, declined or ignored (a tap elsewhere), both stop 0; stop: 1-7, the stop it ended at
   // The ideas explainer (explore/explainer.js): do first-time visitors open an idea once Gemma has said what they are?
   explain_beat: ['beat'],                 // beat: a (the first bubble), b (the first idea opened), c (the first basket add); once per browser each
   first_idea_open: ['beat_a'],            // an idea opened for the first time this visit; beat_a: yes or no (had she explained the bubbles?)

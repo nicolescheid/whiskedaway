@@ -33,7 +33,7 @@ export function install(inn) {
   const linesOf = (k, touch) => ((touch && X[k].touch) || X[k].lines).map(l => l.replace('{n}', allowanceWord()));
 
   // A quiet moment: not in the film, not touring, no unanswered tour offer, nothing open
-  const tourOffered = () => inn.state.chips?.some(c => ['tour', 'tourNo'].includes(c.do?.[0]));
+  const tourOffered = () => !!inn.tour?.offering;
   const quiet = () => inn.$('front-door').hidden && !inn.touring && !tourOffered() && !layers.any && !document.hidden;
 
   let timers = [], playing = false;
@@ -78,7 +78,10 @@ export function install(inn) {
     q.className = 'sound-q';
     q.setAttribute('aria-hidden', 'true');            // the button's own label says it; this is a glance for sighted visitors
     q.textContent = X.sound;
-    btn.after(q);
+    document.body.append(q);
+    const r = btn.getBoundingClientRect();           // under the button, wherever the bar has put it
+    q.style.top = `${Math.round(r.bottom + 3)}px`;
+    q.style.right = `${Math.round(innerWidth - r.right)}px`;
     if (!reduce()) btn.classList.add('look');
     setTimeout(() => { btn.classList.remove('look'); q.remove(); }, 5000);
   }

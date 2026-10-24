@@ -265,6 +265,7 @@
   .blurb { display: block; font: 500 12px 'Quicksand'; letter-spacing: 0; text-transform: none; opacity: .8; margin-top: 2px; }
   .spot .name:has(.blurb) { border-radius: 12px; }
   .spot .blurb { white-space: normal; max-width: 190px; }
+  @media (max-height: 420px) { .spot .name { padding: 3px 8px; font-size: 12px; } }   /* short landscape: Cuddlecore's kettle, cauldron and tray labels no longer touch (QA 6 F1) */
   @media (max-width: 720px), (max-height: 420px) { .spot .blurb { display: none; } }   /* short landscape phones: one-line labels, so the foyer's don't pile up */
 
 </style>

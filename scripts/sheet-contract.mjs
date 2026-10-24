@@ -350,6 +350,42 @@ const JOURNEYS = [
     out.push(['history balanced', ok, note]);
     return out;
   } },
+  // QA 6 B1 and F3: the first-visit offer is a card that stays on screen (not chat chips that can sit under the human-check
+  // box), it's marked offered once it's up, No and Escape decline it, Yes starts the tour, and Escape or Back out of the tour
+  // puts you back in the room you started in
+  { id: 'the tour offer card, and Escape returns you home', async run(page) {
+    const out = [], entry = await marked(page);
+    const offer = () => page.evaluate(() => { localStorage.removeItem('wa-tour-offered'); return window.__explore.tour.offer(); });
+    out.push(['a first visit gets the offer', await offer()]);
+    out.push(['it shows as a card', await shown(page, '#tour')]);
+    out.push(['marked offered once it is up', await page.evaluate(() => localStorage.getItem('wa-tour-offered') === '1')]);
+    out.push(['both answers are on screen', await page.evaluate(() => [...document.querySelectorAll('#tour .tr-btns button')].every(b => { const r = b.getBoundingClientRect(); return r.width > 0 && r.top >= 0 && r.bottom <= innerHeight; }))]);
+    await page.click('#tour .tr-skip');
+    await page.waitForTimeout(400);
+    out.push(['No declines it with the check-in offer', !await isOpen(page, '#tour') && await page.evaluate(() => window.__explore.state.chips.some(c => c.do[0] === 'checkin'))]);
+    out.push(['an unanswered offer is let go by a tap elsewhere', await (async () => {
+      await offer(); await shown(page, '#tour');
+      await page.evaluate(() => window.__explore.touch?.('door-flourish'));
+      await page.waitForTimeout(400);
+      return !await isOpen(page, '#tour');
+    })()]);
+    await page.evaluate(() => window.__explore.goRoom('hall-entrance'));
+    await page.waitForTimeout(600);
+    const home = await page.evaluate(() => window.__explore.state.room);
+    await offer(); await shown(page, '#tour');
+    await page.click('#tour .tr-next');
+    out.push(['Yes starts the tour', await page.evaluate(() => window.__explore.tour.stop === 1)]);
+    await page.click('#tour .tr-next');
+    await page.waitForTimeout(400);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(600);
+    out.push(['Escape ends it', !await isOpen(page, '#tour')]);
+    out.push(['and puts you back where you started', await page.evaluate(h => window.__explore.state.room === h, home), home]);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
   // The top bar's Tour button runs the same tour; the ideas explainer's beats (explainer.js) each come once and stay quiet
   // while the tour runs
   { id: 'the top bar tour button and the explainer beats', async run(page) {

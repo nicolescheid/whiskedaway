@@ -189,7 +189,7 @@ export function install(inn) {
     if (!Object.keys(now).length) return W.cleared;
     const newly = (v, c) => FEELS.filter(f => now[f.id] === c && was[f.id] !== c).map(f => feelById[f.id]);
     const s = newly(now, 'skip'), m = newly(now, 'more');
-    const skipText = s.length ? (s.length === 1 ? W.skipLine : W.skipMany).replace('{x}', capFirst(inn.listOf(s.slice(0, 2).map(f => f.skip.toLowerCase())))) : '';
+    const skipText = s.length ? (s.length === 1 ? W.skipLine : W.skipMany).replace('{x}', capFirst(inn.listOf(s.slice(0, 4).map(f => f.skip.toLowerCase())))) : '';
     const moreWords = inn.listOf(m.slice(0, 2).map(f => f.more));
     const moreText = m.length ? (s.length ? W.moreLine : W.moreOnly).replace('{x}', s.length ? moreWords : capFirst(moreWords)) : '';
     const freed = FEELS.some(f => was[f.id] === 'skip' && now[f.id] !== 'skip');
