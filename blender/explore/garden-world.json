@@ -501,7 +501,8 @@
         "simple",
         "bread",
         "warming",
-        "snack"
+        "snack",
+        "evening"
       ],
       "seed": {
         "name": "Camp-oven damper",
@@ -604,7 +605,8 @@
         "cooking",
         "simple",
         "whole-food",
-        "autumn"
+        "autumn",
+        "warming"
       ],
       "seed": {
         "name": "Foil-baked potatoes with rosemary",
@@ -701,7 +703,9 @@
         "no-cook",
         "midday",
         "sunny",
-        "cooling"
+        "cooling",
+        "sharing",
+        "evening"
       ],
       "seed": {
         "name": "Greek-style table salad",
@@ -753,7 +757,9 @@
         "simple",
         "midday",
         "sunny",
-        "drink"
+        "drink",
+        "sharing",
+        "evening"
       ],
       "seed": {
         "name": "Fresh lemonade with mint",
