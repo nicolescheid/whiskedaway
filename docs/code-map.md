@@ -26,7 +26,7 @@ write-out cache serves the old wording for up to 30 days.
 
 | Role | Files |
 |---|---|
-| Ideas build (main coder) | ideas.js, idea-pick.js, basket.js, basket-view.js, checkout.js, book.js, book-view.js, writeout.js, list.js, cook.js, kitchen.js, chia-mix.js, tell.js, tags.js, checkin.js, checkin-controls.js, navigator.js, theme.js, shopwords.js, serving.js, basket-glue.js, tell-glue.js, chia-glue.js, centrepieces.js, theme-glue.js, how-you-like-it.js, feels.js |
+| Ideas build (main coder) | ideas.js, idea-pick.js, basket.js, basket-view.js, checkout.js, book.js, book-view.js, writeout.js, list.js, cook.js, kitchen.js, chia-mix.js, tell.js, tags.js, checkin.js, checkin-controls.js, navigator.js, theme.js, shopwords.js, serving.js, basket-glue.js, tell-glue.js, chia-glue.js, centrepieces.js, theme-glue.js, how-you-like-it.js, feels.js, food-map.js, food-map-rules.js |
 | Inn architecture / whoever holds the bootstrap | explore.html (bootstrap only), layers.js, touch.js, rooms.js, panorama.js, chat-glue.js, panels.js, inn-map.js, inn-dialogs.js, candles.js, arrival.js, scripts/check.mjs, scripts/sheet-contract.mjs |
 | Phones / mobile lead | chat.js, edge-hints.js, tilt.js, swipe.js, data-budget.js |
 | Sound | sound.js |
@@ -57,7 +57,7 @@ explore.html. A value several modules reassign is a field of `inn` (`inn.spots`,
 
 **Install order matters only for what a module does at load** (its `create*()` calls, which also fix the order sheets are
 added to the page). Today's order: touch, rooms, panorama, chat-glue, serving, basket-glue, chia-glue, sweet-glue,
-centrepieces, tell-glue, how-you-like-it, theme-glue, panels, inn-map, inn-dialogs, candles, arrival. A new module goes after the ones whose
+centrepieces, tell-glue, how-you-like-it, food-map, theme-glue, panels, inn-map, inn-dialogs, candles, arrival. A new module goes after the ones whose
 values it reads at load.
 
 | Module | What it holds |
@@ -76,6 +76,7 @@ values it reads at load.
 | `panels.js` | fitDock, the notebook (renderTold, renderNotes), fromBook, the bar's Front door, Forget, what follows a change to the visit store |
 | `inn-map.js` | the Inn map (24 Oct): the bar's Map button opens a plan of the Inn drawn from `inn-map.json` (content and art edit it); tap a room to walk there, ✦ Where my wander points, and "In this room" (every hotspot here, for keyboards and screen readers). A layer |
 | `how-you-like-it.js` | Cuddlecore's "How you like it" tray, the little cage and the bell jar (24 Oct): one layer with a view per object; the store keys `feels` and `keepingOff`; `inn.likeClash` (the filter: the bell jar, then the cage), `inn.loosenFeels` (a room left with only caged ideas), `inn.howYouLike.payload()` for write-outs; the cage's overlay (`inn.spriteFrom`). The bell jar is behind `MEDICINE_FOODS` (off until a pharmacist or dietitian has checked it; `?medicine-foods=1` on a local build). Its data and rules are `feels.js` (unit-tested) |
+| `food-map.js` | the food map (24 Oct): Tell Gemma's map, through Cuddlecore's framed map, the Tell menu, the notebook and the chat's tag (never the bar's Map, which is the Inn map). Home, Family and Love the food pens on a map drawn from `food-map.json` (content's words, art's places), a list for keyboards and screen readers, shopping words, and the adventure dial. Store keys `foodMap` and `adventure`; `inn.cuisinesNow()` (the familiar cuisines, for everything that read the old `cuisines`), `inn.foodMap.adventure()` for the navigator. Rules in `food-map-rules.js` (unit-tested). A layer |
 | `inn-dialogs.js` | showDialog, hideDialog, openTool, the barometer, clock and seasons wheel (and their taps) |
 | `candles.js` | spriteFrom (on `inn`, for any overlay drawn into the room), the candle's flame and glow, showCandle, chooseEnergy |
 | `arrival.js` | arrive (the foyer's check-in offer, the weather question), checkinPill, endCheckinOffer, faceDesk, settle |
@@ -87,7 +88,7 @@ values it reads at load.
 - **Cuddlecore's "How you like it" tray, cage and bell jar**: built 24 Oct, `explore/how-you-like-it.js` and `feels.js`, on placeholder hotspots until art renders them (docs/art-brief-cuddlecore-tray.md). The cage's
   overlay is drawn like the candle flames (`inn.spriteFrom`, from candles.js). Its filter goes in serving.js next to dietClash and
   kitchenOk, and the cage always wins.
-- **The Food map adventure dial**: part of inn-map.js or its own sheet. Its filter goes in serving.js.
+- **The food map and its adventure dial**: built 24 Oct, `explore/food-map.js`. The dial is a score in navigator.js (`adventureScore`), never a filter; the cage and the bell jar leave cards out before anything is scored.
 - **The first-visit tour**: `explore/tour.js`, a `modal: false` layer, started from arrival.js. Skip and Escape end it.
 - **The garden**: a world JSON plus renders. ROOMS picks it up in the bootstrap; a new kind of object registers its tap with
   `inn.onTouch`.

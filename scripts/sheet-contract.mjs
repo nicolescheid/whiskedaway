@@ -25,7 +25,8 @@ const SWEET = { root: '#sweet-sheet', ways: { done: '.sw-done', x: '.tl-x' }, ke
 const DIALOG = (root, ok) => ({ root, ways: { done: ok, x: null }, keep: ALL, dialog: true });
 export const SHEETS = [
   { id: 'pantry', ...TELL, open: { room: 'cuddlecore', spot: 'pantry-cabinet' }, answer: 'pantry' },
-  { id: 'food map', root: '#food-map', ways: { done: '.fm-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'press', keep: ALL },
+  { id: 'food map dial', root: '#food-map', ways: { done: '.fm-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'press', keep: ALL },   // the first choice in it is the dial
+  { id: 'food map pins', root: '#food-map', ways: { done: '.fm-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'pin', keep: ALL },
   { id: 'dietary', ...TELL, open: { room: 'cuddlecore', spot: 'dietary-shelf' }, answer: 'press' },
   { id: 'how you like it', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'feels-tray' }, answer: 'press', keep: ALL },
   { id: 'little cage', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'cage' }, answer: null, keep: ALL },
@@ -258,6 +259,7 @@ async function answer(page, S) {
     return true;
   }
   if (S.answer === 'star') { await page.click(`${S.root} .sc-star`); await page.waitForTimeout(300); return true; }
+  if (S.answer === 'pin') { await page.click(`${S.root} .fm-t[aria-pressed="false"]`); return true; }   // a pin or a colour from the food map's list
   // the first unpressed choice in the sheet's body (not a close, Done, Back or Next); where that's past a limit (the map's three
   // cuisines) and doesn't press, the first pressed one unpressed instead
   const did = await page.evaluate(root => {
