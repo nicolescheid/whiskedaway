@@ -32,6 +32,7 @@ from whisked import (ART, ASSETS, CHIA_EYE, CHIA_FROM_GH, GH_EYE, GH_PLATE, GLAZ
                      glimpse_plate, image_mat, look, mat, meshes_of, model, pano_camera, pbr, plate_target, point_light,
                      sage_paint, sphere, srgb, text, use_gpu, window_glass)
 
+import timeofday  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
@@ -69,6 +70,13 @@ NIGHT_VIEWS = {"rain": "19-lane-night-rain.png", "fair": "20-lane-night-fair.png
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
               bounce=(4, (0.55, 0.62, 1.0)), green=0, beyond=0.06, fill=1.2, lamps=0.9, exposure=-0.05)
+
+# Dawn and dusk: --dawn / --dusk (timeofday.py). The window looks onto the village lane (east): the sun reaches it at dawn.
+TIME = "dawn" if "--dawn" in ARGS and not GLIMPSE else "dusk" if "--dusk" in ARGS and not GLIMPSE else None
+if TIME:
+    WX.update(timeofday.look(TIME, WX, "dawn", -35, "lamps"))
+    WX.update(view=timeofday.plate(os.path.join(LANE, WEATHERS[WEATHER]["view"]), os.path.join(LANE, NIGHT_VIEWS[WEATHER]), TIME, f"lane_{WEATHER}"),
+              green=WX["green"] * 0.4, beyond=WX["beyond"] * 0.8)
 
 W, D, H = 4.5, 4.5, 2.7               # inside the room
 EYE = CHIA_EYE[2]
@@ -1100,7 +1108,7 @@ def main():
         print("[whisked] done (no render)")
         return
     pano_camera(scene, CAM, CAM_YAW)
-    scene.render.filepath = os.path.join(OUT, f"chiapothecary_pano_{WEATHER}{'_night' if NIGHT else ''}{'_preview' if PREVIEW else ''}.jpg")
+    scene.render.filepath = os.path.join(OUT, f"chiapothecary_pano_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}{'_preview' if PREVIEW else ''}.jpg")
     bpy.ops.render.render(write_still=True)
     print(f"[whisked] rendered {WEATHER}{' night' if NIGHT else ''}")
     print("[whisked] done")

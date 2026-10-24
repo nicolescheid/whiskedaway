@@ -25,6 +25,7 @@ from appliances import APPLIANCES, appliance_mats  # noqa: E402
 from feels_objects import bell_jar, feels_mats, feels_tray, little_cage  # noqa: E402
 from tools import TOOLS, cup_and_saucer, tool_mats, water_glass  # noqa: E402
 from whisked import emission_mat, window_glass  # noqa: E402
+import timeofday  # noqa: E402
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
@@ -58,6 +59,14 @@ NIGHT_VIEWS = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
               bounce=(5, (0.55, 0.62, 1.0)), flames=1.4, fill=7, exposure=0.85)
+
+# Dawn and dusk: --dawn / --dusk (timeofday.py). The window faces the sea (west): the sun reaches it at dusk.
+TIME = "dawn" if "--dawn" in ARGS else "dusk" if "--dusk" in ARGS else None
+if TIME:
+    WX.update(timeofday.look(TIME, WX, "dusk", 25, "flames"))
+    WX.update(view=timeofday.plate(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "art-inbox", "cuddlecore", WX["view"]),
+                                   os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "art-inbox", "cuddlecore", NIGHT_VIEWS[WEATHER]),
+                                   TIME, f"cuddlecore_{WEATHER}"))
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "assets")
@@ -1054,7 +1063,7 @@ def main():
             nm, yw, pt, fv = spec.split(",")
             cam.data.angle = math.radians(float(fv))
             cam.rotation_euler = (math.radians(90 + float(pt)), 0, -math.radians(float(yw)))
-            scene.render.filepath = os.path.join(OUT, f"closeup_{nm}_{WEATHER}{'_night' if NIGHT else ''}.png")
+            scene.render.filepath = os.path.join(OUT, f"closeup_{nm}_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}.png")
             bpy.ops.render.render(write_still=True)
         return
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "cuddlecore.blend"))
@@ -1063,7 +1072,7 @@ def main():
     if NO_RENDER:
         print("[whisked] done (no render)", json.dumps(HOTSPOTS))
         return
-    bpy.context.scene.render.filepath = os.path.join(OUT, f"cuddlecore_pano_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
+    bpy.context.scene.render.filepath = os.path.join(OUT, f"cuddlecore_pano_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}{suffix}.jpg")
     bpy.ops.render.render(write_still=True)
     print("[whisked] done", json.dumps(HOTSPOTS))
 

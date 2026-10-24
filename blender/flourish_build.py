@@ -33,6 +33,7 @@ from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, cyl
                      mat, meshes_of, model, pano_camera, pbr, point_light, retint, sphere, srgb, swap_material, text,
                      use_gpu, window_glass)
 
+import timeofday  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
@@ -66,6 +67,14 @@ if NIGHT:
     # Late night: the same weather after dark, every lamp lit
     WX.update(sea=NIGHT_SEA[WEATHER], garden="29-garden-night.png", sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8,
               sun=None, bounce=(4, (0.55, 0.62, 1.0)), lamps=1.4, fill=6, exposure=0.9)
+
+# Dawn and dusk: --dawn / --dusk (timeofday.py). The sea window faces west: the sun reaches it at dusk.
+TIME = "dawn" if "--dawn" in ARGS else "dusk" if "--dusk" in ARGS else None
+if TIME:
+    _d = WEATHERS[WEATHER]
+    WX.update(timeofday.look(TIME, WX, "dusk", 25, "lamps"))
+    WX.update(sea=timeofday.plate(os.path.join(PACK, _d["sea"]), os.path.join(PACK, NIGHT_SEA[WEATHER]), TIME, f"flourish_sea_{WEATHER}"),
+              garden=timeofday.plate(os.path.join(PACK, _d["garden"]), os.path.join(PACK, "29-garden-night.png"), TIME, f"flourish_garden_{WEATHER}"))
 
 W, D, H = 4.5, 4.5, 2.7
 EYE = 1.6
@@ -1365,7 +1374,7 @@ def main():
         print("[whisked] done (no render)")
         return
     pano_camera(scene, CAM, CAM_YAW)
-    scene.render.filepath = os.path.join(OUT, f"flourish_pano_{WEATHER}{'_night' if NIGHT else ''}{'_preview' if PREVIEW else ''}.jpg")
+    scene.render.filepath = os.path.join(OUT, f"flourish_pano_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}{'_preview' if PREVIEW else ''}.jpg")
     bpy.ops.render.render(write_still=True)
     print(f"[whisked] rendered {WEATHER}{' night' if NIGHT else ''}")
     print("[whisked] done")

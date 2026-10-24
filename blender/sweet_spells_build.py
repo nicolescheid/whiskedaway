@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, curtain, cyl, emission_mat,  # noqa: E402
                      image_mat, look, mat, meshes_of, model, pano_camera, pbr, point_light, retint, sphere, srgb,
                      text, use_gpu, window_glass)
+import timeofday  # noqa: E402
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
@@ -59,6 +60,12 @@ NIGHT_VIEWS = {"rain": "19-lane-night-rain.png", "fair": "20-lane-night-fair.png
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
               bounce=(4, (0.55, 0.62, 1.0)), fill=1.0, lamps=0.8, exposure=-0.1)
+# Dawn and dusk: --dawn / --dusk (timeofday.py). The bay looks onto the village lane (east): the sun reaches it at dawn.
+TIME = "dawn" if "--dawn" in ARGS else "dusk" if "--dusk" in ARGS else None
+if TIME:
+    WX.update(timeofday.look(TIME, WX, "dawn", 20, "lamps"))
+    WX.update(view=timeofday.plate(os.path.join(PACK, WEATHERS[WEATHER]["view"]), os.path.join(PACK, NIGHT_VIEWS[WEATHER]),
+                                   TIME, f"lane_{WEATHER}"))
 GLOW = 1.4 if NIGHT else 1.0          # candles, fire and lamps are lit whatever the weather; a touch brighter at night
 
 W, D, H = 4.5, 4.5, 2.7               # inside the room
@@ -1109,7 +1116,7 @@ def main():
         print("[whisked] done (no render)")
         return
     pano_camera(scene, CAM, CAM_YAW)
-    scene.render.filepath = os.path.join(OUT, f"sweet_spells_pano_{WEATHER}{'_night' if NIGHT else ''}{'_preview' if PREVIEW else ''}.jpg")
+    scene.render.filepath = os.path.join(OUT, f"sweet_spells_pano_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}{'_preview' if PREVIEW else ''}.jpg")
     bpy.ops.render.render(write_still=True)
     print(f"[whisked] rendered {WEATHER}{' night' if NIGHT else ''}")
     print("[whisked] done")

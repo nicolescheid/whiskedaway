@@ -26,6 +26,7 @@ from whisked import (ART, OUT, area_light, blend_model, box, box_span, center_of
                      emission_mat, image_mat, look, mat, meshes_of, model, pano_camera, pbr, point_light, retint,
                      sphere, srgb, text, use_gpu, window_glass, fly_camera, key_rot_z, video_settings)
 
+import timeofday  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
@@ -58,6 +59,21 @@ FILL = 0.25 if NIGHT else 1.0  # the broad warm fills: low at night, so the ligh
 os.makedirs(OUT, exist_ok=True)
 PACK = os.path.join(ART, "inn-hallway")
 KITCHEN = os.path.join(ART, "cuddlecore")
+
+# Dawn and dusk: --dawn / --dusk (timeofday.py). The sea window at the end of the hall faces west (sunset glow);
+# the front door's fanlight faces the lane (dawn glow). Lamps lit, the broad fills low, as at night.
+TIME = "dawn" if "--dawn" in ARGS else "dusk" if "--dusk" in ARGS else None
+FAN = ("#c9d1d6", 0.55)
+if TIME:
+    _t = timeofday.TIMES[TIME]
+    VIEWS = dict(VIEWS)
+    VIEWS[WEATHER] = timeofday.plate(os.path.join(KITCHEN, VIEWS[WEATHER]), os.path.join(KITCHEN, NIGHT_VIEWS[WEATHER]), TIME, f"hallway_{WEATHER}")
+    _s = SKY[WEATHER]
+    SKY = dict(SKY)
+    SKY[WEATHER] = (_s[0] * _t["sky"], _s[1], _s[2] * _t["bounce"][1])
+    LAMP = 1.1
+    FILL = 0.5
+    FAN = ("#f0b79a" if TIME == "dawn" else "#e9a77e", 0.6)
 
 H = 2.7                      # ceiling
 EYE = 1.6
@@ -593,7 +609,7 @@ def build():
     lane_sky.scale = (4, 2, 1)
     for attr in ("visible_shadow", "visible_diffuse", "visible_glossy", "visible_transmission", "visible_volume_scatter"):
         setattr(lane_sky, attr, False)
-    sky_m = mat("fanlight_sky", (0, 0, 0, 1), emission=srgb("#1d2533" if NIGHT else "#c9d1d6"), strength=0.06 if NIGHT else 0.55)
+    sky_m = mat("fanlight_sky", (0, 0, 0, 1), emission=srgb("#1d2533" if NIGHT else FAN[0]), strength=0.06 if NIGHT else FAN[1])
     lane_sky.data.materials.append(sky_m)
     fd_parts = [box_span("front_leaf", -fd_w / 2 + 0.01, fd_w / 2 - 0.01, FRONT - 0.2, FRONT - 0.15, 0.01, fd_h - 0.005, front_paint, bevel=0.004)]
     for px in (-0.22, 0.22):
@@ -738,7 +754,7 @@ def build():
     scene.render.resolution_percentage = 100
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = 0.7 if NIGHT else 0.75
+    scene.view_settings.exposure = 0.7 if NIGHT else 0.85 if TIME else 0.75
     scene.render.image_settings.file_format = "JPEG"
     scene.render.image_settings.quality = 90
 
@@ -845,7 +861,7 @@ def main():
         if cam:
             bpy.data.objects.remove(cam)
         cam = pano_camera(scene, loc, 0)
-        scene.render.filepath = os.path.join(OUT, f"hallway_pano_{stop}_{WEATHER}{'_night' if NIGHT else ''}{suffix}.jpg")
+        scene.render.filepath = os.path.join(OUT, f"hallway_pano_{stop}_{WEATHER}{'_night' if NIGHT else '_' + TIME if TIME else ''}{suffix}.jpg")
         bpy.ops.render.render(write_still=True)
         print(f"[whisked] rendered {stop}")
     print("[whisked] done")
