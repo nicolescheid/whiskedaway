@@ -329,8 +329,8 @@ const JOURNEYS = [
   // stays live behind it, the walk adds nothing to the trail, and Check in opens the check-in
   { id: 'the tour, start to desk', async run(page) {
     const out = [], entry = await marked(page);
-    const trail = await page.evaluate(() => window.__explore.state.trail.length);
     out.push(['Show me round starts the tour', await tourStart(page)]);
+    const trail = await page.evaluate(() => window.__explore.state.trail.length);   // after the walk to the foyer, which is a real move
     out.push(['the room stays live behind it', await page.evaluate(() => !document.getElementById('stage')?.closest('[inert]'))]);
     out.push(['focus on Next', await page.evaluate(() => document.activeElement?.classList.contains('tr-next'))]);
     const rooms = [];
