@@ -4,7 +4,7 @@
 // Shared through `inn` (docs/code-map.md).
 
 export function install(inn) {
-  Object.assign(inn, { checkinPill, arrive, settle, endCheckinOffer });   // its functions, for the other modules (hoisted)
+  Object.assign(inn, { checkinPill, arrive, settle, endCheckinOffer, offerCheckin, faceDesk });   // its functions, for the other modules (hoisted)
   // ---------- arrival: Gemma asks once about the visitor's weather
   // Gemma checks her guess at the visitor's weather, rather than asking from scratch (docs/gemma-voice-guide.md:
   // "love" only in the greeting, and nothing that only works by day)
@@ -47,22 +47,27 @@ export function install(inn) {
   const PHONE_FOYER_VIEW = { yaw: 52, pitch: -16 }, WIDE_FOYER_YAW = 20;
   function faceDesk() {
     const d = inn.spots['checkin-desk'];
-    if (!d) return;
+    if (!d || inn.touring) return;                         // the tour has already walked them on
     if (innerWidth < innerHeight) return inn.lookTo(PHONE_FOYER_VIEW.yaw, PHONE_FOYER_VIEW.pitch);
     const half = Math.atan(Math.tan(inn.camera.fov * Math.PI / 360) * inn.camera.aspect) * 180 / Math.PI;   // half the view, across
     if (Math.abs(((d.yaw - inn.look.yaw + 540) % 360) - 180) > half - 16) inn.lookTo(WIDE_FOYER_YAW, inn.look.pitch);   // 16: room for the desk's label beside its dot
+  }
+  // The check-in offer: her line, Check in / Later, and the pill on phones. Also after the first-visit tour is declined or
+  // skipped (tour.js), with its own line first
+  function offerCheckin({ line = OPENER().line } = {}) {
+    inn.chatLine('gemma', line);
+    inn.setChips([{ label: OPENER().yes, do: ['checkin'] }, { label: OPENER().no, do: ['later'] }]);
+    inn.state.checkinPill = true;
+    inn.store.save(inn.state);
+    checkinPill();
+    inn.chatUI.setAsking(false);                             // keep the chat at Line: raised to Short it would cover the desk
   }
   function arrive() {
     if (inn.state.asked || inn.state.trail.length) return;
     if (inn.state.room === 'hall-entrance') {
       inn.state.asked = true;
       inn.store.save(inn.state);
-      inn.chatLine('gemma', OPENER().line);
-      inn.setChips([{ label: OPENER().yes, do: ['checkin'] }, { label: OPENER().no, do: ['later'] }]);
-      inn.state.checkinPill = true;
-      inn.store.save(inn.state);
-      checkinPill();
-      inn.chatUI.setAsking(false);                           // keep the chat at Line: raised to Short it would cover the desk
+      if (!inn.tour?.offer()) offerCheckin();                // a first visit: Gemma offers the tour instead (tour.js)
       setTimeout(faceDesk, inn.reduceMotion() ? 0 : 1100);   // after the film's hand-over has settled
       return;
     }

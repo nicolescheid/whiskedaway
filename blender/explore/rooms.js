@@ -95,7 +95,7 @@ export function install(inn) {
   }
   setInterval(() => {
     inn.erwina?.tick({ still: !inn.drag && !document.hidden && performance.now() - inn.lastMove >= 1000 });   // the cat looks for a still second
-    if (!inn.hasLooked || inn.drag || document.hidden || performance.now() - inn.lastMove < 2000) return;
+    if (!inn.hasLooked || inn.touring || inn.drag || document.hidden || performance.now() - inn.lastMove < 2000) return;
     const centre = inn.dir(inn.look.yaw, inn.look.pitch);
     for (const h of inn.hotspots) {
       const ang = THREE.MathUtils.radToDeg(centre.angleTo(h.v.clone().normalize()));
@@ -106,7 +106,10 @@ export function install(inn) {
     }
   }, 300);
   // ---------- moving between rooms
-  function goRoom(id, yaw) {
+  // quiet: the first-visit tour walking the visitor through (tour.js). No trail entry, no count, no intro or season line,
+  // so the tour never steers the navigator, and the room still introduces itself when they really walk in. While the tour
+  // is on (inn.touring), resting on its doors isn't lingering either
+  function goRoom(id, yaw, { quiet = false } = {}) {
     if (!inn.ROOMS[id] || id === inn.state.room) return;
     const from = inn.state.room;
     inn.state.room = id;
@@ -119,11 +122,14 @@ export function install(inn) {
     inn.buildHotspots();
     inn.showClock();
     inn.showWeather(inn.state.weather);
-    record({ kind: 'room', id });
-    inn.track('room_enter', { room: id, from_room: from, step: stepNow() });
+    if (!quiet) {
+      record({ kind: 'room', id });
+      inn.track('room_enter', { room: id, from_room: from, step: stepNow() });
+    }
     if (inn.state.result) inn.applyReveal(inn.state.result.reveal);
     inn.render();
     if (id !== 'cuddlecore') askHemisphere();
+    if (quiet) return inn.store.save(inn.state);
     if (inn.room().seasons && !inn.state.seasonTold) {
       // First time in the Conservatory: say which season it opened in, and that the wheel changes it
       inn.state.seasonTold = true;
