@@ -1,0 +1,267 @@
+{
+  "room": "garden",
+  "stops": {
+    "patio": {
+      "position": [
+        6.5,
+        3.0,
+        1.6
+      ],
+      "yaw": 90,
+      "hotspots": {
+        "gd-flourish-door": {
+          "label": "Back to Flourish",
+          "type": "door",
+          "overlay": null,
+          "yaw": -155.92,
+          "pitch": -14.31,
+          "distance": 2.02,
+          "visible": true,
+          "go": "flourish"
+        },
+        "gd-glasshouse-door": {
+          "label": "The glasshouse",
+          "type": "door",
+          "overlay": null,
+          "yaw": 88.73,
+          "pitch": -6.34,
+          "distance": 4.53,
+          "visible": true,
+          "go": "glasshouse"
+        },
+        "gd-bbq": {
+          "label": "The barbecue",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": -95.97,
+          "pitch": -0.09,
+          "distance": 2.41,
+          "visible": true,
+          "appliance": "bbq"
+        },
+        "gd-table": {
+          "label": "The garden table",
+          "type": "submit",
+          "overlay": null,
+          "yaw": -15.95,
+          "pitch": -21.56,
+          "distance": 2.35,
+          "visible": true
+        },
+        "gd-lights": {
+          "label": "The string lights",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -58.26,
+          "pitch": 27.05,
+          "distance": 2.04,
+          "visible": true
+        },
+        "gd-pizza-oven": {
+          "label": "The pizza oven",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -63.43,
+          "pitch": -9.55,
+          "distance": 4.06,
+          "visible": true
+        },
+        "gd-herbs": {
+          "label": "The herbs",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -134.43,
+          "pitch": -38.36,
+          "distance": 2.36,
+          "visible": true
+        },
+        "gd-beds": {
+          "label": "The vegetable beds",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 62.04,
+          "pitch": -5.45,
+          "distance": 4.75,
+          "visible": true
+        },
+        "gd-tent": {
+          "label": "The tent",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -26.01,
+          "pitch": -0.73,
+          "distance": 9.05,
+          "visible": true
+        },
+        "gd-camp-oven": {
+          "label": "The camp oven",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": -21.1,
+          "pitch": -7.72,
+          "distance": 6.17,
+          "visible": true
+        },
+        "gd-fire-pit": {
+          "label": "The fire",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -21.11,
+          "pitch": -13.89,
+          "distance": 6.28,
+          "visible": true
+        },
+        "gd-sea": {
+          "label": "The sea",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -70.91,
+          "pitch": -2.5,
+          "distance": 13.77,
+          "visible": true
+        },
+        "gd-to-camp": {
+          "label": "To the camp",
+          "type": "stop",
+          "overlay": null,
+          "yaw": -3.81,
+          "pitch": -20.1,
+          "distance": 4.8,
+          "visible": false,
+          "go": "camp"
+        }
+      }
+    },
+    "camp": {
+      "position": [
+        11.0,
+        3.3,
+        1.6
+      ],
+      "yaw": 45,
+      "hotspots": {
+        "gd-flourish-door": {
+          "label": "Back to Flourish",
+          "type": "door",
+          "overlay": null,
+          "yaw": -130.46,
+          "pitch": -4.53,
+          "distance": 6.33,
+          "visible": true,
+          "go": "flourish"
+        },
+        "gd-glasshouse-door": {
+          "label": "The glasshouse",
+          "type": "door",
+          "overlay": null,
+          "yaw": 177.51,
+          "pitch": -4.39,
+          "distance": 6.53,
+          "visible": false,
+          "go": "glasshouse"
+        },
+        "gd-bbq": {
+          "label": "The barbecue",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": -111.14,
+          "pitch": -0.04,
+          "distance": 5.19,
+          "visible": true,
+          "appliance": "bbq"
+        },
+        "gd-table": {
+          "label": "The garden table",
+          "type": "submit",
+          "overlay": null,
+          "yaw": -127.87,
+          "pitch": -19.64,
+          "distance": 2.57,
+          "visible": false
+        },
+        "gd-lights": {
+          "label": "The string lights",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -115.61,
+          "pitch": 13.89,
+          "distance": 3.87,
+          "visible": true
+        },
+        "gd-pizza-oven": {
+          "label": "The pizza oven",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -84.54,
+          "pitch": -9.0,
+          "distance": 4.31,
+          "visible": true
+        },
+        "gd-herbs": {
+          "label": "The herbs",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -125.02,
+          "pitch": -13.96,
+          "distance": 6.06,
+          "visible": false
+        },
+        "gd-beds": {
+          "label": "The vegetable beds",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": 162.0,
+          "pitch": -5.13,
+          "distance": 5.05,
+          "visible": true
+        },
+        "gd-tent": {
+          "label": "The tent",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -0.27,
+          "pitch": -1.27,
+          "distance": 5.17,
+          "visible": true
+        },
+        "gd-camp-oven": {
+          "label": "The camp oven",
+          "type": "kitchen",
+          "overlay": null,
+          "yaw": -12.72,
+          "pitch": -20.23,
+          "distance": 2.39,
+          "visible": true
+        },
+        "gd-fire-pit": {
+          "label": "The fire",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -12.93,
+          "pitch": -33.98,
+          "distance": 2.7,
+          "visible": true
+        },
+        "gd-sea": {
+          "label": "The sea",
+          "type": "ambient",
+          "overlay": null,
+          "yaw": -45.0,
+          "pitch": -2.7,
+          "distance": 12.71,
+          "visible": true
+        },
+        "gd-to-patio": {
+          "label": "To the patio",
+          "type": "stop",
+          "overlay": null,
+          "yaw": -138.81,
+          "pitch": -20.1,
+          "distance": 4.8,
+          "visible": true,
+          "go": "patio"
+        }
+      }
+    }
+  }
+}
