@@ -80,6 +80,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": [
         "bbq",
         "stove"
@@ -131,6 +132,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": ["smells"],
       "appliances": [
         "bbq",
         "stove"
@@ -180,6 +182,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": ["smells"],
       "appliances": [
         "bbq",
         "oven"
@@ -230,6 +233,7 @@
         "gluten-free",
         "nut-free"
       ],
+      "feels": ["coriander"],
       "appliances": [
         "bbq",
         "stove"
@@ -278,6 +282,7 @@
         "gluten-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": [
         "bbq",
         "oven",
@@ -329,6 +334,7 @@
       "cuisines": [
         "Italian"
       ],
+      "feels": [],
       "appliances": [
         "oven"
       ],
@@ -376,6 +382,7 @@
       "cuisines": [
         "Middle Eastern"
       ],
+      "feels": [],
       "appliances": [
         "oven",
         "stove",
@@ -426,6 +433,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": [
         "oven",
         "stove",
@@ -477,6 +485,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": [
         "oven",
         "bbq"
@@ -529,6 +538,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": ["crunchy"],
       "appliances": [
         "oven"
       ],
@@ -577,6 +587,7 @@
         "gluten-free",
         "nut-free"
       ],
+      "feels": ["skins"],
       "appliances": [
         "bbq",
         "oven"
@@ -622,6 +633,7 @@
       ],
       "sweetener": "sugar",
       "added_sugar": true,
+      "feels": [],
       "appliances": [
         "stove",
         "bbq"
@@ -673,6 +685,7 @@
       "cuisines": [
         "Greek"
       ],
+      "feels": ["strong-flavours"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -722,6 +735,7 @@
       ],
       "sweetener": "sugar",
       "added_sugar": true,
+      "feels": ["sour"],
       "appliances": [
         "kettle"
       ],

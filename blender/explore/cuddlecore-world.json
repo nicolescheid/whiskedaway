@@ -509,6 +509,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["kettle", "stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -554,6 +555,8 @@
       "cuisines": [
         "Japanese"
       ],
+      "feels": ["slippery"],
+      "mild_way_in": "Japanese",
       "appliances": ["kettle", "stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -596,6 +599,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -640,6 +644,7 @@
       "cuisines": [
         "Chinese"
       ],
+      "feels": ["slippery"],
       "appliances": ["stove", "slow-cooker"],
       "appliances_checked": true,
       "themes": [
@@ -680,6 +685,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove", "slow-cooker"],
       "appliances_checked": true,
       "themes": [
@@ -720,6 +726,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -754,6 +761,7 @@
       ],
       "method_short": "Spoon theory: some days you only have a few units of energy to spend. The spoons on each card show what it costs.",
       "diet": [],
+      "feels": ["nuts"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -793,6 +801,7 @@
       "cuisines": [
         "Italian"
       ],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -830,6 +839,7 @@
       ],
       "method_short": "Crackers, a bit of cheese, apple slices and a few nuts. One plate, eaten under a blanket.",
       "diet": [],
+      "feels": ["crunchy", "nuts"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -875,6 +885,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -919,6 +930,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -960,6 +972,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": ["nuts"],
       "appliances": ["food-processor"],
       "appliances_checked": true,
       "themes": [
@@ -1002,6 +1015,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1047,6 +1061,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1090,6 +1105,7 @@
       "cuisines": [
         "Greek"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1132,6 +1148,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": ["nuts"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1176,6 +1193,8 @@
       "cuisines": [
         "Chinese"
       ],
+      "feels": [],
+      "mild_way_in": "Chinese",
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1217,6 +1236,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["stove", "air-fryer"],
       "appliances_checked": true,
       "themes": [
@@ -1258,6 +1278,7 @@
       ],
       "sweetener": "honey",
       "added_sugar": true,
+      "feels": [],
       "appliances": ["stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -1299,6 +1320,7 @@
         "vegetarian",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -1340,6 +1362,7 @@
         "vegetarian",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1384,6 +1407,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1430,6 +1454,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["food-processor"],
       "appliances_checked": true,
       "themes": [
@@ -1473,6 +1498,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -1513,6 +1539,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1553,6 +1580,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["stove", "oven"],
       "appliances_checked": true,
       "themes": [
@@ -1591,6 +1619,7 @@
         "vegetarian",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["slow-cooker"],
       "appliances_checked": true,
       "themes": [
@@ -1637,6 +1666,8 @@
       "cuisines": [
         "Middle Eastern"
       ],
+      "feels": [],
+      "mild_way_in": "Middle Eastern",
       "appliances": ["kettle"],
       "appliances_checked": true,
       "themes": [
@@ -1683,6 +1714,7 @@
       "cuisines": [
         "Chinese"
       ],
+      "feels": [],
       "appliances": ["kettle"],
       "appliances_checked": true,
       "themes": [
@@ -1725,6 +1757,7 @@
         "nut-free"
       ],
       "tools": ["pan", "timer"],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1768,6 +1801,7 @@
         "nut-free"
       ],
       "tools": ["pan", "timer"],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1807,6 +1841,7 @@
         "nut-free"
       ],
       "tools": ["timer"],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1848,6 +1883,7 @@
         "nut-free"
       ],
       "tools": ["wooden-spoon"],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1887,6 +1923,7 @@
         "nut-free"
       ],
       "tools": ["colander"],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
