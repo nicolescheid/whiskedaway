@@ -421,9 +421,9 @@ const MUSIC = {
   // The clockwork songbird sings a real tūī's song (DOC), bright in fair weather, quieter in rain, hushed in a storm
   songbird: { room: 'chiapothecary', wind: 3, src: () => `${SOUND}tui-song.mp3`,
               level: s => s?.weather === 'stormy' ? 0.25 : s?.weather === 'fair' || s?.weather === 'very-dry' ? 1 : 0.6 },
-  // The phonograph in Flourish: Grieg in the morning, Vivaldi at midday, Dvořák in the evening and at night
+  // The phonograph in Flourish: Grieg at dawn and in the morning, Vivaldi at midday, Dvořák in the evening and at night
   'fl-phonograph': { room: 'flourish', wind: 6, horn: true,
-                     src: s => `${SOUND}${{ morning: 'grieg-morning', midday: 'vivaldi-spring' }[s?.time] || 'dvorak-humoresque'}.mp3` },
+                     src: s => `${SOUND}${{ dawn: 'grieg-morning', morning: 'grieg-morning', midday: 'vivaldi-spring' }[s?.time] || 'dvorak-humoresque'}.mp3` },
 };
 // A phonograph's horn: no deep bass, no sparkle, a little nasal, and a faint crackle from the record
 function horn(out) {

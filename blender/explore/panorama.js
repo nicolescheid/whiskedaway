@@ -8,6 +8,7 @@ import { createEdgeHints } from './edge-hints.js';
 import { createTilt } from './tilt.js';
 import { saveData } from './data-budget.js';
 import { createErwina } from './erwina.js';
+import { usable } from './pano-times.js';
 
 export function install(inn) {
   Object.assign(inn, { showWeather, showClock, buildHotspots, render, resize, lookTo });   // its functions, for the other modules (hoisted)
@@ -91,23 +92,27 @@ export function install(inn) {
   /** Show a weather: preview first (fast), then the full-resolution render if the GPU can take it. */
   inn.erwina = null;                                   // the Inn cat (explore/erwina.js), made once the room is set up
   async function showWeather(w, { fade = true } = {}) {
-    const night = inn.isNight(), R = inn.room(), at = inn.state.room, season = inn.seasonNow();
-    sound.ambience(at, w, { night, season, time: inn.timeNow() });                     // the room's quiet bed follows the weather
+    const night = inn.isNight(), time = inn.timeNow(), R = inn.room(), at = inn.state.room, season = inn.seasonNow();
+    sound.ambience(at, w, { night, season, time });                     // the room's quiet bed follows the weather
     inn.erwina?.update();                                  // the cat: is a spot possible here, in this weather, at this time?
-    const stale = () => w !== inn.state.weather || night !== inn.isNight() || at !== inn.state.room || season !== inn.seasonNow();
+    const stale = () => w !== inn.state.weather || time !== inn.timeNow() || at !== inn.state.room || season !== inn.seasonNow();
     let shown = w;                                     // a room without this weather's render falls back to rain
-    let preview = night && !R.dayOnly && !R.noNight ? await loadTex(R.pano(w, true, false)) : null;
-    const haveNight = !!preview;                       // until the night renders exist, darken the day render
-    if (!preview) preview = await loadTex(R.pano(w, false, false));
+    // Dawn, dusk and night try their own render first (explore/pano-times.js says which exist), then fall back, ending at the day render
+    let preview = null, got = null;                    // got: [weather, tod] of the render on screen; tod null = the day render
+    for (const [cw, tod] of R.dayOnly || R.noNight ? [[w, null]] : usable(R, w, time)) {
+      preview = await loadTex(R.pano(cw, tod, false));
+      if (preview) { got = [cw, tod]; break; }
+    }
+    const haveTod = !!got?.[1];                        // until a time's renders exist, tint the day render
     if (!preview && w !== 'rain') { shown = 'rain'; preview = await loadTex(R.pano('rain', false, false)); }
     if (stale()) return;
-    inn.$('tint').className = night ? (haveNight ? '' : 'night') : (inn.timeNow() === 'midday' ? '' : inn.timeNow());
+    inn.$('tint').className = haveTod ? '' : time === 'night' ? 'night' : time === 'dawn' ? 'morning' : time === 'dusk' ? 'evening' : time === 'midday' ? '' : time;
     setThemeColor();
     stage.className = stage.className.replace(/\s*wx-\S+/g, '') + (R.dayOnly || shown !== w ? ` wx-${w}` : '');
     if (preview) inn.erwina?.lightFrom(preview);          // she's lit from the pano on screen
     if (preview) fade && sphere.material.map ? crossFade(preview) : (showTex(preview), render());
     if (useFull) {
-      const full = await loadTex(fullUrl(R.pano(shown, haveNight, true)));
+      const full = await loadTex(fullUrl(R.pano(got ? got[0] : shown, got ? got[1] : false, true)));
       if (full && !stale()) { showTex(full); if (!fader.visible) render(); }
     }
   }

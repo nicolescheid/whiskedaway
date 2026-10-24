@@ -10,16 +10,21 @@ import { sound } from './sound.js';
 export function install(inn) {
   Object.assign(inn, { askHemisphere, countAtom, record, goRoom, introduce, setRoomText, wanderRoom });   // its functions, for the other modules (hoisted)
   // ---------- time of day: the device's own, unless the visitor pushed the clock
-  const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
+  // Dawn and dusk (24 Oct) sit either side of the day: the buckets below, with sun times or without
+  const bucketFor = h => (h < 5 || h >= 21) ? 'night' : h < 6.5 ? 'dawn' : h < 11 ? 'morning' : h < 17 ? 'midday' : h < 19.5 ? 'evening' : 'dusk';
   // With today's local sunrise and sunset (from /local-weather), it's night from half an hour after sunset until half an
   // hour before sunrise, so an October evening in Auckland goes dark at about 8.30 pm and a June one at 5.30 pm.
-  // Without them, the fixed hours above (night from 9 pm to 5 am).
+  // Dawn runs from there to 45 minutes after sunrise; dusk from 45 minutes before sunset to when night starts.
+  // Without them, the fixed hours above (dawn 5 to 6.30 am, dusk 7.30 to 9 pm, night from 9 pm to 5 am).
   const hours = t => { const [a, b] = t.split(':').map(Number); return a + b / 60; };
   const deviceTime = () => {
     const d = new Date(), h = d.getHours() + d.getMinutes() / 60, sun = inn.state.sun;
-    if (!sun || hours(sun.set) <= hours(sun.rise)) return bucketFor(d.getHours());   // no sun times, or a sunset past midnight (far north in summer)
-    if (h < hours(sun.rise) - 0.5 || h >= hours(sun.set) + 0.5) return 'night';
-    return bucketFor(Math.min(Math.max(d.getHours(), 5), 20));
+    if (!sun || hours(sun.set) <= hours(sun.rise)) return bucketFor(h);   // no sun times, or a sunset past midnight (far north in summer)
+    const rise = hours(sun.rise), set = hours(sun.set);
+    if (h < rise - 0.5 || h >= set + 0.5) return 'night';
+    if (h < rise + 0.75) return 'dawn';
+    if (h >= set - 0.75) return 'dusk';
+    return h < 11 ? 'morning' : h < 17 ? 'midday' : 'evening';
   }; inn.deviceTime = deviceTime;
   const timeNow = () => inn.state.time || deviceTime(); inn.timeNow = timeNow;
   const isNight = () => timeNow() === 'night'; inn.isNight = isNight;
