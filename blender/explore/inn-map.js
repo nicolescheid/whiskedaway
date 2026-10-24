@@ -78,7 +78,10 @@ export function install(inn) {
         const t = el('text', { x: cx, y: cy + 4, class: 'im-name', 'text-anchor': 'middle', transform: `rotate(-90 ${cx} ${cy})` }, r.label);
         a.append(t);
         if (!open && line) a.append(el('text', { x: cx + 12, y: cy + 4, class: 'im-line', 'text-anchor': 'middle', transform: `rotate(-90 ${cx + 12} ${cy})` }, line));
-        if (isHere) a.append(el('circle', { cx: x + w / 2, cy: y + 10, r: 4.5, class: 'im-dot' }));
+        if (isHere) {                     // the dot at the top, and "You're here" up the side where a closed room's line goes
+          a.append(el('circle', { cx: x + w / 2, cy: y + 10, r: 4.5, class: 'im-dot' }));
+          a.append(el('text', { x: cx + 12, y: cy + 4, class: 'im-here', 'text-anchor': 'middle', transform: `rotate(-90 ${cx + 12} ${cy})` }, M.here || "You're here"));
+        }
       } else {
         const ls = rows(line, Math.max(10, Math.floor((w - 10) / 5.6)));
         const top = cy - (ls.length * 12.5 + (isHere ? 13 : 0)) / 2;
