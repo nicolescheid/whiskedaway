@@ -39,5 +39,6 @@
 .fm-steps button { position: relative; min-height: 44px; padding: 2px 4px; border-radius: 10px; border: 1px solid var(--berry); background: #fff; color: var(--berry);
   font: 500 12px/1.2 'Quicksand'; }
 .fm-steps button[aria-pressed="true"] { background: var(--berry); color: var(--parchment); }
+@media (max-width: 420px), (max-height: 420px) { .fm-steps { gap: 3px; } .fm-steps button { font-size: 11px; padding: 2px 1px; } }   /* "Somewhere new" fits its fifth of the row at 375 (QA 6 F4) */
 .fm-unset { margin-top: 6px; min-height: 32px; }
 @media (prefers-reduced-motion: reduce) { .fm-needle { transition: none; } }

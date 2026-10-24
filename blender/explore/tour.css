@@ -21,6 +21,12 @@
 .spot.tour-glow .dot { background: var(--amber-glow); width: 16px; height: 16px; animation: glow 1.8s ease-in-out infinite; }
 .spot.tour-glow .name { opacity: 1; transform: none; border-color: var(--amber); pointer-events: auto; }
 .chip.tour-glow { box-shadow: 0 0 0 3px rgba(232, 184, 122, .75), 0 0 16px 4px rgba(232, 184, 122, .55); }
+/* The offer card (a first visit): Yes and No stacked, no dots */
+.tour.offer .tr-dots { display: none; }
+.tour.offer .tr-foot { flex-direction: column; align-items: stretch; }
+.tour.offer .tr-btns { flex-direction: column-reverse; }
+.tour.offer .tr-btns button { min-height: 44px; }
+.tour.offer .tr-line { min-height: 0; }
 @media (max-width: 560px) { .tr-line { font-size: 16px; } .tr-btns button { padding: 6px 12px; } }
 @media (prefers-reduced-motion: reduce) { .spot.tour-glow .dot { animation: none; box-shadow: 0 0 0 3px rgba(232, 184, 122, .5), 0 0 16px 4px rgba(232, 184, 122, .6); } }
 

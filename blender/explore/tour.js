@@ -63,23 +63,46 @@ export function install(inn) {
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   $('.tr-dots').innerHTML = STOPS.map(() => '<i></i>').join('');
-  let layer = null, at = -1, moving = false;
+  let layer = null, at = -1, moving = false, home = null;   // home: where they stood when it started (Escape and Back return them)
   inn.touring = false;
 
   const firstVisit = () => { try { return localStorage.getItem(OFFERED) !== '1'; } catch { return true; } };
   const markOffered = () => { try { localStorage.setItem(OFFERED, '1'); } catch { /* storage blocked: offered again next visit */ } };
 
-  /** On arrival in the foyer (arrival.js): a first visit gets the offer. Returns true if she made it */
+  // The offer is the tour's own card under the bar (QA 6 B1): the chat's chips can sit off-screen on a short phone, under the
+  // human-check box, and the offer is only made once. `wa-tour-offered` is set when the card is up, so it has been seen
+  let offering = false, offerLayer = null;
+  /** On arrival in the foyer (arrival.js): a first visit gets the offer. Returns true if she'll make it */
   function offer() {
     if (!firstVisit()) return false;
-    markOffered();
-    inn.track('tour_offer', {});
-    inn.chatLine('gemma', T.offer);
-    inn.setChips([{ label: T.yes, do: ['tour'] }, { label: T.no, do: ['tourNo'] }]);   // chips raise the chat from Line, so they show on phones
+    offering = true;                                   // from now it counts as pending (the explainer waits, arrival makes no check-in offer)
+    layers.whenFree(() => {
+      if (!offering || inn.touring) return;
+      markOffered();
+      inn.track('tour_offer', {});
+      root.classList.add('offer');                     // the card says it (its line is a live region); the chat keeps no stale question
+      $('.tr-line').textContent = T.offer;
+      $('.tr-next').textContent = T.yes;
+      $('.tr-skip').textContent = T.no;
+      root.hidden = false;
+      offerLayer = layers.open({ el: root, name: 'tour-offer', modal: false, close: how => answer(how === 'back' || how === 'escape' ? how : 'ignored') });
+      place();
+    });
     return true;
   }
-  inn.CHIP_ACTS.tour = () => start('arrival');
-  inn.CHIP_ACTS.tourNo = () => { inn.track('tour_end', { how: 'declined', stop: 0 }); inn.offerCheckin({ line: T.declined }); };
+  // Leave the offer: Yes starts the tour; No, Escape and Back decline with her line; a tap on anything else lets it go quietly
+  function answer(how) {
+    if (!offering) return;
+    offering = false;
+    root.hidden = true;
+    root.classList.remove('offer');
+    const l = offerLayer;
+    offerLayer = null;
+    if (l) layers.closed(l, { how: how === 'back' ? 'back' : 'self', refocus: how !== 'ignored' && how !== 'yes' });
+    if (how === 'yes') return;
+    inn.track('tour_end', { how: how === 'ignored' ? 'ignored' : 'declined', stop: 0 });
+    inn.offerCheckin(how === 'ignored' ? {} : { line: T.declined });
+  }
 
   function glow(on) {
     const s = STOPS[at];
@@ -116,9 +139,11 @@ export function install(inn) {
 
   function start(src = 'arrival') {
     if (inn.touring) return;
+    if (offering) answer('yes');                      // Yes (or the bar's button) on the offer card: it hands over to the tour
     inn.endCheckinOffer();                            // the tour ends at the desk with its own offer
     inn.setChips([]);
     inn.touring = true;
+    home = { room: inn.state.room, yaw: inn.look.yaw, pitch: inn.look.pitch };
     root.hidden = false;
     layer = layers.open({ el: root, name: 'tour', modal: false, close: how => end(how === 'outside' ? 'skip' : how) });
     inn.track('tour_start', { from: src });
@@ -138,16 +163,24 @@ export function install(inn) {
     layers.closed(layer, { how: how === 'back' ? 'back' : 'self', refocus: ['skip', 'escape', 'back', 'finished'].includes(how) });
     layer = null;
     at = -1;
+    if (['escape', 'back'].includes(how) && home && home.room !== inn.state.room) {   // Escape and Back put them home (QA 6 F3); Skip leaves them where they stand
+      moving = true;
+      inn.goRoom(home.room, home.yaw, { quiet: true });
+      moving = false;
+      inn.lookTo(home.yaw, home.pitch);
+    }
     layers.afterBack(() => inn.showRoomInUrl());      // the step back lands on the address from before the walk: say where they are now
     inn.track('tour_end', { how, stop });
     if (['skip', 'escape', 'back'].includes(how)) inn.offerCheckin({ line: T.skipped });
   }
   $('.tr-next').onclick = () => {
+    if (offering) return start('arrival');
     if (!STOPS[at]?.last) return go(at + 1);
     end('finished');
     inn.tell.open('checkin', 'tour');                 // check-ins after a tour, against those without one
   };
   $('.tr-skip').onclick = () => {
+    if (offering) return answer('declined');
     if (!STOPS[at]?.last) return end('skip');
     end('finished');
     inn.say(T.later, [], true);
@@ -156,11 +189,13 @@ export function install(inn) {
   // A tap on anything ends the tour, and the tap goes on (a door walks you in); so does walking off by the Inn map
   const touch = inn.touch;
   inn.touch = id => {
+    if (offering) answer('ignored');                    // a tap on anything else lets the offer go; the tap carries on
     if (inn.touring) end(inn.world.objects[id]?.type === 'door' || inn.world.objects[id]?.type === 'walk' ? 'door' : 'tap');
     return touch(id);
   };
   const goRoom = inn.goRoom;
   inn.goRoom = (id, yaw, opts) => {
+    if (offering) answer('ignored');
     if (inn.touring && !moving) end('walk');
     return goRoom(id, yaw, opts);
   };
@@ -172,9 +207,9 @@ export function install(inn) {
   }
   addEventListener('resize', () => { if (!root.hidden) place(); });
   // "Show me round" on the bell's card (front-door.js), once the card has tucked away
-  addEventListener('wa-tour', () => layers.whenFree(() => start('bell')));
+  addEventListener('wa-tour', () => (offering ? start('bell') : layers.whenFree(() => start('bell'))));
   // The top bar's Tour button (25 Oct): the same tour, for showing a friend
-  inn.$('btn-tour')?.addEventListener('click', () => layers.whenFree(() => start('bar')));
+  inn.$('btn-tour')?.addEventListener('click', () => (offering ? start('bar') : layers.whenFree(() => start('bar'))));
 
-  inn.tour = { offer, start, end, get stop() { return at + 1; } };
+  inn.tour = { offer, start, end, get stop() { return at + 1; }, get offering() { return offering; } };
 }
