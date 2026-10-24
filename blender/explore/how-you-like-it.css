@@ -13,3 +13,10 @@
 .hy-note { color: var(--ink-soft); }
 .tell.desk .hy-box { width: min(460px, calc(100vw - 32px)); }
 .tell.phone .hy-box { max-height: 82dvh; }
+/* The little cage: a row per skip, "Let it out" */
+.hy-caged { display: flex; align-items: center; gap: 10px; }
+.hy-caged .hy-label { flex: 1; margin: 0; }
+.hy-icon { font-size: 22px; width: 28px; text-align: center; }
+.hy-out { min-height: 40px; padding: 2px 14px; border-radius: 999px; border: 1px solid var(--berry); background: #fff; color: var(--berry); font: 500 13px 'Quicksand'; }
+.hy-caged.out .hy-label { text-decoration: line-through; color: var(--ink-soft); }
+.hy-caged.out .hy-icon { opacity: .45; }

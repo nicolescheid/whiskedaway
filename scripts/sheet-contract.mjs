@@ -28,6 +28,7 @@ export const SHEETS = [
   { id: 'map', ...TELL, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'press' },
   { id: 'dietary', ...TELL, open: { room: 'cuddlecore', spot: 'dietary-shelf' }, answer: 'press' },
   { id: 'how you like it', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'feels-tray' }, answer: 'press', keep: ALL },
+  { id: 'little cage', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'cage' }, answer: null, keep: ALL },
   { id: 'kitchen', ...TELL, open: { room: 'cuddlecore', spot: 'kettle' }, answer: 'press' },
   { id: 'check-in', ...TELL, open: { room: 'hall-entrance', spot: 'checkin-desk' }, answer: 'press' },
   { id: 'chia mood', root: '#chia-mix', ways: { done: '.mx-done', x: '.tl-x' }, open: { room: 'chiapothecary', spot: 'flasks' }, answer: 'press', keep: ALL },

@@ -27,7 +27,12 @@ export function install(inn) {
     // Her Done line: what's skipped, then what's wanted more; two named at most, never the list
     skipLine: H.skipLine || '{x}. Got it.', skipMany: H.skipMany || '{x}. Locked up. It can\'t get you in here.',
     moreLine: H.moreLine || 'And {x}, then. I\'ll lean that way.', moreOnly: H.moreOnly || '{x}, then. I\'ll lean that way.',
-    cleared: H.cleared || 'All let out. Anything goes.', noted: H.noted || 'Noted.',
+    cleared: H.cleared || 'All let out. Anything goes.', noted: H.noted || 'Noted.', freed: H.freed || 'Out it comes.',
+    // The little cage
+    cageTitle: H.cageTitle || 'The little cage', cageSub: H.cageSub || "Locked up. It can't get you in here.",
+    cageEmpty: H.cageEmpty || "Nothing locked up yet. Skip something on the tray and it goes in here.",
+    letOut: H.letOut || 'Let it out', putBack: H.putBack || 'Put it back', toTray: H.toTray || 'The tray',
+    cage: H.cage || "My little cage. Whatever you'd rather skip goes in here.",
     tray: H.tray || "My tray of feels. Tell me how you like things, and I'll cook to suit.",
   };
   const feelById = Object.fromEntries(FEELS.map(f => [f.id, { ...f, ...H.feels?.[f.id] }]));
@@ -47,12 +52,18 @@ export function install(inn) {
   root.innerHTML = `<div class="tl-dim"></div><div class="tl-box hy-box">
       <header class="tl-head"><h2 id="hy-title"></h2><button class="tl-x" aria-label="Close">✕</button></header>
       <div class="tl-body"><p class="small hy-sub"></p><div class="hy-list"></div></div>
-      <footer class="tl-foot"><span class="small hy-note"></span><button class="tl-done hy-done">${esc(W.done)}</button></footer>
+      <footer class="tl-foot"><span class="small hy-note"></span><button class="bk-outline hy-totray" hidden></button><button class="tl-done hy-done">${esc(W.done)}</button></footer>
     </div>`;
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
-  let layer = null, picks = {}, before = {}, from = 'object';
+  let layer = null, picks = {}, before = {}, from = 'object', view = 'tray';
 
+  // The sheet has a view per object: the tray (every feel), the cage (what's skipped)
+  function fill() {
+    $('.hy-totray').hidden = view !== 'cage';
+    if (view === 'cage') return fillCage();
+    fillTray();
+  }
   function fillTray() {
     $('#hy-title').textContent = W.title;
     $('.hy-sub').textContent = W.sub;
@@ -69,22 +80,43 @@ export function install(inn) {
     });
   }
 
-  /** open(from): from is object|book|tag (counted with tell_open) */
-  function open(src = 'object') {
+  // The cage: each skip with "Let it out"; let out, it can go back in before the sheet closes. Empty, it points to the tray
+  function fillCage() {
+    $('#hy-title').textContent = W.cageTitle;
+    const caged = FEELS.filter(f => before[f.id] === 'skip');
+    $('.hy-sub').textContent = caged.length ? W.cageSub : W.cageEmpty;
+    $('.hy-note').textContent = '';
+    $('.hy-totray').textContent = W.toTray;
+    $('.hy-list').innerHTML = caged.map(f => `<div class="hy-row hy-caged">
+        <span class="hy-icon" aria-hidden="true">${f.icon}</span><span class="hy-label" id="hy-l-${f.id}">${esc(feelById[f.id].label)}</span>
+        <button class="hy-out" data-out="${f.id}" aria-pressed="${picks[f.id] !== 'skip'}" aria-describedby="hy-l-${f.id}">${esc(picks[f.id] === 'skip' ? W.letOut : W.putBack)}</button>
+      </div>`).join('');
+    root.querySelectorAll('[data-out]').forEach(b => b.onclick = () => {
+      const id = b.dataset.out, out = picks[id] === 'skip';
+      if (out) delete picks[id]; else picks[id] = 'skip';
+      b.setAttribute('aria-pressed', String(out));
+      b.textContent = out ? W.putBack : W.letOut;
+      b.closest('.hy-row').classList.toggle('out', out);
+    });
+  }
+  $('.hy-totray').onclick = () => { view = 'tray'; fill(); root.querySelector('.hy-seg button[aria-pressed="true"]')?.focus({ preventScroll: true }); };
+
+  /** open(which, from): which is tray|cage; from is object|book|tag (counted with tell_open) */
+  function open(which = 'tray', src = 'object') {
     if (!root.hidden) return;
     const opener = document.activeElement;
     inn.ideas.close(false);
     if (inn.bookView.isOpen) inn.bookView.close();
     if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto');
     from = src;
-    before = feelsNow(); picks = { ...before };
-    fillTray();
+    before = feelsNow(); picks = { ...before }; view = which;
+    fill();
     root.hidden = false;
     root.className = `tell ${mode()} hy-sheet`;
-    inn.track('tell_open', { kind: 'feels', from });
+    inn.track('tell_open', { kind: view === 'cage' ? 'cage' : 'feels', from });
     layer = layers.open({ el: root, name: 'feels', opener, close: how => close({ viaBack: how === 'back' }) });
     if (!reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
-    root.querySelector('.hy-seg button[aria-pressed="true"]')?.focus({ preventScroll: true });
+    root.querySelector('.hy-seg button[aria-pressed="true"], .hy-out, .hy-totray:not([hidden])')?.focus({ preventScroll: true });
   }
   // Every way out keeps the taps (EVERY_WAY_KEEPS: all Tell Gemma sheets keep on every way out)
   function close({ viaBack = false } = {}) {
@@ -116,7 +148,8 @@ export function install(inn) {
     const skipText = s.length ? (s.length === 1 ? W.skipLine : W.skipMany).replace('{x}', capFirst(inn.listOf(s.slice(0, 2).map(f => f.skip.toLowerCase())))) : '';
     const moreWords = inn.listOf(m.slice(0, 2).map(f => f.more));
     const moreText = m.length ? (s.length ? W.moreLine : W.moreOnly).replace('{x}', s.length ? moreWords : capFirst(moreWords)) : '';
-    return [skipText, moreText].filter(Boolean).join(' ') || W.noted;
+    const freed = FEELS.some(f => was[f.id] === 'skip' && now[f.id] !== 'skip');
+    return [skipText, moreText].filter(Boolean).join(' ') || (freed ? W.freed : W.noted);
   }
 
   // What you've told me (panels.js TOLD): "How you like it: nothing spicy and no coriander; more crunch."
@@ -136,7 +169,12 @@ export function install(inn) {
     return inn.pickLine('feels.loosen', [].concat(H.loosen || "Everything left in here has something you skipped. I'll bring it out anyway, and you can set aside what you don't fancy."));
   }
   // A changed tray starts every room afresh
-  visit.subscribe(({ part, key }) => { if (part === 'all' || key === 'feels') inn.state.feelsLoose = {}; });
+  visit.subscribe(({ part, key }) => {
+    if (part !== 'all' && key !== 'feels') return;
+    inn.state.feelsLoose = {};
+    // Cards already out that are now caged go back, quietly: her Done line has already said what's skipped
+    inn.state.cards.filter(c => inn.atomsById[c.atom] && likeClash(inn.atomsById[c.atom])).forEach(c => inn.ideas.remove(c.atom));
+  });
   /** What the write-out sends (basket-glue.js payloadFor): words, never ids */
   const payload = () => feelsPayload(feelsNow());
   /** A swap that names something caged (basket-glue.js swapsFor leaves it out) */
@@ -161,13 +199,65 @@ export function install(inn) {
   inn.CHIP_ACTS.mild = id => inn.showIdea(inn.atomsById[id], 'chat');
   inn.CHIP_ACTS.mildNo = () => {};
 
+  // ---------- the cage's overlay: what's skipped, drawn inside the cage like the candle flames (inn.spriteFrom, candles.js).
+  // At the hotspot's `inside` point (art adds it with the render; until then the hotspot itself, 2.4 m away). Until the cage
+  // is painted into the render, a wire cage is drawn too (CAGE_PAINTED, docs/art-brief-cuddlecore-tray.md)
+  const CAGE_PAINTED = false;
+  // Made on first use: spriteFrom is candles.js's, installed after this module
+  let cageSprite = null;
+  function drawCage(ids) {
+    const c = cageSprite.material.map.image, g = c.getContext('2d');
+    g.clearRect(0, 0, 256, 256);
+    if (!CAGE_PAINTED) {
+      g.strokeStyle = 'rgba(176, 141, 72, 0.95)'; g.lineWidth = 3;
+      g.beginPath(); g.ellipse(128, 236, 92, 12, 0, 0, Math.PI * 2); g.stroke();                // the base ring
+      g.beginPath(); g.arc(128, 104, 92, Math.PI, 0); g.stroke();                               // the dome
+      for (let i = 0; i <= 8; i++) {                                                             // the bars
+        const x = 36 + i * 23, top = 104 - Math.sqrt(Math.max(0, 92 * 92 - (x - 128) ** 2));
+        g.beginPath(); g.moveTo(x, top); g.lineTo(x, 236); g.stroke();
+      }
+      g.beginPath(); g.arc(128, 6, 7, 0, Math.PI * 2); g.stroke();                              // the ring at the top
+      g.beginPath(); g.moveTo(128, 13); g.lineTo(128, 24); g.stroke();
+    }
+    // Up to six tokens on the cage floor, two rows (the first skipped at the front)
+    g.font = '44px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    ids.slice(0, 6).forEach((id, i) => {
+      const row = i < 3 ? 0 : 1, col = i % 3;
+      g.globalAlpha = row ? 0.85 : 1;
+      g.fillText(FEELS.find(f => f.id === id).icon, 80 + col * 48 + (row ? 24 : 0), row ? 170 : 205);
+    });
+    g.globalAlpha = 1;
+    cageSprite.material.map.needsUpdate = true;
+  }
+  function showCage() {
+    const s = inn.spots?.cage;
+    if (!s && !cageSprite) return;
+    if (!cageSprite) { cageSprite = inn.spriteFrom(() => {}, false); cageSprite.renderOrder = 12; }
+    cageSprite.visible = !!s;
+    if (s) {
+      const p = s.inside || { yaw: s.yaw, pitch: s.pitch, distance: 2.4 };
+      const near = 10 / Math.max(p.distance || 2.4, 0.4);       // the sphere sits at 10 units: scale real metres to it
+      cageSprite.scale.set(0.3 * near, 0.3 * near, 1);
+      cageSprite.position.copy(inn.dir(p.yaw, p.pitch).multiplyScalar(10));
+      drawCage(skipped());
+    }
+    inn.render();
+  }
+  // Only in the room with a cage: rooms.js's goRoom rebuilds the hotspots (and the bootstrap builds the first room's), so the
+  // overlay follows that
+  const buildHotspots = inn.buildHotspots;
+  inn.buildHotspots = (...a) => { buildHotspots(...a); showCage(); };
+  visit.subscribe(({ part, key }) => { if (part === 'all' || key === 'feels') showCage(); });
+
   inn.howYouLike = { open, told, skipped, wanted, feelById, payload, caged, get isOpen() { return !root.hidden; } };
   Object.assign(inn, { likeClash, feelsCaged, loosenFeels });
 
   // Taps (touch.js order 25: after the chia drawers, before the kitchen): the tray opens the sheet after her line
-  inn.onTouch(25, obj => obj.tool === 'feels', (obj, id) => {
-    inn.say(inn.momentOf(id, obj) || W.tray, [], true);
+  inn.onTouch(25, obj => obj.tool === 'feels' || obj.tool === 'cage', (obj, id) => {
+    const cage = obj.tool === 'cage';
+    inn.say(inn.momentOf(id, obj) || (cage ? (skipped().length ? W.cageSub : W.cage) : W.tray), [], true);
     inn.holdLine();
-    open('object');
+    open(cage ? 'cage' : 'tray', 'object');
   });
 }

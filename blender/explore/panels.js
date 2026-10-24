@@ -47,7 +47,7 @@ export function install(inn) {
     inn.$('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${inn.esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${inn.esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${inn.esc(k)}" aria-label="Forget this: ${inn.esc(text)}">forget</button></li>`).join('')
       : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
     inn.$('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
-    inn.$('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : b.dataset.change === 'feels' ? inn.howYouLike.open('book')
+    inn.$('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : b.dataset.change === 'feels' ? inn.howYouLike.open('tray', 'book')
       : inn.tell.open(b.dataset.change, 'book'))));
     inn.$('told').querySelector('[data-menu]')?.addEventListener('click', fromBook(() => inn.tell.openMenu('book')));
   }
