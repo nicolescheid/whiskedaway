@@ -22,6 +22,7 @@ from mathutils import Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from appliances import APPLIANCES, appliance_mats  # noqa: E402
+from feels_objects import bell_jar, feels_mats, feels_tray, little_cage  # noqa: E402
 from tools import TOOLS, cup_and_saucer, tool_mats, water_glass  # noqa: E402
 from whisked import emission_mat, window_glass  # noqa: E402
 
@@ -684,6 +685,9 @@ def build():
     if WX["flames"]:
         point_light("lamp_light", (1.55, HY - 0.3, top + 0.36), 22 * WX["flames"], (1.0, 0.64, 0.33), radius=0.03)
     hotspot("oil-lamp", "The lamp", None, lamp, kind="ambient")
+    fm = feels_mats()
+    tray = feels_tray(fm, (0.76, HY - 0.33, top), rot_z=180, name="feels_tray", scale=0.86)
+    hotspot("feels-tray", "How you like it", None, tray)
     bowl = model("wooden_bowl_01", (1.0, HY - 0.33, top))
     for i, (dx, dy) in enumerate(((-0.05, 0.0), (0.05, 0.03), (0.0, -0.06))):
         model("food_apple_01", (1.0 + dx, HY - 0.33 + dy, top + 0.02), rot_z=i * 70)
@@ -790,12 +794,20 @@ def build():
         lambda z: [cyl(f"bowl_stack_{z}_{k}", (sx, py - 0.1, z + 0.025 + k * 0.045), 0.11 - k * 0.012, 0.045, stoneware, bevel=0.01) for k in range(3)]
         + [cyl(f"beans_jar_{z}", (sx, py + 0.17, z + 0.11), 0.065, 0.22, glass, bevel=0.01),
            cyl(f"beans_{z}", (sx, py + 0.17, z + 0.08), 0.058, 0.15, mat("beans", srgb("#efe8da"), rough=0.7), bevel=0)],
-        lambda z: [model("ceramic_vase_01", (sx, py, z), scale=0.5)],
+        lambda z: [little_cage(fm, (sx, py - 0.03, z), rot_z=90, name="little_cage")],
     ]
     for i, z in enumerate(shelves[:len(stock)]):
         stock[i](z)
     point_light("pantry_glow", (px - 0.25, py, 1.7), 6, (1.0, 0.7, 0.42), radius=0.15)
     hotspot("pantry-cabinet", "Your pantry", "pantry", pantry)
+    cage = bpy.data.objects["little_cage"]
+    hotspot("cage", "The little cage", None, cage)
+    # the middle of the cage's empty space: the page draws the skipped feels here, like a candle's flame
+    ix, iy, iz = cage.location.x, cage.location.y, cage.location.z + 0.1
+    HOTSPOTS["cage"]["inside"] = {
+        "yaw": round(math.degrees(math.atan2(ix, iy)), 2),
+        "pitch": round(math.degrees(math.atan2(iz - EYE, math.hypot(ix, iy))), 2),
+        "distance": round(math.sqrt(ix * ix + iy * iy + (iz - EYE) ** 2), 2)}
 
     bx, by, blen = HX - 0.31, -0.55, 1.3
     box("right_cab", (bx, by, 0.44), (0.62, blen, 0.88), paint, bevel=0.012)
@@ -822,9 +834,12 @@ def build():
     box("cards", (HX - 0.14, by + 0.3, 1.615), (0.1, 0.14, 0.04), card, bevel=0.002)
     model("jug_01", (HX - 0.13, by + 0.05, 1.94), rot_z=180, scale=0.9)
     for k in range(2):
-        cyl(f"shelf_bowl_{k}", (HX - 0.13, by - 0.35, 1.965 + k * 0.04), 0.1 - k * 0.012, 0.04, stoneware, bevel=0.01)
+        cyl(f"shelf_bowl_{k}", (HX - 0.13, by - 0.46, 1.965 + k * 0.04), 0.1 - k * 0.012, 0.04, stoneware, bevel=0.01)
     model("potted_plant_02", (HX - 0.15, by + 0.38, 1.94), rot_z=10, scale=0.28)
     hotspot("dietary-shelf", "Dietary needs", "dietary", book_shelf)
+    jar = bell_jar(fm, (HX - 0.13, by - 0.22, 1.94), rot_z=90, name="bell_jar")
+    hotspot("bell-jar", "Keeping off?", None, jar)
+    point_light("jar_glow", (HX - 0.4, by - 0.2, 2.25), 1.2, (1.0, 0.72, 0.45), radius=0.15)
 
     # Your kitchen: a microwave and an air fryer on the bare right-hand worktop, under the cookbook shelves (front toward the room)
     am = appliance_mats()
@@ -1017,6 +1032,31 @@ def main():
     if "--flythrough" in ARGS:
         return flythrough(bpy.context.scene)
     suffix = "_preview" if PREVIEW else ""
+    closeup = next((a.split("=", 1)[1] for a in ARGS if a.startswith("--closeup=")), None)
+    if closeup:   # a flat test view of one spot: --closeup=NAME,yaw,pitch,fov_deg (never written to out/)
+        scene = bpy.context.scene
+        if "--noglass" in ARGS:
+            for o in bpy.data.objects:
+                if o.name.startswith("bell_jar_glass"):
+                    o.hide_render = True
+        if "--glassdebug" in ARGS:
+            dbg = mat("dbg", (1, 0, 0, 1), rough=0.5)
+            for o in bpy.data.objects:
+                if o.name.startswith("bell_jar_glass"):
+                    o.data.materials.clear()
+                    o.data.materials.append(dbg)
+        cam = scene.camera
+        cam.data.type = "PERSP"
+        cam.data.sensor_fit = "HORIZONTAL"
+        scene.render.resolution_x, scene.render.resolution_y = 1200, 900
+        scene.cycles.samples = 128
+        for spec in closeup.split(";"):
+            nm, yw, pt, fv = spec.split(",")
+            cam.data.angle = math.radians(float(fv))
+            cam.rotation_euler = (math.radians(90 + float(pt)), 0, -math.radians(float(yw)))
+            scene.render.filepath = os.path.join(OUT, f"closeup_{nm}_{WEATHER}{'_night' if NIGHT else ''}.png")
+            bpy.ops.render.render(write_still=True)
+        return
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "cuddlecore.blend"))
     with open(os.path.join(OUT, "cuddlecore_hotspots.json"), "w") as fh:
         json.dump(HOTSPOTS, fh, indent=2)
