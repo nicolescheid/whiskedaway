@@ -52,22 +52,22 @@ export function frontDoor({ active, track }) {
         <p id="welcome-line">Have a wander. Start at the desk if you like.</p>
         <div id="welcome-intro">
           <p>Have a wander. Drag to look around, and touch anything that glows.</p>
-          <p>I'll notice what you're drawn to and bring you something to cook. Doors with dials lead to the other rooms.</p>
+          <p>I'll notice what you're drawn to and bring you something to cook. The Map up top shows every room.</p>
           <p>What I notice stays in this tab. Open My recipe book and pick This visit to see all of it.</p>
         </div>
         <div id="welcome-help">
           <p><b>Ring the bell any time.</b></p>
           <ul class="help">
             <li>Drag, or swipe on a phone, to look around.</li>
-            <li>Touch anything that glows. A door with a dial beside it takes you to another room, and the star on the dial follows your wander.</li>
-            <li>The map lists everything in the room you're in.</li>
+            <li>Touch anything that glows. A door takes you through to the next room.</li>
+            <li>The Map shows the whole Inn. Tap a room to go there, or the star to follow your wander.</li>
             <li>Open My recipe book and pick This visit to see what I've noticed. "Forget this visit" clears it.</li>
             <li>"Front door" takes you back outside.</li>
             <li>The speaker beside the bell turns the Inn's sounds on. They start off.</li>
           </ul>
           <p><a href="/?door=1#story">About the Inn</a>: what it is, where the weather comes from, and what's kept.</p>
         </div>
-        <button class="ok" id="welcome-ok">Come in</button>
+        <div class="welcome-btns"><button class="ok soft" id="welcome-tour" hidden>Show me round</button><button class="ok" id="welcome-ok">Come in</button></div>
       </div>`;
     document.body.appendChild(card);
   }
@@ -84,6 +84,10 @@ export function frontDoor({ active, track }) {
     if (line) $('welcome-line').textContent = line;
     $('welcome-intro').hidden = !help;
     $('welcome-ok').textContent = help ? 'Back to the Inn' : 'Come in';
+    // The bell's card offers the first-visit tour to anyone (explore/tour.js hears wa-tour once the card has tucked away)
+    $('welcome-tour').hidden = !help;
+    let tour = false;
+    $('welcome-tour').onclick = () => { tour = true; $('welcome-ok').click(); };
     card.classList.add('open');
     $('welcome-ok').focus();
     closing = new Promise(done => {
@@ -100,6 +104,7 @@ export function frontDoor({ active, track }) {
         }
         track('welcome_close');
         bell.focus();
+        if (tour) dispatchEvent(new Event('wa-tour'));
         done();
       };
       const onKey = e => { if (e.key === 'Escape') close(); };
