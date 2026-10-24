@@ -16,7 +16,7 @@
       ]
     },
     "rest": {
-      "label": "rest, with no effort",
+      "label": "something restful",
       "themes": [
         "rest",
         "no-cook",
@@ -509,6 +509,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["kettle", "stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -554,6 +555,8 @@
       "cuisines": [
         "Japanese"
       ],
+      "feels": ["slippery"],
+      "mild_way_in": "Japanese",
       "appliances": ["kettle", "stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -594,8 +597,10 @@
         "nut-free"
       ],
       "cuisines": [
-        "Kiwi classics"
+        "Kiwi classics",
+        "British"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -640,6 +645,7 @@
       "cuisines": [
         "Chinese"
       ],
+      "feels": ["slippery"],
       "appliances": ["stove", "slow-cooker"],
       "appliances_checked": true,
       "themes": [
@@ -680,6 +686,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove", "slow-cooker"],
       "appliances_checked": true,
       "themes": [
@@ -720,6 +727,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -754,6 +762,7 @@
       ],
       "method_short": "Spoon theory: some days you only have a few units of energy to spend. The spoons on each card show what it costs.",
       "diet": [],
+      "feels": ["nuts"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -793,6 +802,7 @@
       "cuisines": [
         "Italian"
       ],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -830,6 +840,7 @@
       ],
       "method_short": "Crackers, a bit of cheese, apple slices and a few nuts. One plate, eaten under a blanket.",
       "diet": [],
+      "feels": ["crunchy", "nuts"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -875,6 +886,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -919,6 +931,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -960,6 +973,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": ["nuts"],
       "appliances": ["food-processor"],
       "appliances_checked": true,
       "themes": [
@@ -1002,6 +1016,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1047,6 +1062,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1090,6 +1106,7 @@
       "cuisines": [
         "Greek"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1132,6 +1149,7 @@
       ],
       "sweetener": "fruit",
       "added_sugar": false,
+      "feels": ["nuts"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1176,6 +1194,8 @@
       "cuisines": [
         "Chinese"
       ],
+      "feels": [],
+      "mild_way_in": "Chinese",
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1217,6 +1237,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["stove", "air-fryer"],
       "appliances_checked": true,
       "themes": [
@@ -1258,6 +1279,7 @@
       ],
       "sweetener": "honey",
       "added_sugar": true,
+      "feels": [],
       "appliances": ["stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -1299,6 +1321,7 @@
         "vegetarian",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -1340,6 +1363,7 @@
         "vegetarian",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1351,7 +1375,8 @@
         "green",
         "comfort",
         "midday",
-        "light"
+        "light",
+        "breakfast"
       ],
       "seed": {
         "name": "Asparagus on toast with lemon butter",
@@ -1384,6 +1409,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1430,6 +1456,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["food-processor"],
       "appliances_checked": true,
       "themes": [
@@ -1473,6 +1500,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["stove", "microwave"],
       "appliances_checked": true,
       "themes": [
@@ -1513,6 +1541,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1553,6 +1582,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": ["stove", "oven"],
       "appliances_checked": true,
       "themes": [
@@ -1591,6 +1621,7 @@
         "vegetarian",
         "nut-free"
       ],
+      "feels": [],
       "appliances": ["slow-cooker"],
       "appliances_checked": true,
       "themes": [
@@ -1637,6 +1668,8 @@
       "cuisines": [
         "Middle Eastern"
       ],
+      "feels": [],
+      "mild_way_in": "Middle Eastern",
       "appliances": ["kettle"],
       "appliances_checked": true,
       "themes": [
@@ -1683,6 +1716,7 @@
       "cuisines": [
         "Chinese"
       ],
+      "feels": [],
       "appliances": ["kettle"],
       "appliances_checked": true,
       "themes": [
@@ -1725,6 +1759,7 @@
         "nut-free"
       ],
       "tools": ["pan", "timer"],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1768,6 +1803,7 @@
         "nut-free"
       ],
       "tools": ["pan", "timer"],
+      "feels": [],
       "appliances": ["stove"],
       "appliances_checked": true,
       "themes": [
@@ -1807,6 +1843,7 @@
         "nut-free"
       ],
       "tools": ["timer"],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1848,6 +1885,7 @@
         "nut-free"
       ],
       "tools": ["wooden-spoon"],
+      "feels": [],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -1864,44 +1902,46 @@
       "body": "Taste before you season, add a small pinch of salt, stir and taste again. If it still seems flat, try a squeeze of lemon or a drop of vinegar before more salt. Use a clean spoon each time."
     },
     {
-      "id": "drain-without-scalding",
+      "id": "measure-it",
       "room": "cuddlecore",
       "kind": "technique",
       "spoons": 1,
-      "title": "Drain pasta without scalding yourself",
-      "short": "Draining",
-      "icon": "🧺",
-      "ref": "the colander",
-      "hook": "Colander in the sink first, then tip the pot away from you.",
-      "time": 10,
+      "title": "Measure it: spoons, cups and scales",
+      "short": "Measuring",
+      "icon": "⚖️",
+      "ref": "the scales and cups",
+      "hook": "Level the cup, zero the scales, and it comes out the same each time.",
+      "time": 5,
       "key_ingredients": [
-        "pasta",
-        "water",
-        "salt",
-        "olive oil"
+        "flour",
+        "sugar",
+        "a bowl"
       ],
-      "method_short": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce.",
+      "method_short": "For cups and spoons, fill and level off with a knife, don't heap. For scales, put the bowl on first and zero it, then weigh each thing straight in.",
       "diet": [
         "vegetarian",
-        "dairy-free",
         "nut-free"
       ],
-      "tools": ["colander"],
-      "appliances": ["stove"],
+      "tools": [
+        "measuring-cups",
+        "scales"
+      ],
+      "feels": [],
+      "appliances": [],
       "appliances_checked": true,
       "themes": [
         "learning",
-        "simple",
+        "hands-on",
         "cooking",
-        "pantry",
-        "low-spoons",
-        "hands-on"
+        "baking",
+        "why",
+        "whole-food"
       ],
       "seed": {
-        "name": "Pasta with olive oil and a little cooking water",
-        "why": "The safe way is also the tidy way."
+        "name": "Plain scones, measured properly",
+        "why": "Baking is the one place a guess costs you."
       },
-      "body": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce."
+      "body": "For cups and spoons, fill and level off with a knife, don't heap. For scales, put the bowl on first and zero it, then weigh each thing straight in."
     }
   ],
   "weathers": {

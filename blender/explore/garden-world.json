@@ -1,5 +1,5 @@
 {
-  "_about": "The garden (24 Oct 2026): outdoor cooking, out through Flourish's stable door. Two stops, the patio and the camp (garden_hotspots.json). Recipes by content editor 4 (garden-plan.md); five came from Cuddlecore and Flourish (`moved_from`). `garden` on an atom names the hotspot whose `ideas` lists it. Objects' lines are stand-ins until content writes them. Appliance ids stay the existing eight: a pizza oven or camp oven is tagged 'oven', fire-pit cooking 'bbq'.",
+  "_about": "The garden (24 Oct 2026): outdoor cooking, out through Flourish's stable door. Two stops, the patio and the camp (garden_hotspots.json). Recipes by content editor 4 (garden-plan.md); five came from Cuddlecore and Flourish (`moved_from`). `garden` on an atom names the hotspot whose `ideas` lists it. Appliance ids stay the existing eight: a pizza oven or camp oven is tagged 'oven', fire-pit cooking 'bbq'.",
   "room": "garden",
   "name": "The garden",
   "intro": "This is the garden. Everything out here gets cooked outside: the barbecue, the pizza oven, and the fire down at the camp.",
@@ -20,7 +20,7 @@
     "gd-to-patio": { "label": "Back to the patio", "ref": "the patio", "type": "walk", "go": "garden-patio", "arrive_yaw": -15, "themes": [] },
     "gd-bbq": { "ideas": ["sausage-sizzle", "bbq-lamb-chops", "bbq-fish-parcels", "bbq-charred-corn", "bbq-veg-skewers"],
                 "label": "The barbecue", "ref": "the barbecue", "type": "kitchen", "appliance": "bbq", "themes": ["cooking", "hands-on", "garden", "outdoor", "summer"],
-                "moment": "Same barbecue you can see from Flourish. The lid's hot, so mind your hands.",
+                "moment": "The barbecue Flourish looks out on. The lid gets hot, so mind your hands.",
                 "moments": ["Sausages, chops, corn in its husks. It's not fussy.", "Give it ten minutes to heat up properly before anything goes on."] },
     "gd-table": { "label": "The garden table", "ref": "the garden table", "type": "submit", "tool": "generate", "always_visible": true,
                   "themes": ["outdoor", "sharing", "summer", "meal"], "tool_title": "The garden table" },
@@ -30,13 +30,13 @@
                        "moments": ["Logs underneath, and they stay dry under there. Mostly.", "Keep the peel floured or the pizza won't slide off."] },
     "gd-herbs": { "ideas": ["jug-lemonade", "table-salad"],
                   "label": "The herbs", "ref": "the herb pots", "type": "ambient", "themes": ["herbs", "fresh", "green", "garden"],
-                  "moment": "Rosemary and thyme by the door, so I can grab some on the way out to the barbecue." },
+                  "moment": "Rosemary and thyme by the door. I grab a sprig on my way out to the barbecue." },
     "gd-beds": { "ideas": ["table-salad"],
                  "label": "The vegetable beds", "ref": "the vegetable beds", "type": "ambient", "themes": ["garden", "green", "fresh", "whole-food"],
                  "moment": "Kale, beans up the canes, and whatever the snails have left me.",
                  "moments": ["Beans grow faster than I can pick them this time of year.", "Brick paths, so you can pick in the rain without sinking."] },
     "gd-lights": { "label": "The string lights", "ref": "the string lights", "type": "ambient", "themes": ["evening", "outdoor", "cosy"],
-                   "moment": "They come on at dusk. Dinner tastes better under them, I'm sure of it." },
+                   "moment": "String lights along the fence. Dinner outside feels more of an occasion with them on." },
     "gd-tent": { "label": "The tent", "ref": "the bell tent", "type": "ambient", "themes": ["outdoor", "cosy", "evening"],
                  "moment": "A rug, a lantern and a pile of blankets. Guests sleep out here in summer.",
                  "moment_wet": "Laced shut till this blows over. It's dry as a bone in there, mind.",
@@ -48,7 +48,7 @@
                       "moments": ["It's heavy. Lift it with the hook, never your hands.", "Stew, bread, pudding. It does the lot."] },
     "gd-fire-pit": { "ideas": ["foil-potatoes-embers", "fire-hot-chocolate"],
                      "label": "The fire", "ref": "the fire pit", "type": "ambient", "themes": ["outdoor", "cosy", "evening", "warming"],
-                     "moment": "Pull up a log. The embers are the best part for cooking.",
+                     "moment": "Pull up a log. The embers do the cooking and you do the sitting.",
                      "moment_wet": "Out, in this weather. The potatoes in foil can wait for a fine night.",
                      "moments": ["Keep a bucket of water nearby. I always do.", "Potatoes in foil, straight into the embers. Then you just sit."] },
     "gd-sea": { "label": "The sea", "ref": "the sea", "type": "ambient", "themes": ["sunny", "fresh", "outdoor"],
@@ -73,13 +73,15 @@
         "onion",
         "tomato sauce"
       ],
-      "method_short": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
+      "method_short": "Grill the sausages until browned all over and cooked through, with no pink in the middle, and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
       "diet": [
         "nut-free"
       ],
       "cuisines": [
-        "Kiwi classics"
+        "Kiwi classics",
+        "Australian"
       ],
+      "feels": [],
       "appliances": [
         "bbq",
         "stove"
@@ -100,7 +102,7 @@
         "name": "Sausage sizzle with fried onion",
         "why": "A Saturday-morning classic, and it works in any back yard."
       },
-      "body": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
+      "body": "Grill the sausages until browned all over and cooked through, with no pink in the middle, and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
       "moved_from": "cuddlecore",
       "garden": "gd-bbq"
     },
@@ -131,6 +133,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": ["smells"],
       "appliances": [
         "bbq",
         "stove"
@@ -180,6 +183,7 @@
         "dairy-free",
         "nut-free"
       ],
+      "feels": ["smells"],
       "appliances": [
         "bbq",
         "oven"
@@ -230,6 +234,7 @@
         "gluten-free",
         "nut-free"
       ],
+      "feels": ["coriander"],
       "appliances": [
         "bbq",
         "stove"
@@ -278,6 +283,7 @@
         "gluten-free",
         "nut-free"
       ],
+      "feels": [],
       "appliances": [
         "bbq",
         "oven",
@@ -329,6 +335,7 @@
       "cuisines": [
         "Italian"
       ],
+      "feels": [],
       "appliances": [
         "oven"
       ],
@@ -376,6 +383,7 @@
       "cuisines": [
         "Middle Eastern"
       ],
+      "feels": [],
       "appliances": [
         "oven",
         "stove",
@@ -426,6 +434,7 @@
       "cuisines": [
         "Kiwi classics"
       ],
+      "feels": [],
       "appliances": [
         "oven",
         "stove",
@@ -475,8 +484,10 @@
         "nut-free"
       ],
       "cuisines": [
-        "Kiwi classics"
+        "Kiwi classics",
+        "Australian"
       ],
+      "feels": [],
       "appliances": [
         "oven",
         "bbq"
@@ -490,7 +501,8 @@
         "simple",
         "bread",
         "warming",
-        "snack"
+        "snack",
+        "evening"
       ],
       "seed": {
         "name": "Camp-oven damper",
@@ -527,8 +539,10 @@
       "sweetener": "sugar",
       "added_sugar": true,
       "cuisines": [
-        "Kiwi classics"
+        "Kiwi classics",
+        "British"
       ],
+      "feels": ["crunchy"],
       "appliances": [
         "oven"
       ],
@@ -577,6 +591,7 @@
         "gluten-free",
         "nut-free"
       ],
+      "feels": ["skins"],
       "appliances": [
         "bbq",
         "oven"
@@ -590,7 +605,8 @@
         "cooking",
         "simple",
         "whole-food",
-        "autumn"
+        "autumn",
+        "warming"
       ],
       "seed": {
         "name": "Foil-baked potatoes with rosemary",
@@ -622,6 +638,7 @@
       ],
       "sweetener": "sugar",
       "added_sugar": true,
+      "feels": [],
       "appliances": [
         "stove",
         "bbq"
@@ -673,6 +690,7 @@
       "cuisines": [
         "Greek"
       ],
+      "feels": ["strong-flavours"],
       "appliances": [],
       "appliances_checked": true,
       "themes": [
@@ -685,7 +703,9 @@
         "no-cook",
         "midday",
         "sunny",
-        "cooling"
+        "cooling",
+        "sharing",
+        "evening"
       ],
       "seed": {
         "name": "Greek-style table salad",
@@ -722,6 +742,7 @@
       ],
       "sweetener": "sugar",
       "added_sugar": true,
+      "feels": ["sour"],
       "appliances": [
         "kettle"
       ],
@@ -736,7 +757,9 @@
         "simple",
         "midday",
         "sunny",
-        "drink"
+        "drink",
+        "sharing",
+        "evening"
       ],
       "seed": {
         "name": "Fresh lemonade with mint",
