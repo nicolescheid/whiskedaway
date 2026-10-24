@@ -14,9 +14,9 @@ const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)
   : matchMedia('(max-width: 719px)').matches ? 'phone' : 'desk');
 const bucket = n => (n <= 0 ? '0' : n === 1 ? '1' : n <= 3 ? '2-3' : '4+');
 
-// The bell jar's medicine foods stay OFF on the live site until a pharmacist or dietitian has checked the list and the
-// words (Nicole, 23 Oct). Switch it on here. For testing, ?medicine-foods=1 turns it on, but only on a local build
-export const MEDICINE_FOODS = false;
+// The bell jar's medicine foods are ON (Nicole, 25 Oct: "We're on the recipes side, not the medicine side. We're just
+// helping the user to follow the direction they've been given."). Its words frame it that way. ?medicine-foods=1 still works locally
+export const MEDICINE_FOODS = true;
 const medicineOn = () => MEDICINE_FOODS || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)
   && new URLSearchParams(location.search).get('medicine-foods') === '1');
 const CHOICES = [['skip', 'Skip it'], ['either', 'Either way'], ['more', 'More, please']];
