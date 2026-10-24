@@ -1,31 +1,59 @@
 {
-  "_about": "DRAFT, not wired in (23 Oct 2026, content editor 4). Recipes for the garden room (garden-plan.md). Same atom format as the other rooms, `room` is 'garden'. Five atoms are COPIES of ones that live elsewhere today (`moved_from` names the room): when the garden opens, delete the originals from cuddlecore-world.json and flourish-world.json in the same commit. Garden atoms add `garden` (the hotspot key whose `ideas` should list the atom). Appliance ids stay the existing eight: a pizza oven or camp oven is tagged 'oven' (every recipe has a home-oven line), and fire-pit cooking is tagged 'bbq' (and 'oven' where it can swap). If the picker should get 'pizza-oven', 'camp-oven' and 'fire', add them to kitchen.js APPLIANCES and re-tag.",
+  "_about": "The garden (24 Oct 2026): outdoor cooking, out through Flourish's stable door. Two stops, the patio and the camp (garden_hotspots.json). Recipes by content editor 4 (garden-plan.md); five came from Cuddlecore and Flourish (`moved_from`). `garden` on an atom names the hotspot whose `ideas` lists it. Objects' lines are stand-ins until content writes them. Appliance ids stay the existing eight: a pizza oven or camp oven is tagged 'oven', fire-pit cooking 'bbq'.",
   "room": "garden",
-  "hotspot_ideas": {
-    "gd-bbq": [
-      "sausage-sizzle",
-      "bbq-lamb-chops",
-      "bbq-fish-parcels",
-      "bbq-charred-corn",
-      "bbq-veg-skewers"
-    ],
-    "gd-pizza-oven": [
-      "pizza-oven-margherita",
-      "yoghurt-flatbreads"
-    ],
-    "gd-camp-oven": [
-      "camp-oven-stew",
-      "camp-oven-damper",
-      "camp-oven-crumble"
-    ],
-    "gd-fire-pit": [
-      "foil-potatoes-embers",
-      "fire-hot-chocolate"
-    ],
-    "gd-table": [
-      "table-salad",
-      "jug-lemonade"
-    ]
+  "name": "The garden",
+  "intro": "This is the garden. Everything out here gets cooked outside: the barbecue, the pizza oven, and the fire down at the camp.",
+  "stops": {
+    "garden-patio": { "stop": "patio", "title": "The garden", "where": "On the patio", "yaw": -15, "pitch": -8 },
+    "garden-camp": { "stop": "camp", "title": "The garden", "where": "At the camp", "yaw": -10, "pitch": -8 }
+  },
+  "walks": {
+    "garden-patio": { "gd-to-camp": { "yaw": 0, "pitch": -7 } }
+  },
+  "clusters": {
+    "cook-outside": { "label": "cooking outside", "themes": ["outdoor", "garden", "summer", "hands-on", "sharing"] }
+  },
+  "objects": {
+    "gd-flourish-door": { "label": "Back to Flourish", "ref": "the stable door", "type": "door", "go": "flourish", "themes": [] },
+    "gd-glasshouse-door": { "label": "Into the Conservatory", "ref": "the Conservatory door", "type": "door", "go": "glasshouse", "themes": [] },
+    "gd-to-camp": { "label": "Down to the camp", "ref": "the camp", "type": "walk", "go": "garden-camp", "always_visible": true, "themes": [] },
+    "gd-to-patio": { "label": "Back to the patio", "ref": "the patio", "type": "walk", "go": "garden-patio", "arrive_yaw": -15, "themes": [] },
+    "gd-bbq": { "ideas": ["sausage-sizzle", "bbq-lamb-chops", "bbq-fish-parcels", "bbq-charred-corn", "bbq-veg-skewers"],
+                "label": "The barbecue", "ref": "the barbecue", "type": "kitchen", "appliance": "bbq", "themes": ["cooking", "hands-on", "garden", "outdoor", "summer"],
+                "moment": "Same barbecue you can see from Flourish. The lid's hot, so mind your hands.",
+                "moments": ["Sausages, chops, corn in its husks. It's not fussy.", "Give it ten minutes to heat up properly before anything goes on."] },
+    "gd-table": { "label": "The garden table", "ref": "the garden table", "type": "submit", "tool": "generate", "always_visible": true,
+                  "themes": ["outdoor", "sharing", "summer", "meal"], "tool_title": "The garden table" },
+    "gd-pizza-oven": { "ideas": ["pizza-oven-margherita", "yoghurt-flatbreads"],
+                       "label": "The pizza oven", "ref": "the pizza oven", "type": "ambient", "themes": ["outdoor", "baking", "hands-on", "sharing"],
+                       "moment": "It takes an hour to heat and two minutes to cook a pizza. Worth it.",
+                       "moments": ["Logs underneath, and they stay dry under there. Mostly.", "Keep the peel floured or the pizza won't slide off."] },
+    "gd-herbs": { "ideas": ["jug-lemonade", "table-salad"],
+                  "label": "The herbs", "ref": "the herb pots", "type": "ambient", "themes": ["herbs", "fresh", "green", "garden"],
+                  "moment": "Rosemary and thyme by the door, so I can grab some on the way out to the barbecue." },
+    "gd-beds": { "ideas": ["table-salad"],
+                 "label": "The vegetable beds", "ref": "the vegetable beds", "type": "ambient", "themes": ["garden", "green", "fresh", "whole-food"],
+                 "moment": "Kale, beans up the canes, and whatever the snails have left me.",
+                 "moments": ["Beans grow faster than I can pick them this time of year.", "Brick paths, so you can pick in the rain without sinking."] },
+    "gd-lights": { "label": "The string lights", "ref": "the string lights", "type": "ambient", "themes": ["evening", "outdoor", "cosy"],
+                   "moment": "They come on at dusk. Dinner tastes better under them, I'm sure of it." },
+    "gd-tent": { "label": "The tent", "ref": "the bell tent", "type": "ambient", "themes": ["outdoor", "cosy", "evening"],
+                 "moment": "A rug, a lantern and a pile of blankets. Guests sleep out here in summer.",
+                 "moment_wet": "Laced shut till this blows over. It's dry as a bone in there, mind.",
+                 "moments": ["When the wind's up I lace the door shut.", "You can hear the sea from in there."] },
+    "gd-camp-oven": { "ideas": ["camp-oven-stew", "camp-oven-damper", "camp-oven-crumble"],
+                      "label": "The camp oven", "ref": "the camp oven", "type": "ambient", "themes": ["outdoor", "hearty", "slow", "baking"],
+                      "moment": "A cast-iron pot on a tripod. Coals underneath, a few on the lid, and you leave it be.",
+                      "moment_wet": "No fire under it today. A home oven does the same job, low and slow.",
+                      "moments": ["It's heavy. Lift it with the hook, never your hands.", "Stew, bread, pudding. It does the lot."] },
+    "gd-fire-pit": { "ideas": ["foil-potatoes-embers", "fire-hot-chocolate"],
+                     "label": "The fire", "ref": "the fire pit", "type": "ambient", "themes": ["outdoor", "cosy", "evening", "warming"],
+                     "moment": "Pull up a log. The embers are the best part for cooking.",
+                     "moment_wet": "Out, in this weather. The potatoes in foil can wait for a fine night.",
+                     "moments": ["Keep a bucket of water nearby. I always do.", "Potatoes in foil, straight into the embers. Then you just sit."] },
+    "gd-sea": { "label": "The sea", "ref": "the sea", "type": "ambient", "themes": ["sunny", "fresh", "outdoor"],
+                "moment": "The same bay you see from the kitchens, with nothing in the way out here.",
+                "moments": ["The wall's there so nobody wanders off the cliff after dinner.", "On a still night you can hear it from the tent."] }
   },
   "atoms": [
     {

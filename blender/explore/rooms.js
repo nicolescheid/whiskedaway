@@ -138,8 +138,9 @@ export function install(inn) {
   // From goRoom, on arrival once the weather question is answered (or straight away if she didn't ask one), and on the
   // first touch in the room if the question was left unanswered
   function introduce(id = inn.state.room) {
-    const intro = { cuddlecore: inn.world.intro, flourish: inn.flWorld.intro, 'sweet-spells': inn.sweetWorld.intro, chiapothecary: inn.chiaWorld.intro }[id];
-    if (intro && !(inn.state.introduced ||= []).includes(id)) { inn.state.introduced.push(id); inn.say([intro, inn.entryFact(id)].filter(Boolean).join(' '), [], true); }
+    const home = inn.homeOf(id) === 'garden' ? 'garden' : id;   // the garden's two stops share one introduction
+    const intro = { cuddlecore: inn.world.intro, flourish: inn.flWorld.intro, 'sweet-spells': inn.sweetWorld.intro, chiapothecary: inn.chiaWorld.intro, garden: inn.gardenWorld.intro }[home];
+    if (intro && !(inn.state.introduced ||= []).includes(home)) { inn.state.introduced.push(home); inn.say([intro, inn.entryFact(id)].filter(Boolean).join(' '), [], true); }
   }
   function setRoomText() {
     inn.$('room-title').textContent = inn.room().title;
@@ -155,7 +156,8 @@ export function install(inn) {
   function wanderRoom() {
     const lean = localNavigate(navTrail(), inn.world, { ...inn.steer(), dismissed: inn.state.dismissed }).cluster;
     const STAR_OVERRIDES = { sweet: 'sweet-spells', 'hands-on': 'flourish' };   // Cuddlecore readings that belong next door
-    return STAR_OVERRIDES[lean] || inn.world.clusters[lean]?.room || 'cuddlecore';
+    const r = STAR_OVERRIDES[lean] || inn.world.clusters[lean]?.room || 'cuddlecore';
+    return r === 'garden' ? 'garden-patio' : r;                // the garden's reading walks out to the patio
   }
 
   // Taps (explore/touch.js): doors and walks (a closed door says so; a door out of the Inn says goodbye first)

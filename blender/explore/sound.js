@@ -311,6 +311,13 @@ function recipe(room, weather, { night = false, season = null } = {}) {
     if (wet) rain(0.8);
     if (storm) wind(1);
     if (mist) L.scatter.push(['drip', 0.6]);
+  } else if (room.startsWith('garden')) {
+    L.steady.push({ type: 'lowpass', freq: 520, q: 0.6, gain: mist ? 0.015 : 0.025, swell: 0.9, swellHz: 0.13 });   // the sea below the wall
+    if (wet) rain(1.2);
+    if (storm) wind(1.2);
+    if (mist) L.scatter.push(['drip', 0.8]);
+    if (!wet) L.scatter.push(['crackle', room === 'garden-camp' ? 1 : 0.4]);   // the fire pit (and the pizza oven's embers)
+    if (!wet && !night) L.scatter.push(['bird', 1]);
   } else if (room === 'chiapothecary') {
     L.scatter.push(['bubble', 1]);                // the flasks
     if (wet) rain(0.6);

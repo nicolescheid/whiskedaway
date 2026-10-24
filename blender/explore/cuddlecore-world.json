@@ -1569,47 +1569,6 @@
       }
     },
     {
-      "id": "sausage-sizzle",
-      "room": "cuddlecore",
-      "kind": "recipe idea",
-      "spoons": 1,
-      "title": "A sausage sizzle at home",
-      "short": "Sausage sizzle",
-      "icon": "🌭",
-      "ref": "the sausage sizzle",
-      "hook": "Sausage and fried onion in a slice of white bread, with sauce.",
-      "time": 20,
-      "key_ingredients": [
-        "sausages",
-        "white bread",
-        "onion",
-        "tomato sauce"
-      ],
-      "method_short": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store.",
-      "diet": [
-        "nut-free"
-      ],
-      "cuisines": [
-        "Kiwi classics"
-      ],
-      "appliances": ["bbq", "stove"],
-      "appliances_checked": true,
-      "themes": [
-        "comfort",
-        "quick",
-        "snack",
-        "hearty",
-        "cooking",
-        "summer",
-        "simple"
-      ],
-      "seed": {
-        "name": "Sausage sizzle with fried onion",
-        "why": "A Saturday-morning classic, and it works in any back yard."
-      },
-      "body": "Grill the sausages until browned all over and fry sliced onion beside them. Fold both into a slice of bread with sauce, and eat it standing up like it's outside the hardware store."
-    },
-    {
       "id": "slow-cooker-porridge",
       "room": "cuddlecore",
       "kind": "recipe idea",

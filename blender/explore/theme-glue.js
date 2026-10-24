@@ -12,7 +12,7 @@ export function install(inn) {
     const kept = book.list(), now = kept.filter(k => k.visit === book.visitId);
     const { words } = visitTheme({ keptNow: now, keptBefore: kept.filter(k => k.visit !== book.visitId),
       dismissed: inn.state.dismissed.map(id => inn.atomsById[id]).filter(Boolean), lean: inn.world.clusters[inn.state.result?.cluster]?.themes || [] });
-    const roomName = r => ({ cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'the Chiapothecary' }[r] || r);
+    const roomName = r => ({ cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'the Chiapothecary', garden: 'the garden' }[r] || r);
     return { words, now, sentence: themeSentence(words, now, roomName, inn.LINES.book?.theme) };
   }
   function renderTheme() {

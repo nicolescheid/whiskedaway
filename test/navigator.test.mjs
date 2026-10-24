@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { localNavigate, roomClusters, listJoin, adventureScore, adventureKind } from '../blender/explore/navigator.js';
 
 const read = f => JSON.parse(readFileSync(new URL(`../blender/explore/${f}-world.json`, import.meta.url), 'utf8'));
-const homes = ['cuddlecore', 'flourish', 'sweet-spells', 'chiapothecary'].map(read);
+const homes = ['cuddlecore', 'flourish', 'sweet-spells', 'chiapothecary', 'garden'].map(read);
 const [cuddle] = homes;
 for (const w of homes) Object.values(w.clusters).forEach(c => { c.room = w.room; });
 const world = {

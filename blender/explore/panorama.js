@@ -13,7 +13,7 @@ export function install(inn) {
   Object.assign(inn, { showWeather, showClock, buildHotspots, render, resize, lookTo });   // its functions, for the other modules (hoisted)
   // ---------- panorama
   const stage = inn.$('stage');
-  const edgeHints = createEdgeHints({ stage, roomId: () => (inn.state.room.startsWith('hall') ? 'hallway' : inn.state.room) });
+  const edgeHints = createEdgeHints({ stage, roomId: () => inn.homeOf(inn.state.room) || inn.state.room });
   // preserveDrawingBuffer keeps the last frame, so browser screenshot tools capture the room instead of black
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));

@@ -10,6 +10,7 @@ export const RIBBONS = {
   'sweet-spells': { name: 'Sweet Spells', colour: '#b5577a', glyph: '🍰' },
   chiapothecary: { name: 'Chiapothecary', colour: '#4f8a83', glyph: '🥣' },
   glasshouse: { name: 'Conservatory', colour: '#7a9a5c', glyph: '🌿' },
+  garden: { name: 'The garden', colour: '#a0522d', glyph: '🔥' },
 };
 import { swipeable } from './swipe.js';
 

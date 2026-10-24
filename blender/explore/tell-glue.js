@@ -154,7 +154,7 @@ export function install(inn) {
     const counts = {};
     inn.world.atoms.filter(fits).forEach(a => { counts[a.room] = (counts[a.room] || 0) + 1; });
     const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-    const name = { cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'The Chiapothecary' }[best] || 'Next door';
+    const name = { cuddlecore: 'Cuddlecore', flourish: 'Flourish', 'sweet-spells': 'Sweet Spells', chiapothecary: 'The Chiapothecary', garden: 'The garden' }[best] || 'Next door';
     if (!diet.length) return inn.LINES.room_empty || "That's everything I've got in here. Try next door.";
     return TL.roomNone.replace('{diet}', inn.listOf(diet.map(x => DIET_WORD[x] || x))).replace('{room}', name);   // "vegan, gluten-free and nut-free"
   }

@@ -71,7 +71,8 @@ if (!browser) { console.log('\nFAIL\n- no Chrome or Edge found for the browser c
 
 const SIZES = flag('--sheets-only') ? [] : [[375, 812], [375, 635], [724, 340], [812, 375], [1280, 800]].filter(([w, h]) => !only || only === `${w}x${h}`);
 const hall = JSON.parse(readFileSync(join(root, 'blender/explore/hallway-world.json'), 'utf8'));
-const ROOMS = ['cuddlecore', ...Object.keys(hall.stops), 'glasshouse', 'flourish', 'sweet-spells', 'chiapothecary'];
+const garden = JSON.parse(readFileSync(join(root, 'blender/explore/garden-world.json'), 'utf8'));
+const ROOMS = ['cuddlecore', ...Object.keys(hall.stops), 'glasshouse', 'flourish', 'sweet-spells', 'chiapothecary', ...Object.keys(garden.stops)];
 const TIMES = ['midday', 'night'];
 
 async function openPage({ width, height, time, path, phone }) {

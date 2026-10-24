@@ -4,7 +4,7 @@
 // and stops showing once the visitor has turned the view a few times on this device.
 
 const KEY = 'wa-edge-turns', ENOUGH = 8;
-const COLOURS = { cuddlecore: '#c4956a', flourish: '#6f8f4e', 'sweet-spells': '#b5577a', chiapothecary: '#4f8a83' };
+const COLOURS = { cuddlecore: '#c4956a', flourish: '#6f8f4e', 'sweet-spells': '#b5577a', chiapothecary: '#4f8a83', garden: '#a0522d' };
 const phoneSized = matchMedia('(max-width: 719px), (max-height: 500px)');
 
 let turns = 0;

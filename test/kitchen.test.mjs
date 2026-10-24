@@ -54,7 +54,7 @@ test('the tag, the words and the write-out', () => {
 
 test('content: every appliance has words, every idea atom is tagged with known ids', () => {
   for (const id of APPLIANCES) assert.ok(K.appliances[id]?.label && K.appliances[id]?.short && K.pick[id], id);
-  for (const room of ['cuddlecore', 'flourish', 'sweet-spells', 'chiapothecary', 'glasshouse']) {
+  for (const room of ['cuddlecore', 'flourish', 'sweet-spells', 'chiapothecary', 'glasshouse', 'garden']) {
     const w = JSON.parse(readFileSync(new URL(`../blender/explore/${room}-world.json`, import.meta.url), 'utf8'));
     for (const a of w.atoms || []) {
       if (!a.appliances_checked) continue;

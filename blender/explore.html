@@ -693,6 +693,7 @@ import { install as installRooms } from './explore/rooms.js';
 import { install as installInnMap } from './explore/inn-map.js';
 import { install as installHowYouLike } from './explore/how-you-like-it.js';
 import { install as installFoodMap } from './explore/food-map.js';
+import { install as installGarden } from './explore/garden.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 
 const params = new URLSearchParams(location.search);
@@ -700,7 +701,7 @@ const params = new URLSearchParams(location.search);
 // On the live site the AI navigator is on by default (?ai=0 turns it off); locally it's opt-in
 const aiParam = params.get('ai') ?? (location.hostname.endsWith('whiskedaway.com') ? '1' : null);
 const AI = !aiParam || aiParam === '0' ? null : /^https?:/.test(aiParam) ? aiParam : (body, opts) => genieFetch('/navigate', body, opts);
-const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, LINES, innMapData, foodMapData] = await Promise.all([
+const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorld, flSpots, sweetWorld, sweetSpots, chiaWorld, chiaSpots, gardenWorld, gardenSpots, LINES, innMapData, foodMapData] = await Promise.all([
   fetch('explore/cuddlecore-world.json').then(r => r.json()),
   fetch('out/cuddlecore_hotspots.json').then(r => r.json()),
   fetch('explore/hallway-world.json').then(r => r.json()),
@@ -713,6 +714,8 @@ const [world, kitchenSpots, hallWorld, hallSpots, glassWorld, glassSpots, flWorl
   fetch('out/sweet_spells_hotspots.json').then(r => r.json()),
   fetch('explore/chiapothecary-world.json').then(r => r.json()),
   fetch('out/chiapothecary_hotspots.json').then(r => r.json()),
+  fetch('explore/garden-world.json').then(r => r.json()),
+  fetch('out/garden_hotspots.json').then(r => r.json()),
   fetch('explore/gemma-lines.json').then(r => r.json()).catch(() => ({})),     // her lines for ideas and the book
   fetch('explore/inn-map.json').then(r => r.json()).catch(() => ({})),        // the Inn map's plan (content and art)
   fetch('explore/food-map.json').then(r => r.json()).catch(() => ({})),       // the food map's countries (content and art)
@@ -722,7 +725,7 @@ useTellData({ cuisines: (LINES.tell?.cuisines || []).map(n => ({ id: n, label: n
               countries: (LINES.tell?.countries || []).map(c => ({ id: c.code, label: c.name, example: c.example })) });
 // Each reading (cluster) remembers its room, like the atoms do in their JSON: the navigator sends the AI the room's own
 // readings first, and the star on the dial follows them
-for (const w of [world, flWorld, sweetWorld, chiaWorld]) Object.values(w.clusters).forEach(c => { c.room = w.room; });
+for (const w of [world, flWorld, sweetWorld, chiaWorld, gardenWorld]) Object.values(w.clusters).forEach(c => { c.room = w.room; });
 // One world for the navigator: every room's objects together, and Flourish's pieces beside the kitchen's
 Object.assign(world.objects, hallWorld.objects, glassWorld.objects, flWorld.objects);
 Object.assign(world.clusters, flWorld.clusters);
@@ -738,6 +741,10 @@ Object.assign(world.clusters, chiaWorld.clusters);
 world.atoms.push(...chiaWorld.atoms);
 // The Conservatory's own herb ideas (Nicole, 22 Oct: the herbs serve an idea that uses them)
 world.atoms.push(...(glassWorld.atoms || []));
+// The garden brings its own objects, outdoor recipes (atoms) and its reading (explore/garden.js does the rest)
+Object.assign(world.objects, gardenWorld.objects);
+Object.assign(world.clusters, gardenWorld.clusters);
+world.atoms.push(...gardenWorld.atoms);
 
 // ---------- rooms: the kitchen, and the hallway's two camera stops
 const ROOMS = {
@@ -784,9 +791,18 @@ for (const [id, st] of Object.entries(chiaWorld.stops)) {
   ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw,
                 pano: (w, night, full) => `out/chiapothecary_pano_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
 }
+// The garden: the patio and the camp, in every weather by day and night, like Flourish next door
+for (const [id, st] of Object.entries(gardenWorld.stops)) {
+  const stop = gardenSpots.stops[st.stop];
+  const stopSpots = Object.fromEntries(Object.entries(stop.hotspots)
+    .filter(([k, h]) => gardenWorld.objects[k] && (h.visible || gardenWorld.objects[k].always_visible)));
+  Object.assign(stopSpots, gardenWorld.walks[id] || {});
+  ROOMS[id] = { title: st.title, where: st.where, eye: stop.position, spots: stopSpots, yaw: st.yaw, pitch: st.pitch,
+                pano: (w, night, full) => `out/garden_pano_${st.stop}_${w}${night ? '_night' : ''}${full ? '' : '_preview'}.jpg` };
+}
 const atomsById = Object.fromEntries(world.atoms.map(a => [a.id, a]));
 // Which world each view belongs to (both hallway stops are "hallway"), for the navigator's home room
-const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld].find(w => w.room === id || w.stops?.[id])?.room || null;
+const homeOf = id => [world, hallWorld, glassWorld, flWorld, sweetWorld, chiaWorld, gardenWorld].find(w => w.room === id || w.stops?.[id])?.room || null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -857,7 +873,7 @@ delete state.sound;                        // sound on or off lives in explore/s
 const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood'];
 // What every module reads from the bootstrap (docs/code-map.md): the data, the visit, and a few helpers
 Object.assign(inn, { track, genieFetch, getPass, GENIE_URL, stepBucket,
-                      AI, chiaWorld, sweetWorld, flWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, innMapData, foodMapData, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
+                      AI, chiaWorld, sweetWorld, flWorld, gardenWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, innMapData, foodMapData, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
 installTouch(inn);   // what a tap on a hotspot does: each module registers its own (inn.onTouch)
 installRooms(inn);   // time, season, the trail, moving between rooms, the hallway dial
 installPanorama(inn);   // the 360° view: renderer, weathers, clocks, hotspots, looking around, Erwina
@@ -870,6 +886,7 @@ installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortu
 installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary and kitchen sheets, the tags
 installHowYouLike(inn);   // Cuddlecore's How you like it tray, the little cage and the bell jar
 installFoodMap(inn);   // the food map: home, family and loved countries (Tell Gemma's map)
+installGarden(inn);   // the garden: its table's cast, the barbecue's ideas, the fire out in the rain
 installThemeGlue(inn);   // the visit's theme caption and the hallway notice board
 installPanels(inn);   // the bar, the notebook and Forget
 installInnMap(inn);   // the Inn map: the bar's Map button, a plan of the Inn, and In this room

@@ -177,7 +177,8 @@ export function install(inn) {
     close(() => {
       inn.track('inn_map_star', { room: go });
       const says = { flourish: 'Your wander says Flourish. In you go.', 'sweet-spells': 'Your wander says Sweet Spells. In you go.',
-                     chiapothecary: 'Your wander says the Chiapothecary. In you go.' };
+                     chiapothecary: 'Your wander says the Chiapothecary. In you go.',
+                     'garden-patio': 'Your wander says the garden. Out you go.' };
       inn.say(says[go] || 'Your wander says Cuddlecore. In you go.', [], true);
       setTimeout(() => inn.goRoom(go), reduce() ? 0 : 700);
     });
