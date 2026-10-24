@@ -8,7 +8,7 @@ import { sound } from './sound.js';
 import { createTags } from './tags.js';
 import { book } from './book.js';
 import { sweetTags } from './sweet-spells.js';
-import { servingsNumber, checkinWords, timeWords, ackLine, heardWords } from './checkin.js';
+import { servingsNumber, checkinWords, timeWords, ackLine, heardWords, TIME_LIMIT } from './checkin.js';
 import { createTell, countryFromLanguage, cuisineLabel, countryLabel } from './tell.js';
 import { createShopWords } from './shopwords.js';
 import { kitchenFits, kitchenWords } from './kitchen.js';
@@ -70,8 +70,27 @@ export function install(inn) {
     const named = two.length === 2 ? (CW.ack.checkinTwo || "{a}, and {b}. I'll keep all that in mind.").replace('{a}', two[0]).replace('{b}', two[1]) : '';
     const line = !one ? named || CW.ack.checkin : one === 'energy' ? inn.world.energies?.[after.energy]?.moment : one === 'weather' ? inn.world.weathers[after.weather]?.moment
       : ackLine(CW, one, after[one]);
-    if (line) { inn.say(capFirst(line), [], true); inn.holdLine(); }
+    const sorted = resortIdeas(changed, after);
+    if (sorted || line) { inn.say(capFirst(sorted || line), [], true); inn.holdLine(); }
     inn.scheduleNavigate();
+  }
+  // The check-in's payoff (first-visit-tour.md §4): short on patience or a low candle, and the ideas already out re-sort while
+  // you watch, quick and gentle ones nearest the thumb, and she says what changed. Returns her line, or '' if neither changed
+  const QUICK = new Set(['quick', 'half']), GENTLE = new Set(['burnt-out', 'low']);
+  function resortIdeas(changed, after) {
+    const quick = changed.includes('time') && QUICK.has(after.time), gentle = changed.includes('energy') && GENTLE.has(after.energy);
+    if (!quick && !gentle) return '';
+    const P = CW.payoff || {};
+    const limit = TIME_LIMIT[after.time] || 0;
+    const fit = a => (quick ? (a.time ? (a.time <= limit ? 1 : 0) : 0.5) : 0) + (gentle ? (a.spoons === 0 ? 1 : a.spoons === 1 ? 0.5 : 0) : 0);
+    const cards = inn.state.cards.filter(c => inn.atomsById[c.atom]);
+    const order = cards.map((c, i) => ({ c, i, f: fit(inn.atomsById[c.atom]) })).sort((x, y) => y.f - x.f || x.i - y.i).map(x => x.c);
+    if (order.some((c, i) => c !== cards[i])) { inn.state.cards = order; inn.store.save(inn.state); inn.ideas.render(); }   // the column slides them into place
+    const said = [quick && heardWords(CW, 'time', after.time),
+                  gentle && (P.candle || "your candle's {e}").replace('{e}', String(inn.world.energies?.[after.energy]?.label || after.energy).toLowerCase())].filter(Boolean);
+    const which = quick && gentle ? P.both || 'quick, gentle' : quick ? P.quick || 'quick' : P.gentle || 'gentle';
+    const then = (cards.length ? P.sorted || "I've put the {w} ones first." : P.next || "I'll bring the {w} ones first.").replace('{w}', which);
+    return `${capFirst(inn.listOf(said))}. ${then}`;
   }
   // Your kitchen's Done: her line for one appliance, else "{x}. I'll keep to those." (two named at most), or cleared; each appliance
   // picked is counted (kitchen_pick: its id, nothing else)
