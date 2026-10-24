@@ -27,7 +27,7 @@ write-out cache serves the old wording for up to 30 days.
 | Role | Files |
 |---|---|
 | Ideas build (main coder) | garden.js, ideas.js, idea-pick.js, basket.js, basket-view.js, checkout.js, book.js, book-view.js, writeout.js, list.js, cook.js, kitchen.js, chia-mix.js, tell.js, tags.js, checkin.js, checkin-controls.js, navigator.js, theme.js, shopwords.js, serving.js, basket-glue.js, tell-glue.js, chia-glue.js, centrepieces.js, theme-glue.js, how-you-like-it.js, feels.js, food-map.js, food-map-rules.js |
-| Inn architecture / whoever holds the bootstrap | explore.html (bootstrap only), layers.js, touch.js, rooms.js, panorama.js, chat-glue.js, panels.js, inn-map.js, inn-dialogs.js, candles.js, arrival.js, scripts/check.mjs, scripts/sheet-contract.mjs |
+| Inn architecture / whoever holds the bootstrap | explore.html (bootstrap only), layers.js, touch.js, rooms.js, panorama.js, chat-glue.js, panels.js, inn-map.js, inn-dialogs.js, candles.js, arrival.js, tour.js, scripts/check.mjs, scripts/sheet-contract.mjs |
 | Phones / mobile lead | chat.js, edge-hints.js, tilt.js, swipe.js, data-budget.js |
 | Sound | sound.js |
 | Front door / homepage story | front-door.js, the door markup and story in explore.html (copy is content's) |
@@ -57,7 +57,7 @@ explore.html. A value several modules reassign is a field of `inn` (`inn.spots`,
 
 **Install order matters only for what a module does at load** (its `create*()` calls, which also fix the order sheets are
 added to the page). Today's order: touch, rooms, panorama, chat-glue, serving, basket-glue, chia-glue, sweet-glue,
-centrepieces, tell-glue, how-you-like-it, food-map, garden, theme-glue, panels, inn-map, inn-dialogs, candles, arrival. A new module goes after the ones whose
+centrepieces, tell-glue, how-you-like-it, food-map, garden, theme-glue, panels, inn-map, inn-dialogs, candles, arrival, tour. A new module goes after the ones whose
 values it reads at load.
 
 | Module | What it holds |
@@ -80,7 +80,8 @@ values it reads at load.
 | `garden.js` | the garden (24 Oct): its world is `garden-world.json` (stops garden-patio and garden-camp, renders `out/garden_pano_{patio,camp}_*`, `out/garden_hotspots.json`), loaded and put into ROOMS by the bootstrap like the other rooms. The module holds what's the garden's own: the garden table casts (`CAST_ROOMS.garden = 'table'`), the barbecue opens Your kitchen until it has a BBQ and then brings out a barbecue idea (order 29), and in rain and storm the fire, camp oven and tent say `moment_wet` (order 59). In through Flourish's stable door (`fl-back-door`) and the Conservatory's `garden-door`, both arriving on the patio |
 | `inn-dialogs.js` | showDialog, hideDialog, openTool, the barometer, clock and seasons wheel (and their taps) |
 | `candles.js` | spriteFrom (on `inn`, for any overlay drawn into the room), the candle's flame and glow, showCandle, chooseEnergy |
-| `arrival.js` | arrive (the foyer's check-in offer, the weather question), checkinPill, endCheckinOffer, faceDesk, settle |
+| `arrival.js` | arrive (the foyer's check-in offer, the weather question), offerCheckin, checkinPill, endCheckinOffer, faceDesk, settle |
+| `tour.js` | the first-visit tour (24 Oct): on a first visit (localStorage `wa-tour-offered`) arrive asks `inn.tour.offer()` instead of the check-in offer. Seven stops on today's renders (the four hall doors, the Chiapothecary's glasshouse door, the Conservatory's garden door with the bar's Map glowing, the foyer desk), one line each (gemma-lines.json `tour`), Next and Skip and a dot row; ends with Check in / Later. A `modal: false` layer: Escape, Back and Skip end it with the check-in offer; a tap on anything (or a walk by the Inn map) ends it and carries on. Rooms it passes through are entered with `goRoom(id, yaw, { quiet: true })` and `inn.touring` stops lingering, so it never steers the navigator. The bell's card has Show me round (front-door.js sends `wa-tour`). Counts tour_offer, tour_start, tour_end |
 
 ## Where new features go (the queue, 23 Oct)
 
@@ -90,7 +91,7 @@ values it reads at load.
   overlay is drawn like the candle flames (`inn.spriteFrom`, from candles.js). Its filter goes in serving.js next to dietClash and
   kitchenOk, and the cage always wins.
 - **The food map and its adventure dial**: built 24 Oct, `explore/food-map.js`. The dial is a score in navigator.js (`adventureScore`), never a filter; the cage and the bell jar leave cards out before anything is scored.
-- **The first-visit tour**: `explore/tour.js`, a `modal: false` layer, started from arrival.js. Skip and Escape end it.
+- **The first-visit tour**: built 24 Oct, `explore/tour.js`, a `modal: false` layer, started from arrival.js and the bell. After any check-in's Done, a shorter time or a low candle re-sorts the Ideas column and Gemma says so (tell-glue.js `resortIdeas`).
 - **The garden**: live (24 Oct), `explore/garden.js` and `garden-world.json`. Seasons for the garden (and the Conservatory's
   summer, autumn and winter views, which still show the old meadow) are a design call for later.
 

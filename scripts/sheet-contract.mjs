@@ -295,7 +295,7 @@ async function closeBy(page, S, way) {
 
 // ---------- journeys: [check, ok, note] rows
 const clean = async page => {
-  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map', '#hyli', '#food-map']
+  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map', '#hyli', '#food-map', '#tour']
     .filter(s => { const el = document.querySelector(s); return el && !el.hidden; }) })`);
   return [['nothing open', !r.open.length, r.open.join(', ')], ['inert', !r.inert.length, r.inert.join(', ')]];
 };
@@ -313,7 +313,63 @@ const press = async (page, spot) => {
   return page.evaluate(() => window.__explore.state.room);
 };
 
+// The first-visit tour (tour.js): a layer over the live room. Started here from the bell's Show me round (a real opener; the
+// arrival offer needs a first visit, which these tabs aren't)
+const tourStart = async page => {
+  await page.evaluate(async () => { const ex = window.__explore; if (ex.state.room !== 'hall-entrance') { ex.goRoom('hall-entrance'); await new Promise(r => setTimeout(r, 500)); } });
+  await page.click('#btn-bell');
+  await page.waitForTimeout(300);
+  await page.click('#welcome-tour');
+  return shown(page, '#tour');
+};
+const tourAt = page => page.evaluate(() => window.__explore.tour.stop);
+
 const JOURNEYS = [
+  // The whole tour: seven stops through the hall, the Chiapothecary and the Conservatory, back to the foyer desk; the room
+  // stays live behind it, the walk adds nothing to the trail, and Check in opens the check-in
+  { id: 'the tour, start to desk', async run(page) {
+    const out = [], entry = await marked(page);
+    const trail = await page.evaluate(() => window.__explore.state.trail.length);
+    out.push(['Show me round starts the tour', await tourStart(page)]);
+    out.push(['the room stays live behind it', await page.evaluate(() => !document.getElementById('stage')?.closest('[inert]'))]);
+    out.push(['focus on Next', await page.evaluate(() => document.activeElement?.classList.contains('tr-next'))]);
+    const rooms = [];
+    for (let i = 0; i < 6; i++) { rooms.push(await page.evaluate(() => window.__explore.state.room)); await page.click('#tour .tr-next'); await page.waitForTimeout(500); }
+    rooms.push(await page.evaluate(() => window.__explore.state.room));
+    const want = ['hall-middle', 'hall-middle', 'hall-middle', 'hall-middle', 'chiapothecary', 'glasshouse', 'hall-entrance'];
+    out.push(['walks the seven stops', JSON.stringify(rooms) === JSON.stringify(want), rooms.join(' > ')]);
+    out.push(['the door it talks about glows', await page.evaluate(() => document.querySelector('.spot.tour-glow')?.dataset.spot === 'checkin-desk')]);
+    out.push(['nothing added to the trail', await page.evaluate(n => window.__explore.state.trail.length === n, trail)]);
+    await page.click('#tour .tr-next');                    // Check in
+    out.push(['Check in opens the check-in', await shown(page, '#tell')]);
+    await page.click('#tell .tl-x');
+    await page.waitForTimeout(500);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
+  // Skip, Escape and Back end it where you stand, with the check-in offer; a door tapped mid-tour walks you in
+  { id: 'the tour: skip, escape, back, a door', async run(page) {
+    const out = [];
+    for (const way of ['skip', 'escape', 'back', 'door']) {
+      const entry = await marked(page);
+      if (!await tourStart(page)) { out.push([`the tour starts (${way})`, false]); continue; }
+      await page.click('#tour .tr-next');
+      await page.waitForTimeout(400);
+      if (way === 'skip') await page.click('#tour .tr-skip');
+      else if (way === 'escape') await page.keyboard.press('Escape');
+      else if (way === 'back') out.push(['Back stays in the Inn (tour)', await back(page)]);
+      else out.push(['the glowing door walks you in', await press(page, 'door-flourish') === 'flourish']);
+      await page.waitForTimeout(500);
+      out.push([`${way} ends the tour`, !await isOpen(page, '#tour') && (await tourAt(page)) === 0]);
+      if (way !== 'door') out.push([`${way}: the check-in offer follows`, await page.evaluate(() => window.__explore.state.chips.some(c => c.do[0] === 'checkin'))]);
+      out.push(...(await clean(page)).map(([c, ok, n]) => [`${c} (${way})`, ok, n]));
+      const [ok, note] = await sameEntry(page, entry);
+      out.push([`history balanced (${way})`, ok, note]);
+    }
+    return out;
+  } },
   // The garden (24 Oct): out through Flourish's stable door to the patio, down to the camp and back, home through the
   // stable door; and the Inn map walks there now it's built
   { id: 'the garden walk', async run(page) {
