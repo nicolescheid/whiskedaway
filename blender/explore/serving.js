@@ -148,7 +148,7 @@ export function install(inn) {
       awayOk: !awayOut() || !!inn.state.awayLift?.[inn.homeOf(inn.state.room)],
       moodThemes: chiaData(inn.LINES).moods[visit.dish('chiapothecary', 'mood')]?.themes || [],   // not chia.data: steer() can run before it's made
       ...sweetSteer(visit),                                                                    // Sweet Spells' cravings and "no added sugar"
-      served: [...inn.state.served, ...kept.map(k => k.id), ...inn.world.atoms.filter(a => dietClash(a) || !kitchenOk(a)).map(a => a.id)],
+      served: [...inn.state.served, ...kept.map(k => k.id), ...inn.world.atoms.filter(a => dietClash(a) || inn.likeClash?.(a) || !kitchenOk(a)).map(a => a.id)],
       book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
       about: { pantry: inn.pantryNow().items, useUp: inn.pantryNow().useUp, cuisines: visit.get('cuisines') || [], synonyms: inn.SYNONYMS,
                why: { ...inn.CW.why, ...inn.T.why }, cuisineLabel,

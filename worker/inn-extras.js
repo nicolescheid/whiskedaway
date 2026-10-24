@@ -2,6 +2,7 @@
 // (test/inn-extras.test.mjs). Both are new, optional payload fields: a page that doesn't send them gets the prompt it had before.
 //   Your kitchen (appliances-chia-plan.md §1): payload.appliances ['oven', 'air fryer'] or payload.no_cooking true
 //   A real mix (§2): payload.mix.addins ['Berries', …], mix.top [the ones that go on top], mix.thirsty [the ones that soak up liquid]
+//   How you like it (Cuddlecore's tray): payload.feels_skip ['coriander', 'nuts'], feels_more ['spicy heat'], keeping_off ['grapefruit']
 
 const txt = (v, n) => String(v ?? '').replace(/[\r\n]+/g, ' ').slice(0, n);
 const list = (v, n, m = 40) => (Array.isArray(v) ? v : []).slice(0, n).map(x => txt(x, m).trim()).filter(Boolean);
@@ -18,6 +19,16 @@ export function kitchenLine(payload = {}) {
     + 'If the idea usually needs something else, adapt the method to one they have (an air fryer instead of the oven, a microwave instead of the stove '
     + 'for warming, a kettle for boiling water, a fork or whisk instead of a blender) and say so in a few words in that step. '
     + 'A kettle only boils water: never warm milk or cook in it. Never ask for an appliance they did not list.';
+}
+
+/** How they like it (the tray, the cage and the bell jar), or '' for no preference. Never a reason: they chose, that's all */
+export function feelsLine(payload = {}) {
+  const skip = list(payload.feels_skip, 13), more = list(payload.feels_more, 13), off = list(payload.keeping_off, 8);
+  const parts = [];
+  if (off.length) parts.push(`Keep these foods out entirely, as an ingredient, a garnish or a swap: ${off.join(', ')}. Never say why, and never mention medicines or health.`);
+  if (skip.length) parts.push(`They'd rather skip: ${skip.join(', ')}. Leave these out, never add them back as a swap or garnish, and don't comment on it.`);
+  if (more.length) parts.push(`They like more of: ${more.join(', ')}. Lean into these where they suit the dish, without saying so.`);
+  return parts.join(' ');
 }
 
 /** The add-ins line for a real mix, with the chia to liquid kept honest, or '' for a simple jar */

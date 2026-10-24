@@ -129,7 +129,8 @@ export function install(inn) {
   }
   // When the diet filter (or the visit) has emptied this room: once per room, name the room with most that fit, and let other
   // rooms' ideas in here; once per visit, say when nothing anywhere fits. Never a bubble that breaks the filter (§5)
-  const fitsDiet = a => !inn.dietClash(a) && !inn.state.served.includes(a.id) && !inn.state.dismissed.includes(a.id) && !book.has(a.id);
+  const unused = a => !inn.state.served.includes(a.id) && !inn.state.dismissed.includes(a.id) && !book.has(a.id);
+  const fitsDiet = a => !inn.dietClash(a) && !inn.likeClash(a) && unused(a);              // the cage always wins, before the kitchen loosens
   const fits = a => fitsDiet(a) && inn.kitchenOk(a); inn.fits = fits;
   function emptyRoomLine() {
     const home = inn.homeOf(inn.state.room);
@@ -138,6 +139,11 @@ export function install(inn) {
     // The kitchen first: if the room still has ideas for their diet, loosen the kitchen here and serve again
     if (inn.world.atoms.some(a => a.room === home && fitsDiet(a))) {
       const line = inn.loosenKitchen(home);
+      if (line) { inn.scheduleNavigate(); return line; }
+    }
+    // Then the cage: if all the room has left is something caged, she says so and lets it out for this room (never the bell jar)
+    if (inn.world.atoms.some(a => a.room === home && !inn.dietClash(a) && unused(a) && inn.feelsCaged(a))) {
+      const line = inn.loosenFeels(home);
       if (line) { inn.scheduleNavigate(); return line; }
     }
     const diet = [].concat(visit.get('dietary') || []).filter(x => !inn.PASS_ONLY.has(x));   // not a filter yet (no cards checked), so never the reason

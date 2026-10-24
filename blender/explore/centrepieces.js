@@ -75,6 +75,7 @@ export function install(inn) {
   const onCard = id => inn.state.cards.some(c => c.atom === id); inn.onCard = onCard;
   function canServe(a) {
     if (inn.state.served.includes(a.id) || book.has(a.id) || basket.has(a.id)) return false;
+    if (inn.likeClash(a)) return false;                                                   // the cage always wins (how-you-like-it.js)
     if (inn.isAway(a) && inn.awayOut() && !inn.state.awayLift?.[inn.homeOf(inn.state.room)]) return false;
     const head = inn.headline(a);
     return !head || !inn.state.cards.some(c => inn.atomsById[c.atom] && inn.headline(inn.atomsById[c.atom]) === head);

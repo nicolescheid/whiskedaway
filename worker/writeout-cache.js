@@ -10,7 +10,7 @@
 // HMAC of the pass's sid (never the sid itself), kept 3 days. Logged only, not enforced.
 
 /** Bump on any change to the Inn's prompt (INN_CONSTITUTION, buildUserMessage's inn-idea lines, inn-extras.js) or the model */
-export const PROMPT_VERSION = 'inn-2026-10-23b';
+export const PROMPT_VERSION = 'inn-2026-10-24a';
 export const CACHE_TTL = 30 * 24 * 3600;
 export const COUNT_TTL = 3 * 24 * 3600;
 
@@ -36,6 +36,7 @@ export function keyParts(payload = {}, { model = '' } = {}) {
             method: s(idea.method_short, 400), time: s(idea.time, 40) },
     units: s(p.units, 10), locale: s(p.locale, 20), country: s(p.country, 40), servings: num(p.servings),
     diet: sorted(p.dietary_restrictions), avoid: low(p.dietary_other, 60),
+    feels_skip: sorted(p.feels_skip), feels_more: sorted(p.feels_more), keeping_off: sorted(p.keeping_off),
     appliances: p.no_cooking === true ? ['none'] : sorted(p.appliances),
     pantry: sorted(p.pantry_ingredients), use_up: !!p.use_up, cuisines: sorted(p.cuisines),
     energy: s(p.energy, 40), confidence: s(p.confidence, 20), time_available: num(p.time_available),

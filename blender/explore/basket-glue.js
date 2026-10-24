@@ -43,7 +43,7 @@ export function install(inn) {
     const xs = [...(hit ? table[hit] : [])];
     const sw = SWEETENER_KEYS[key] || SWEETENER_KEYS[hit];
     if (sw) for (const [id, label] of Object.entries(inn.sweet.data.sweetenWith.options)) if (id !== sw && id !== 'sweeteners' && !xs.includes(label)) xs.push(label);
-    return xs.filter(x => x.toLowerCase() !== name).slice(0, 6);
+    return xs.filter(x => x.toLowerCase() !== name && !inn.howYouLike.caged(x)).slice(0, 6);   // a swap never brings back what's caged
   }
   const writer = createWriteOut({
     book, visit, lines: inn.LINES.write_out, track: inn.track, bucket: n => (n >= 2 ? '2-3' : String(n)),
@@ -65,6 +65,7 @@ export function install(inn) {
       occasion: rec.room === 'sweet-spells' ? inn.sweet.data.occasions.options[visit.dish('sweet-spells', 'occasion')]?.label || null : null,
       servings: servingsNumber(visit.get('servings')), confidence: visit.get('confidence') || null, time_available: TIME_LIMIT[visit.get('time')] || null,
       ...kitchenPayload(inn.kitchenNow(), inn.LINES.kitchen),               // { appliances: ['oven', 'air fryer'] } or { no_cooking: true }
+      ...inn.howYouLike.payload(),                                          // { feels_skip, feels_more, keeping_off }: words, the Worker reads them
     }),
     onWritten: (rec, full) => { inn.record({ kind: 'recipe', atom: rec.id }); intoBook(rec, full); },
     onChange: () => bookView.refresh(),

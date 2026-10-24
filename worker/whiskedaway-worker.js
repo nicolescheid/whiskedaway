@@ -3,7 +3,7 @@
 
 // The analytics allow-list, shared with the browser (docs/analytics-plan.md)
 import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
-import { kitchenLine, addinsLine } from './inn-extras.js';
+import { kitchenLine, addinsLine, feelsLine } from './inn-extras.js';
 import { cacheKey, validRecipe, countKey, countWriteout, CACHE_TTL } from './writeout-cache.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -854,6 +854,7 @@ function buildUserMessage(payload) {
       : `Use these if they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`);
     if (payload.country) parts.push(`Shopping words for: ${txt(payload.country, 40)} (ingredient names and shops from there)`);
     if (payload.dietary_other) parts.push(`Also avoid: ${txt(payload.dietary_other, 60)}`);
+    if (feelsLine(payload)) parts.push(feelsLine(payload));         // How you like it: what's caged, what's wanted more, the bell jar
     const UNITS = {
       metric: 'Measurements: metric only, never cups. Weigh solids in g or kg (flour, sugar, chopped vegetables, leaves, grains), measure liquids in ml or l; '
         + 'tsp and tbsp only for small amounts (under about 3 tbsp). Whole things stay counted (2 eggs, 1 onion). Put the number in "amount" and the unit in "unit".',

@@ -5,6 +5,8 @@
 // Words: gemma-lines.json `howYouLikeIt` (content's); the ones here stand in until it's written. docs/code-map.md has the module.
 import { visit } from './visit-state.js';
 import { layers } from './layers.js';
+import { cuisineLabel } from './tell.js';
+import { FEELS, GROUPS, HEAT, names, feelClash, feelsSplit, feelsPayload } from './feels.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -12,23 +14,6 @@ const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)
   : matchMedia('(max-width: 719px)').matches ? 'phone' : 'desk');
 const bucket = n => (n <= 0 ? '0' : n === 1 ? '1' : n <= 3 ? '2-3' : '4+');
 
-// The feels, in the tray's order. skip/more: Gemma's short words for her Done line; icon: the cage's overlay
-export const FEELS = [
-  { id: 'spicy', group: 'flavour', label: 'Spicy heat', skip: 'Nothing spicy', more: 'a bit more heat', icon: '🌶️' },
-  { id: 'strong-spice', group: 'flavour', label: 'Strongly spiced', skip: 'Nothing strongly spiced', more: 'plenty of spice', icon: '🫚' },
-  { id: 'strong-flavours', group: 'flavour', label: 'Strong flavours', skip: 'No strong flavours', more: 'big flavours', icon: '🧀' },
-  { id: 'smells', group: 'flavour', label: 'Strong smells', skip: 'No strong smells', more: 'a good strong smell', icon: '🧄' },
-  { id: 'bitter', group: 'flavour', label: 'Bitter', skip: 'Nothing bitter', more: 'a bitter edge', icon: '☕' },
-  { id: 'sour', group: 'flavour', label: 'Very sour', skip: 'Nothing very sour', more: 'something sour', icon: '🍋' },
-  { id: 'coriander', group: 'flavour', label: 'Coriander', skip: 'No coriander', more: 'more coriander', icon: '🌿' },
-  { id: 'slippery', group: 'texture', label: 'Slippery', skip: 'Nothing slippery', more: 'something slippery', icon: '🍄' },
-  { id: 'crunchy', group: 'texture', label: 'Very crunchy', skip: 'Nothing too crunchy', more: 'a good crunch', icon: '🥨' },
-  { id: 'bits', group: 'texture', label: 'Bits in smooth things', skip: 'No bits in smooth things', more: 'bits in smooth things', icon: '🥣' },
-  { id: 'seeds', group: 'bits', label: 'Seeds and pips', skip: 'No seeds', more: 'seeds and pips', icon: '🌻' },
-  { id: 'nuts', group: 'bits', label: 'Nuts', skip: 'No nuts', more: 'nuts', icon: '🥜' },
-  { id: 'skins', group: 'bits', label: 'Skins and husks', skip: 'No skins or husks', more: 'skins and husks', icon: '🥔' },
-];
-const GROUPS = { flavour: 'Heat and flavour', texture: 'Textures', bits: 'Bits and pieces' };
 const CHOICES = [['skip', 'Skip it'], ['either', 'Either way'], ['more', 'More, please']];
 
 export function install(inn) {
@@ -47,8 +32,8 @@ export function install(inn) {
   };
   const feelById = Object.fromEntries(FEELS.map(f => [f.id, { ...f, ...H.feels?.[f.id] }]));
   const feelsNow = () => { const v = visit.get('feels'); return v && typeof v === 'object' ? v : {}; };
-  const skipped = (v = feelsNow()) => FEELS.filter(f => v[f.id] === 'skip').map(f => f.id);
-  const wanted = (v = feelsNow()) => FEELS.filter(f => v[f.id] === 'more').map(f => f.id);
+  const skipped = (v = feelsNow()) => feelsSplit(v).skip;
+  const wanted = (v = feelsNow()) => feelsSplit(v).more;
   const capFirst = t => t.replace(/^./, c => c.toUpperCase());
 
   // ---------- the sheet
@@ -120,6 +105,7 @@ export function install(inn) {
     inn.track('tell_set', { kind: 'feels', count: bucket(Object.keys(now).length), from });   // how many, never which
     const line = feelsLine(was, now);
     if (line) { inn.say(line, [], true); inn.holdLine(); }
+    offerMild(was, now);
     inn.scheduleNavigate();
   }
   const sorted = o => Object.fromEntries(Object.entries(o).sort());
@@ -137,10 +123,46 @@ export function install(inn) {
   function told(v) {
     const s = skipped(v || {}).map(id => feelById[id].skip.toLowerCase()), m = wanted(v || {}).map(id => feelById[id].more);
     if (!s.length && !m.length) return '';
-    return `${W.title}: ${[s.length && inn.listOf(s), m.length && `more of ${inn.listOf(m)}`].filter(Boolean).join('; ')}.`;
+    return `${W.title}: ${[s.length && inn.listOf(s), m.length && `${inn.listOf(m)}, please`].filter(Boolean).join('; ')}.`;
   }
 
-  inn.howYouLike = { open, told, skipped, wanted, feelById, get isOpen() { return !root.hidden; } };
+  // ---------- the filter (serving.js steer, centrepieces.js canServe, tell-glue.js fits): the cage always wins, before the
+  // kitchen loosens. A room left with only caged ideas is loosened for the feels (never the bell jar): Gemma says so once
+  const feelsCaged = a => feelClash(a, skipped());
+  const likeClash = a => (inn.state.feelsLoose?.[a.room] ? null : feelsCaged(a));
+  function loosenFeels(home) {
+    if (!skipped().length || inn.state.feelsLoose?.[home]) return null;
+    (inn.state.feelsLoose ||= {})[home] = true;
+    return inn.pickLine('feels.loosen', [].concat(H.loosen || "Everything left in here has something you skipped. I'll bring it out anyway, and you can set aside what you don't fancy."));
+  }
+  // A changed tray starts every room afresh
+  visit.subscribe(({ part, key }) => { if (part === 'all' || key === 'feels') inn.state.feelsLoose = {}; });
+  /** What the write-out sends (basket-glue.js payloadFor): words, never ids */
+  const payload = () => feelsPayload(feelsNow());
+  /** A swap that names something caged (basket-glue.js swapsFor leaves it out) */
+  const caged = text => skipped().some(id => names(id, text));
+
+  // ---------- mild ways in (PM's idea, approved 23 Oct): with heat caged, Gemma may offer a cuisine's mild dishes, labelled
+  // mild, once a visit and never pushed. Content marks a card `mild_way_in: "<cuisine>"`; until one is marked, nothing happens
+  function offerMild(was, now) {
+    if (inn.state.mildOffered || !HEAT.some(id => now[id] === 'skip' && was[id] !== 'skip')) return;
+    const fancy = [].concat(visit.get('cuisines') || []);
+    const ok = a => a.mild_way_in && !likeClash(a) && !inn.dietClash(a) && inn.canServe(a);
+    const a = inn.world.atoms.find(x => ok(x) && fancy.includes(x.mild_way_in)) || inn.world.atoms.find(ok);
+    if (!a) return;
+    inn.state.mildOffered = true;
+    const line = (H.mild || "If you ever fancy {cuisine}, it has mild ways in. {title} is one, and it's mild.")
+      .replace('{cuisine}', cuisineLabel(a.mild_way_in)).replace('{title}', a.title);
+    setTimeout(() => {
+      inn.say(line, [], true);
+      inn.setChips([{ label: H.mildYes || 'Show me', do: ['mild', a.id] }, { label: H.mildNo || 'Not now', do: ['mildNo'] }]);
+    }, 3200);                                                       // after her Done line has had its 3 s
+  }
+  inn.CHIP_ACTS.mild = id => inn.showIdea(inn.atomsById[id], 'chat');
+  inn.CHIP_ACTS.mildNo = () => {};
+
+  inn.howYouLike = { open, told, skipped, wanted, feelById, payload, caged, get isOpen() { return !root.hidden; } };
+  Object.assign(inn, { likeClash, feelsCaged, loosenFeels });
 
   // Taps (touch.js order 25: after the chia drawers, before the kitchen): the tray opens the sheet after her line
   inn.onTouch(25, obj => obj.tool === 'feels', (obj, id) => {
