@@ -213,21 +213,26 @@
     "label": "How you like it",
     "overlay": null,
     "type": "interactive",
-    "yaw": 19.5,
-    "pitch": -11.5
+    "yaw": 21.67,
+    "pitch": -10.29
   },
   "cage": {
     "label": "The little cage",
     "overlay": null,
     "type": "interactive",
-    "yaw": 67.0,
-    "pitch": 12.5
+    "yaw": 66.26,
+    "pitch": 12.85,
+    "inside": {
+      "yaw": 66.53,
+      "pitch": 11.86,
+      "distance": 2.28
+    }
   },
   "bell-jar": {
     "label": "Keeping off?",
     "overlay": null,
     "type": "interactive",
-    "yaw": 112.0,
-    "pitch": 13.0
+    "yaw": 109.96,
+    "pitch": 12.16
   }
 }
