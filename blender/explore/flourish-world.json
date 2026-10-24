@@ -588,19 +588,6 @@
       "themes": ["learning", "hands-on", "cooking", "why"],
       "seed": { "name": "A fried egg, in a pan held right", "why": "Most kitchen burns are a handle or a damp cloth." },
       "body": "Keep the handle turned in, over the stove rather than out over the room. Lift with a dry cloth, never a damp one, and a straight wrist. Add food to a hot pan away from you." },
-    { "id": "measure-it", "room": "flourish", "kind": "technique", "spoons": 1, "title": "Measure it: spoons, cups and scales",
-      "short": "Measuring", "icon": "⚖️", "ref": "the scales and cups",
-      "hook": "Level the cup, zero the scales, and it comes out the same each time.", "time": 5,
-      "key_ingredients": ["flour", "sugar", "a bowl"],
-      "method_short": "For cups and spoons, fill and level off with a knife, don't heap. For scales, put the bowl on first and zero it, then weigh each thing straight in.",
-      "diet": ["vegetarian", "nut-free"],
-      "tools": ["measuring-cups", "scales"],
-      "feels": [],
-      "appliances": [],
-      "appliances_checked": true,
-      "themes": ["learning", "hands-on", "cooking", "baking", "why", "whole-food"],
-      "seed": { "name": "Plain scones, measured properly", "why": "Baking is the one place a guess costs you." },
-      "body": "For cups and spoons, fill and level off with a knife, don't heap. For scales, put the bowl on first and zero it, then weigh each thing straight in." },
     { "id": "which-knife", "room": "flourish", "kind": "technique", "spoons": 1, "title": "Which knife to reach for",
       "short": "Which knife", "icon": "🧅", "ref": "the knife block",
       "hook": "A small knife, a big knife and a bread knife cover almost everything.", "time": 5,
@@ -626,6 +613,7 @@
       "appliances_checked": true,
       "themes": ["learning", "hands-on", "cooking", "why", "whole-food"],
       "seed": { "name": "Any dinner, tidied as you go", "why": "Cooking feels easier when the end isn't a mountain." },
-      "body": "Fill the sink with hot soapy water before you start. Wash what you've finished with while the food cooks, and wipe the bench as you go." }
+      "body": "Fill the sink with hot soapy water before you start. Wash what you've finished with while the food cooks, and wipe the bench as you go." },
+    { "id": "drain-without-scalding", "room": "flourish", "kind": "technique", "spoons": 1, "title": "Drain pasta without scalding yourself", "short": "Draining", "icon": "🧺", "ref": "the colander", "hook": "Colander in the sink first, then tip the pot away from you.", "time": 10, "key_ingredients": ["pasta", "water", "salt", "olive oil"], "method_short": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce.", "diet": ["vegetarian", "dairy-free", "nut-free"], "tools": ["colander"], "feels": [], "appliances": ["stove"], "appliances_checked": true, "themes": ["learning", "simple", "cooking", "pantry", "low-spoons", "hands-on"], "seed": {"name": "Pasta with olive oil and a little cooking water", "why": "The safe way is also the tidy way."}, "body": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce." }
   ]
 }

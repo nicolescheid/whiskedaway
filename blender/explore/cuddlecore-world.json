@@ -1902,45 +1902,46 @@
       "body": "Taste before you season, add a small pinch of salt, stir and taste again. If it still seems flat, try a squeeze of lemon or a drop of vinegar before more salt. Use a clean spoon each time."
     },
     {
-      "id": "drain-without-scalding",
+      "id": "measure-it",
       "room": "cuddlecore",
       "kind": "technique",
       "spoons": 1,
-      "title": "Drain pasta without scalding yourself",
-      "short": "Draining",
-      "icon": "🧺",
-      "ref": "the colander",
-      "hook": "Colander in the sink first, then tip the pot away from you.",
-      "time": 10,
+      "title": "Measure it: spoons, cups and scales",
+      "short": "Measuring",
+      "icon": "⚖️",
+      "ref": "the scales and cups",
+      "hook": "Level the cup, zero the scales, and it comes out the same each time.",
+      "time": 5,
       "key_ingredients": [
-        "pasta",
-        "water",
-        "salt",
-        "olive oil"
+        "flour",
+        "sugar",
+        "a bowl"
       ],
-      "method_short": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce.",
+      "method_short": "For cups and spoons, fill and level off with a knife, don't heap. For scales, put the bowl on first and zero it, then weigh each thing straight in.",
       "diet": [
         "vegetarian",
-        "dairy-free",
         "nut-free"
       ],
-      "tools": ["colander"],
+      "tools": [
+        "measuring-cups",
+        "scales"
+      ],
       "feels": [],
-      "appliances": ["stove"],
+      "appliances": [],
       "appliances_checked": true,
       "themes": [
         "learning",
-        "simple",
+        "hands-on",
         "cooking",
-        "pantry",
-        "low-spoons",
-        "hands-on"
+        "baking",
+        "why",
+        "whole-food"
       ],
       "seed": {
-        "name": "Pasta with olive oil and a little cooking water",
-        "why": "The safe way is also the tidy way."
+        "name": "Plain scones, measured properly",
+        "why": "Baking is the one place a guess costs you."
       },
-      "body": "Put the colander in the sink before you lift the pot. Tip the water away from you and keep your face back from the steam. Save a mug of the starchy water for the sauce."
+      "body": "For cups and spoons, fill and level off with a knife, don't heap. For scales, put the bowl on first and zero it, then weigh each thing straight in."
     }
   ],
   "weathers": {
