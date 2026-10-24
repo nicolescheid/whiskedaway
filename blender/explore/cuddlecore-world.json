@@ -407,6 +407,21 @@
         "why"
       ]
     },
+    "feels-tray": {
+      "label": "How you like it",
+      "ref": "the tray of feels",
+      "type": "interactive",
+      "tool": "feels",
+      "moment": "My tray of feels. Tell me how you like things, and I'll cook to suit.",
+      "themes": []
+    },
+    "cage": {
+      "label": "The little cage",
+      "ref": "the little cage",
+      "type": "interactive",
+      "tool": "cage",
+      "themes": []
+    },
     "pantry-cabinet": {
       "label": "Your pantry",
       "ref": "the pantry",

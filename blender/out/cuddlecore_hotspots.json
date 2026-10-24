@@ -208,5 +208,19 @@
     "type": "ambient",
     "yaw": -121.15,
     "pitch": -9.49
+  },
+  "feels-tray": {
+    "label": "How you like it",
+    "overlay": null,
+    "type": "interactive",
+    "yaw": 19.5,
+    "pitch": -11.5
+  },
+  "cage": {
+    "label": "The little cage",
+    "overlay": null,
+    "type": "interactive",
+    "yaw": 67.0,
+    "pitch": 12.5
   }
 }

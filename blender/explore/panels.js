@@ -38,15 +38,17 @@ export function install(inn) {
                  cuisines: v => [].concat(v || []).length && `You fancy ${listOf([].concat(v).map(cuisineLabel))}.`,
                  country: v => v && `Shopping words for ${countryLabel(v) || v}.`,
                  kitchen: v => kitchenPicks(v).length && `${inn.LINES.kitchen?.visit_row || 'Your kitchen'}: ${kitchenPicks(v)[0] === NO_COOKING ? kitchenWords(v, inn.LINES.kitchen)[0] : listOf(kitchenWords(v, inn.LINES.kitchen))}.`,
+                 feels: v => inn.howYouLike.told(v),
                  time: v => toldLine(inn.CW, 'time', v), servings: v => toldLine(inn.CW, 'servings', v), confidence: v => toldLine(inn.CW, 'confidence', v), ...sweetTold(inn.sweet.data) };
-  const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet' };
+  const TOLD_SHEET = { kitchen: 'kitchen', dietary: 'dietary', dietaryOther: 'dietary', pantry: 'pantry', cuisines: 'map', country: 'map', time: 'checkin', servings: 'checkin', confidence: 'checkin', sweetness: 'sweet', sweeteners: 'sweet', feels: 'feels' };
   const listOf = xs => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`); inn.listOf = listOf;
   function renderTold() {
     const rows = Object.entries(visit.all().about).map(([k, v]) => [k, TOLD[k]?.(v)]).filter(([, text]) => text);
     inn.$('told').innerHTML = (rows.length ? rows.map(([k, text]) => `<li>${inn.esc(text)} ${TOLD_SHEET[k] ? `<button class="link" data-change="${inn.esc(TOLD_SHEET[k])}">change</button> ` : ''}<button class="link" data-forget="${inn.esc(k)}" aria-label="Forget this: ${inn.esc(text)}">forget</button></li>`).join('')
       : `<li>Nothing yet. Light a candle in the kitchen and I'll remember it.</li>`) + `<li><button class="link" data-menu>Tell me about you</button></li>`;
     inn.$('told').querySelectorAll('[data-forget]').forEach(b => b.onclick = () => visit.forget(b.dataset.forget));
-    inn.$('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : inn.tell.open(b.dataset.change, 'book'))));
+    inn.$('told').querySelectorAll('[data-change]').forEach(b => b.onclick = fromBook(() => (b.dataset.change === 'sweet' ? inn.sweet.open('sweet', 'book') : b.dataset.change === 'feels' ? inn.howYouLike.open('book')
+      : inn.tell.open(b.dataset.change, 'book'))));
     inn.$('told').querySelector('[data-menu]')?.addEventListener('click', fromBook(() => inn.tell.openMenu('book')));
   }
   // A sheet opened from inside the book waits for the book's step back in history: otherwise that late step lands on the

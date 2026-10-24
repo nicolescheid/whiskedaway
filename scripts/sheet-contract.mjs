@@ -27,6 +27,7 @@ export const SHEETS = [
   { id: 'pantry', ...TELL, open: { room: 'cuddlecore', spot: 'pantry-cabinet' }, answer: 'pantry' },
   { id: 'map', ...TELL, open: { room: 'cuddlecore', spot: 'locale-map' }, answer: 'press' },
   { id: 'dietary', ...TELL, open: { room: 'cuddlecore', spot: 'dietary-shelf' }, answer: 'press' },
+  { id: 'how you like it', root: '#hyli', ways: { done: '.hy-done', x: '.tl-x' }, open: { room: 'cuddlecore', spot: 'feels-tray' }, answer: 'press', keep: ALL },
   { id: 'kitchen', ...TELL, open: { room: 'cuddlecore', spot: 'kettle' }, answer: 'press' },
   { id: 'check-in', ...TELL, open: { room: 'hall-entrance', spot: 'checkin-desk' }, answer: 'press' },
   { id: 'chia mood', root: '#chia-mix', ways: { done: '.mx-done', x: '.tl-x' }, open: { room: 'chiapothecary', spot: 'flasks' }, answer: 'press', keep: ALL },
@@ -289,7 +290,7 @@ async function closeBy(page, S, way) {
 
 // ---------- journeys: [check, ok, note] rows
 const clean = async page => {
-  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map']
+  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map', '#hyli']
     .filter(s => { const el = document.querySelector(s); return el && !el.hidden; }) })`);
   return [['nothing open', !r.open.length, r.open.join(', ')], ['inert', !r.inert.length, r.inert.join(', ')]];
 };

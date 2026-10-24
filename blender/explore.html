@@ -402,6 +402,7 @@
 <!-- Ideas, Gemma's chat sizes, the visitor's tags and the recipe book (recipe-book-ux.md v4) -->
 <link rel="stylesheet" href="explore/ideas.css">
 <link rel="stylesheet" href="explore/inn-map.css">
+<link rel="stylesheet" href="explore/how-you-like-it.css">
 </head>
 <body>
 <!-- The front door: shown at / on a new visit (or with ?door=1), never with ?room= -->
@@ -689,6 +690,7 @@ import { install as installArrival } from './explore/arrival.js';
 import { install as installPanorama } from './explore/panorama.js';
 import { install as installRooms } from './explore/rooms.js';
 import { install as installInnMap } from './explore/inn-map.js';
+import { install as installHowYouLike } from './explore/how-you-like-it.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 
 const params = new URLSearchParams(location.search);
@@ -863,6 +865,7 @@ installChiaGlue(inn);   // the Chiapothecary: the Mix, its tools and a jar's own
 installSweetGlue(inn);   // Sweet Spells: its sheets, tools and the swap-the-sugar lines
 installCentrepieces(inn);   // the centrepieces' cast and the star chart's fortune
 installTellGlue(inn);   // Tell Gemma: the check-in, the pantry, map, dietary and kitchen sheets, the tags
+installHowYouLike(inn);   // Cuddlecore's How you like it tray, the little cage and the bell jar
 installThemeGlue(inn);   // the visit's theme caption and the hallway notice board
 installPanels(inn);   // the bar, the notebook and Forget
 installInnMap(inn);   // the Inn map: the bar's Map button, a plan of the Inn, and In this room
