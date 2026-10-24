@@ -173,6 +173,8 @@ export function install(inn) {
   addEventListener('resize', () => { if (!root.hidden) place(); });
   // "Show me round" on the bell's card (front-door.js), once the card has tucked away
   addEventListener('wa-tour', () => layers.whenFree(() => start('bell')));
+  // The top bar's Tour button (25 Oct): the same tour, for showing a friend
+  inn.$('btn-tour')?.addEventListener('click', () => layers.whenFree(() => start('bar')));
 
   inn.tour = { offer, start, end, get stop() { return at + 1; } };
 }

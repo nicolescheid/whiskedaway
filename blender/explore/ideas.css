@@ -703,3 +703,9 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .sc-reading { min-height: 4.5em; margin: 12px 2px 0; font: 18px/1.4 'Crimson Pro', Georgia, serif; }
 @keyframes sc-twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.88); } }
 @media (prefers-reduced-motion: reduce) { .sc-glyph { animation: none; } .sc-star { transition: none; } }
+
+/* The first bubble's one-off nudge (explainer.js): a soft bounce, or with reduced motion a soft glow */
+.idea.ex-bounce { animation: ex-bounce 1.3s ease-in-out 2; }
+@keyframes ex-bounce { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-9px); } 50% { transform: translateY(0); } 70% { transform: translateY(-4px); } }
+.idea.ex-glow { box-shadow: 0 0 0 5px rgba(139, 77, 92, .4), 0 0 14px rgba(139, 77, 92, .35); }
+@media (prefers-reduced-motion: reduce) { .idea.ex-bounce { animation: none; } }

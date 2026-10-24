@@ -237,6 +237,7 @@ export function install(inn) {
     else if (n === 1) line = first ? L.keepFirstEver : pickLine('keep1', L.keepFirstVisit);
     else if (n === 3) line = pickLine('keep3', L.keepThird, { cluster_label: inn.world.clusters[inn.state.result?.cluster]?.label });
     else if (n > 3 && (n - 3) % 4 === 0) line = pickLine('keepN', L.keepLater);
+    if (!tuckedAway && !book.has(atom) && inn.explain?.basketAdd()) { line = null; holdLine(); }   // the first basket add: beat c (explainer.js) takes the turn
     if (line) { inn.say(line, [], true); holdLine(); }
     inn.state.keepSpoke = !!line;
     inn.state.dismissRun = 0;
@@ -247,11 +248,12 @@ export function install(inn) {
     state: inn.state, atoms: inn.atomsById, save: () => inn.store.save(inn.state), here: () => inn.homeOf(inn.state.room),
     avatar: () => inn.$('cw-av'), bookChip: () => inn.$('btn-book'),
     layout: (what, on) => { if (what === 'highlight') inn.chatUI.hold(on); },
-    onFirst: function first() { const wait = inn.casting ? 500 : lineHeldUntil - Date.now(); if (wait > 0) setTimeout(first, wait); else inn.say(L.ideaFirst, [], true); },   // a held line (an Inn note's, a cast's) is read first
+    onFirst: function first() { if (inn.explain && !inn.explain.done().a) return;   // the first-ever bubble is the explainer's beat a (explainer.js)
+       const wait = inn.casting ? 500 : lineHeldUntil - Date.now(); if (wait > 0) setTimeout(first, wait); else inn.say(L.ideaFirst, [], true); },   // a held line (an Inn note's, a cast's) is read first
     // Once per device, the first time a touch visitor opens an idea: how to swipe it
     wantHint: () => !book.hint,
     onHint: () => { book.hint = true; inn.say(inn.LINES.swipe_hint || "Swipe right to keep one, or left if it's not for you.", [], true); },
-    onHighlight: c => inn.countAtom('atom_highlight', c.atom),
+    onHighlight: c => { inn.countAtom('atom_highlight', c.atom); const touch = matchMedia('(pointer: coarse)').matches; if (inn.explain?.opened(touch) && touch) book.hint = true; },   // beat b covers the swipe hint on a touch screen
     onShown: c => inn.countAtom('atom_served', c.atom),       // in view for a moment, once each (not when the navigator picks it)
     canShow: () => inn.$('front-door').hidden,
     onRead: c => {

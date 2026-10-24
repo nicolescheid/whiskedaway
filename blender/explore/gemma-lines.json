@@ -30,6 +30,19 @@
     "first": "Fair enough. Fewer like that, then.",
     "undo": "Back it comes."
   },
+  "explain": {
+    "_when": "Three short beats, each said once per browser. a: the first idea bubble. b: the first idea opened (touch has swipe wording). c: the first basket add. Lines come one at a time, about 3.5 s apart, each under 100 characters. {n} is the daily allowance as a word; it comes from the code's own setting (WRITE_CAP), never typed here. Lines that carry the allowance are tagged policy: daily-allowance (grep for it when the allowance changes).",
+    "a": { "lines": ["These are my ideas for you.", "Tap a bubble to take a look."] },
+    "b": {
+      "lines": ["Like it? Tap ♥ Keep. Not for you? Tap Not this.", "Not this teaches me too.", "Kept ideas go in your basket."],
+      "touch": ["Like it? Swipe right, or tap ♥ Keep.", "Not for you? Swipe left. That teaches me too.", "Kept ideas go in your basket."]
+    },
+    "c": {
+      "policy": "daily-allowance",
+      "lines": ["That's in your basket.", "At checkout I write up to {n} a day out in full, in your book.", "I tailor each one to you. What you keep stays on this device.", "I learn as you wander, and from what you tell me, like Your kitchen or Dietary needs."]
+    },
+    "sound": "Sound?"
+  },
   "swipe_hint": "Swipe right to keep one, or left if it's not for you.",
   "book": {
     "full": "Your book's full, so I've taken out the oldest one to make room.",

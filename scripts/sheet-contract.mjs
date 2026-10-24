@@ -350,6 +350,26 @@ const JOURNEYS = [
     out.push(['history balanced', ok, note]);
     return out;
   } },
+  // The top bar's Tour button runs the same tour; the ideas explainer's beats (explainer.js) each come once and stay quiet
+  // while the tour runs
+  { id: 'the top bar tour button and the explainer beats', async run(page) {
+    const out = [], entry = await marked(page);
+    out.push(['the Tour button fits the bar and is 44 px to tap on a phone', await page.evaluate(() => { const b = document.getElementById('btn-tour'); const r = b.getBoundingClientRect(); return (innerWidth > 560 || r.width + 6 >= 44) && r.right <= innerWidth && r.top >= 0; })]);
+    await page.click('#btn-tour');
+    out.push(['it starts the tour', await shown(page, '#tour')]);
+    out.push(['no beat speaks over the tour', await page.evaluate(() => { const ex = window.__explore; return ex.state.chat.filter(m => m.who === 'gemma').every(m => !/my ideas for you|write up to/.test(m.text)); })]);
+    await page.click('#tour .tr-skip');
+    await page.waitForTimeout(500);
+    const first = await page.evaluate(() => window.__explore.explain.basketAdd());   // true if it spoke
+    const again = await page.evaluate(() => window.__explore.explain.basketAdd());
+    out.push(['the basket beat plays once', again === false, `first ${first}, again ${again}`]);
+    await page.waitForTimeout(500);
+    out.push(['it names the allowance from the code, not a typed number', await page.evaluate(() => { const t = window.__explore.state.chat.filter(m => m.who === 'gemma').map(m => m.text).join(' '); return !/\d a day/.test(t); })]);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
   // Skip, Escape and Back end it where you stand, with the check-in offer; a door tapped mid-tour walks you in
   { id: 'the tour: skip, escape, back, a door', async run(page) {
     const out = [];

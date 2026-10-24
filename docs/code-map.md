@@ -57,7 +57,7 @@ explore.html. A value several modules reassign is a field of `inn` (`inn.spots`,
 
 **Install order matters only for what a module does at load** (its `create*()` calls, which also fix the order sheets are
 added to the page). Today's order: touch, rooms, panorama, chat-glue, serving, basket-glue, chia-glue, sweet-glue,
-centrepieces, tell-glue, how-you-like-it, food-map, garden, theme-glue, panels, inn-map, inn-dialogs, candles, arrival, tour. A new module goes after the ones whose
+centrepieces, tell-glue, how-you-like-it, food-map, garden, theme-glue, panels, inn-map, inn-dialogs, candles, arrival, tour, explainer. A new module goes after the ones whose
 values it reads at load.
 
 | Module | What it holds |
@@ -82,6 +82,7 @@ values it reads at load.
 | `candles.js` | spriteFrom (on `inn`, for any overlay drawn into the room), the candle's flame and glow, showCandle, chooseEnergy |
 | `arrival.js` | arrive (the foyer's check-in offer, the weather question), offerCheckin, checkinPill, endCheckinOffer, faceDesk, settle |
 | `tour.js` | the first-visit tour (24 Oct): on a first visit (localStorage `wa-tour-offered`) arrive asks `inn.tour.offer()` instead of the check-in offer. Seven stops on today's renders (the four hall doors, the Chiapothecary's glasshouse door, the Conservatory's garden door with the bar's Map glowing, the foyer desk), one line each (gemma-lines.json `tour`), Next and Skip and a dot row; ends with Check in / Later. A `modal: false` layer: Escape, Back and Skip end it with the check-in offer; a tap on anything (or a walk by the Inn map) ends it and carries on. Rooms it passes through are entered with `goRoom(id, yaw, { quiet: true })` and `inn.touring` stops lingering, so it never steers the navigator. The bell's card has Show me round (front-door.js sends `wa-tour`). Counts tour_offer, tour_start, tour_end |
+| `explainer.js` | the ideas explainer and first-visit nudges (25 Oct): three beats from Gemma, each once per browser (localStorage `wa-explained`): a, the first bubble; b, the first idea opened (`onHighlight`, swipe wording on touch, it replaces the swipe hint); c, the first basket add (`keepIdea`, it replaces the usual first-keep line). Also the first bubble's bounce (a glow with reduced motion) and the sound button's look-at-me with a "Sound?" label, once a visit (sessionStorage `wa-sound-looked`, shared with the homepage's in front-door.js). Waits for a quiet moment: no tour, no unanswered tour offer, no layer, door shut. Lines in gemma-lines.json `explain`; the allowance in beat c is `{n}` from `WRITE_CAP` (writeout.js) and the beat is tagged `policy: daily-allowance`. Counts explain_beat and first_idea_open |
 
 ## Where new features go (the queue, 23 Oct)
 

@@ -30,8 +30,11 @@ export const EVENTS = {
   inn_map_star: ['room'],                 // the Inn map's ✦ Where my wander points
   // The first-visit tour (explore/tour.js): offered, started, and how it ended at which stop
   tour_offer: [],                         // Gemma offered it (a first visit, in the foyer after the door film)
-  tour_start: ['from'],                   // from: arrival (the offer) or bell (Show me round)
+  tour_start: ['from'],                   // from: arrival (the offer), bell (Show me round) or bar (the top bar's Tour button)
   tour_end: ['how', 'stop'],              // how: finished, skip, escape, back, door, tap, walk, declined (stop 0); stop: 1-7, the stop it ended at
+  // The ideas explainer (explore/explainer.js): do first-time visitors open an idea once Gemma has said what they are?
+  explain_beat: ['beat'],                 // beat: a (the first bubble), b (the first idea opened), c (the first basket add); once per browser each
+  first_idea_open: ['beat_a'],            // an idea opened for the first time this visit; beat_a: yes or no (had she explained the bubbles?)
   notebook_open: ['room'],
   visit_forget: [],
   leave_to_inn: ['room', 'step'],         // "Front door": back out to the picture
@@ -70,7 +73,7 @@ export const EVENTS = {
 
   // The front door at / (docs/front-door-spec.md)
   door_view: [],
-  door_open: ['film', 'from'],            // film: full, or short (reduced motion or Data Saver); from: picture, or story
+  door_open: ['film', 'from'],            // film: full, or short (reduced motion or Data Saver); from: picture, cta (the big Step inside button), or story
   welcome_close: [],
   bell_ring: ['room'],
   story_view: [],                         // the story below the picture scrolled into view

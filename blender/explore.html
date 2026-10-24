@@ -313,6 +313,26 @@
   #front-door .fd-words .how:focus-visible { outline: 3px solid #8b4d5c; outline-offset: 2px; border-radius: 8px; }
   @media (max-width: 560px) { #front-door .fd-words .cue-where { display: none; } #front-door .fd-first { height: calc(100vh - 32px); height: calc(100dvh - 32px); } }
   #front-door .fd-words .cue { margin: 4px 0 0; font: 500 clamp(14px, 1.6vw, 17px) 'Quicksand', system-ui, sans-serif; }
+  /* The big call to action under the whisk (25 Oct): the cue is now the button that opens the door; the picture pulses gently if nobody taps */
+  #front-door .fd-words .fd-cta { pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; margin: 8px 0 0; padding: 10px 26px;
+                                  border: 0; border-radius: 999px; background: #8b4d5c; color: #f4efe4; font: 700 clamp(16px, 1.8vw, 19px) 'Quicksand', system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 14px rgba(60, 30, 40, .3); }
+  #front-door .fd-words .fd-cta:hover { background: #7a4150; }
+  #front-door .fd-words .fd-cta:focus-visible { outline: 3px solid #2c2416; outline-offset: 3px; }
+  #front-door .fd-enter.pulse img { animation: fd-pulse 2.6s ease-in-out 3; }
+  @keyframes fd-pulse { 50% { transform: scale(1.012); filter: brightness(1.06) drop-shadow(0 0 14px rgba(255, 236, 190, .55)); } }
+  /* The sound button's look-at-me (explainer.js; the homepage one is front-door.js) */
+  .chip.speaker.look, #front-door .fd-sound.look { animation: soundglow 1.4s ease-in-out 3; }
+  @keyframes soundglow { 50% { box-shadow: 0 0 0 5px rgba(139, 77, 92, .4); } }
+  .sound-q { position: fixed; z-index: 21; top: calc(62px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); padding: 2px 9px; border-radius: 999px;
+             background: var(--berry, #8b4d5c); color: #f4efe4; font: 600 12px 'Quicksand', system-ui, sans-serif; pointer-events: none; }
+  #front-door .fd-sound .sound-q { position: static; margin-left: 2px; padding: 0 8px; }
+  .chip.tour-btn { padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; }
+  .chip.tour-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  @media (max-height: 350px) { .chip.tour-btn { display: none; } }   /* a very short landscape phone (724 x 340): the bar would reach the clock's dot in Flourish; the bell still offers the tour */
+  .chip.tour-btn { order: 1; }   /* wide screens: the last chip */
+  /* Phones: the Tour button shares the title's row (beside Tilt), where the bar has room, not the six-chip row below */
+  @media (max-width: 560px) { .bar .chip.tour-btn { order: 0; padding: 6px 12px; } .bar > .room-title { flex-basis: calc(100% - 46px) !important; } body.can-tilt .bar > .room-title { flex-basis: calc(100% - 130px) !important; } }   /* icon only: the bar has no room for a word at 724 x 340 or 375 */
+  @media (prefers-reduced-motion: reduce) { #front-door .fd-enter.pulse img { animation: none; } .chip.speaker.look, #front-door .fd-sound.look { animation: none; } }
   #front-door.playing .fd-words, #front-door.short .fd-words { opacity: 0; }
   #front-door .fd-enter:focus-visible { outline: 3px solid #8b4d5c; outline-offset: -6px; }
   #front-door.waiting .fd-words .cue::after { content: ' …'; }
@@ -419,7 +439,7 @@
     <div class="fd-words">
       <h1>WhiskedAway<span class="what"><span class="sr-only">: </span>A recipe site you explore</span></h1>
       <p class="promise">Wander Gemma's Inn, and she'll find you something to cook.</p>
-      <p class="cue" id="fd-cue"><span class="cue-where">Gemma's Inn. </span>Step inside.</p>
+      <button type="button" class="cue fd-cta" id="fd-cue">Step inside the Inn <span aria-hidden="true">→</span></button>
       <span class="fd-links"><a class="how" id="fd-how" href="/#story">How it works ⌄</a><button type="button" class="fd-sound" id="fd-sound" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" stroke="none"/><g class="waves"><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/></g><g class="hush"><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></g></svg><span>Sound off</span></button></span>
     </div>
   </div>
@@ -539,7 +559,7 @@
     let back = false;
     try { back = (JSON.parse(sessionStorage.getItem('wa-explore') || 'null')?.trail || []).length > 0; } catch { /* storage blocked */ }
     if (on && back) {
-      document.getElementById('fd-cue').innerHTML = '<span class="cue-where">Gemma\'s Inn. </span>Come back in.';
+      document.getElementById('fd-cue').innerHTML = 'Come back in <span aria-hidden="true">→</span>';
       document.getElementById('fd-step').textContent = document.getElementById('fd-pill').textContent = 'Come back in';
       document.getElementById('fd-enter').setAttribute('aria-label', 'Come back into the Inn');
     }
@@ -561,6 +581,7 @@
 
 <div class="bar">
   <p class="room-title" id="room-title">Cuddlecore</p>   <!-- not a heading: the page has one h1, on the front door -->
+  <button class="chip tour-btn" id="btn-tour" aria-label="Take the tour of the Inn" title="Tour of the Inn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M6 5h10l3 3-3 3H6zM18 14H8l-3 3 3 3h10z"/></svg></button>
   <a class="chip" id="btn-inn" href="/?door=1"><span class="long">Front door</span><span class="short">Door</span></a>
   <button class="chip" id="btn-map" aria-expanded="false" aria-controls="inn-map"><svg class="map-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Map</button>
   <button class="chip" id="btn-book" aria-haspopup="dialog" aria-expanded="false"><span class="long">Your basket</span><span class="short">Basket</span><span class="badge" hidden></span></button>   <!-- the basket's (ideas fly here) -->
@@ -697,6 +718,7 @@ import { install as installHowYouLike } from './explore/how-you-like-it.js';
 import { install as installFoodMap } from './explore/food-map.js';
 import { install as installGarden } from './explore/garden.js';
 import { install as installTour } from './explore/tour.js';
+import { install as installExplainer } from './explore/explainer.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 
 const params = new URLSearchParams(location.search);
@@ -897,10 +919,11 @@ installInnDialogs(inn);   // the Inn's small dialogs: barometer, clock, seasons 
 installCandles(inn);   // the energy candles: the lit flame and chooseEnergy
 installArrival(inn);   // arrival: the check-in offer in the foyer, the weather question, settle
 installTour(inn);   // the first-visit tour: Gemma shows a new visitor round, ending at the desk
+installExplainer(inn);   // after the tour: the ideas beats, the first bubble's bounce, the sound button's nudge (never over the tour)
 
 // Test hooks for scripted checks (the room walk, the sheet contract)
 window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle: inn.settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch: inn.touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy: inn.chooseEnergy, chooseSeason: inn.chooseSeason, goRoom: inn.goRoom, lookTo: (y, p) => { inn.look.yaw = y; inn.look.pitch = p; inn.render(); }, navigate: inn.navigate,
-                    world, spot: id => inn.spots[id], tour: inn.tour };
+                    world, spot: id => inn.spots[id], tour: inn.tour, explain: inn.explain };
 
 inn.setRoomText();
 inn.buildHotspots();

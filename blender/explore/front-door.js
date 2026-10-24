@@ -297,6 +297,31 @@ export function frontDoor({ active, track }) {
 
   let entering = false;
   button.addEventListener('click', () => enter('picture'));
+  $('fd-cue')?.addEventListener('click', () => enter('cta'));   // the big Step inside button under the whisk
+
+  // ---------- first-visit nudges (25 Oct): the picture pulses gently if nobody has tapped for a few seconds, and the sound
+  // button gets one short look-at-me (a glow and a "Sound?" label, which the Inn shares: once a visit, explainer.js).
+  // Reduced motion: no pulse, no glow, just the label
+  const idleTimers = [];
+  const stopNudges = () => { idleTimers.forEach(clearTimeout); button.classList.remove('pulse'); };
+  if (!door.hidden) {
+    for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) door.addEventListener(ev, stopNudges, { once: true, passive: true });
+    door.addEventListener('scroll', stopNudges, { once: true, passive: true });
+    if (!reduced) idleTimers.push(setTimeout(() => !entering && button.classList.add('pulse'), 6000));
+    let looked = false;
+    try { looked = sessionStorage.getItem('wa-sound-looked') === '1'; } catch { /* once per page load */ }
+    if (!looked && soundBtn && !sound.on) idleTimers.push(setTimeout(() => {
+      if (entering || sound.on) return;
+      try { sessionStorage.setItem('wa-sound-looked', '1'); } catch { /* fine */ }
+      const q = document.createElement('span');
+      q.className = 'sound-q';
+      q.setAttribute('aria-hidden', 'true');
+      q.textContent = 'Sound?';
+      soundBtn.appendChild(q);
+      if (!reduced) soundBtn.classList.add('look');
+      setTimeout(() => { soundBtn.classList.remove('look'); q.remove(); }, 5000);
+    }, 2500));
+  }
   async function enter(from) {
     if (entering) return;
     entering = true;
