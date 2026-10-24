@@ -422,6 +422,13 @@
       "tool": "cage",
       "themes": []
     },
+    "bell-jar": {
+      "label": "Keeping off?",
+      "ref": "the bell jar",
+      "type": "interactive",
+      "tool": "bell-jar",
+      "themes": []
+    },
     "pantry-cabinet": {
       "label": "Your pantry",
       "ref": "the pantry",

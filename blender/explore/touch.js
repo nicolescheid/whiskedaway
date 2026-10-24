@@ -7,6 +7,7 @@
 // chart and notice board before generic ambient, Sweet Spells' and the Chiapothecary's tools before submit):
 //   10 something that plays (here)        60 any other ambient object (here)      110 the Chiapothecary's tools (chia-glue)
 //   20 a Chiapothecary drawer (chia-glue) 70 barometer, clock, seasons wheel      120 a centrepiece cast (centrepieces)
+//   25 the tray, cage and bell jar (how-you-like-it)
 //   30 the kitchen and range (tell-glue)     (inn-dialogs)                         130 any other submit (here)
 //   40 the star chart (centrepieces)      80 doors and walks (rooms)              140 Tell Gemma's objects (tell-glue)
 //   50 the notice board (theme-glue)      90 the hallway dial (rooms)             then: "I can't open this one" (here)

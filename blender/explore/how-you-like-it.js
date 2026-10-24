@@ -6,7 +6,7 @@
 import { visit } from './visit-state.js';
 import { layers } from './layers.js';
 import { cuisineLabel } from './tell.js';
-import { FEELS, GROUPS, HEAT, names, feelClash, feelsSplit, feelsPayload } from './feels.js';
+import { FEELS, GROUPS, HEAT, JAR, names, feelClash, jarClash, feelsSplit, feelsPayload } from './feels.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -14,6 +14,11 @@ const mode = () => (matchMedia('(max-height: 500px) and (orientation: landscape)
   : matchMedia('(max-width: 719px)').matches ? 'phone' : 'desk');
 const bucket = n => (n <= 0 ? '0' : n === 1 ? '1' : n <= 3 ? '2-3' : '4+');
 
+// The bell jar's medicine foods stay OFF on the live site until a pharmacist or dietitian has checked the list and the
+// words (Nicole, 23 Oct). Switch it on here. For testing, ?medicine-foods=1 turns it on, but only on a local build
+export const MEDICINE_FOODS = false;
+const medicineOn = () => MEDICINE_FOODS || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+  && new URLSearchParams(location.search).get('medicine-foods') === '1');
 const CHOICES = [['skip', 'Skip it'], ['either', 'Either way'], ['more', 'More, please']];
 
 export function install(inn) {
@@ -33,12 +38,22 @@ export function install(inn) {
     cageEmpty: H.cageEmpty || "Nothing locked up yet. Skip something on the tray and it goes in here.",
     letOut: H.letOut || 'Let it out', putBack: H.putBack || 'Put it back', toTray: H.toTray || 'The tray',
     cage: H.cage || "My little cage. Whatever you'd rather skip goes in here.",
+    // The bell jar (behind MEDICINE_FOODS): no reasons, no drug names, no advice
+    jarTitle: H.jarTitle || 'Keeping off?', jarSub: H.jarSub || "Tap what you're keeping off, and I'll leave it out.",
+    jarNote: H.jarNote || 'Your pharmacist can tell you which foods matter for your medicines.',
+    keepOff: H.keepOff || 'Keeping off', jarLine: H.jarLine || "I'll keep {x} out.", jarCleared: H.jarCleared || 'Nothing kept off, then.',
+    jar: H.jarTap || "My bell jar. Keeping off any of these? Tap and I'll leave them out.",
     tray: H.tray || "My tray of feels. Tell me how you like things, and I'll cook to suit.",
   };
   const feelById = Object.fromEntries(FEELS.map(f => [f.id, { ...f, ...H.feels?.[f.id] }]));
   const feelsNow = () => { const v = visit.get('feels'); return v && typeof v === 'object' ? v : {}; };
   const skipped = (v = feelsNow()) => feelsSplit(v).skip;
   const wanted = (v = feelsNow()) => feelsSplit(v).more;
+  const jarOn = medicineOn();
+  // While it's off, the bell jar isn't there to tap, and nothing kept off is read (a stale value in the tab does nothing)
+  if (!jarOn) delete inn.world.objects['bell-jar'];
+  const keptOff = () => (jarOn ? [].concat(visit.get('keepingOff') || []).filter(id => JAR.some(j => j.id === id)) : []);
+  const jarById = Object.fromEntries(JAR.map(j => [j.id, { ...j, ...H.jar?.[j.id] }]));
   const capFirst = t => t.replace(/^./, c => c.toUpperCase());
 
   // ---------- the sheet
@@ -56,12 +71,13 @@ export function install(inn) {
     </div>`;
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
-  let layer = null, picks = {}, before = {}, from = 'object', view = 'tray';
+  let layer = null, picks = {}, before = {}, from = 'object', view = 'tray', offPicks = [], offBefore = [];
 
   // The sheet has a view per object: the tray (every feel), the cage (what's skipped)
   function fill() {
     $('.hy-totray').hidden = view !== 'cage';
     if (view === 'cage') return fillCage();
+    if (view === 'jar') return fillJar();
     fillTray();
   }
   function fillTray() {
@@ -99,21 +115,38 @@ export function install(inn) {
       b.closest('.hy-row').classList.toggle('out', out);
     });
   }
+  // The bell jar: a tap per food, no reasons and no drug names; one line pointing to the pharmacist
+  function fillJar() {
+    $('#hy-title').textContent = W.jarTitle;
+    $('.hy-sub').textContent = W.jarSub;
+    $('.hy-note').textContent = W.jarNote;
+    $('.hy-list').innerHTML = JAR.map(j => `<div class="hy-row hy-caged">
+        <span class="hy-icon" aria-hidden="true">${j.icon}</span><span class="hy-label" id="hy-j-${j.id}">${esc(jarById[j.id].label)}</span>
+        <button class="hy-out" data-off="${j.id}" aria-pressed="${offPicks.includes(j.id)}" aria-describedby="hy-j-${j.id}">${offPicks.includes(j.id) ? '✓ ' : ''}${esc(W.keepOff)}</button>
+      </div>`).join('');
+    root.querySelectorAll('[data-off]').forEach(b => b.onclick = () => {
+      const id = b.dataset.off, on = !offPicks.includes(id);
+      offPicks = on ? JAR.map(j => j.id).filter(x => x === id || offPicks.includes(x)) : offPicks.filter(x => x !== id);
+      b.setAttribute('aria-pressed', String(on));
+      b.textContent = `${on ? '✓ ' : ''}${W.keepOff}`;
+    });
+  }
   $('.hy-totray').onclick = () => { view = 'tray'; fill(); root.querySelector('.hy-seg button[aria-pressed="true"]')?.focus({ preventScroll: true }); };
 
-  /** open(which, from): which is tray|cage; from is object|book|tag (counted with tell_open) */
+  /** open(which, from): which is tray|cage|jar; from is object|book|tag (counted with tell_open) */
   function open(which = 'tray', src = 'object') {
-    if (!root.hidden) return;
+    if (!root.hidden || (which === 'jar' && !jarOn)) return;
     const opener = document.activeElement;
     inn.ideas.close(false);
     if (inn.bookView.isOpen) inn.bookView.close();
     if (inn.chatUI.size === 'full') inn.chatUI.choose('short', 'auto');
     from = src;
     before = feelsNow(); picks = { ...before }; view = which;
+    offBefore = keptOff(); offPicks = [...offBefore];
     fill();
     root.hidden = false;
     root.className = `tell ${mode()} hy-sheet`;
-    inn.track('tell_open', { kind: view === 'cage' ? 'cage' : 'feels', from });
+    inn.track('tell_open', { kind: { cage: 'cage', jar: 'keeping-off' }[view] || 'feels', from });
     layer = layers.open({ el: root, name: 'feels', opener, close: how => close({ viaBack: how === 'back' }) });
     if (!reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     root.querySelector('.hy-seg button[aria-pressed="true"], .hy-out, .hy-totray:not([hidden])')?.focus({ preventScroll: true });
@@ -123,7 +156,7 @@ export function install(inn) {
     if (root.hidden) return;
     root.hidden = true;
     layers.closed(layer, { how: viaBack ? 'back' : 'self' });
-    setTimeout(() => saved(before, picks), reduce() ? 0 : 200);   // after the sheet has gone, so her line isn't behind it
+    setTimeout(() => (view === 'jar' ? savedJar(offBefore, offPicks) : saved(before, picks)), reduce() ? 0 : 200);   // after the sheet has gone, so her line isn't behind it
   }
   $('.hy-done').onclick = () => close();
   $('.tl-x').onclick = () => close();
@@ -140,6 +173,17 @@ export function install(inn) {
     offerMild(was, now);
     inn.scheduleNavigate();
   }
+  // "I'll keep grapefruit out." Never why
+  function savedJar(was, now) {
+    if (was.join() === now.join()) return;
+    visit.set('keepingOff', now.length ? now : null);
+    inn.track('tell_set', { kind: 'keeping-off', count: bucket(now.length), from });   // how many, never which
+    const line = now.length ? W.jarLine.replace('{x}', inn.listOf(now.slice(0, 2).map(id => jarById[id].short)) + (now.length > 2 ? ' and the rest' : ''))
+      : W.jarCleared;
+    inn.say(capFirst(line), [], true);
+    inn.holdLine();
+    inn.scheduleNavigate();
+  }
   const sorted = o => Object.fromEntries(Object.entries(o).sort());
   function feelsLine(was, now) {
     if (!Object.keys(now).length) return W.cleared;
@@ -153,6 +197,7 @@ export function install(inn) {
   }
 
   // What you've told me (panels.js TOLD): "How you like it: nothing spicy and no coriander; more crunch."
+  const toldJar = v => (jarOn && [].concat(v || []).length ? `${W.keepOff}: ${inn.listOf([].concat(v).map(id => jarById[id]?.short).filter(Boolean))}.` : '');
   function told(v) {
     const s = skipped(v || {}).map(id => feelById[id].skip.toLowerCase()), m = wanted(v || {}).map(id => feelById[id].more);
     if (!s.length && !m.length) return '';
@@ -162,7 +207,7 @@ export function install(inn) {
   // ---------- the filter (serving.js steer, centrepieces.js canServe, tell-glue.js fits): the cage always wins, before the
   // kitchen loosens. A room left with only caged ideas is loosened for the feels (never the bell jar): Gemma says so once
   const feelsCaged = a => feelClash(a, skipped());
-  const likeClash = a => (inn.state.feelsLoose?.[a.room] ? null : feelsCaged(a));
+  const likeClash = a => jarClash(a, keptOff()) || (inn.state.feelsLoose?.[a.room] ? null : feelsCaged(a));
   function loosenFeels(home) {
     if (!skipped().length || inn.state.feelsLoose?.[home]) return null;
     (inn.state.feelsLoose ||= {})[home] = true;
@@ -170,15 +215,15 @@ export function install(inn) {
   }
   // A changed tray starts every room afresh
   visit.subscribe(({ part, key }) => {
-    if (part !== 'all' && key !== 'feels') return;
+    if (part !== 'all' && key !== 'feels' && key !== 'keepingOff') return;
     inn.state.feelsLoose = {};
     // Cards already out that are now caged go back, quietly: her Done line has already said what's skipped
     inn.state.cards.filter(c => inn.atomsById[c.atom] && likeClash(inn.atomsById[c.atom])).forEach(c => inn.ideas.remove(c.atom));
   });
   /** What the write-out sends (basket-glue.js payloadFor): words, never ids */
-  const payload = () => feelsPayload(feelsNow());
+  const payload = () => feelsPayload(feelsNow(), keptOff());
   /** A swap that names something caged (basket-glue.js swapsFor leaves it out) */
-  const caged = text => skipped().some(id => names(id, text));
+  const caged = text => [...skipped(), ...keptOff()].some(id => names(id, text));
 
   // ---------- mild ways in (PM's idea, approved 23 Oct): with heat caged, Gemma may offer a cuisine's mild dishes, labelled
   // mild, once a visit and never pushed. Content marks a card `mild_way_in: "<cuisine>"`; until one is marked, nothing happens
@@ -247,17 +292,39 @@ export function install(inn) {
   // Only in the room with a cage: rooms.js's goRoom rebuilds the hotspots (and the bootstrap builds the first room's), so the
   // overlay follows that
   const buildHotspots = inn.buildHotspots;
-  inn.buildHotspots = (...a) => { buildHotspots(...a); showCage(); };
+  inn.buildHotspots = (...a) => { buildHotspots(...a); showTag(); showCage(); };
   visit.subscribe(({ part, key }) => { if (part === 'all' || key === 'feels') showCage(); });
 
-  inn.howYouLike = { open, told, skipped, wanted, feelById, payload, caged, get isOpen() { return !root.hidden; } };
+  // The bell jar's tag ("Keeping off?"), drawn over the render only while the feature is on (the render has no tag)
+  let tagSprite = null;
+  const drawTag = g => {
+    g.translate(128, 128); g.rotate(-0.12);
+    g.fillStyle = '#d9c4a0'; g.strokeStyle = '#7a5a3a'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(-96, -34); g.lineTo(70, -34); g.lineTo(104, 0); g.lineTo(70, 34); g.lineTo(-96, 34); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.arc(78, 0, 7, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = '#4a3420'; g.font = 'italic 30px "Crimson Pro", Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(W.jarTitle, -12, 2);
+  };
+  function showTag() {
+    const s = jarOn && inn.spots?.['bell-jar'];
+    if (!s && !tagSprite) return;
+    if (!tagSprite) { tagSprite = inn.spriteFrom(drawTag, false); tagSprite.renderOrder = 12; }
+    tagSprite.visible = !!s;
+    if (!s) return;
+    const p = s.tag || { yaw: s.yaw + 3, pitch: s.pitch - 4, distance: 2.6 };
+    const near = 10 / Math.max(p.distance || 2.6, 0.4);
+    tagSprite.scale.set(0.2 * near, 0.2 * near, 1);
+    tagSprite.position.copy(inn.dir(p.yaw, p.pitch).multiplyScalar(10));
+  }
+
+  inn.howYouLike = { open, told, toldJar, skipped, wanted, feelById, payload, caged, get isOpen() { return !root.hidden; } };
   Object.assign(inn, { likeClash, feelsCaged, loosenFeels });
 
   // Taps (touch.js order 25: after the chia drawers, before the kitchen): the tray opens the sheet after her line
-  inn.onTouch(25, obj => obj.tool === 'feels' || obj.tool === 'cage', (obj, id) => {
-    const cage = obj.tool === 'cage';
-    inn.say(inn.momentOf(id, obj) || (cage ? (skipped().length ? W.cageSub : W.cage) : W.tray), [], true);
+  inn.onTouch(25, obj => ['feels', 'cage', 'bell-jar'].includes(obj.tool), (obj, id) => {
+    const which = { feels: 'tray', cage: 'cage', 'bell-jar': 'jar' }[obj.tool];
+    inn.say(inn.momentOf(id, obj) || { tray: W.tray, cage: skipped().length ? W.cageSub : W.cage, jar: W.jar }[which], [], true);
     inn.holdLine();
-    open(cage ? 'cage' : 'tray', 'object');
+    open(which, 'object');
   });
 }

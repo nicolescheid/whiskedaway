@@ -222,5 +222,12 @@
     "type": "interactive",
     "yaw": 67.0,
     "pitch": 12.5
+  },
+  "bell-jar": {
+    "label": "Keeping off?",
+    "overlay": null,
+    "type": "interactive",
+    "yaw": 112.0,
+    "pitch": 13.0
   }
 }
