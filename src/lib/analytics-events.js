@@ -28,6 +28,10 @@ export const EVENTS = {
   map_open: ['room'],                     // the Inn map (the bar's Map button)
   inn_map_go: ['from_room', 'room'],      // a room tapped on the Inn map
   inn_map_star: ['room'],                 // the Inn map's ✦ Where my wander points
+  // The first-visit tour (explore/tour.js): offered, started, and how it ended at which stop
+  tour_offer: [],                         // Gemma offered it (a first visit, in the foyer after the door film)
+  tour_start: ['from'],                   // from: arrival (the offer) or bell (Show me round)
+  tour_end: ['how', 'stop'],              // how: finished, skip, escape, back, door, tap, walk, declined (stop 0); stop: 1-7, the stop it ended at
   notebook_open: ['room'],
   visit_forget: [],
   leave_to_inn: ['room', 'step'],         // "Front door": back out to the picture
@@ -48,7 +52,7 @@ export const EVENTS = {
   list_share: [],                         // (before 22 Oct) the share sheet or copy was used; what was shared never leaves the device through us
   list_build: ['from', 'count'],          // a recipe put on the shopping list; from: contents, recipe, list, cook, jars; count: recipes on it now 1|2-3|4+
   list_export: ['kind'],                  // the list taken away; kind: copy, share or print. Never what's on it
-  tell_open: ['kind', 'from'],          // Tell Gemma: kind pantry|map|dietary|confidence|time|servings|energy|sweetness|sweetener|craving|occasion|mood|mix|kitchen|feels|cage|keeping-off|food-map; from object|tag|menu|book|offer|foyer
+  tell_open: ['kind', 'from'],          // Tell Gemma: kind pantry|map|dietary|confidence|time|servings|energy|sweetness|sweetener|craving|occasion|mood|mix|kitchen|feels|cage|keeping-off|food-map; from object|tag|menu|book|offer|foyer|tour
   tell_set: ['kind', 'count', 'use_up', 'from'],   // count 0|1|2-3|4+ (pantry, map, dietary, sweetener, craving, feels: how many aren't "Either way", keeping-off: how many in the bell jar, food-map: how many pins and coloured-in countries); never the values (see ANSWER_KINDS). Dietary values (FODMAP included) never leave the page
   adventure_set: ['step'],              // the food map's adventure dial: step 1 (close to home) .. 5 (somewhere new), or unset. Never with the pins
   kitchen_pick: ['appliance'],           // Your kitchen: one per appliance newly picked on Done (stove, oven, microwave, kettle, air-fryer, bbq, food-processor, slow-cooker, none). Never with anything else

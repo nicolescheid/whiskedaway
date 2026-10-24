@@ -2052,5 +2052,23 @@
         "sourdough starter"
       ]
     }
+  },
+  "tour": {
+    "_about": "The first-visit tour (explore/tour.js, tour-plan.md): the offer after the door film, one line at each stop, and her lines when it's declined, skipped or ends at the desk. The chips (yes, no) are Nicole's words. Every line under 100 characters, no health claims.",
+    "offer": "First time at the Inn? I can show you round. It takes a minute.",
+    "yes": "Yes, give me the tour",
+    "no": "It's ok, I'll explore by myself",
+    "declined": "Right you are. Check in at the desk if you like. It helps me pick for you.",
+    "skipped": "Right you are. Ring the bell for the tour any time. Check in at the desk if you like.",
+    "later": "Right you are. The desk's here whenever you want it.",
+    "stops": {
+      "cuddlecore": "Cuddlecore. For days you're not at your best: gentle food, little effort.",
+      "flourish": "Flourish. Proper meals from whole foods, when you've a bit more time.",
+      "sweet-spells": "Sweet Spells. For the sweet tooth.",
+      "chiapothecary": "The Chiapothecary. Chia, your way, set ahead.",
+      "conservatory": "Through here, the Conservatory. Herbs, the seasons, and the garden through the glass.",
+      "garden": "And the garden, for cooking outdoors. The Map up top takes you to any room.",
+      "desk": "Last stop. Check in here and I'll only suggest things that fit. It takes 20 seconds."
+    }
   }
 }

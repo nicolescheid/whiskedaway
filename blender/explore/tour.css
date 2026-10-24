@@ -1,0 +1,29 @@
+/* The first-visit tour (explore/tour.js): a small card under the bar with Gemma's line, the dots, Next and Skip. It sits over
+   a live room, so only the card takes taps. The door she's talking about glows like a revealed spot, and so does the bar's
+   Map at the garden stop. */
+.tour { position: fixed; left: 50%; transform: translateX(-50%); z-index: 18; width: min(440px, calc(100vw - 32px)); pointer-events: none; }
+.tour[hidden] { display: none; }
+.tr-card { pointer-events: auto; display: grid; grid-template-columns: 40px 1fr; gap: 4px 10px; align-items: start; padding: 10px 12px 10px;
+  background: var(--parchment-90); color: var(--ink); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 6px 22px rgba(20, 14, 10, .28); backdrop-filter: blur(6px); }
+.tr-who { width: 40px; height: 40px; border-radius: 50%; grid-row: span 2; }
+.tr-line { margin: 2px 0 0; font: 17px/1.35 'Crimson Pro', Georgia, serif; min-height: 2.7em; }
+.tr-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tr-dots { display: inline-flex; gap: 5px; }
+.tr-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.tr-dots i.on { background: var(--berry); }
+.tr-btns { display: inline-flex; gap: 8px; }
+.tr-btns button { font: 600 14px 'Quicksand', system-ui, sans-serif; border-radius: 999px; padding: 7px 14px; min-height: 36px; cursor: pointer; }
+.tr-skip { background: transparent; color: var(--berry); border: 1px solid var(--line); }
+.tr-next { background: var(--berry); color: var(--parchment); border: 1px solid var(--berry); }
+.tr-btns button:focus-visible { outline: 3px solid var(--amber-glow); outline-offset: 2px; }
+
+.spot.tour-glow .dot { background: var(--amber-glow); width: 16px; height: 16px; animation: glow 1.8s ease-in-out infinite; }
+.spot.tour-glow .name { opacity: 1; transform: none; border-color: var(--amber); pointer-events: auto; }
+.chip.tour-glow { box-shadow: 0 0 0 3px rgba(232, 184, 122, .75), 0 0 16px 4px rgba(232, 184, 122, .55); }
+@media (max-width: 560px) { .tr-line { font-size: 16px; } .tr-btns button { padding: 6px 12px; } }
+@media (prefers-reduced-motion: reduce) { .spot.tour-glow .dot { animation: none; box-shadow: 0 0 0 3px rgba(232, 184, 122, .5), 0 0 16px 4px rgba(232, 184, 122, .6); } }
+
+/* "Show me round" on the bell's card (front-door.js), beside Back to the Inn */
+.welcome .welcome-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.tool .ok.soft { background: transparent; color: var(--berry); border: 1px solid var(--line); }
