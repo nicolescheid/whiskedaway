@@ -99,7 +99,8 @@ export function cleanEvent(name, params = {}) {
   if (!allowed) return null;
   const out = {};
   for (const key of allowed) {
-    const v = params[key];
+    let v = params[key];
+    if (Number.isInteger(v) && v >= 0 && v < 1000) v = String(v);   // tour_end's stop is a number; GA4 gets it as a short id like the rest
     if (typeof v === 'string' && VALUE.test(v)) out[key] = v;
   }
   if (name === 'tell_set' && ANSWER_KINDS.has(out.kind)) { delete out.count; delete out.use_up; }
@@ -132,7 +133,11 @@ export function sourceParams(src) {
   const u = utm(src.utm_source);
   const source = u || (src.bucket === 'direct' ? '(direct)' : src.bucket);
   const medium = u ? (u === 'linkedin' ? 'social' : 'campaign') : BUCKET_MEDIUM[src.bucket];
-  return { source, medium, ...(utm(src.utm_campaign) ? { campaign: utm(src.utm_campaign) } : {}) };
+  const campaign = utm(src.utm_campaign);
+  // source, medium and campaign are GA4's own names (it may or may not read them as session attribution from the
+  // Measurement Protocol); visit_* are the same values under plain names, for event-scoped custom dimensions, which do work
+  return { source, medium, visit_source: source, visit_medium: medium,
+    ...(campaign ? { campaign, visit_campaign: campaign } : {}) };
 }
 
 /** Steps so far in the visit, in buckets, so "after how many steps" never becomes a timeline. */

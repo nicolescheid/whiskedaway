@@ -43,11 +43,22 @@ test('visit source never carries a URL, and utm values are short ids', () => {
 });
 
 test('GA4 source parameters', () => {
-  assert.deepEqual(sourceParams({ bucket: 'linkedin' }), { source: 'linkedin', medium: 'social' });
-  assert.deepEqual(sourceParams({ bucket: 'google' }), { source: 'google', medium: 'organic' });
-  assert.deepEqual(sourceParams({ bucket: 'direct' }), { source: '(direct)', medium: '(none)' });
-  assert.deepEqual(sourceParams({ bucket: 'direct', utm_source: 'linkedin', utm_campaign: 'launch' }), { source: 'linkedin', medium: 'social', campaign: 'launch' });
-  assert.deepEqual(sourceParams({ bucket: 'other', utm_source: 'newsletter' }), { source: 'newsletter', medium: 'campaign' });
+  assert.deepEqual(sourceParams({ bucket: 'linkedin' }), { source: 'linkedin', medium: 'social', visit_source: 'linkedin', visit_medium: 'social' });
+  assert.deepEqual(sourceParams({ bucket: 'google' }), { source: 'google', medium: 'organic', visit_source: 'google', visit_medium: 'organic' });
+  assert.deepEqual(sourceParams({ bucket: 'direct' }), { source: '(direct)', medium: '(none)', visit_source: '(direct)', visit_medium: '(none)' });
+  assert.deepEqual(sourceParams({ bucket: 'direct', utm_source: 'linkedin', utm_campaign: 'launch' }), { source: 'linkedin', medium: 'social', campaign: 'launch', visit_source: 'linkedin', visit_medium: 'social', visit_campaign: 'launch' });
+  assert.deepEqual(sourceParams({ bucket: 'other', utm_source: 'newsletter' }), { source: 'newsletter', medium: 'campaign', visit_source: 'newsletter', visit_medium: 'campaign' });
   assert.equal(sourceParams({ bucket: 'https://x.example/' }), null);
   assert.equal(sourceParams(null), null);
+});
+
+test('tour, explainer and freebie events keep their parameters (tour_end stop is a number in the code)', () => {
+  assert.deepEqual(cleanEvent('tour_end', { how: 'skip', stop: 3 }).params, { how: 'skip', stop: '3' });
+  assert.deepEqual(cleanEvent('tour_end', { how: 'declined', stop: 0 }).params, { how: 'declined', stop: '0' });
+  assert.deepEqual(cleanEvent('tour_offer', {}).params, {});
+  assert.deepEqual(cleanEvent('tour_start', { from: 'arrival' }).params, { from: 'arrival' });
+  assert.deepEqual(cleanEvent('explain_beat', { beat: 'b' }).params, { beat: 'b' });
+  assert.deepEqual(cleanEvent('first_idea_open', { beat_a: 'yes' }).params, { beat_a: 'yes' });
+  assert.deepEqual(cleanEvent('book_add_free', { count: '2-3' }).params, { count: '2-3' });
+  assert.equal(cleanEvent('tour_end', { stop: -1, how: 'x' }).params.stop, undefined);
 });

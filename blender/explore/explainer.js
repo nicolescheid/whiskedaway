@@ -1,7 +1,7 @@
 // The ideas explainer and first-visit nudges (Nicole, 25 Oct). Three short beats from Gemma, each once per browser and each
 // when it's relevant: (a) the first bubble, (b) the first idea opened, (c) the first basket add. Also the first bubble's
 // one-off bounce, and the sound button's "look at me" at the start of a visit.
-//   - once per browser: localStorage `wa-explained` { a, b, c, free, bounce }; storage blocked: once per page load
+//   - once per browser: localStorage `wa-explained` { a, b, c, free, bounce, first }; storage blocked: once per page load
 //   - nothing speaks or moves over the first-visit tour, its unanswered offer, the front door or any open layer: it waits
 //     (a, the bounce and the sound look poll for a quiet moment; b and c answer a tap the visitor has just made)
 //   - the daily allowance in beat c is WRITE_CAP (writeout.js), the number the code itself uses; lines that carry it are
@@ -105,7 +105,10 @@ export function install(inn) {
   inn.explain = {
     /** The first idea opened (serving.js onHighlight). Returns true if beat b spoke, so the swipe hint isn't said twice */
     opened(touch) {
-      if (!opened) { opened = true; inn.track('first_idea_open', { beat_a: done.a ? 'yes' : 'no' }); }   // once a visit
+      if (!opened) {                                                     // once a browser: `first` in wa-explained (storage blocked: once a page load)
+        opened = true;
+        if (!done.first) { mark('first'); inn.track('first_idea_open', { beat_a: done.a ? 'yes' : 'no' }); }
+      }
       return done.b ? false : play('b', { touch });
     },
     /** The first add to the basket (serving.js keepIdea). Returns true if she spoke, so her usual first-keep line steps aside */
