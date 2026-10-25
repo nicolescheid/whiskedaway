@@ -28,3 +28,10 @@ test('each beat says what it should', () => {
   assert.match(X.c.lines.join(' '), /this device/);
   assert.match(X.c.lines.join(' '), /Your kitchen/);
 });
+test('a beat holds the navigator and the usual lines until its last line has played (polish 1, 25 Oct)', () => {
+  const ex = readFileSync(new URL('../blender/explore/explainer.js', import.meta.url), 'utf8');
+  const sv = readFileSync(new URL('../blender/explore/serving.js', import.meta.url), 'utf8');
+  assert.match(ex, /holdLine\?\.\(\(lines\.length - 1\) \* GAP \+ \d+\)/, 'play() holds for the whole beat');
+  assert.match(sv, /Math\.max\(lineHeldUntil/, 'a short hold never cuts a long one short');
+  assert.match(sv, /whenFree\(speak\)/, 'the navigator re-checks the hold when it wakes');
+});

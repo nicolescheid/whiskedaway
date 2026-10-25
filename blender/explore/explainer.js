@@ -46,6 +46,7 @@ export function install(inn) {
     inn.track('explain_beat', { beat: k });
     timers.forEach(clearTimeout);
     timers = [];
+    inn.holdLine?.((lines.length - 1) * GAP + 3000);       // the navigator and the usual lines wait until the beat has played through
     lines.forEach((text, i) => {
       const go = () => {
         if (inn.touring) return;
