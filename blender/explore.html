@@ -105,7 +105,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet" media="print" id="wa-fonts">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <style>
   :root {
@@ -961,6 +961,10 @@ inn.resize();
 (() => {
   const src = document.getElementById('wa-main');
   const img = document.getElementById('fd-pic');
+  // The fonts (~95 KB) wait for the picture too: they came first and took a share of a slow phone's bandwidth (LCP 2.8 s -> 2.1 s at 1.6 Mbps)
+  const fonts = document.getElementById('wa-fonts'), showFonts = () => { if (fonts) fonts.media = 'all'; };
+  if (!window.__doorActive || !img || (img.complete && img.naturalWidth)) showFonts();
+  else { img.addEventListener('load', showFonts, { once: true }); img.addEventListener('error', showFonts, { once: true }); setTimeout(showFonts, 5000); }
   let started = false, tries = 0;
   const start = () => {
     if (started) return;
