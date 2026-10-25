@@ -355,6 +355,7 @@
       "appliances_checked": true,
       "themes": ["calming", "warming", "spiced", "evening", "overnight", "cosy"],
       "seed": { "name": "Chai-spiced chia pudding", "why": "The warm spices of a chai, in a jar." },
-      "body": "Warm the oat milk with the spices, stir in chia and maple, and leave it overnight." }
+      "body": "Warm the oat milk with the spices, stir in chia and maple, and leave it overnight." },
+      {"id":"vietnamese-coffee-chia","room":"chiapothecary","kind":"recipe idea","spoons":1,"title":"Vietnamese coffee chia pudding","short":"Coffee chia","icon":"🥤","ref":"the coffee chia","hook":"Strong coffee and sweetened condensed milk, set with chia.","time":10,"key_ingredients":["chia seeds","strong coffee","milk","sweetened condensed milk"],"method_short":"Stir the chia seeds into cooled strong coffee and milk with a spoonful of condensed milk. Stir again after ten minutes, then chill for at least four hours.","diet":["vegetarian","gluten-free","nut-free"],"sweetener":"condensed milk","added_sugar":true,"cuisines":["Vietnamese"],"feels":["seeds","bitter"],"appliances":[],"appliances_checked":true,"themes":["overnight","sweet","treat","energy","simple"],"seed":{"name":"Vietnamese coffee chia pudding","why":"Cà phê sữa, the sweet iced Vietnamese coffee, turned into a pudding."},"body":"Stir the chia seeds into cooled strong coffee and milk with a spoonful of condensed milk. Stir again after ten minutes, then chill for at least four hours.","wait":"overnight"}
   ]
 }
