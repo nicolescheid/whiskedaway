@@ -20,7 +20,8 @@ export function install(inn) {
   // ---------- navigator
   let navTimer, navSeq = 0, lineHeldUntil = 0;
   inn.casting = false;                                         // a centrepiece is writing (B1): her lines wait for it
-  const holdLine = () => { lineHeldUntil = Date.now() + 3000; }; inn.holdLine = holdLine;
+  const holdLine = (ms = 3000) => { lineHeldUntil = Math.max(lineHeldUntil, Date.now() + ms); }; inn.holdLine = holdLine;   // a longer hold (a beat's lines, explainer.js) is never cut short by a shorter one
+  const whenFree = fn => { const wait = lineHeldUntil - Date.now(); wait > 0 ? setTimeout(() => whenFree(fn), wait) : fn(); };   // re-checks: a hold can grow while she waits
   function scheduleNavigate() {
     clearTimeout(navTimer);
     navTimer = setTimeout(navigate, inn.AI ? 700 : 350);
@@ -84,8 +85,7 @@ export function install(inn) {
           .filter(([, c]) => inn.world.clusters[c]).map(([label, c]) => ({ label, do: ['choose', c] }))), 400);
       } else if (gemma) inn.say(gemma, r.fork);              // with the AI on this posts at once: she "typed" while it read
     };
-    const wait = lineHeldUntil - Date.now();
-    wait > 0 ? setTimeout(speak, wait) : speak();
+    whenFree(speak);
     if (useAI) r.serve.forEach(s => serve(s, r.mode)); else putOut(r);
     inn.store.save(inn.state);
     inn.renderNotes();

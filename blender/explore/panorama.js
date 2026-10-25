@@ -266,9 +266,16 @@ export function install(inn) {
       h.x = p.x;
       if (vis) {
         const w = h.nameW ||= h.el.querySelector('.name')?.offsetWidth || 0;
-        h.el.classList.toggle('name-left', !!col && col.width > 0 && x + 20 + w > col.left - 6 && x - 26 - w > 0
-          && y > col.top - 20 && y < col.bottom + 20);
+        h.px = x; h.py = y; h.w = w;
+        h.underBubbles = !!col && col.width > 0 && x + 20 + w > col.left - 6 && x - 26 - w > 0 && y > col.top - 20 && y < col.bottom + 20;
       }
+    }
+    // A name that would run over another spot's dot trails to the left of its own dot instead, when the left is clear
+    // (a polish item: "How you like it" brushed "The bowl" at 812x375)
+    const shown = inn.hotspots.filter(h => h.px !== undefined && h.el.style.display !== 'none');
+    const dotIn = (h, x0, x1) => shown.some(o => o !== h && o.px > x0 && o.px < x1 && Math.abs(o.py - h.py) < 14);
+    for (const h of shown) {
+      h.el.classList.toggle('name-left', h.underBubbles || (dotIn(h, h.px + 8, h.px + 24 + h.w) && !dotIn(h, h.px - 28 - h.w, h.px - 8) && h.px - 26 - h.w > 0));
     }
     edgeHints.update(inn.hotspots, camera);                     // phones: arrows toward what's off-screen
     // Names trail to the right, so keep the spots in left-to-right order: a spot is always above any name coming
