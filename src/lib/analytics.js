@@ -74,12 +74,11 @@ export function track(name, params = {}) {
   timer = queue.length >= 10 ? (flush(), null) : setTimeout(flush, 4000);
 }
 
-// Where the visit came from: a coarse bucket, not the referrer. Goes with the first batch that is actually sent
-let src = visitSource(document.referrer, location.search, 'whiskedaway.com');
+// Where the visit came from: a coarse bucket, not the referrer. Goes with every batch
+const src = visitSource(document.referrer, location.search, 'whiskedaway.com');
 const payload = (events, pass) => {
-  const first = src;
-  src = null;
-  return JSON.stringify({ pass, visit, session, surface, device, debug, ...(first ? { src: first } : {}), events });
+  // The same coarse bucket goes with every batch, so every event of the visit carries it (a visit's later events used to have none)
+  return JSON.stringify({ pass, visit, session, surface, device, debug, ...(src ? { src } : {}), events });
 };
 
 // text/plain keeps it a simple request: no CORS preflight, and sendBeacon can send it too
