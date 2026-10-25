@@ -25,6 +25,11 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
     openBook: lines.open_book || 'Open my book',
     read: lines.read || 'Read ›',
     remove: lines.remove || 'Take out',
+    // Complete cards (free, as they are): outside the daily allowance (docs: freebies-plan.md)
+    freeAsIs: lines.free_as_is || 'Free, as it is',
+    splitWritten: lines.split_written || '{n} written for you',
+    splitFree: lines.split_free || '{n} as they are', splitFreeOne: lines.split_free_one || 'One as it is',
+    addAll: lines.add_book || 'Add to my book',
   };
   const ticked = new Set();
   const status = new Map();          // id → 'queued' | 'writing' | 'failed'
@@ -33,21 +38,23 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
   let running = false, redraw = () => {};
 
   const left = () => writer.left;
+  const isFree = x => !!x?.complete && !!x?.recipe?.steps?.length;     // a complete card: its own recipe, added as it is
+  const paidTicks = () => [...ticked].filter(id => !isFree(basket.get(id)));
   const allowanceLine = () => (left() > 1 ? L.free.replace('{n}', left()) : left() === 1 ? L.freeOne : L.none);
   // Never more ticks than she can write today
-  const trim = () => { while (ticked.size > left()) ticked.delete([...ticked].pop()); };
+  const trim = () => { const paid = paidTicks(); while (paid.length > left()) ticked.delete(paid.pop()); };
 
   function render(el, draw) {
     redraw = draw || redraw;
     for (const id of [...ticked]) if (!basket.has(id)) ticked.delete(id);
     if (!running) trim();
-    const items = basket.list(), n = ticked.size;
+    const items = basket.list(), n = ticked.size, nPaid = paidTicks().length, nFree = n - nPaid, anyFree = items.some(isFree);
     const row = x => {
       const st = status.get(x.id), r = ribbons[x.room];
       return `<li class="bs-leaf${st ? ` is-${st}` : ''}" style="--ring:${r?.colour || 'var(--berry)'}">
         <label><input type="checkbox" data-tick="${esc(x.id)}" ${ticked.has(x.id) ? 'checked' : ''}
-          ${running || (!ticked.has(x.id) && n >= left()) ? 'disabled' : ''}><i></i>
-          <span><b>${esc(x.title)}</b><small>${esc(r?.name || '')}</small></span></label>
+          ${running || (!ticked.has(x.id) && !isFree(x) && nPaid >= left()) ? 'disabled' : ''}><i></i>
+          <span><b>${esc(x.title)}</b><small>${esc(r?.name || '')}${isFree(x) ? ` · <span class="bs-free">${esc(L.freeAsIs)}</span>` : ''}</small></span></label>
         ${st === 'writing' ? `<span class="bs-st" role="status">${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></span>`
           : st === 'failed' ? `<span class="bs-st bs-fail" role="status">${esc(L.failed)}</span>` : ''}
         <span class="bs-acts"><button class="link" data-read="${esc(x.id)}" aria-expanded="${reading.has(x.id)}">${esc(reading.has(x.id) ? L.readLess : L.read)}</button>
@@ -57,8 +64,9 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
     // "Your leaflets wait here" only when some do (QA 3 #1): an empty basket at the cap just says it's empty
     el.innerHTML = `${items.length || left() ? `<p class="bs-allow"><b>${esc(allowanceLine())}</b></p>` : ''}
       ${items.length ? `${left() ? `<p class="small">${esc(L.intro)}</p>` : ''}<div class="bs-diet"></div><div class="bs-units"></div><ul class="bs-list">${items.map(row).join('')}</ul>
-        ${left() && n >= left() && !running ? `<p class="small">${esc(L.full)}</p>` : ''}
-        ${left() ? `<p><button class="tl-done bs-write" ${!n || running ? 'disabled' : ''}>${esc(n > 1 ? L.write.replace('{n}', n) : L.writeOne)}</button></p>` : ''}`
+        ${left() && nPaid >= left() && !running ? `<p class="small">${esc(L.full)}</p>` : ''}
+        ${left() || anyFree ? `<p><button class="tl-done bs-write" ${!n || running ? 'disabled' : ''}>${esc(nFree ? L.addAll : n > 1 ? L.write.replace('{n}', n) : L.writeOne)}</button></p>
+          ${nFree && n ? `<p class="small bs-split">${esc([nPaid && L.splitWritten.replace('{n}', nPaid), nFree > 1 ? L.splitFree.replace('{n}', nFree) : L.splitFreeOne.replace('{n}', nFree)].filter(Boolean).join(', '))}</p>` : ''}` : ''}`
         : `<p class="small">${esc(L.empty)}</p>`}
       ${done.length ? `<h4>${esc(L.written)}</h4><ul class="bs-done">${done.map(d => `<li>✓ <button class="link" data-book="${esc(d.id)}">${esc(d.title)}</button></li>`).join('')}</ul>` : ''}
       <p><button class="bk-outline bs-book">${esc(L.openBook)}</button></p>`;
@@ -96,9 +104,17 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
     running = true;
     const ids = [...ticked];
     ids.forEach(id => status.set(id, 'queued'));
-    let count = 0, failed = 0;
+    let count = 0, failed = 0, free = 0;
+    for (const id of ids) {                                   // the free ones first: no write-out, no allowance
+      const rec = basket.get(id);
+      if (!isFree(rec)) continue;
+      if (writer.addAsIs(rec)) { free++; status.delete(id); ticked.delete(id); done.push({ id, title: rec.title }); }
+      else status.delete(id);
+    }
+    if (free) track?.('book_add_free', { count: bucket(free) });
     for (const id of ids) {
       const rec = basket.get(id);
+      if (isFree(rec)) continue;
       if (!rec || !left()) { status.delete(id); continue; }
       status.set(id, 'writing'); redraw();
       onWriteStart?.(rec);
@@ -108,9 +124,9 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
       else { failed++; status.set(id, 'failed'); }
     }
     running = false;
-    track?.('checkout_written', { count: String(count), failed: String(failed), remaining: bucket(left()) });
+    if (count || failed || !free) track?.('checkout_written', { count: String(count), failed: String(failed), remaining: bucket(left()) });
     redraw();
-    onBatchDone?.({ count, failed, first: done[0]?.id || null });
+    onBatchDone?.({ count: count + free, failed, first: done[0]?.id || null });
   }
 
   return {

@@ -709,3 +709,8 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 @keyframes ex-bounce { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-9px); } 50% { transform: translateY(0); } 70% { transform: translateY(-4px); } }
 .idea.ex-glow { box-shadow: 0 0 0 5px rgba(139, 77, 92, .4), 0 0 14px rgba(139, 77, 92, .35); }
 @media (prefers-reduced-motion: reduce) { .idea.ex-bounce { animation: none; } }
+
+/* Complete cards, free as they are (freebies, 25 Oct) */
+.bs-free, .bk-free { color: var(--berry); font-weight: 600; }
+.bk-free { margin: 0 0 6px; font-size: 13px; }
+.bs-split { margin: 2px 0 6px; }

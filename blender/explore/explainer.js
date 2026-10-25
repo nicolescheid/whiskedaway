@@ -1,7 +1,7 @@
 // The ideas explainer and first-visit nudges (Nicole, 25 Oct). Three short beats from Gemma, each once per browser and each
 // when it's relevant: (a) the first bubble, (b) the first idea opened, (c) the first basket add. Also the first bubble's
 // one-off bounce, and the sound button's "look at me" at the start of a visit.
-//   - once per browser: localStorage `wa-explained` { a, b, c, bounce }; storage blocked: once per page load
+//   - once per browser: localStorage `wa-explained` { a, b, c, free, bounce }; storage blocked: once per page load
 //   - nothing speaks or moves over the first-visit tour, its unanswered offer, the front door or any open layer: it waits
 //     (a, the bounce and the sound look poll for a quiet moment; b and c answer a tap the visitor has just made)
 //   - the daily allowance in beat c is WRITE_CAP (writeout.js), the number the code itself uses; lines that carry it are
@@ -20,6 +20,7 @@ const STAND_IN = {
   b: { lines: ['Like it? Tap ♥ Keep. Not for you? Tap Not this.', 'Not this teaches me too.', 'Kept ideas go in your basket.'],
        touch: ['Like it? Swipe right, or tap ♥ Keep.', 'Not for you? Swipe left. That teaches me too.', 'Kept ideas go in your basket.'] },
   c: { lines: ["That's in your basket.", 'At checkout I write up to {n} a day out in full, in your book.', 'I tailor each one to you. What you keep stays on this device.', 'I learn as you wander, and from what you tell me, like Your kitchen or Dietary needs.'] },
+  free: { lines: ["This one needs nothing from me.", 'It goes in your book free, as it is.', 'Or I can write it out for you instead.'] },
   sound: 'Sound?',
 };
 
@@ -108,6 +109,8 @@ export function install(inn) {
     },
     /** The first add to the basket (serving.js keepIdea). Returns true if she spoke, so her usual first-keep line steps aside */
     basketAdd() { return done.c ? false : play('c'); },
+    /** The first complete card kept (it can go into the book free): one line on that, once per browser */
+    freeCard() { return done.free ? false : play('free'); },
     get playing() { return playing; },
     done: () => ({ ...done }),
   };

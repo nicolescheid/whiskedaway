@@ -143,6 +143,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
           rec(S.id, way, 'closed', after.hidden);
           const inert = await page.evaluate(INERT);
           rec(S.id, way, 'inert', !inert.length, inert.length > 4 ? `${inert.slice(0, 4).join(', ')} and ${inert.length - 4} more` : inert.join(', '));
+          if (await page.evaluate(() => window.__layers?.top?.name === 'idea')) { await page.keyboard.press('Escape'); await page.waitForTimeout(400); }   // a card the sheet's answer opened is a layer with its own step
           const hist = await page.evaluate(() => history.state);
           const balanced = JSON.stringify(hist) === JSON.stringify(opener.state);
           rec(S.id, way, 'history', balanced, balanced ? '' : `on ${JSON.stringify(hist)}, want ${JSON.stringify(opener.state)}`);
@@ -302,7 +303,9 @@ const clean = async page => {
 const isOpen = (page, root) => page.evaluate(r => { const el = document.querySelector(r); return !!el && !el.hidden; }, root);
 const usable = (page, root) => page.evaluate(r => { const el = document.querySelector(r); return !!el && !el.hidden && !el.closest('[inert]'); }, root);
 const marked = async page => page.evaluate(() => { history.replaceState({ ...(history.state || {}), probe: Math.random().toString(36).slice(2, 7) }, ''); return JSON.stringify(history.state); });
-const sameEntry = async (page, want) => { const now = await page.evaluate(() => JSON.stringify(history.state)); return [now === want, now === want ? '' : `on ${now}, want ${want}`]; };
+// An idea card left open (the star chart's star opens one) is a layer now, with its own history step: close it before comparing
+const sameEntry = async (page, want) => { if (await page.evaluate(() => window.__layers?.top?.name === 'idea')) { await page.keyboard.press('Escape'); await page.waitForTimeout(400); }
+  const now = await page.evaluate(() => JSON.stringify(history.state)); return [now === want, now === want ? '' : `on ${now}, want ${want}`]; };
 const back = async page => { await page.evaluate(() => history.back()); await page.waitForTimeout(700); return page.evaluate(() => !!window.__explore).catch(() => false); };
 
 // A hotspot pressed as a keyboard visitor would: the view turned to it, focused, Enter
@@ -346,6 +349,50 @@ const JOURNEYS = [
     await page.click('#tell .tl-x');
     await page.waitForTimeout(500);
     out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
+  // Freebies (25 Oct): a complete card goes into the book as it is, free, outside the daily allowance; closing an idea card
+  // keeps nothing; the phone's Back closes an open idea card instead of leaving the page
+  { id: 'a complete card goes into the book free', async run(page) {
+    const out = [], entry = await marked(page);
+    const left0 = await page.evaluate(() => window.__explore.writer.left);
+    await page.evaluate(() => window.__explore.keepIdea('boil-an-egg', '', 'button'));
+    await page.click('#btn-book');
+    out.push(['the basket opens', await shown(page, '#basket-sheet')]);
+    out.push(['the card says it is free, as it is', await page.evaluate(() => /Free, as it is/.test(document.querySelector('#basket-sheet .bs-list')?.textContent || ''))]);
+    await page.click('#basket-sheet [data-tick="boil-an-egg"]');
+    out.push(['one button, with the split line', await page.evaluate(() => /Add to my book/.test(document.querySelector('#basket-sheet .bs-write')?.textContent || '') && /as it is/.test(document.querySelector('#basket-sheet .bs-split')?.textContent || ''))]);
+    await page.click('#basket-sheet .bs-write');
+    await page.waitForTimeout(800);
+    out.push(['it is in the book as written-shape, flagged as it is', await page.evaluate(() => window.__explore.book.get('boil-an-egg')?.full?.asIs === true)]);
+    out.push(['the allowance is untouched', await page.evaluate(l => window.__explore.writer.left === l, left0), `was ${left0}`]);
+    await page.click('#basket-sheet .bk-close');
+    await page.waitForTimeout(400);
+    await page.evaluate(() => window.__explore.bookView.open('boil-an-egg', { from: 'chip' }));
+    out.push(['its page shows the how-to and the Write it out instead button', await shown(page, '#book') && await page.evaluate(() => /How to/.test(document.querySelector('#book')?.textContent || '') && /Write it out for me instead/.test(document.querySelector('#book')?.textContent || ''))]);
+    await page.click('#book .bk-close');
+    await page.waitForTimeout(400);
+    await page.evaluate(() => window.__explore.book.remove('boil-an-egg'));
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
+  { id: 'the idea card: Back and Escape close it, keeping nothing', async run(page) {
+    const out = [], entry = await marked(page);
+    const basketN = () => page.evaluate(() => JSON.parse(localStorage.getItem('wa-basket') || '{}')?.items?.length ?? JSON.parse(localStorage.getItem('wa-basket') || '[]').length ?? 0);
+    const n0 = await basketN();
+    for (const way of ['back', 'escape']) {
+      await page.evaluate(() => { const i = window.__explore.ideas; i.add({ atom: 'which-knife', why: '' }, null, { force: true }); i.open('which-knife'); });
+      await page.waitForTimeout(400);
+      out.push([`the card opens (${way})`, await page.evaluate(() => window.__explore.ideas.openAtom === 'which-knife')]);
+      if (way === 'back') out.push(['Back stays in the Inn (idea)', await back(page)]); else { await page.keyboard.press('Escape'); await page.waitForTimeout(400); }
+      out.push([`${way} closes the card`, await page.evaluate(() => window.__explore.ideas.openAtom === null)]);
+      out.push([`${way} kept nothing`, (await basketN()) === n0]);
+      await page.evaluate(() => window.__explore.ideas.remove('which-knife'));
+    }
     const [ok, note] = await sameEntry(page, entry);
     out.push(['history balanced', ok, note]);
     return out;

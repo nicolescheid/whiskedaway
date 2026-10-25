@@ -41,6 +41,7 @@
       "policy": "daily-allowance",
       "lines": ["That's in your basket.", "At checkout I write up to {n} a day out in full, in your book.", "I tailor each one to you. What you keep stays on this device.", "I learn as you wander, and from what you tell me, like Your kitchen or Dietary needs."]
     },
+    "free": { "lines": ["This one needs nothing from me.", "It goes in your book free, as it is.", "Or I can write it out for you instead."] },
     "sound": "Sound?"
   },
   "swipe_hint": "Swipe right to keep one, or left if it's not for you.",

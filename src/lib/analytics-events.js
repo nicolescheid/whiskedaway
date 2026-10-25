@@ -67,6 +67,7 @@ export const EVENTS = {
   recipe_rewrite: ['kind', 'outcome', 'remaining'],                // a swap or other measurements on a written recipe; kind: swap, units; outcome: ok, failed; remaining: of 5 a day                                                // "Save as PDF / print" on a written recipe
   // The recipe basket (Stage 1, docs/basket-stage1-design.md): do visitors use up their 3 free write-outs a day?
   basket_add: ['from', 'basket_size'],                             // from: button, swipe, book, cast, star_chart
+  book_add_free: ['count'],                                        // complete cards added to the book as they are (free, outside the allowance); count 1, 2-3
   checkout_open: ['from', 'basket_size', 'remaining'],             // from: chip, tab, cast, star_chart; remaining: today's write-outs left
   checkout_written: ['count', 'failed', 'remaining'],              // one checkout's "Write out": how many written, how many failed
   allowance_reached: ['from'],                                     // a write took today's left to 0; from: checkout, book, mix, cook

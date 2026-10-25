@@ -238,6 +238,7 @@ export function install(inn) {
     else if (n === 3) line = pickLine('keep3', L.keepThird, { cluster_label: inn.world.clusters[inn.state.result?.cluster]?.label });
     else if (n > 3 && (n - 3) % 4 === 0) line = pickLine('keepN', L.keepLater);
     if (!tuckedAway && !book.has(atom) && inn.explain?.basketAdd()) { line = null; holdLine(); }   // the first basket add: beat c (explainer.js) takes the turn
+    else if (a?.complete && inn.explain?.freeCard()) { line = null; holdLine(); }   // the first complete card: it can go in the book free
     if (line) { inn.say(line, [], true); holdLine(); }
     inn.state.keepSpoke = !!line;
     inn.state.dismissRun = 0;

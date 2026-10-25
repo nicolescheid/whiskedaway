@@ -488,6 +488,7 @@
   "atoms": [
     {
       "id": "honey-ginger-lemon",
+      "complete": true, "recipe": {"serves": 1, "time": "5 minutes", "ingredients": [{"amount": "4 thin slices", "item": "fresh ginger"}, {"amount": "1/2", "item": "lemon, juiced"}, {"amount": "1 tsp", "item": "honey"}, {"amount": "1 mug", "item": "hot water"}], "steps": ["Put the ginger slices in a mug and pour over the hot water.", "Leave it for 3 minutes.", "Stir in the lemon juice and the honey.", "Hold it with both hands and sip slowly."]},
       "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
@@ -1037,6 +1038,7 @@
     },
     {
       "id": "frozen-grapes",
+      "complete": true, "recipe": {"serves": 2, "time": "5 minutes, plus freezing", "ingredients": [{"amount": "2 cups", "item": "seedless grapes"}, {"amount": "1", "item": "lime, juiced"}, {"amount": "a few leaves", "item": "mint"}], "steps": ["Wash the grapes and pat them dry.", "Spread them on a tray and freeze for 3 hours or more.", "Squeeze the lime over the top and tear over the mint.", "Eat them straight from the freezer, a few at a time."], "tip": "Keep them in a covered container once frozen."},
       "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
@@ -1257,6 +1259,7 @@
     },
     {
       "id": "evening-milk",
+      "complete": true, "recipe": {"serves": 1, "time": "5 minutes", "ingredients": [{"amount": "1 cup", "item": "milk"}, {"amount": "1 pinch", "item": "cinnamon"}, {"amount": "1 tsp", "item": "honey"}], "steps": ["Warm the milk in a small pan over low heat until steaming, not boiling.", "Stir in the cinnamon and the honey.", "Pour into a mug and sit somewhere quiet."]},
       "room": "cuddlecore",
       "kind": "ritual",
       "spoons": 0,
@@ -1737,6 +1740,7 @@
     },
     {
       "id": "boil-an-egg",
+      "complete": true, "recipe": {"serves": 1, "time": "10 minutes", "ingredients": [{"amount": "1 or more", "item": "eggs"}, {"amount": "1 pot", "item": "water"}, {"amount": "1 pinch", "item": "salt"}], "steps": ["Bring a pot of water to a rolling boil with the salt.", "Lower the egg in on a spoon and start the timer.", "Cook 6 minutes for a soft yolk or 9 for firm.", "Move it straight into cold water for a minute so it peels easily."]},
       "room": "cuddlecore",
       "kind": "technique",
       "spoons": 1,
@@ -1779,6 +1783,7 @@
     },
     {
       "id": "rice-in-a-pot",
+      "complete": true, "recipe": {"serves": 2, "time": "25 minutes", "ingredients": [{"amount": "1 cup", "item": "long-grain rice"}, {"amount": "1 1/2 cups", "item": "water"}, {"amount": "1 pinch", "item": "salt"}], "steps": ["Rinse the rice in a sieve until the water runs clearer.", "Put the rice, water and salt in a pot with a lid and bring to the boil.", "Turn it right down, put the lid on and cook for 12 minutes without lifting it.", "Turn off the heat and leave it covered for 5 minutes, then fluff with a fork."]},
       "room": "cuddlecore",
       "kind": "technique",
       "spoons": 1,
@@ -1822,6 +1827,7 @@
     },
     {
       "id": "use-a-timer",
+      "complete": true, "recipe": {"serves": 1, "time": "a few minutes", "ingredients": [{"amount": "1", "item": "timer: a phone, an oven dial or a wind-up one"}], "steps": ["Set the timer when the food goes on, not when you remember.", "Choose the shorter time first.", "When it rings, check the food.", "If it needs more, add a minute at a time and set it again."]},
       "room": "cuddlecore",
       "kind": "technique",
       "spoons": 0,
@@ -1862,6 +1868,7 @@
     },
     {
       "id": "season-to-taste",
+      "complete": true, "recipe": {"serves": 1, "time": "5 minutes", "ingredients": [{"amount": "1 small pinch", "item": "salt"}, {"amount": "a squeeze", "item": "lemon, or a drop of vinegar"}, {"amount": "a grind", "item": "black pepper"}], "steps": ["Taste the food before you add anything.", "Add a small pinch of salt, stir, and taste again.", "If it still seems flat, add a squeeze of lemon or a drop of vinegar.", "Add pepper last.", "Use a clean spoon each time you taste."]},
       "room": "cuddlecore",
       "kind": "technique",
       "spoons": 0,
@@ -1903,6 +1910,7 @@
     },
     {
       "id": "measure-it",
+      "complete": true, "recipe": {"serves": 1, "time": "5 minutes", "ingredients": [{"amount": "1", "item": "set of measuring spoons or cups"}, {"amount": "1", "item": "kitchen scale, if you have one"}, {"amount": "1", "item": "bowl"}], "steps": ["For cups and spoons, fill, then level off the top with a knife. Don't heap.", "For scales, put the bowl on first and zero it.", "Weigh each ingredient straight into the bowl, zeroing between them."]},
       "room": "cuddlecore",
       "kind": "technique",
       "spoons": 1,

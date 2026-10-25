@@ -31,6 +31,8 @@ export const minutesOf = a => (a.time ? `${a.time} min` : '');
 /** "SWEET SPELLS · recipe idea · 25 min · 🥄" */
 export const metaLine = (a, room = true) => [room && RIBBONS[a.room]?.name, a.kind, minutesOf(a), spoonsOf(a)].filter(Boolean).map(esc).join(' · ');
 
+import { layers } from './layers.js';
+
 export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUndo, onRead, onHighlight, onShown, canShow, onFirst, avatar, bookChip, layout, wantHint, onHint }) {
   const col = document.createElement('div');
   col.className = 'ideas';
@@ -213,6 +215,7 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
       <button class="x" data-act="close" aria-label="Close this idea">✕</button>`;
     hl.hidden = false;
     hl.dataset.atom = atom;
+    if (!ideaLayer) ideaLayer = layers.open({ el: hl, name: 'idea', modal: false, close: how => close(how === 'escape' ? 'force' : false, how === 'back' ? 'back' : 'self') });
     hl.querySelector('[data-act=close]').onclick = e => { e.stopPropagation(); close(); };
     hl.querySelectorAll('[data-act=read]').forEach(b => b.onclick = e => { e.stopPropagation(); onRead(c); });
     hl.querySelector('[data-act=no]').onclick = e => { e.stopPropagation(); dismiss(atom, 'button'); };
@@ -262,8 +265,12 @@ export function createIdeas({ state, atoms, save, here, onKeep, onDismiss, onUnd
     }
   }
   addEventListener('resize', place);
-  function close(returnFocus = true) {
+  let ideaLayer = null;               // the open card is a layer over the live room (layers.js): the phone's Back gesture closes it, not the page
+  function close(returnFocus = true, how = 'self') {
     if (!openAtom) return;
+    const l = ideaLayer;
+    ideaLayer = null;
+    if (l) layers.closed(l, { how, refocus: false });
     const atom = openAtom, hadFocus = hl.contains(document.activeElement);
     openAtom = null;
     hl.hidden = true;

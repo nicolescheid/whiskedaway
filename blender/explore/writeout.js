@@ -82,8 +82,16 @@ const CUP = /^cups?$/i;
 /** A written recipe as its page should show it: a "Both" amount whose unit came apart ("200 (1 1/2 cups)" + "g") put back
  *  together, and in a metric recipe any cup turned into ml (a metric cup, 250 ml) or, for a quarter cup or less, tablespoons.
  *  unitsFix: 'converted' when cups were changed, 'mixed' when one couldn't be (the page says so instead of "Written in metric") */
+/** A "complete" card's own recipe, in the shape of a written one (QA freebies, 25 Oct): ingredients with amounts as the card gives them,
+ *  its steps, flagged `asIs`. Free: no Worker call, nothing from the daily allowance. Null if the card isn't complete. */
+export function asIsFull(rec) {
+  const r = rec?.recipe;
+  if (!rec?.complete || !r?.steps?.length || !r?.ingredients?.length) return null;
+  const ingredients = r.ingredients.map(i => (typeof i === 'string' ? { item: i, amount: '' } : { item: String(i.item), amount: String(i.amount || ''), unit: String(i.unit || '') }));
+  return { name: rec.title, serves: r.serves || null, time: r.time ? String(r.time) : '', ingredients, steps: r.steps.map(String), tip: r.tip ? String(r.tip) : '', asIs: true, howto: rec.kind === 'technique' };
+}
 export function fitUnits(f) {
-  if (!f?.ingredients?.length) return f;
+  if (!f?.ingredients?.length || f.asIs) return f;
   let converted = 0, mixed = 0;
   const ingredients = f.ingredients.map(i => {
     let { amount = '', unit = '' } = i;
@@ -134,6 +142,9 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
     remaining: lines.remaining || 'Gemma writes it for you (3 free a day, {n} left today).',
     remainingOne: lines.remaining_one || 'Gemma writes it for you (3 free a day, one left today).',
     writing: lines.writing || 'Gemma is writing…',
+    freeAsIs: lines.free_as_is || 'Free, as it is',
+    howtoNeed: lines.howto_need || "What you'll use", howtoHow: lines.howto_how || 'How to',
+    instead: lines.write_instead || 'Write it out for me instead',
     atCap: lines.at_cap || "That's my three written out for today. The short version's above, and I'll write more tomorrow.",
     print: lines.print || 'Save as PDF / print',
     more: lines.more_diets || 'More options ›',
@@ -224,10 +235,27 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
       <p class="bk-printrow"><button class="bk-outline bk-print">${esc(L.print)}</button></p>`;
   }
 
+  // A complete card kept as it is (free): its own ingredients and steps; units, swaps and re-writes belong to written recipes
+  function asIsHtml(f) {
+    return `<p class="bk-free">${esc(L.freeAsIs)}</p>
+      <h4>${esc(f.howto ? L.howtoNeed : "You'll need")}${f.serves ? ` <span class="small">(serves ${f.serves})</span>` : ''}</h4>
+      <ul class="bk-ing">${f.ingredients.map(i => `<li>${i.amount ? `<b>${esc(i.amount)}${i.unit ? ` ${esc(i.unit)}` : ''}</b> ` : ''}${esc(i.item)}</li>`).join('')}</ul>
+      <h4>${esc(f.howto ? L.howtoHow : 'How')}${f.time ? ` <span class="small">${esc(f.time)}</span>` : ''}</h4>
+      <ol class="bk-steps">${f.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>
+      ${f.tip ? `<p class="small"><b>Tip:</b> ${esc(f.tip)}</p>` : ''}
+      <p><button class="bk-print link">${esc(L.print)}</button></p>`;
+  }
+  /** A complete card goes into the book as it is: free, no write-out, nothing off today's allowance */
+  function addAsIs(rec) {
+    const full = asIsFull(rec);
+    if (full) onWritten?.(rec, full);
+    return full;
+  }
   /** Fill a page's write-out slot. `seedEl` holds the short version, which a written recipe replaces. */
   function render(el, rec, seedEl) {
     const f = written(rec.id);
-    if (f) {
+    if (f?.asIs) { seedEl.innerHTML = asIsHtml(f); seedEl.querySelector('.bk-print').onclick = () => { track?.('recipe_print'); printRecipe(rec, f); }; }
+    if (f && !f.asIs) {
       seedEl.innerHTML = fullHtml({ ...f, id: rec.id }); el.innerHTML = '';
       seedEl.querySelector('.bk-print').onclick = () => { track?.('recipe_print'); printRecipe(rec, f); };
       const again = (focus) => { redraw(el, rec, seedEl); if (focus) seedEl.isConnected ? seedEl.querySelector(focus)?.focus() : document.querySelector(`.bk-seed ${focus}`)?.focus(); };
@@ -260,7 +288,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
     const ask = !diet.length && !mem.dietAsked;
     const offer = !diet.length && mem.dietAsked && !openDiet;     // asked before and not answered: a one-line way back in (UX T6)
     el.innerHTML = `${oops}${offer ? `<p><button class="link bk-dietmore">Anything to avoid? ›</button></p>` : ''}${ask || openDiet ? dietGroup(diet) : ''}
-      <button class="bk-writeout">${esc(L.button)}</button>
+      <button class="bk-writeout">${esc(f?.asIs ? L.instead : L.button)}</button>
       <p class="small">${esc(left() === 1 ? L.remainingOne : L.remaining.replace('{n}', left()))}</p>`;
     // It isn't asked again this visit once answered; More options redraws with the question open
     bindDiet(el, () => { openDiet = true; render(el, rec, seedEl); });
@@ -367,5 +395,5 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
   }
   const dietAskReset = () => { askOpen = false; unitsAskOpen = false; };
 
-  return { render, written, writeNow, rewriteNow, dietAsk, unitsAsk, dietAskReset, get rewritesLeft() { return rwLeft(); }, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
+  return { render, written, addAsIs, writeNow, rewriteNow, dietAsk, unitsAsk, dietAskReset, get rewritesLeft() { return rwLeft(); }, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
 }

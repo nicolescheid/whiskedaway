@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { WRITE_CAP } from '../blender/explore/writeout.js';
 
 const X = JSON.parse(readFileSync(new URL('../blender/explore/gemma-lines.json', import.meta.url), 'utf8')).explain;
-const all = Object.entries(X).filter(([k]) => ['a', 'b', 'c'].includes(k)).flatMap(([, v]) => [...v.lines, ...(v.touch || [])]);
+const all = Object.entries(X).filter(([k]) => ['a', 'b', 'c', 'free'].includes(k)).flatMap(([, v]) => [...v.lines, ...(v.touch || [])]);
 
 test('every beat line fits a phone chat line and keeps the voice guide', () => {
   for (const l of all) {

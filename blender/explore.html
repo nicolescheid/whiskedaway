@@ -924,7 +924,7 @@ installExplainer(inn);   // after the tour: the ideas beats, the first bubble's 
 
 // Test hooks for scripted checks (the room walk, the sheet contract)
 window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle: inn.settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch: inn.touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy: inn.chooseEnergy, chooseSeason: inn.chooseSeason, goRoom: inn.goRoom, lookTo: (y, p) => { inn.look.yaw = y; inn.look.pitch = p; inn.render(); }, navigate: inn.navigate,
-                    world, spot: id => inn.spots[id], tour: inn.tour, explain: inn.explain };
+                    world, spot: id => inn.spots[id], tour: inn.tour, explain: inn.explain, keepIdea: inn.keepIdea, writer: inn.writer, basketView: inn.basketView };
 
 inn.setRoomText();
 inn.buildHotspots();
