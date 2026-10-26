@@ -5,6 +5,7 @@
 import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
 import { kitchenLine, addinsLine, feelsLine } from './inn-extras.js';
 import { cacheKey, validRecipe, countKey, countWriteout, CACHE_TTL } from './writeout-cache.js';
+import { capFor, declaredTooLarge, readCapped, cleanWritePayload, cleanNavigatePayload } from './limits.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -579,6 +580,10 @@ export default {
 
     const path = new URL(request.url).pathname;
 
+    // Every route that reads a body has a size cap (limits.js). A Content-Length over it is turned away here, before anything else
+    // happens; the bytes actually read are counted again where the body is read
+    if (declaredTooLarge(request, capFor(path))) return withCors(tooLarge(), request, env);
+
     // Turnstile token in, signed visitor pass out
     if (path === '/session') {
       return withCors(await handleSession(request, env), request, env);
@@ -609,7 +614,9 @@ async function handleRecipe(request, env, { rewrite = false, ctx = null } = {}) 
   {
 
     try {
-      const payload = await request.json();
+      const body = await readCapped(request, capFor(rewrite ? '/rewrite' : '/recipe'));
+      if (body.tooLarge) return tooLarge();
+      const payload = cleanWritePayload(JSON.parse(body.text));   // every visitor-typed field cut to size (limits.js)
       // /rewrite only re-writes an Inn recipe; the Inn's page sends `rewrite` only there
       if (rewrite !== !!payload.rewrite || (rewrite && payload.tome_id !== 'inn-idea')) return jsonResponse({ error: 'bad_rewrite' }, 400);
       
@@ -1035,11 +1042,13 @@ async function handleNavigate(request, env) {
     status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   });
   try {
-    const p = await request.json();
-    const objects = (p.objects || []).slice(0, 40);
-    const atoms = (p.atoms || []).slice(0, 60);
-    const clusters = (p.clusters || []).slice(0, 24);   // 19 across the four rooms (Oct 2026); the page sends the current room's first
-    const trail = (p.trail || []).slice(-30).map(({ kind, id, atom, cluster }) => ({ kind, id, atom, cluster }));
+    const body = await readCapped(request, capFor('/navigate'));
+    if (body.tooLarge) return tooLarge();
+    const p = cleanNavigatePayload(JSON.parse(body.text));   // lists capped, every string cut to size (limits.js)
+    const objects = p.objects.slice(0, 40);
+    const atoms = p.atoms.slice(0, 60);
+    const clusters = p.clusters.slice(0, 24);   // 19 across the four rooms (Oct 2026); the page sends the current room's first
+    const trail = p.trail;
     if (!objects.length || !atoms.length || !clusters.length || !trail.length) {
       return json({ error: 'objects, atoms, clusters and trail are required' }, 400);
     }
@@ -1051,8 +1060,8 @@ async function handleNavigate(request, env) {
     // on every call, so a cache marker on them would only add the write surcharge
     const userMessage = 'Use only ids that appear in these lists (cluster ids for cluster and fork, object ids for reveal, atom ids for serve).\n' + JSON.stringify({
       room: p.room, clusters, objects, atoms, trail,
-      already_served: (p.already_served || []).slice(0, 60),
-      set_aside: (p.dismissed || []).slice(0, 60),
+      already_served: p.already_served,
+      set_aside: p.dismissed,
       visitor: {
         time_available: p.visitor?.time_available ? String(p.visitor.time_available).slice(0, 20) : null,
         confidence: ['starting', 'happy', 'confident'].includes(p.visitor?.confidence) ? p.visitor.confidence : null,
@@ -1187,6 +1196,11 @@ function withCors(response, request, env) {
   return res;
 }
 
+/** 413 for a body over its route's cap (limits.js). Short, and the same for every route */
+function tooLarge() {
+  return jsonResponse({ error: 'too_large' }, 413);
+}
+
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1243,7 +1257,9 @@ async function handleSession(request, env) {
     return jsonResponse({ error: 'not_configured' }, 503);
   }
   let token;
-  try { ({ token } = await request.json()); } catch { /* handled below */ }
+  const body = await readCapped(request, capFor('/session'));
+  if (body.tooLarge) return tooLarge();
+  try { ({ token } = JSON.parse(body.text)); } catch { /* handled below */ }
   if (!token || typeof token !== 'string' || token.length > 2048) {
     return jsonResponse({ error: 'bot_check' }, 403);
   }
@@ -1275,8 +1291,10 @@ const MP_URL = 'https://www.google-analytics.com/mp/collect';
 
 async function handleMeasure(request, env, ctx) {
   const done = () => new Response(null, { status: 204, headers: corsHeaders });
-  const text = await request.text().catch(() => '');
-  if (!text || text.length > 16384) return done();
+  const body0 = await readCapped(request, capFor('/m'));
+  if (body0.tooLarge) return tooLarge();   // the page never sends this much; it does not retry a 413
+  const text = body0.text;
+  if (!text) return done();
   let body;
   try { body = JSON.parse(text); } catch { return done(); }
 
