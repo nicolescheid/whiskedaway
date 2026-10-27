@@ -72,6 +72,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
     await ctx.addInitScript(([rec]) => {
       try {
         localStorage.setItem('wa-welcomed', '1');
+        localStorage.setItem('wa-chat-offered', '1');   // the sit-down offer is made once; its own journey clears this
         if (!sessionStorage.getItem('wa-check')) {
           sessionStorage.setItem('wa-check', '1');
           sessionStorage.setItem('wa-door-done', '1');
@@ -296,7 +297,7 @@ async function closeBy(page, S, way) {
 
 // ---------- journeys: [check, ok, note] rows
 const clean = async page => {
-  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map', '#hyli', '#food-map', '#tour']
+  const r = await page.evaluate(`({ inert: ${INERT}, open: ['#tell', '#chia-mix', '#sweet-sheet', '#star-sheet', '#cook', '#book', '#basket-sheet', '#inn-map', '#hyli', '#food-map', '#tour', '#sitdown']
     .filter(s => { const el = document.querySelector(s); return el && !el.hidden; }) })`);
   return [['nothing open', !r.open.length, r.open.join(', ')], ['inert', !r.inert.length, r.inert.join(', ')]];
 };
@@ -468,6 +469,76 @@ const JOURNEYS = [
       await page.waitForTimeout(500);
       out.push([`${way} ends the tour`, !await isOpen(page, '#tour') && (await tourAt(page)) === 0]);
       if (way !== 'door') out.push([`${way}: the check-in offer follows`, await page.evaluate(() => window.__explore.state.chips.some(c => c.do[0] === 'checkin'))]);
+      out.push(...(await clean(page)).map(([c, ok, n]) => [`${c} (${way})`, ok, n]));
+      const [ok, note] = await sameEntry(page, entry);
+      out.push([`history balanced (${way})`, ok, note]);
+    }
+    return out;
+  } },
+  // The tour steps inside (26 Oct): a guest who rests at a door sees the room behind it on its own picture, turned to something
+  // characteristic, and one who taps Next straight away never loads it; Skip while peeking walks back out to the door
+  { id: 'the tour steps inside the room at a door', async run(page) {
+    const out = [], entry = await marked(page);
+    out.push(['Show me round starts the tour', await tourStart(page)]);
+    await page.waitForTimeout(500);
+    out.push(['a quick look stays at the door', await page.evaluate(() => window.__explore.state.room === 'hall-middle')]);
+    await page.waitForTimeout(3200);
+    out.push(['resting there steps into Cuddlecore', await page.evaluate(() => window.__explore.state.room === 'cuddlecore')]);
+    out.push(['and something there glows', await page.evaluate(() => !!document.querySelector('.spot.tour-glow'))]);
+    await page.click('#tour .tr-skip');
+    await page.waitForTimeout(500);
+    out.push(['Skip while inside walks back out to the hall', await page.evaluate(() => window.__explore.state.room === 'hall-middle')]);
+    out.push(['and ends the tour', !await isOpen(page, '#tour')]);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
+  // Shall we sit down for a chat? (26 Oct, sitdown.js): offered once, Yes walks to Cuddlecore with one glowing object a step,
+  // Later leaves it on the bell's card; Skip, Escape and Back end it (Escape and Back take you home), a tap goes on
+  { id: 'sit down for a chat: offer, steps, skip, escape, back', async run(page) {
+    const out = [];
+    const offer = () => page.evaluate(() => { localStorage.removeItem('wa-chat-offered'); window.__explore.sitdown.offer(); });
+    await page.evaluate(async () => { const ex = window.__explore; if (ex.state.room !== 'hall-entrance') { ex.goRoom('hall-entrance'); await new Promise(r => setTimeout(r, 500)); } });
+    const home = await page.evaluate(() => window.__explore.state.room);
+    {
+      const entry = await marked(page);
+      await offer();
+      out.push(['the offer shows as a card', await shown(page, '#sitdown')]);
+      out.push(['asked only once a browser', await page.evaluate(() => { const ex = window.__explore; localStorage.setItem('wa-chat-offered', '1'); ex.sitdown.offer(); return !document.getElementById('sitdown').hidden; })]);
+      await page.click('#sitdown .tr-skip');                  // Later
+      await page.waitForTimeout(400);
+      out.push(['Later closes it', !await isOpen(page, '#sitdown')]);
+      out.push(['and the bell has it', await (async () => { await page.click('#btn-bell'); await page.waitForTimeout(300); const ok = await page.evaluate(() => !document.getElementById('welcome-chat').hidden); await page.click('#welcome-ok'); await page.waitForTimeout(900); return ok; })()]);
+      out.push(...await clean(page));
+      const [ok, note] = await sameEntry(page, entry);
+      out.push(['history balanced (later)', ok, note]);
+    }
+    for (const way of ['done', 'skip', 'escape', 'back', 'door']) {
+      const entry = await marked(page);
+      await page.evaluate(async h => { const ex = window.__explore; if (ex.state.room !== h) { ex.goRoom(h); await new Promise(r => setTimeout(r, 500)); } }, home);
+      await offer(); await shown(page, '#sitdown');
+      await page.click('#sitdown .tr-next');                  // Yes
+      await page.waitForTimeout(500);
+      out.push([`Yes walks to Cuddlecore (${way})`, await page.evaluate(() => window.__explore.state.room === 'cuddlecore' && window.__explore.sitdown.step === 1)]);
+      out.push([`an object glows (${way})`, await page.evaluate(() => !!document.querySelector('.spot.tour-glow'))]);
+      if (way === 'done') {
+        let n = 1;
+        while (await page.evaluate(() => !document.getElementById('sitdown').classList.contains('last')) && n++ < 8) { await page.click('#sitdown .tr-next'); await page.waitForTimeout(250); }
+        out.push(['the last step is her closing line', await page.evaluate(() => /other things around the Inn/.test(document.querySelector('#sitdown .tr-line').textContent))]);
+        await page.click('#sitdown .tr-next');
+      } else {
+        await page.click('#sitdown .tr-next');
+        await page.waitForTimeout(250);
+        if (way === 'skip') await page.click('#sitdown .tr-skip');
+        else if (way === 'escape') await page.keyboard.press('Escape');
+        else if (way === 'back') out.push(['Back stays in the Inn (chat)', await back(page)]);
+        else out.push(['a glowing object opens its sheet', await press(page, 'locale-map') !== undefined]);
+      }
+      await page.waitForTimeout(600);
+      out.push([`${way} ends the chat`, !await isOpen(page, '#sitdown') && await page.evaluate(() => window.__explore.sitdown.step === 0)]);
+      if (way === 'escape' || way === 'back') out.push([`${way} takes you home`, await page.evaluate(h => window.__explore.state.room === h, home)]);
+      if (way === 'door') { for (const sel of ['#food-map', '#tell']) if (await isOpen(page, sel)) { await page.keyboard.press('Escape'); await page.waitForTimeout(500); } }
       out.push(...(await clean(page)).map(([c, ok, n]) => [`${c} (${way})`, ok, n]));
       const [ok, note] = await sameEntry(page, entry);
       out.push([`history balanced (${way})`, ok, note]);

@@ -35,7 +35,7 @@ export function install(inn) {
 
   // A quiet moment: not in the film, not touring, no unanswered tour offer, nothing open
   const tourOffered = () => !!inn.tour?.offering;
-  const quiet = () => inn.$('front-door').hidden && !inn.touring && !tourOffered() && !layers.any && !document.hidden;
+  const quiet = () => inn.$('front-door').hidden && !inn.touring && !inn.chatting && !inn.sitdown?.offering && !tourOffered() && !layers.any && !document.hidden;
 
   let timers = [], playing = false;
   /** Say a beat, a line at a time. keep: true leaves an open question's chips (the check-in offer) alone */

@@ -66,7 +66,7 @@ export function frontDoor({ active, track }) {
           </ul>
           <p><a href="/?door=1#story">About the Inn</a>: what it is, where the weather comes from, and what's kept.</p>
         </div>
-        <div class="welcome-btns"><button class="ok soft" id="welcome-tour" hidden>Show me round</button><button class="ok" id="welcome-ok">Come in</button></div>
+        <div class="welcome-btns"><button class="ok soft" id="welcome-tour" hidden>Show me round</button><button class="ok soft" id="welcome-chat" hidden>Sit down for a chat</button><button class="ok" id="welcome-ok">Come in</button></div>
       </div>`;
     document.body.appendChild(card);
   }
@@ -85,8 +85,10 @@ export function frontDoor({ active, track }) {
     $('welcome-ok').textContent = help ? 'Back to the Inn' : 'Come in';
     // The bell's card offers the first-visit tour to anyone (explore/tour.js hears wa-tour once the card has tucked away)
     $('welcome-tour').hidden = !help;
-    let tour = false;
+    $('welcome-chat').hidden = !help;
+    let tour = false, chat = false;
     $('welcome-tour').onclick = () => { tour = true; $('welcome-ok').click(); };
+    $('welcome-chat').onclick = () => { chat = true; $('welcome-ok').click(); };
     card.classList.add('open');
     $('welcome-ok').focus();
     closing = new Promise(done => {
@@ -104,6 +106,7 @@ export function frontDoor({ active, track }) {
         track('welcome_close');
         bell.focus();
         if (tour) dispatchEvent(new Event('wa-tour'));
+        if (chat) dispatchEvent(new Event('wa-sitdown'));
         done();
       };
       const onKey = e => { if (e.key === 'Escape') close(); };

@@ -56,6 +56,8 @@ test('tour, explainer and freebie events keep their parameters (tour_end stop is
   assert.deepEqual(cleanEvent('tour_end', { how: 'skip', stop: 3 }).params, { how: 'skip', stop: '3' });
   assert.deepEqual(cleanEvent('tour_end', { how: 'declined', stop: 0 }).params, { how: 'declined', stop: '0' });
   assert.deepEqual(cleanEvent('tour_offer', {}).params, {});
+  assert.deepEqual(cleanEvent('chat_start', { from: 'bell' }).params, { from: 'bell' });
+  assert.deepEqual(cleanEvent('chat_end', { how: 'later', step: 0 }).params, { how: 'later', step: '0' });
   assert.deepEqual(cleanEvent('tour_start', { from: 'arrival' }).params, { from: 'arrival' });
   assert.deepEqual(cleanEvent('explain_beat', { beat: 'b' }).params, { beat: 'b' });
   assert.deepEqual(cleanEvent('first_idea_open', { beat_a: 'yes' }).params, { beat_a: 'yes' });

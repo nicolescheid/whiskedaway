@@ -100,7 +100,7 @@ export function install(inn) {
   }
   setInterval(() => {
     inn.erwina?.tick({ still: !inn.drag && !document.hidden && performance.now() - inn.lastMove >= 1000 });   // the cat looks for a still second
-    if (!inn.hasLooked || inn.touring || inn.drag || document.hidden || performance.now() - inn.lastMove < 2000) return;
+    if (!inn.hasLooked || inn.touring || inn.chatting || inn.drag || document.hidden || performance.now() - inn.lastMove < 2000) return;
     const centre = inn.dir(inn.look.yaw, inn.look.pitch);
     for (const h of inn.hotspots) {
       const ang = THREE.MathUtils.radToDeg(centre.angleTo(h.v.clone().normalize()));

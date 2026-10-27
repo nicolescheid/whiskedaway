@@ -14,6 +14,7 @@ import { layers } from './layers.js';
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OFFERED = 'wa-tour-offered';
+const DWELL = 2600, HOLD = 4200;   // ms at a door before the view steps in; ms inside before it walks back out
 const STAND_IN = {
   offer: "First time at the Inn? I can show you round. It takes a minute.",
   yes: 'Yes, give me the tour',
@@ -34,12 +35,14 @@ const STAND_IN = {
   },
 };
 // The walk: which stop to stand at, which hotspot to face (and glow), and whose line. `map`: the bar's Map glows too
+// `inside`: if the guest pauses at the door, the view steps into that room on its own picture and turns to `face`. `keep`: it
+// stays there (the next stop is in the same room, or one through its door); otherwise it walks back out to the door
 const STOPS = [
-  { line: 'cuddlecore', room: 'hall-middle', spot: 'door-cuddlecore' },
-  { line: 'flourish', room: 'hall-middle', spot: 'door-flourish' },
-  { line: 'sweet-spells', room: 'hall-middle', spot: 'door-sweet-spells' },
-  { line: 'chiapothecary', room: 'hall-middle', spot: 'door-chiapothecary' },
-  { line: 'conservatory', room: 'chiapothecary', spot: 'chia-glasshouse-door', door: true },
+  { line: 'cuddlecore', room: 'hall-middle', spot: 'door-cuddlecore', inside: { room: 'cuddlecore', face: 'cauldron' } },
+  { line: 'flourish', room: 'hall-middle', spot: 'door-flourish', inside: { room: 'flourish', face: 'fl-range' } },
+  { line: 'sweet-spells', room: 'hall-middle', spot: 'door-sweet-spells', inside: { room: 'sweet-spells', face: 'spell-table' } },
+  { line: 'chiapothecary', room: 'hall-middle', spot: 'door-chiapothecary', inside: { room: 'chiapothecary', face: 'drawers', keep: true } },
+  { line: 'conservatory', room: 'chiapothecary', spot: 'chia-glasshouse-door', door: true, inside: { room: 'glasshouse', face: 'plant-lavender', keep: true } },
   { line: 'garden', room: 'glasshouse', spot: 'garden-door', door: true, map: true },
   { line: 'desk', room: 'hall-entrance', spot: 'checkin-desk', door: true, last: true },
 ];
@@ -104,15 +107,19 @@ export function install(inn) {
     inn.offerCheckin(how === 'ignored' ? {} : { line: T.declined });
   }
 
+  let glowSpot = null, timers = [];   // glowSpot: the hotspot that glows (the door, or what's faced inside)
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
   function glow(on) {
     const s = STOPS[at];
-    for (const h of inn.hotspots) h.el.classList.toggle('tour-glow', !!on && h.id === s?.spot);
+    for (const h of inn.hotspots) h.el.classList.toggle('tour-glow', !!on && h.id === (glowSpot || s?.spot));
     inn.$('btn-map').classList.toggle('tour-glow', !!on && !!s?.map);
   }
   // Walk to a stop: through a door (its sound) into another room, or along the hall; then the view glides onto the spot
   function go(i) {
+    clearTimers();
     glow(false);
     at = i;
+    glowSpot = null;
     const s = STOPS[i];
     moving = true;
     if (s.room !== inn.state.room) {
@@ -128,6 +135,8 @@ export function install(inn) {
       inn.lookTo(portraitDesk ? 52 : p.yaw, portraitDesk ? -16 : p.pitch);
     }
     glow(true);
+    // Only a guest who stays at the door sees inside it, so a quick Next never fetches the room's picture
+    if (s.inside) timers.push(setTimeout(() => stepIn(i), DWELL));
     $('.tr-line').textContent = T.stops[s.line];
     [...$('.tr-dots').children].forEach((d, k) => d.classList.toggle('on', k <= i));
     $('.tr-count').textContent = T.of.replace('{n}', i + 1).replace('{m}', STOPS.length);
@@ -135,6 +144,37 @@ export function install(inn) {
     $('.tr-skip').textContent = s.last ? T.notNow : T.skip;
     root.classList.toggle('last', !!s.last);
     place();
+  }
+
+  // Step through the door: the room's own picture, turned to something characteristic; then, unless the next stop is in there too,
+  // back out to the door
+  function stepIn(i) {
+    const s = STOPS[i];
+    if (!inn.touring || at !== i || !s.inside) return;
+    glow(false);
+    sound.door?.();
+    moving = true;
+    inn.goRoom(s.inside.room, undefined, { quiet: true });
+    moving = false;
+    const p = inn.spots[s.inside.face];
+    if (p) inn.lookTo(p.yaw, p.pitch);
+    glowSpot = s.inside.face;
+    glow(true);
+    if (!s.inside.keep) timers.push(setTimeout(() => stepOut(i), HOLD));
+  }
+  function stepOut(i) {
+    const s = STOPS[i];
+    if (!inn.touring || at !== i) return;
+    glow(false);
+    glowSpot = null;
+    sound.door?.();
+    moving = true;
+    const to = inn.ROOMS[s.room]?.spots?.[s.spot];
+    inn.goRoom(s.room, to ? to.yaw - 30 : undefined, { quiet: true });
+    moving = false;
+    const p = inn.spots[s.spot];
+    if (p) inn.lookTo(p.yaw, p.pitch);
+    glow(true);
   }
 
   function start(src = 'arrival') {
@@ -157,12 +197,20 @@ export function install(inn) {
   function end(how) {
     if (!inn.touring) return;
     const stop = at + 1;
+    const peeking = glowSpot && STOPS[at]?.inside && !STOPS[at].inside.keep && inn.state.room === STOPS[at].inside.room;
+    clearTimers();
     glow(false);
+    glowSpot = null;
     inn.touring = false;
     root.hidden = true;
     layers.closed(layer, { how: how === 'back' ? 'back' : 'self', refocus: ['skip', 'escape', 'back', 'finished'].includes(how) });
     layer = null;
     at = -1;
+    if (peeking && how === 'skip') {                  // Skip while peeking into a room: back out to the door, not left inside
+      moving = true;
+      inn.goRoom(STOPS[stop - 1].room, undefined, { quiet: true });
+      moving = false;
+    }
     if (['escape', 'back'].includes(how) && home && home.room !== inn.state.room) {   // Escape and Back put them home (QA 6 F3); Skip leaves them where they stand
       moving = true;
       inn.goRoom(home.room, home.yaw, { quiet: true });
