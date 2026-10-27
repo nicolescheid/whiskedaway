@@ -52,9 +52,12 @@ Flourish, Sweet Spells and the Chiapothecary are being built on their own branch
   picks up the site's `wrangler.jsonc` from the parent folder instead.
 - **Bot guard:** `BOT_GUARD` in `worker/wrangler.toml` is `enforce`. If a frontend change needs to
   roll out before the client sends passes, set it to `log` for a while.
-- **Explore page locally:** run `npm run dev` and open `/blender/explore.html`, or
-  `/blender/explore.html?ai=1` for the AI navigator (it uses the live Worker with a visitor pass).
-  `?room=hall-entrance`, `?room=hall-middle` or `?room=glasshouse` opens a room directly.
+- **Explore page locally:** run `npm run dev` and open `http://localhost:5173/`, the Inn at `/` as on the live site
+  (`/?ai=1` for the AI navigator, which uses the live Worker with a visitor pass). `/?room=hall-entrance`, `/?room=hall-middle`
+  or `/?room=glasshouse` opens a room directly. The old React Inn is at `/archive/`.
+- **Checks:** `npm run check:quick` while you iterate (about a minute: the build, the unit tests, one pass over the Inn; it
+  prints "quick, not a deploy gate"). `npm run check` is the deploy gate (about 10 minutes: every room at five sizes by day and
+  night, then the sheet contract). Run the full one before every deploy, never while Blender renders.
 - **Renders:** quick previews run on the laptop. Full 8K renders run on Runpod (see
   `docs/cloud-rendering.md`). Fetch the assets first with `python -I blender/fetch_assets.py`.
 

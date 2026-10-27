@@ -100,8 +100,11 @@ Each one: its own module with `install(inn)`, a layer (rule 2), a contract row (
 
 ## Tests
 
-- `npm run check`: build, unit tests (test/*.test.mjs), every room at five sizes by day and night, the front door, the star
-  dial, Gemma in every room, then the sheet contract at 375x812 and 1280x800. About 6 minutes.
+- `npm run check:quick` (about a minute): for iterating. The build, the unit tests, and one pass over the Inn: every room at
+  1280x800 by day, the front door, the star dial, Gemma in every room. It skips the night pass, the other four sizes and the
+  sheet contract, and prints "quick, not a deploy gate".
+- `npm run check` is the deploy gate and the only one that counts before a deploy: build, unit tests (test/*.test.mjs), every room at five sizes by day and night, the front door, the star
+  dial, Gemma in every room, then the sheet contract at 375x812 and 1280x800. About 10 minutes.
 - `npm run check -- --no-build --sheets-only`: just the sheet contract. `SHEETS_ONLY=pantry,book` runs some sheets only;
   `SHEETS_VERBOSE=1` logs each case.
 - Test hooks: hotspots carry `data-spot`; `window.__explore` has `world`, `spot(id)`, `goRoom`, `lookTo`, `chatUI`, `book`;

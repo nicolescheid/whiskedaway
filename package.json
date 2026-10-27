@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "deploy": "npm run build && npx wrangler@latest deploy",
     "deploy:api": "npx wrangler@latest deploy --config worker/wrangler.toml",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "check:quick": "node scripts/check.mjs --quick"
   },
   "dependencies": {
     "jspdf": "^2.5.1",

@@ -97,14 +97,16 @@ test('the navigator trim caps every list and string and drops fields the prompt 
 
 test('readCapped counts the bytes actually read, whatever Content-Length says', async () => {
   assert.deepEqual(await readCapped(post('/recipe', 'a'.repeat(100)), 100), { text: 'a'.repeat(100) });
-  assert.deepEqual(await readCapped(post('/recipe', 'a'.repeat(101)), 100), { tooLarge: true });
+  assert.deepEqual(await readCapped(post('/recipe', 'a'.repeat(101)), 100), { tooLarge: true, counted: 101 });
   // a body with no Content-Length (streamed) that runs past the cap
   const stream = new ReadableStream({ pull(ctl) { ctl.enqueue(new Uint8Array(40)); } });
   const r = new Request('https://genie.test/recipe', { method: 'POST', body: stream, duplex: 'half' });
-  assert.deepEqual(await readCapped(r, 100), { tooLarge: true });
+  const big = await readCapped(r, 100);
+  assert.equal(big.tooLarge, true);
+  assert.ok(big.counted > 100);
   // a lying Content-Length is judged by the header alone
   const lie = { headers: new Headers({ 'Content-Length': '999999' }), body: { cancel: async () => {} } };
-  assert.deepEqual(await readCapped(lie, 100), { tooLarge: true });
+  assert.deepEqual(await readCapped(lie, 100), { tooLarge: true, counted: 0 });
   assert.deepEqual(await readCapped(new Request('https://genie.test/recipe', { method: 'POST' }), 100), { text: '' });
 });
 
@@ -134,6 +136,21 @@ for (const [path, cap] of [['/recipe', BODY_CAPS['/recipe']], ['/rewrite', BODY_
     assert.deepEqual(calls, [], 'no Claude call, no Google forward, no Turnstile call');
   });
 }
+
+test('a 413 logs one size line: route, cap, declared and counted bytes, none of the body or the query', async () => {
+  const lines = [], realLog = console.log;
+  console.log = l => lines.push(String(l));
+  try {
+    const secret = 'SECRET-BODY-TEXT';
+    const body = JSON.stringify({ pad: 'x'.repeat(5000), secret });
+    // no Content-Length (the body is counted as it is read), then one that declares it
+    assert.equal((await run(post('/session?name=private', body), [])).status, 413);
+    assert.equal((await run(post('/session', body, { 'Content-Length': String(bytes(body)) }), [])).status, 413);
+    assert.deepEqual(lines, [`413 too_large route=/session cap=4096 declared=none counted=${bytes(body)}`,
+      `413 too_large route=/session cap=4096 declared=${bytes(body)} counted=0`]);
+    assert.ok(lines.every(l => !l.includes(secret) && !l.includes('private')));
+  } finally { console.log = realLog; }
+});
 
 test('/recipe: the fullest real payload goes through, and the prompt is cut to size', async () => {
   const calls = [];

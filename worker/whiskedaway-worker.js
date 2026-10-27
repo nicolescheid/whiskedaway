@@ -5,7 +5,7 @@
 import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
 import { kitchenLine, addinsLine, feelsLine } from './inn-extras.js';
 import { cacheKey, validRecipe, countKey, countWriteout, CACHE_TTL } from './writeout-cache.js';
-import { capFor, declaredTooLarge, readCapped, cleanWritePayload, cleanNavigatePayload } from './limits.js';
+import { capFor, declaredTooLarge, readCapped, tooLargeLine, cleanWritePayload, cleanNavigatePayload } from './limits.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -582,7 +582,7 @@ export default {
 
     // Every route that reads a body has a size cap (limits.js). A Content-Length over it is turned away here, before anything else
     // happens; the bytes actually read are counted again where the body is read
-    if (declaredTooLarge(request, capFor(path))) return withCors(tooLarge(), request, env);
+    if (declaredTooLarge(request, capFor(path))) return withCors(tooLarge(request, capFor(path), 0), request, env);
 
     // Turnstile token in, signed visitor pass out
     if (path === '/session') {
@@ -614,8 +614,9 @@ async function handleRecipe(request, env, { rewrite = false, ctx = null } = {}) 
   {
 
     try {
-      const body = await readCapped(request, capFor(rewrite ? '/rewrite' : '/recipe'));
-      if (body.tooLarge) return tooLarge();
+      const cap = capFor(rewrite ? '/rewrite' : '/recipe');
+      const body = await readCapped(request, cap);
+      if (body.tooLarge) return tooLarge(request, cap, body.counted);
       const payload = cleanWritePayload(JSON.parse(body.text));   // every visitor-typed field cut to size (limits.js)
       // /rewrite only re-writes an Inn recipe; the Inn's page sends `rewrite` only there
       if (rewrite !== !!payload.rewrite || (rewrite && payload.tome_id !== 'inn-idea')) return jsonResponse({ error: 'bad_rewrite' }, 400);
@@ -1043,7 +1044,7 @@ async function handleNavigate(request, env) {
   });
   try {
     const body = await readCapped(request, capFor('/navigate'));
-    if (body.tooLarge) return tooLarge();
+    if (body.tooLarge) return tooLarge(request, capFor('/navigate'), body.counted);
     const p = cleanNavigatePayload(JSON.parse(body.text));   // lists capped, every string cut to size (limits.js)
     const objects = p.objects.slice(0, 40);
     const atoms = p.atoms.slice(0, 60);
@@ -1196,8 +1197,9 @@ function withCors(response, request, env) {
   return res;
 }
 
-/** 413 for a body over its route's cap (limits.js). Short, and the same for every route */
-function tooLarge() {
+/** 413 for a body over its route's cap (limits.js). Short, and the same for every route; logs one size line (no body content) */
+function tooLarge(request, cap, counted) {
+  console.log(tooLargeLine(request, cap, counted));
   return jsonResponse({ error: 'too_large' }, 413);
 }
 
@@ -1258,7 +1260,7 @@ async function handleSession(request, env) {
   }
   let token;
   const body = await readCapped(request, capFor('/session'));
-  if (body.tooLarge) return tooLarge();
+  if (body.tooLarge) return tooLarge(request, capFor('/session'), body.counted);
   try { ({ token } = JSON.parse(body.text)); } catch { /* handled below */ }
   if (!token || typeof token !== 'string' || token.length > 2048) {
     return jsonResponse({ error: 'bot_check' }, 403);
@@ -1292,7 +1294,7 @@ const MP_URL = 'https://www.google-analytics.com/mp/collect';
 async function handleMeasure(request, env, ctx) {
   const done = () => new Response(null, { status: 204, headers: corsHeaders });
   const body0 = await readCapped(request, capFor('/m'));
-  if (body0.tooLarge) return tooLarge();   // the page never sends this much; it does not retry a 413
+  if (body0.tooLarge) return tooLarge(request, capFor('/m'), body0.counted);   // the page never sends this much; it does not retry a 413
   const text = body0.text;
   if (!text) return done();
   let body;
