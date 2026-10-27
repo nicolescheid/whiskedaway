@@ -1681,6 +1681,13 @@
     "_when": "Tapping a dial entry with no door behind it (Nourish Academy, Cravings Decoded). {label} is filled in.",
     "closed": "{label} is only engraved on the dial. There is no door behind it."
   },
+  "foodMap": {
+    "_about": "The food map (explore/food-map.js). noRecipes: Gemma, once, when the only pins just added are on countries she has no dishes from yet. The rest are the sheet's small labels.",
+    "noRecipes": "I don't have dishes from there yet, but I'll lean that way.",
+    "find": "Find a country",
+    "findNone": "No country by that name.",
+    "noDishes": "no dishes from there yet"
+  },
   "cast": {
     "_about": "Centrepiece write-outs (spell table, Cuddlecore pot, Flourish table). Stage 1 (basket): the touch puts the room's idea in the basket and opens checkout with it ticked. added: said then. writing: while she writes after the visitor taps Write (5-15 s). done: as it lands in the book. atCap: today's 3 are used, the leaflet waits in the basket. failed: didn't work, it stays in the basket.",
     "spell": {
