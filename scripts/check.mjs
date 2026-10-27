@@ -2,6 +2,9 @@
 // Builds the site, runs the navigator unit tests, serves dist/ on a local port and walks the Inn in a real browser:
 // every room at five sizes, by day and by night. Prints PASS, or FAIL with a short list. Exit code 0 or 1.
 //   node scripts/check.mjs [--no-build] [--headed] [--only=375x812] [--sheets-only]
+//   node scripts/check.mjs --quick     (npm run check:quick) for builders while they iterate: the build, the unit tests and one
+//     pass over the Inn (every room at 1280x800 by day, the front door, the star dial, Gemma in every room), about a minute.
+//     It skips the night pass, the other four sizes and the sheet contract. Its verdict says it is not the deploy gate.
 // Then the sheet contract (scripts/sheet-contract.mjs): every sheet opened from its real opener and closed every way out.
 // Uses the Chrome (or Edge) already installed, through playwright-core: no browser download.
 // The genie Worker is never called: its requests are answered locally with empty replies, and the AI navigator is
@@ -17,6 +20,7 @@ import { sheetContract, judge } from './sheet-contract.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const flag = f => args.includes(f);
+const quick = flag('--quick');
 const only = args.find(a => a.startsWith('--only='))?.slice(7);
 const t0 = Date.now();
 const failures = [];
@@ -69,11 +73,11 @@ for (const channel of ['chrome', 'msedge']) {
 }
 if (!browser) { console.log('\nFAIL\n- no Chrome or Edge found for the browser check'); process.exit(1); }
 
-const SIZES = flag('--sheets-only') ? [] : [[375, 812], [375, 635], [724, 340], [812, 375], [1280, 800]].filter(([w, h]) => !only || only === `${w}x${h}`);
+const SIZES = flag('--sheets-only') ? [] : (quick ? [[1280, 800]] : [[375, 812], [375, 635], [724, 340], [812, 375], [1280, 800]]).filter(([w, h]) => !only || only === `${w}x${h}`);
 const hall = JSON.parse(readFileSync(join(root, 'blender/explore/hallway-world.json'), 'utf8'));
 const garden = JSON.parse(readFileSync(join(root, 'blender/explore/garden-world.json'), 'utf8'));
 const ROOMS = ['cuddlecore', ...Object.keys(hall.stops), 'glasshouse', 'flourish', 'sweet-spells', 'chiapothecary', ...Object.keys(garden.stops)];
-const TIMES = ['midday', 'night'];
+const TIMES = quick ? ['midday'] : ['midday', 'night'];
 
 async function openPage({ width, height, time, path, phone }) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, hasTouch: phone, isMobile: false });
@@ -190,7 +194,7 @@ step('Gemma in every room');
 
 // The sheet contract: known failures are listed, new ones fail
 let sheets = null;
-{
+if (!quick) {
   const sizes = [[375, 812], [1280, 800]].filter(([w, h]) => !only || only === `${w}x${h}`);
   try { sheets = judge(await sheetContract({ browser, base, root, sizes, step })); } catch (e) { fail(`sheet contract: ${String(e.message).split('\n')[0]}`); }
   for (const f of sheets?.fails || []) fail(`sheet contract: ${f}`);

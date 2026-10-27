@@ -21,12 +21,29 @@ export const declaredTooLarge = (request, cap) => {
   return Number.isFinite(n) && n > cap;
 };
 
+/** What the Content-Length header declares, or null when it is missing or not a number */
+export const declaredBytes = request => {
+  const h = request.headers.get('Content-Length');
+  return h !== null && h !== '' && Number.isFinite(Number(h)) ? Number(h) : null;
+};
+
+/**
+ * The one log line for a 413 (quick-check, 28 Oct): the route, the cap, the bytes the header declared and the bytes counted before
+ * the read stopped. Never any of the body, the query string or anything about the guest, so we learn real sizes and nothing else.
+ */
+export const tooLargeLine = (request, cap, counted = 0) => {
+  let route = '?';
+  try { route = new URL(request.url).pathname.slice(0, 40); } catch { /* no URL */ }
+  return `413 too_large route=${route} cap=${cap} declared=${declaredBytes(request) ?? 'none'} counted=${counted}`;
+};
+
 /**
  * The request body as text, read in pieces and counted, so a missing or false Content-Length cannot get past the cap.
- * Returns { text } or { tooLarge: true }; a body that cannot be read comes back as an empty text.
+ * Returns { text } or { tooLarge: true, counted } (counted: bytes read before it stopped; 0 when the header alone refused it);
+ * a body that cannot be read comes back as an empty text.
  */
 export async function readCapped(request, cap) {
-  if (declaredTooLarge(request, cap)) { request.body?.cancel().catch(() => {}); return { tooLarge: true }; }
+  if (declaredTooLarge(request, cap)) { request.body?.cancel().catch(() => {}); return { tooLarge: true, counted: 0 }; }
   if (!request.body) return { text: '' };
   const reader = request.body.getReader(), chunks = [];
   let total = 0;
@@ -35,7 +52,7 @@ export async function readCapped(request, cap) {
       const { done, value } = await reader.read();
       if (done) break;
       total += value.byteLength;
-      if (total > cap) { reader.cancel().catch(() => {}); return { tooLarge: true }; }
+      if (total > cap) { reader.cancel().catch(() => {}); return { tooLarge: true, counted: total }; }
       chunks.push(value);
     }
   } catch { return { text: '' }; }
