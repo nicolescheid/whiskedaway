@@ -9,6 +9,8 @@
     "build-up": { "label": "a proper meal from scratch", "themes": ["nourishing", "whole-food", "meal", "protein", "pulses", "eggs", "garden"] }
   },
   "objects": {
+    "fl-twine": { "label": "The cone of twine", "ref": "the cone of twine", "type": "interactive", "tool": "setting-twine", "themes": [] },
+    "fl-lamp": { "label": "The lamp", "ref": "the lamp", "type": "interactive", "tool": "setting-lamp", "themes": [] },
     "fl-table": { "label": "Lay the Table", "ref": "the breakfast table", "type": "submit", "tool": "generate", "always_visible": true,
                   "themes": ["nourishing", "breakfast", "eggs", "meal", "whole-food"],
                   "tool_title": "Lay the Table" },

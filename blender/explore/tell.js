@@ -205,7 +205,7 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
   const DRAW = { pantry: drawPantry, dietary: drawDietary, checkin: drawCheckin, kitchen: () => drawKitchen(), menu: drawMenu };
 
   // ---------- open, Done, forget, close
-  function open(k, src = 'tag', { keepOpener = false, appliance = null } = {}) {
+  function open(k, src = 'tag', { keepOpener = false, appliance = null, row = null } = {}) {
     if (k === 'map' && openMap) { if (!root.hidden) close({ silent: true }); return openMap(src); }   // the food map's own sheet
     if (!DRAW[k]) return;
     if (!keepOpener) opener = document.activeElement;
@@ -225,6 +225,9 @@ export function createTell({ visit, lines = {}, kitchenLines = {}, track, before
     layer = layers.open({ el: root, name: 'tell', opener, close: how => close({ viaBack: how === 'back' }) });   // the menu into a sheet: the same layer
     if (!was && !reduce()) $('.tl-box').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
     if (k !== 'menu') track?.('tell_open', { kind: k, from: src });
+    // The check-in opened from an object that shows one answer (settings-objects.js): that row is the one focused and in view
+    const rowEl = k === 'checkin' && row && (row === 'energy' ? body.querySelector('.tl-candles button[aria-pressed="true"]') || body.querySelector('.tl-candles button') : row === 'time' ? body.querySelector('.ck-string .ck-track') : null);
+    if (rowEl) { rowEl.focus({ preventScroll: true }); rowEl.scrollIntoView({ block: 'center' }); return; }
     (body.querySelector('.kt-here') || body.querySelector('input, button') || $('.tl-x')).focus({ preventScroll: true });
   }
   function close({ silent = false, viaBack = false, keep = true } = {}) {

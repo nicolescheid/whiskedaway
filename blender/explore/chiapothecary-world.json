@@ -14,6 +14,7 @@
     "skin": { "label": "something with vitamin C", "themes": ["skin", "vitamins", "citrus", "fruity", "sunny"] }
   },
   "objects": {
+    "chia-suncatcher": { "label": "The suncatcher", "ref": "the suncatcher", "type": "interactive", "tool": "setting-suncatcher", "themes": [] },
     "pudding-jars": { "label": "Mix an experiment", "ref": "the pudding jars on the counter", "type": "submit", "tool": "generate", "tool_title": "Mix an experiment",
                       "themes": ["breakfast", "no-cook", "hands-on", "routine", "overnight"] },
     "drawers": { "label": "Pick your add-ins", "map": "The drawers", "ref": "the wall of drawers", "type": "interactive", "tool": "add-ins",
