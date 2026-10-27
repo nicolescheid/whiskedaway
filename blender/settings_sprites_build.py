@@ -173,9 +173,9 @@ def wound(m, scale=60.0, rough=0.85):
 # ---------------------------------------------------------------- the objects
 def lamp(lit):
     """A little enamel table lamp with a pleated cream shade (0.3 m): the Flourish lamp."""
-    enamel = mat("enamel", srgb("#cdbf9f"), rough=0.35, coat=0.4)
+    enamel = mat("enamel", srgb("#9c6b3a"), rough=0.4, metal=0.6)
     brass = mat("brass", srgb("#bd9655"), rough=0.3, metal=1.0)
-    shade_c = srgb("#e3c98f")
+    shade_c = srgb("#dba85a")
     shade = mat("shade", shade_c, rough=0.9, emission=(1.0, 0.72, 0.36, 1) if lit else None, strength=1.1 if lit else 0.0)
     lathe("base", [(0, 0), (0.06, 0.0), (0.066, 0.012), (0.055, 0.06), (0.03, 0.1), (0.014, 0.13), (0.0, 0.13)], enamel)
     cyl("stem", (0, 0, 0.16), 0.007, 0.07, brass, bevel=0.0)
