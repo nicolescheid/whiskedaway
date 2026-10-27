@@ -8,6 +8,7 @@
         1.6
       ],
       "hotspots": {
+          "ss-ribbon": { "label": "The spool of ribbon", "type": "interactive", "overlay": null, "yaw": 38, "pitch": -26, "distance": 1.3, "visible": true },
         "window-seat": {
           "label": "The window seat",
           "type": "ambient",

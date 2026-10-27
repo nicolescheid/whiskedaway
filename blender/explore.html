@@ -711,6 +711,7 @@ import { install as installThemeGlue } from './explore/theme-glue.js';
 import { install as installPanels } from './explore/panels.js';
 import { install as installInnDialogs } from './explore/inn-dialogs.js';
 import { install as installCandles } from './explore/candles.js';
+import { install as installSettingsObjects } from './explore/settings-objects.js';
 import { install as installArrival } from './explore/arrival.js';
 import { install as installPanorama } from './explore/panorama.js';
 import { install as installRooms } from './explore/rooms.js';
@@ -918,6 +919,7 @@ installPanels(inn);   // the bar, the notebook and Forget
 installInnMap(inn);   // the Inn map: the bar's Map button, a plan of the Inn, and In this room
 installInnDialogs(inn);   // the Inn's small dialogs: barometer, clock, seasons wheel, tool cards
 installCandles(inn);   // the energy candles: the lit flame and chooseEnergy
+installSettingsObjects(inn);   // the lamp, suncatcher, yarn, twine and ribbon that show the check-in
 installArrival(inn);   // arrival: the check-in offer in the foyer, the weather question, settle
 installTour(inn);   // the first-visit tour: Gemma shows a new visitor round, ending at the desk
 installExplainer(inn);   // after the tour: the ideas beats, the first bubble's bounce, the sound button's nudge (never over the tour)

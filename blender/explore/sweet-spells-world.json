@@ -11,6 +11,7 @@
     "bake": { "label": "baking something to share", "themes": ["baking", "celebration", "hands-on"] }
   },
   "objects": {
+    "ss-ribbon": { "label": "The spool of ribbon", "ref": "the spool of ribbon", "type": "interactive", "tool": "setting-ribbon", "themes": [] },
     "spell-table": { "label": "Cast a spell", "ref": "the spell table", "type": "submit", "tool": "generate", "tool_title": "Cast a spell",
                      "themes": ["treat", "sweet", "hands-on", "baking"] },
     "spell-books": { "label": "Cravings", "map": "The spell books", "ref": "the spell books", "type": "interactive", "tool": "flavour",

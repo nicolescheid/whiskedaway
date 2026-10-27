@@ -1,4 +1,5 @@
 {
+  "cc-yarn": { "label": "The ball of yarn", "overlay": null, "type": "interactive", "yaw": 121, "pitch": -20.5, "distance": 2.2 },
   "window": {
     "label": "The rain",
     "overlay": null,

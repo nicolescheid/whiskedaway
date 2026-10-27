@@ -93,6 +93,7 @@
     }
   },
   "objects": {
+    "cc-yarn": { "label": "The ball of yarn", "ref": "the ball of yarn", "type": "interactive", "tool": "setting-yarn", "themes": [] },
     "window": {
       "label": "The window",
       "ref": "the window",

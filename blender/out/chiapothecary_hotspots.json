@@ -54,6 +54,7 @@
         1.6
       ],
       "hotspots": {
+          "chia-suncatcher": { "label": "The suncatcher", "type": "interactive", "overlay": null, "yaw": 160, "pitch": 9, "distance": 1.8, "visible": true },
         "chia-lane-window": {
           "label": "The lane",
           "type": "ambient",

@@ -2086,6 +2086,45 @@
     "jarTap": "Told to keep off something? Tap what it is and I'll leave it out of the cooking.",
     "jar": { "aged-cheese": { "short": "aged cheese, cured meats" } }
   },
+  "settings": {
+    "lamp": {
+      "unset": "A little lamp. Tell me how much you've got in you, and I'll set it to match.",
+      "burnt-out": "The lamp's out, same as you. We'll keep tonight gentle.",
+      "low": "Turned right down. I'll keep everything simple.",
+      "half": "Burning at half. A bit of care in it, nothing fiddly.",
+      "three-quarters": "Nice and bright. You've got plenty to give.",
+      "full": "Lit up all the way. Let's make something proper."
+    },
+    "suncatcher": {
+      "unset": "It catches whatever light there is. Tell me your energy and watch it shine.",
+      "burnt-out": "Barely a glint. A quiet day is fine by me.",
+      "low": "Just a faint glimmer. Low and slow suits me.",
+      "half": "A few colours on the wall. Half a candle, half a rainbow.",
+      "three-quarters": "Plenty of colour today. That's a good sign.",
+      "full": "Look at it go. You've got a lot in you today."
+    },
+    "yarn": {
+      "unset": "A fresh ball of yarn. Tell me how patient you are and I'll unwind some.",
+      "quick": "Hardly any off the ball. Short on patience: quick it is.",
+      "half": "A little unwound. I'll keep it to about half an hour.",
+      "hour": "Well unwound. You've got a good while.",
+      "any": "Nearly all unwound. All the time in the world."
+    },
+    "twine": {
+      "unset": "A full cone of twine. Tell me how patient you are and I'll pull some out.",
+      "quick": "Just a short end pulled. Quick it is.",
+      "half": "A bit pulled out. I'll keep things to half an hour.",
+      "hour": "Plenty pulled out. A good long while, then.",
+      "any": "Pulled right out. No rush at all."
+    },
+    "ribbon": {
+      "unset": "A full spool of ribbon. Tell me how patient you are and I'll unroll it.",
+      "quick": "Barely a curl off the spool. Quick it is.",
+      "half": "A little unrolled. Half an hour, say.",
+      "hour": "Well unrolled. You've got a good while.",
+      "any": "Unrolled the whole way. Take all the time you like."
+    }
+  },
   "tour": {
     "_about": "The first-visit tour (explore/tour.js, tour-plan.md): the offer after the door film, one line at each stop, and her lines when it's declined, skipped or ends at the desk. The chips (yes, no) are Nicole's words. Every line under 100 characters, no health claims.",
     "offer": "First time at the Inn? I can show you round. It takes a minute.",

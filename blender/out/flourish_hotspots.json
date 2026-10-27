@@ -8,6 +8,8 @@
         1.6
       ],
       "hotspots": {
+          "fl-twine": { "label": "The cone of twine", "type": "interactive", "overlay": null, "yaw": -158, "pitch": -29, "distance": 1.3, "visible": true },
+          "fl-lamp": { "label": "The lamp", "type": "interactive", "overlay": null, "yaw": 107, "pitch": -17, "distance": 2.1, "visible": true },
         "fl-window": {
           "label": "The sea",
           "type": "ambient",
