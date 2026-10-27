@@ -11,7 +11,7 @@ import { visit } from './visit-state.js';
 // What each object is: its hotspot (where its body sits), the sprite's size in metres (the build script's SPAN) and where the
 // sprite's centre lies from the body in metres (right, up), `big` (a little larger than life so it reads at phone size), the row it opens
 const KINDS = {
-  lamp:       { id: 'fl-lamp',         key: 'energy', row: 'energy', span: 0.46, off: [0, 0.03], big: 1.15 },
+  lamp:       { id: 'fl-lamp',         key: 'energy', row: 'energy', span: 0.46, off: [0, 0.128], big: 1.15 },
   suncatcher: { id: 'chia-suncatcher', key: 'energy', row: 'energy', span: 0.44, off: [0, 0], big: 1.5 },
   yarn:       { id: 'cc-yarn',         key: 'time',   row: 'time',   span: 0.42, off: [0.12, -0.01], big: 1.5 },
   twine:      { id: 'fl-twine',        key: 'time',   row: 'time',   span: 0.42, off: [0.06, -0.01], big: 1.5 },
@@ -85,8 +85,8 @@ export function install(inn) {
       place(P.body, kind, s); place(P.lit, kind, s);
       P.body.material.color.copy(rgb); P.lit.material.color.copy(rgb);
       P.lit.material.opacity = level;                                   // the shade warms as the candle burns up
-      place(P.glow, kind, s, 1.9);
-      P.glow.material.opacity = level * (T.night ? 1 : 0.55);            // by day a lamp is a gentle glow, at night it lights the shelf
+      place(P.glow, kind, s, 2.4);
+      P.glow.material.opacity = Math.min(1, level * (T.night ? 1.2 : 0.8));            // by day a lamp is a gentle glow, at night it lights the shelf
       P.glow.position.y += 0.02;
     } else if (kind === 'suncatcher') {
       P.body.material.map = tex('suncatcher'); place(P.body, kind, s);
