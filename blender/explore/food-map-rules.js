@@ -13,14 +13,29 @@ export function tidy(fm, countries) {
 }
 export const isEmpty = fm => PENS.every(p => !fm[p].length);
 
-/** Familiar cuisines (home, then family, then loved: the order write-outs and lines use), and near ones (their neighbours') */
+/** Does the Inn have dishes from this country yet? */
+export const hasRecipes = c => !!c?.cuisines?.length;
+
+/** Familiar cuisines (home, then family, then loved: the order write-outs and lines use), and near ones (their neighbours').
+ *  A pinned country with no recipes yet adds nothing familiar; its near cuisines come from its neighbours and its part of the world
+ *  (same sub-region, else the same region), so the dial still has somewhere to lean. */
 export function cuisineSets(fm, countries) {
   const byId = Object.fromEntries(countries.map(c => [c.id, c]));
+  const cuisinesOf = cs => cs.flatMap(c => c.cuisines || []);
   const ids = uniq(PENS.flatMap(p => fm[p]));
   const familiar = uniq(ids.flatMap(id => byId[id]?.cuisines || []));
-  const near = uniq(ids.flatMap(id => byId[id]?.neighbours || []).flatMap(id => byId[id]?.cuisines || [])).filter(c => !familiar.includes(c));
+  const nearIds = ids.flatMap(id => byId[id]?.neighbours || []).map(id => byId[id]).filter(Boolean);
+  const near = cuisinesOf(nearIds);
+  for (const id of ids) {
+    const c = byId[id];
+    if (!c || hasRecipes(c)) continue;
+    const others = countries.filter(o => o.id !== id);
+    const sub = c.sub ? cuisinesOf(others.filter(o => o.sub === c.sub)) : [];
+    near.push(...sub);
+    if (!sub.length && !cuisinesOf(c.neighbours.map(n => byId[n]).filter(Boolean)).length && c.region) near.push(...cuisinesOf(others.filter(o => o.region === c.region)));
+  }
   const heritage = uniq(fm.heritage.flatMap(id => byId[id]?.cuisines || []));
-  return { familiar, near, heritage };
+  return { familiar, near: uniq(near).filter(c => !familiar.includes(c)), heritage };
 }
 
 /** The shopping-words country the pins imply: the first home pin that is a shopping country, else null (heritage never sets it) */
