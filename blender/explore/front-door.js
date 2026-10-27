@@ -85,7 +85,10 @@ export function frontDoor({ active, track }) {
     $('welcome-ok').textContent = help ? 'Back to the Inn' : 'Come in';
     // The bell's card offers the first-visit tour to anyone (explore/tour.js hears wa-tour once the card has tucked away)
     $('welcome-tour').hidden = !help;
-    $('welcome-chat').hidden = !help;
+    // ...and "Sit down for a chat" once they've said Later to it or skipped it (explore/sitdown.js sets wa-chat-bell)
+    let chatOnBell = false;
+    try { chatOnBell = localStorage.getItem('wa-chat-bell') === '1'; } catch { /* storage blocked: no chat on the bell */ }
+    $('welcome-chat').hidden = !help || !chatOnBell;
     let tour = false, chat = false;
     $('welcome-tour').onclick = () => { tour = true; $('welcome-ok').click(); };
     $('welcome-chat').onclick = () => { chat = true; $('welcome-ok').click(); };

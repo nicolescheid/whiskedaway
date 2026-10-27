@@ -495,7 +495,7 @@ const JOURNEYS = [
     return out;
   } },
   // Shall we sit down for a chat? (26 Oct, sitdown.js): offered once, Yes walks to Cuddlecore with one glowing object a step,
-  // Later leaves it on the bell's card; Skip, Escape and Back end it (Escape and Back take you home), a tap goes on
+  // Later leaves it on the bell's card (not there before); Skip, Escape and Back end it (Escape and Back take you home), a tap goes on
   { id: 'sit down for a chat: offer, steps, skip, escape, back', async run(page) {
     const out = [];
     const offer = () => page.evaluate(() => { localStorage.removeItem('wa-chat-offered'); window.__explore.sitdown.offer(); });
@@ -503,6 +503,8 @@ const JOURNEYS = [
     const home = await page.evaluate(() => window.__explore.state.room);
     {
       const entry = await marked(page);
+      await page.evaluate(() => localStorage.removeItem('wa-chat-bell'));
+      out.push(['the bell has no chat before Later', await (async () => { await page.click('#btn-bell'); await page.waitForTimeout(300); const ok = await page.evaluate(() => document.getElementById('welcome-chat').hidden); await page.click('#welcome-ok'); await page.waitForTimeout(900); return ok; })()]);
       await offer();
       out.push(['the offer shows as a card', await shown(page, '#sitdown')]);
       out.push(['asked only once a browser', await page.evaluate(() => { const ex = window.__explore; localStorage.setItem('wa-chat-offered', '1'); ex.sitdown.offer(); return !document.getElementById('sitdown').hidden; })]);

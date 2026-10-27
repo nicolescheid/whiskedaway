@@ -1,8 +1,8 @@
 // "Shall we sit down for a chat?" (Nicole, 26 Oct). After the check-in's Done, Gemma offers to walk the visitor to Cuddlecore and
 // point out where to tell her about themselves: the food map, the tray and cage, the bell jar, the dietary-needs books and the
 // appliances. One short line a step, the object glowing, Next and Skip and a dot row, like the tour.
-//   - the offer is the tour card's own look (tour.css), asked once a browser (localStorage wa-chat-offered); Later leaves
-//     "Sit down for a chat" on the bell's card (front-door.js sends wa-sitdown)
+//   - the offer is the tour card's own look (tour.css), asked once a browser (localStorage wa-chat-offered); Later (or a
+//     Skip mid-chat) leaves "Sit down for a chat" on the bell's card (localStorage wa-chat-bell; front-door.js sends wa-sitdown)
 //   - a layer over a live room (layers.js, modal: false): Escape and Back end it and take the visitor home; Skip stays where
 //     they stand; a tap on anything ends it and the tap goes on (tapping the glowing object opens its sheet)
 //   - rooms it walks into are entered quietly (goRoom { quiet }) and inn.chatting stops lingering, so it never steers the navigator
@@ -12,6 +12,7 @@ import { layers } from './layers.js';
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OFFERED = 'wa-chat-offered';
+const ON_BELL = 'wa-chat-bell';                      // front-door.js reads it: the bell offers the chat only after a Later or Skip
 const STAND_IN = {
   offer: 'Shall we sit down for a chat?', yes: 'Yes, please', later: 'Later',
   started: "Come and sit in Cuddlecore. I'll show you where to tell me about yourself.",
@@ -60,6 +61,7 @@ export function install(inn) {
 
   const asked = () => { try { return localStorage.getItem(OFFERED) === '1'; } catch { return false; } };
   const markAsked = () => { try { localStorage.setItem(OFFERED, '1'); } catch { /* storage blocked: asked again next time */ } };
+  const onBell = () => { try { localStorage.setItem(ON_BELL, '1'); } catch { /* storage blocked: the bell won't offer it */ } };
 
   // The offer, after a check-in's Done (tell-glue.js): once a browser, and not over the tour or another chat
   function offer() {
@@ -88,7 +90,7 @@ export function install(inn) {
     if (l) layers.closed(l, { how: how === 'back' ? 'back' : 'self', refocus: how !== 'ignored' && how !== 'yes' });
     if (how === 'yes') return;
     inn.track('chat_end', { how: how === 'ignored' ? 'ignored' : how === 'later' ? 'later' : how, step: 0 });
-    if (how !== 'ignored') inn.say(T.declined, [], true);
+    if (how !== 'ignored') { onBell(); inn.say(T.declined, [], true); }
   }
 
   const glowTo = ids => {
@@ -156,6 +158,7 @@ export function install(inn) {
     }
     layers.afterBack(() => inn.showRoomInUrl());
     inn.track('chat_end', { how, step });
+    if (['skip', 'escape', 'back'].includes(how)) onBell();
     if (how === 'skip') inn.say(T.skipped, [], true);
   }
   $('.tr-next').onclick = () => {
