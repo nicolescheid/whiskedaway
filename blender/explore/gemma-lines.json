@@ -2146,9 +2146,26 @@
       "flourish": "Flourish. Proper meals from whole foods, when you've a bit more time.",
       "sweet-spells": "Sweet Spells. For the sweet tooth.",
       "chiapothecary": "The Chiapothecary. Chia, your way, set ahead.",
-      "conservatory": "Through here, the Conservatory. Herbs, the seasons, and the garden through the glass.",
+      "conservatory": "Through here, the Conservatory, part of the Chiapothecary. Herbs, the seasons, the garden beyond.",
       "garden": "And the garden, for cooking outdoors. The Map up top takes you to any room.",
       "desk": "Last stop. Check in here and I'll only suggest things that fit. It takes 20 seconds."
+    }
+  },
+  "sitdown": {
+    "_about": "'Shall we sit down for a chat?' (explore/sitdown.js, 26 Oct): offered once after a check-in's Done, then a walk round Cuddlecore with one line at each object. The bell jar line keeps the frame 'following what your doctor or pharmacist told you'. Every line under 100 characters, no health claims.",
+    "offer": "Shall we sit down for a chat?",
+    "yes": "Yes, please",
+    "later": "Later",
+    "started": "Come and sit in Cuddlecore. I'll show you where to tell me about yourself.",
+    "declined": "Right you are. The bell has it, whenever you want to sit down.",
+    "skipped": "No bother. The bell has it, any time.",
+    "steps": {
+      "map": "That map: Home, Family, Love the food. Tell me where your cooking comes from.",
+      "tray": "The tray is How you like it. The little cage keeps out what you'd rather not see.",
+      "jar": "The bell jar is for following what your doctor or pharmacist told you. I'll keep it out.",
+      "books": "The dietary-needs books. Tell me yours and I'll cook around them.",
+      "kitchen": "These are Your kitchen. Tell me what you've got and I'll suggest what you can make.",
+      "end": "You'll find other things around the Inn to touch, too."
     }
   }
 }

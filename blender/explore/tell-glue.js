@@ -73,6 +73,7 @@ export function install(inn) {
     const sorted = resortIdeas(changed, after);
     if (sorted || line) { inn.say(capFirst(sorted || line), [], true); inn.holdLine(); }
     inn.scheduleNavigate();
+    if (!forgot) inn.sitdown?.offer();                 // once a browser: Shall we sit down for a chat? (sitdown.js)
   }
   // The check-in's payoff (first-visit-tour.md §4): short on patience or a low candle, and the ideas already out re-sort while
   // you watch, quick and gentle ones nearest the thumb, and she says what changed. Returns her line, or '' if neither changed

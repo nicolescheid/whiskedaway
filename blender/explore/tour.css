@@ -33,3 +33,4 @@
 /* "Show me round" on the bell's card (front-door.js), beside Back to the Inn */
 .welcome .welcome-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .tool .ok.soft { background: transparent; color: var(--berry); border: 1px solid var(--line); }
+.sitdown.last .tr-skip { display: none; }   /* the closing line has just Done (explore/sitdown.js) */
