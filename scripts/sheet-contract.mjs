@@ -164,7 +164,7 @@ export async function sheetContract({ browser, base, root, sizes = [[375, 812], 
     }
 
     // ---------- journeys
-    for (const J of process.env.SHEETS_ONLY ? [] : JOURNEYS) {
+    for (const J of process.env.SHEETS_ONLY ? [] : JOURNEYS.filter(J => !process.env.JOURNEYS_ONLY || new RegExp(process.env.JOURNEYS_ONLY, 'i').test(J.id))) {   // JOURNEYS_ONLY=tour: just the journeys whose name matches
       try {
         if (process.env.SHEETS_VERBOSE) console.log(`  · ${size} ${J.id}`);
         await fresh();
@@ -327,6 +327,8 @@ const tourStart = async page => {
   return shown(page, '#tour');
 };
 const tourAt = page => page.evaluate(() => window.__explore.tour.stop);
+// The tour walks now (turns of 1.3-2.2 s, a fade through doors): wait for it to settle rather than for a fixed time
+const tourSettled = page => page.waitForFunction(() => !window.__explore.tour.walking, null, { timeout: 15000 }).catch(() => {});
 
 const JOURNEYS = [
   // The whole tour: seven stops through the hall, the Chiapothecary and the Conservatory, back to the foyer desk; the room
@@ -339,7 +341,8 @@ const JOURNEYS = [
     out.push(['focus on Next', await page.evaluate(() => document.activeElement?.classList.contains('tr-next'))]);
     out.push(['her chat moves on as it starts', await page.evaluate(() => { const ex = window.__explore; return [...ex.state.chat].reverse().find(m => m.who === 'gemma')?.text === (ex.lines.tour?.started || 'This way, then.'); })]);
     const rooms = [];
-    for (let i = 0; i < 6; i++) { rooms.push(await page.evaluate(() => window.__explore.state.room)); await page.click('#tour .tr-next'); await page.waitForTimeout(500); }
+    for (let i = 0; i < 6; i++) { await tourSettled(page); rooms.push(await page.evaluate(() => window.__explore.state.room)); await page.click('#tour .tr-next'); await page.waitForTimeout(100); }
+    await tourSettled(page);
     rooms.push(await page.evaluate(() => window.__explore.state.room));
     const want = ['hall-middle', 'hall-middle', 'hall-middle', 'hall-middle', 'chiapothecary', 'glasshouse', 'hall-entrance'];
     out.push(['walks the seven stops', JSON.stringify(rooms) === JSON.stringify(want), rooms.join(' > ')]);
@@ -461,7 +464,7 @@ const JOURNEYS = [
       const entry = await marked(page);
       if (!await tourStart(page)) { out.push([`the tour starts (${way})`, false]); continue; }
       await page.click('#tour .tr-next');
-      await page.waitForTimeout(400);
+      await tourSettled(page);                                // the slow turn to the next door
       if (way === 'skip') await page.click('#tour .tr-skip');
       else if (way === 'escape') await page.keyboard.press('Escape');
       else if (way === 'back') out.push(['Back stays in the Inn (tour)', await back(page)]);
@@ -482,7 +485,8 @@ const JOURNEYS = [
     out.push(['Show me round starts the tour', await tourStart(page)]);
     await page.waitForTimeout(500);
     out.push(['a quick look stays at the door', await page.evaluate(() => window.__explore.state.room === 'hall-middle')]);
-    await page.waitForTimeout(3200);
+    await page.waitForFunction(() => window.__explore.state.room === 'cuddlecore', null, { timeout: 12000 }).catch(() => {});   // the turn, the rest at the door, the walk in
+    await tourSettled(page);
     out.push(['resting there steps into Cuddlecore', await page.evaluate(() => window.__explore.state.room === 'cuddlecore')]);
     out.push(['and something there glows', await page.evaluate(() => !!document.querySelector('.spot.tour-glow'))]);
     await page.click('#tour .tr-skip');
@@ -521,7 +525,7 @@ const JOURNEYS = [
       await page.evaluate(async h => { const ex = window.__explore; if (ex.state.room !== h) { ex.goRoom(h); await new Promise(r => setTimeout(r, 500)); } }, home);
       await offer(); await shown(page, '#sitdown');
       await page.click('#sitdown .tr-next');                  // Yes
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1800);                        // the step forward and the fade through the door
       out.push([`Yes walks to Cuddlecore (${way})`, await page.evaluate(() => window.__explore.state.room === 'cuddlecore' && window.__explore.sitdown.step === 1)]);
       out.push([`an object glows (${way})`, await page.evaluate(() => !!document.querySelector('.spot.tour-glow'))]);
       if (way === 'done') {

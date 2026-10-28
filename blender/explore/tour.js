@@ -14,7 +14,7 @@ import { layers } from './layers.js';
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OFFERED = 'wa-tour-offered';
-const DWELL = 2600, HOLD = 4200;   // ms at a door before the view steps in; ms inside before it walks back out
+const DWELL = 3600, HOLD = 4500;   // ms at a door (once the view has turned to it) before it steps in; ms inside before it walks back out
 const STAND_IN = {
   offer: "First time at the Inn? I can show you round. It takes a minute.",
   yes: 'Yes, give me the tour',
@@ -114,29 +114,39 @@ export function install(inn) {
     for (const h of inn.hotspots) h.el.classList.toggle('tour-glow', !!on && h.id === (glowSpot || s?.spot));
     inn.$('btn-map').classList.toggle('tour-glow', !!on && !!s?.map);
   }
-  // Walk to a stop: through a door (its sound) into another room, or along the hall; then the view glides onto the spot
-  function go(i) {
+  // Walking (Nicole, 28 Oct: it whipped around): turns are slow and eased, a door is walked up to (the view narrows a little),
+  // and the room changes through a short fade, arriving already facing where it's going. Each go() takes over from any walk
+  // still going (epoch), so a quick Next never queues spins
+  let epoch = 0, busy = false;   // busy: a turn or a walk is still going
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const swing = (yaw, pitch, base = 1100) => {
+    const d = Math.abs(((yaw - inn.look.yaw + 540) % 360) - 180), ms = Math.round(Math.min(2200, Math.max(1300, base + d * 9)));
+    inn.lookTo(yaw, pitch, { ms, ease: 'inOut' });
+    return wait(reduce() ? 0 : ms);
+  };
+  const enter = (room, yaw) => { moving = true; inn.goRoom(room, yaw, { quiet: true }); moving = false; };
+  /** Turn (slowly) to a spot of the room we're in, stopping a little short of it for the walk through */
+  function faceSpot(id) {
+    const p = inn.spots[id];
+    if (!p) return Promise.resolve();
+    // A portrait phone facing the desk sees the notice board too (arrival.js); elsewhere the spot sits mid-view
+    const portraitDesk = id === 'checkin-desk' && innerWidth < innerHeight;
+    return swing(portraitDesk ? 52 : p.yaw, portraitDesk ? -16 : p.pitch);
+  }
+  // Walk to a stop: in the same room the view turns to it; from another room it walks through (the door it's facing, if
+  // there is one) and arrives facing the stop's spot
+  async function go(i) {
+    const my = ++epoch;
+    try { await goTo(i, my); } finally { if (epoch === my) busy = false; }   // a newer move owns `busy` now
+  }
+  async function goTo(i, my) {
     clearTimers();
+    inn.walkAbort();
     glow(false);
     at = i;
     glowSpot = null;
     const s = STOPS[i];
-    moving = true;
-    if (s.room !== inn.state.room) {
-      if (s.door) sound.door?.();
-      const to = inn.ROOMS[s.room]?.spots?.[s.spot];
-      inn.goRoom(s.room, to ? to.yaw - 30 : undefined, { quiet: true });
-    }
-    moving = false;
-    const p = inn.spots[s.spot];
-    if (p) {
-      // A portrait phone facing the desk sees the notice board too (arrival.js); elsewhere the spot sits mid-view
-      const portraitDesk = s.spot === 'checkin-desk' && innerWidth < innerHeight;
-      inn.lookTo(portraitDesk ? 52 : p.yaw, portraitDesk ? -16 : p.pitch);
-    }
-    glow(true);
-    // Only a guest who stays at the door sees inside it, so a quick Next never fetches the room's picture
-    if (s.inside) timers.push(setTimeout(() => stepIn(i), DWELL));
+    busy = true;
     $('.tr-line').textContent = T.stops[s.line];
     [...$('.tr-dots').children].forEach((d, k) => d.classList.toggle('on', k <= i));
     $('.tr-count').textContent = T.of.replace('{n}', i + 1).replace('{m}', STOPS.length);
@@ -144,36 +154,55 @@ export function install(inn) {
     $('.tr-skip').textContent = s.last ? T.notNow : T.skip;
     root.classList.toggle('last', !!s.last);
     place();
+    if (s.room !== inn.state.room) {
+      const prev = STOPS[i - 1];
+      if (s.door && prev && prev.room === inn.state.room) { await faceSpot(prev.spot); if (my !== epoch) return; }   // up to the door we came to
+      const to = inn.ROOMS[s.room]?.spots?.[s.spot];
+      const ok = await inn.walkThrough(() => { if (s.door) sound.door?.(); enter(s.room, to ? to.yaw - 12 : undefined); }, { dolly: s.door ? 900 : 0 });
+      if (!ok || my !== epoch) return;
+    }
+    await faceSpot(s.spot);
+    if (my !== epoch) return;
+    glow(true);
+    // Only a guest who stays at the door sees inside it, so a quick Next never fetches the room's picture
+    if (s.inside) timers.push(setTimeout(() => stepIn(i), DWELL));
   }
 
-  // Step through the door: the room's own picture, turned to something characteristic; then, unless the next stop is in there too,
-  // back out to the door
-  function stepIn(i) {
+  // Step through the door: the room's own picture, arriving facing something characteristic; then, unless the next stop is in
+  // there too, back out to the door
+  async function stepIn(i) {
+    const my = epoch;
+    try { await stepInTo(i, my); } finally { if (epoch === my) busy = false; }
+  }
+  async function stepInTo(i, my) {
     const s = STOPS[i];
     if (!inn.touring || at !== i || !s.inside) return;
+    busy = true;
+    const face = inn.ROOMS[s.inside.room]?.spots?.[s.inside.face];
     glow(false);
-    sound.door?.();
-    moving = true;
-    inn.goRoom(s.inside.room, undefined, { quiet: true });
-    moving = false;
-    const p = inn.spots[s.inside.face];
-    if (p) inn.lookTo(p.yaw, p.pitch);
+    const ok = await inn.walkThrough(() => { sound.door?.(); enter(s.inside.room, face ? face.yaw - 18 : undefined); });
+    if (!ok || my !== epoch) return;
+    await faceSpot(s.inside.face);
+    if (my !== epoch) return;
     glowSpot = s.inside.face;
     glow(true);
     if (!s.inside.keep) timers.push(setTimeout(() => stepOut(i), HOLD));
   }
-  function stepOut(i) {
+  async function stepOut(i) {
+    const my = epoch;
+    try { await stepOutTo(i, my); } finally { if (epoch === my) busy = false; }
+  }
+  async function stepOutTo(i, my) {
     const s = STOPS[i];
     if (!inn.touring || at !== i) return;
+    busy = true;
+    const to = inn.ROOMS[s.room]?.spots?.[s.spot];
     glow(false);
     glowSpot = null;
-    sound.door?.();
-    moving = true;
-    const to = inn.ROOMS[s.room]?.spots?.[s.spot];
-    inn.goRoom(s.room, to ? to.yaw - 30 : undefined, { quiet: true });
-    moving = false;
-    const p = inn.spots[s.spot];
-    if (p) inn.lookTo(p.yaw, p.pitch);
+    const ok = await inn.walkThrough(() => { sound.door?.(); enter(s.room, to ? to.yaw - 12 : undefined); }, { dolly: 0 });   // out through the door behind us: no step forward
+    if (!ok || my !== epoch) return;
+    await faceSpot(s.spot);
+    if (my !== epoch) return;
     glow(true);
   }
 
@@ -197,8 +226,11 @@ export function install(inn) {
   function end(how) {
     if (!inn.touring) return;
     const stop = at + 1;
-    const peeking = glowSpot && STOPS[at]?.inside && !STOPS[at].inside.keep && inn.state.room === STOPS[at].inside.room;
+    const peeking = STOPS[at]?.inside && !STOPS[at].inside.keep && inn.state.room === STOPS[at].inside.room;
     clearTimers();
+    epoch++;
+    busy = false;
+    inn.walkAbort();
     glow(false);
     glowSpot = null;
     inn.touring = false;
@@ -259,5 +291,5 @@ export function install(inn) {
   // The top bar's Tour button (25 Oct): the same tour, for showing a friend
   inn.$('btn-tour')?.addEventListener('click', () => (offering ? start('bar') : layers.whenFree(() => start('bar'))));
 
-  inn.tour = { offer, start, end, get stop() { return at + 1; }, get offering() { return offering; } };
+  inn.tour = { offer, start, end, get stop() { return at + 1; }, get walking() { return busy; }, get offering() { return offering; } };
 }

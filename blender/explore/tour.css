@@ -34,3 +34,6 @@
 .welcome .welcome-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .tool .ok.soft { background: transparent; color: var(--berry); border: 1px solid var(--line); }
 .sitdown.last .tr-skip { display: none; }   /* the closing line has just Done (explore/sitdown.js) */
+
+/* The fade-through when the tour or the sit-down walks through a door (panorama.js walkThrough) */
+#walk-veil { position: fixed; inset: 0; z-index: 17; background: #120d09; opacity: 0; pointer-events: none; }
