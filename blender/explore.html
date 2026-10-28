@@ -154,6 +154,17 @@
   @media (prefers-reduced-motion: reduce) { .spot.casting .dot { animation: none; box-shadow: 0 0 14px 4px rgba(255, 214, 140, .55); } }
   .spot.ambient .dot { width: 9px; height: 9px; }
   .spot.ambient::before { inset: -8px; }   /* 25 px to tap (2.5.8) */
+  /* Quiet objects (quiet.js): no dot, no name, the hit area stays. Keyboard focus, a highlight, a cast and the tour's glow show it */
+  .spot.quiet { z-index: 4; }                                  /* under the dots of things you do */
+  .spot.quiet::before { inset: -11px; }
+  .spot.quiet:not(.revealed):not(.tour-glow):not(.casting) .dot { opacity: 0; }
+  .spot.quiet:not(.revealed):not(.tour-glow):hover .name { opacity: 0; transform: translateX(-4px); }
+  .spot.quiet:focus-visible .dot { opacity: 1; }
+  /* A dot that sets something glows softly until it is set, then dims (still tappable) */
+  .spot.asks:not(.tour-glow):not(.revealed) .dot { animation: ask-glow 2.6s ease-in-out infinite; }
+  @keyframes ask-glow { 50% { box-shadow: 0 0 0 7px rgba(232, 184, 122, 0), 0 0 14px 4px rgba(232, 184, 122, .55); } }
+  .spot.answered:not(.tour-glow):not(.revealed):not(.chosen):not(:hover):not(:focus-visible) .dot { opacity: .4; }
+  @media (prefers-reduced-motion: reduce) { .spot.asks:not(.tour-glow):not(.revealed) .dot { animation: none; box-shadow: 0 0 0 3px rgba(232, 184, 122, .5), 0 0 10px 2px rgba(232, 184, 122, .45); } }
   .spot.revealed .dot { background: var(--amber-glow); width: 14px; height: 14px; animation: glow 1.8s ease-in-out infinite; }
   .spot.revealed .name { border-color: var(--amber); }
   .spot.revealed .name::before { content: '✦ '; color: var(--amber); }
@@ -722,6 +733,7 @@ import { install as installGarden } from './explore/garden.js';
 import { install as installTour } from './explore/tour.js';
 import { install as installSitdown } from './explore/sitdown.js';
 import { install as installExplainer } from './explore/explainer.js';
+import { install as installQuiet } from './explore/quiet.js';
 const inn = {};                     // the shared object every module installs onto (docs/code-map.md)
 
 const params = new URLSearchParams(location.search);
@@ -924,11 +936,12 @@ installSettingsObjects(inn);   // the lamp, suncatcher, yarn, twine and ribbon t
 installArrival(inn);   // arrival: the check-in offer in the foyer, the weather question, settle
 installTour(inn);   // the first-visit tour: Gemma shows a new visitor round, ending at the desk
 installSitdown(inn);   // after a check-in: Shall we sit down for a chat? A walk round Cuddlecore's tell-me objects
+installQuiet(inn);   // ambient objects lose their dots (hover or a rest notices them); answered classes dim
 installExplainer(inn);   // after the tour: the ideas beats, the first bubble's bounce, the sound button's nudge (never over the tour)
 
 // Test hooks for scripted checks (the room walk, the sheet contract)
 window.__explore = { state, visit, lines: LINES, book, ideas: inn.ideas, chatUI: inn.chatUI, bookView: inn.bookView, settle: inn.settle, checkin: (from = 'foyer') => inn.tell.open('checkin', from), showRoomInUrl, touch: inn.touch, chooseWeather: inn.chooseWeather, chooseTime: inn.chooseTime, chooseEnergy: inn.chooseEnergy, chooseSeason: inn.chooseSeason, goRoom: inn.goRoom, lookTo: (y, p) => { inn.look.yaw = y; inn.look.pitch = p; inn.render(); }, navigate: inn.navigate,
-                    world, spot: id => inn.spots[id], tour: inn.tour, sitdown: inn.sitdown, explain: inn.explain, keepIdea: inn.keepIdea, writer: inn.writer, basketView: inn.basketView };
+                    world, spot: id => inn.spots[id], tour: inn.tour, quiet: inn.quiet, sitdown: inn.sitdown, explain: inn.explain, keepIdea: inn.keepIdea, writer: inn.writer, basketView: inn.basketView };
 
 inn.setRoomText();
 inn.buildHotspots();

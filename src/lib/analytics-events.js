@@ -13,7 +13,7 @@ export const EVENTS = {
   // The 360° Inn (/, was /explore)
   explore_start: ['room', 'nav_mode', 'load_ms', 'full_res'],
   room_enter: ['room', 'from_room', 'step'],
-  hotspot_touch: ['room', 'object', 'object_type'],   // energy candles: object_type only, never which candle
+  hotspot_touch: ['room', 'object', 'object_type', 'how'],   // energy candles: object_type only, never which candle; how: hover or gaze (a quiet object noticed, not tapped; absent on a tap)
   door_closed: ['room', 'object'],
   weather_change: ['room', 'weather'],
   weather_guess: ['weather', 'outcome'],   // the local-weather guess: shown, or confirmed by the visitor
