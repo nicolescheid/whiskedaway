@@ -327,12 +327,16 @@ export function install(inn) {
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches; inn.reduceMotion = reduceMotion;
   stage.addEventListener('wheel', e => { camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 40, 95); camera.updateProjectionMatrix(); render(); }, { passive: true });
 
-  function lookTo(yaw, pitch) {
-    const from = { ...look };
+  // opts (the tour's walk, 28 Oct): { ms, ease: 'inOut' } for a slower, gentler turn; a newer lookTo takes over from an older one
+  let lookSeq = 0;
+  function lookTo(yaw, pitch, { ms = 700, ease = 'out' } = {}) {
+    const from = { ...look }, seq = ++lookSeq;
     let dy = ((yaw - from.yaw + 540) % 360) - 180;          // shortest way round
-    const t0 = performance.now(), dur = reduceMotion() ? 0 : 700;   // reduced motion: jump straight there (R15)
+    const t0 = performance.now(), dur = reduceMotion() ? 0 : ms;   // reduced motion: jump straight there (R15)
     const step = now => {
-      const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - (1 - k) ** 3;
+      if (seq !== lookSeq) return;
+      const k = dur ? Math.min(1, (now - t0) / dur) : 1,
+        e = ease === 'inOut' ? (k < .5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2) : 1 - (1 - k) ** 3;
       look.yaw = from.yaw + dy * e;
       look.pitch = from.pitch + (Math.max(-30, pitch) - from.pitch) * e;
       inn.lastMove = now;
@@ -341,4 +345,55 @@ export function install(inn) {
     };
     dur ? requestAnimationFrame(step) : step(t0);   // reduced motion: there at once
   }
+
+  // ---------- walking through a door (tour.js, sitdown.js): a slow step forward, then a fade through to the next picture
+  const veil = document.createElement('div');
+  veil.id = 'walk-veil';
+  veil.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(veil);
+  let walkSeq = 0, fovHome = null;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const frames = (ms, fn, seq) => new Promise(res => {
+    const t0 = performance.now();
+    const f = now => {
+      if (seq !== walkSeq) return res(false);
+      const k = Math.min(1, (now - t0) / ms);
+      fn(k);
+      k < 1 ? requestAnimationFrame(f) : res(true);
+    };
+    requestAnimationFrame(f);
+  });
+  function restoreFov() {
+    if (fovHome != null) { camera.fov = fovHome; camera.updateProjectionMatrix(); fovHome = null; }
+  }
+  /** Step forward (the view narrows, `ms`) then fade through dark; `swap` changes the room at the darkest moment and the
+   *  view fades back in. Resolves true when it finished, false if walkAbort() or another walk cut it off (then `swap` may not
+   *  have run). Reduced motion: no step, no fade: swap at once */
+  async function walkThrough(swap, { dolly = 900, fadeOut = 260, fadeIn = 340 } = {}) {
+    const seq = ++walkSeq;
+    veil.style.opacity = 0;
+    if (reduceMotion()) { restoreFov(); swap(); return true; }
+    fovHome = camera.fov;
+    const f0 = camera.fov, f1 = Math.max(46, f0 * .68);
+    const ease = k => k < .5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+    if (dolly > 0 && !await frames(dolly, k => { camera.fov = f0 + (f1 - f0) * ease(k); camera.updateProjectionMatrix(); render(); }, seq)) return false;
+    veil.style.transition = `opacity ${fadeOut}ms ease-in`;
+    veil.style.opacity = 1;
+    await wait(fadeOut);
+    if (seq !== walkSeq) return false;
+    restoreFov();
+    swap();
+    veil.style.transition = `opacity ${fadeIn}ms ease-out`;
+    veil.style.opacity = 0;
+    await wait(fadeIn);
+    return seq === walkSeq;
+  }
+  /** Cut a walk short: no more steps, the view back to its own width, the veil gone */
+  function walkAbort() {
+    walkSeq++;
+    restoreFov();
+    veil.style.transition = 'none';
+    veil.style.opacity = 0;
+  }
+  Object.assign(inn, { walkThrough, walkAbort });
 }

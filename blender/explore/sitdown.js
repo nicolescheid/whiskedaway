@@ -98,12 +98,13 @@ export function install(inn) {
   };
   function go(i) {
     at = i;
-    const s = steps[i];
+    const s = steps[i];   // a newer lookTo takes over from a turn still going, so a quick Next never queues spins
     glowTo([]);
     const here = s.spots.filter(id => inn.spots?.[id]);
     if (here.length) {
       const ps = here.map(id => inn.spots[id]);
-      inn.lookTo(ps.reduce((a, p) => a + p.yaw, 0) / ps.length, ps.reduce((a, p) => a + p.pitch, 0) / ps.length);
+      const yaw = ps.reduce((a, p) => a + p.yaw, 0) / ps.length, d = Math.abs(((yaw - inn.look.yaw + 540) % 360) - 180);
+      inn.lookTo(yaw, ps.reduce((a, p) => a + p.pitch, 0) / ps.length, { ms: Math.round(Math.min(2200, Math.max(1300, 1100 + d * 9))), ease: 'inOut' });
     }
     glowTo(here);
     $('.tr-line').textContent = T.steps[s.line];
@@ -121,21 +122,24 @@ export function install(inn) {
     inn.setChips([]);
     inn.chatting = true;
     home = { room: inn.state.room, yaw: inn.look.yaw, pitch: inn.look.pitch };
-    if (inn.state.room !== 'cuddlecore') {
-      sound.door?.();
-      moving = true;
-      inn.goRoom('cuddlecore', undefined, { quiet: true });
-      moving = false;
-    }
-    steps = STEPS.filter(s => s.spots.length === 0 || s.spots.some(id => inn.spots?.[id]));   // the bell jar is a step only while it's there
-    $('.tr-dots').innerHTML = steps.map(() => '<i></i>').join('');
+    // In Cuddlecore the first step is on its way; elsewhere the view walks in first (a short step forward and a fade through)
+    const begin = () => {
+      steps = STEPS.filter(s => s.spots.length === 0 || s.spots.some(id => inn.spots?.[id]));   // the bell jar is a step only while it's there
+      $('.tr-dots').innerHTML = steps.map(() => '<i></i>').join('');
+      go(0);
+    };
+    steps = [];
     root.classList.remove('offer');
     $('.tr-skip').textContent = T.skip;
     root.hidden = false;
     layer = layers.open({ el: root, name: 'sitdown', modal: false, close: how => end(how === 'outside' ? 'skip' : how) });
     inn.track('chat_start', { from: src });
     inn.chatLine('gemma', T.started);
-    go(0);
+    if (inn.state.room === 'cuddlecore') begin();
+    else {
+      $('.tr-line').textContent = T.started;
+      inn.walkThrough(() => { sound.door?.(); moving = true; inn.goRoom('cuddlecore', undefined, { quiet: true }); moving = false; begin(); }, { dolly: 500 });
+    }
     if (!reduce()) $('.tr-card').animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 250, easing: 'ease-out' });
     $('.tr-next').focus({ preventScroll: true });
   }
@@ -144,6 +148,7 @@ export function install(inn) {
   function end(how) {
     if (!inn.chatting) return;
     const step = at + 1;
+    inn.walkAbort();
     glowTo([]);
     inn.chatting = false;
     root.hidden = true;
@@ -163,6 +168,7 @@ export function install(inn) {
   }
   $('.tr-next').onclick = () => {
     if (offering) return start('offer');
+    if (!steps.length) return;                          // still walking in
     if (!steps[at]?.last) return go(at + 1);
     end('finished');
   };
