@@ -236,14 +236,16 @@ export function install(inn) {
       const obj = inn.world.objects[id];
       const el = document.createElement('button');
       // Dials and candles show their name on hover only: a row of them would crowd the view
-      el.className = `spot ${obj.type === 'ambient' ? 'ambient' : obj.type === 'dial' || obj.type === 'energy' ? '' : 'is-tool'} ${obj.type}`;
+      // An ambient object that only speaks has no dot or name (quiet.js notices it on hover or a rest); one that opens something keeps its dot
+      const quiet = obj.type === 'ambient' && [59, 60].includes(inn.touchOrder?.(obj, id));
+      el.className = `spot ${obj.type === 'ambient' ? 'ambient' : obj.type === 'dial' || obj.type === 'energy' ? '' : 'is-tool'} ${obj.type}${quiet ? ' quiet' : ''}`;
       el.innerHTML = `<span class="dot"></span><span class="name">${inn.esc(obj.label)}${obj.blurb ? `<span class="blurb">${inn.esc(obj.blurb)}</span>` : ''}</span>`;
       const hname = obj.map || obj.label;   // the Map's name, so the three dials aren't all "The dial" (a11y review 1, B4)
       el.setAttribute('aria-label', obj.blurb ? `${hname}: ${obj.blurb}` : hname);
       el.dataset.spot = id;                                    // for scripted checks (the sheet contract test)
       el.addEventListener('click', e => { e.stopPropagation(); inn.touch(id); });
       document.body.appendChild(el);
-      return { id, el, s, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
+      return { id, el, s, quiet, v: dir(s.yaw, s.pitch).multiplyScalar(10) };
     });
     inn.showCandle();
   }
@@ -272,7 +274,7 @@ export function install(inn) {
     }
     // A name that would run over another spot's dot trails to the left of its own dot instead, when the left is clear
     // (a polish item: "How you like it" brushed "The bowl" at 812x375)
-    const shown = inn.hotspots.filter(h => h.px !== undefined && h.el.style.display !== 'none');
+    const shown = inn.hotspots.filter(h => !h.quiet && h.px !== undefined && h.el.style.display !== 'none');   // a quiet one has no name to run over anything
     const dotIn = (h, x0, x1) => shown.some(o => o !== h && o.px > x0 && o.px < x1 && Math.abs(o.py - h.py) < 14);
     for (const h of shown) {
       h.el.classList.toggle('name-left', h.underBubbles || (dotIn(h, h.px + 8, h.px + 24 + h.w) && !dotIn(h, h.px - 28 - h.w, h.px - 8) && h.px - 26 - h.w > 0));

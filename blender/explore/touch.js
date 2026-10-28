@@ -24,15 +24,21 @@ export function install(inn) {
     handlers.sort((a, b) => a.order - b.order);              // stable: equal orders keep the order they registered in
   };
 
-  inn.touch = function touch(id) {
-    const obj = inn.world.objects[id];
+  /** Which handler order would answer this object (quiet.js: only objects that just speak go without a dot) */
+  inn.touchOrder = (obj, id) => handlers.find(x => x.when(obj, id))?.order;
+
+  // how: 'tap' (the default), or 'hover' / 'gaze' for a quiet object the visitor has only noticed (quiet.js): the same line,
+  // counted separately, never an intro, an Inn note, a sheet, a chime or a trail tap (a hover is a linger, which the navigator weighs less)
+  inn.touch = function touch(id, how = 'tap') {
+    const obj = inn.world.objects[id], soft = how !== 'tap';
     // A visitor who skipped the weather question and started looking around still hears what this room is for, before
     // the object's own line (the barometer answers the question itself; a door introduces the room it opens)
-    if (!['weather', 'door', 'walk'].includes(obj.type)) inn.introduce();
+    if (!soft && !['weather', 'door', 'walk'].includes(obj.type)) inn.introduce();
     if (obj.type === 'energy') return inn.chooseEnergy(obj.energy);   // the candle is the event: no separate touch
-    inn.record({ kind: 'touch', id });
-    inn.track('hotspot_touch', { room: inn.state.room, object: id, object_type: obj.type });
-    const tap = { note: inn.innNoteLine(id) };                  // an Inn note: said after the object's own line
+    if (!soft) inn.record({ kind: 'touch', id });
+    else if (how === 'hover') inn.record({ kind: 'linger', id });     // a gaze is recorded as a linger already (rooms.js)
+    inn.track('hotspot_touch', { room: inn.state.room, object: id, object_type: obj.type, ...(soft && { how }) });
+    const tap = { note: soft ? null : inn.innNoteLine(id), gentle: soft };                  // an Inn note: said after the object's own line
     const h = handlers.find(x => x.when(obj, id));
     if (h) { if (h.run(obj, id, tap)) return; }
     else inn.openTool(obj.label, "I can't open this one for you yet. Touching it still tells me something about what you're after, so it counts.");
@@ -49,9 +55,9 @@ export function install(inn) {
   // Any other ambient object: her line (a content `moments` list rotates with the base line, never repeating in a visit)
   inn.onTouch(60, obj => obj.type === 'ambient', (obj, id) => {
     inn.say([inn.momentOf(id, obj), obj.ideas && obj.bridge].filter(Boolean).join(' '), [], true);
-    if (id === 'wind-chime') sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
+    if (id === 'wind-chime' && !tap.gentle) sound.chime?.();                   // it says it rings: with the sound on, it does (QA 4)
     // Food on the counters and the Conservatory's herbs show their idea's card (Nicole, 22 Oct): obj.ideas, best fit first
-    if (obj.ideas?.length) inn.showIdea(pickIdea(obj.ideas.map(x => inn.atomsById[x]).filter(a => a && !inn.dietClash(a)).sort((a, b) => inn.kitchenOk(b) - inn.kitchenOk(a)),
+    if (obj.ideas?.length && !tap.gentle) inn.showIdea(pickIdea(obj.ideas.map(x => inn.atomsById[x]).filter(a => a && !inn.dietClash(a)).sort((a, b) => inn.kitchenOk(b) - inn.kitchenOk(a)),
       { canServe: inn.canServe, onCard: a => inn.onCard(a.id), season: inn.room().seasons ? inn.seasonNow() : null }), 'object');
     inn.holdLine();                         // her reading waits, so the object's line stays up long enough to read (QA 9 issue 2)
   });

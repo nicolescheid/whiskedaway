@@ -113,6 +113,7 @@ const COVERED = `(() => {
   const out = [];
   for (const s of document.querySelectorAll('.spot')) {
     if (s.style.display === 'none' || getComputedStyle(s).visibility === 'hidden') continue;
+    if (s.classList.contains('quiet') && !s.classList.contains('revealed')) continue;   // a quiet object has no dot to cover (quiet.js)
     const d = (s.querySelector('.dot') || s).getBoundingClientRect();
     const x = d.left + d.width / 2, y = d.top + d.height / 2;
     if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) continue;

@@ -63,7 +63,7 @@ export function createEdgeHints({ stage, roomId }) {
     if (active) {
       let best = Infinity;
       for (const h of hotspots) {
-        if (h.el.style.display !== 'none') continue;             // on screen already
+        if (h.el.style.display !== 'none' || h.quiet) continue;   // on screen already; a quiet one is nothing to point at
         const c = h.v.clone().applyMatrix4(camera.matrixWorldInverse);
         const turn = Math.atan2(c.x, -c.z);                       // radians to turn: − left, + right
         if (Math.abs(turn) < best) { best = Math.abs(turn); l = turn < 0; r = turn >= 0; }
