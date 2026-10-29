@@ -67,7 +67,7 @@ values it reads at load.
 | `panorama.js` | the renderer and texture cache, showWeather, crossFade, the theme colour, the clocks, the hotspots, render, resize, looking around (drag, keys, wheel, lookTo), Erwina's wiring |
 | `chat-glue.js` | say, chatLine, setChips, CHIP_ACTS, typing, chatUI, the sound chip |
 | `serving.js` | the navigator's timing (scheduleNavigate, navigate, applyReveal), L, pickLine, momentOf, innNoteLine, steer, the filters (dietClash, kitchenOk, the away rule, headline), serve, keepIdea, `ideas = createIdeas` |
-| `basket-glue.js` | write-outs (recipeFetch, unitsNow, swapsFor, writer), intoBook, checkout, basketView, cook, shopList, bookView |
+| `basket-glue.js` | write-outs (recipeFetch, unitsNow, swapsFor, writer; recipeFetch brings the person check into the open sheet via genie.js placeCheck, data-check-slot in the basket), intoBook, checkout, basketView, cook, shopList, bookView |
 | `chia-glue.js` | chia (the Mix), CHIA_TOOLS, chiaActions; drawer and tool taps |
 | `sweet-glue.js` | sweet (its sheets), SWEET_TOOLS, sweetSwapHtml; tool taps |
 | `centrepieces.js` | roomIdeas, bestHere, cast, the star chart's fortune, canServe, onCard, showIdea, ideaPage, whenFree; star chart and cast taps |
