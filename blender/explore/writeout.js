@@ -135,7 +135,7 @@ export function cleanRecipe(r) {
 }
 
 export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewrite, payloadFor, track, bucket, onWritten, onDiet, onChange, onLanded, onAllowanceReached,
-                                 units = () => 'metric', setUnits, swapsFor = () => [] }) {
+                                 units = () => 'metric', setUnits, swapsFor = () => [], checkShowing }) {
   // units(): the visitor's measurements (set, or from the Map's country); swapsFor(ingredient): the swap table's options for it
   const L = {
     button: lines.button || 'Get the full recipe',
@@ -151,6 +151,10 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
     keeping: lines.keeping || "I'll keep to {d}.",
     change: lines.change_diets || 'Change',
     failed: lines.failed || "My pen's run dry. The short version's above. Try again in a bit.",
+    // Why a write-out didn't land (28 Oct pass check): the person check, the slow-down, or anything else (failed, above). Content's lines
+    failedCheck: lines.failed_check || "I need a quick check that you're a person first. Tick the box, then try again.",
+    failedCheckRetry: lines.failed_check_retry || "I couldn't confirm you're a person just now. Try again in a moment, and if a box appears, tick it.",
+    failedRate: lines.failed_rate || "I'm a bit swamped just now. Give me a minute, then try again.",
     diet: lines.diet_question || 'Anything I should avoid?',
     unitsLine: lines.units_line || 'In {u}.',
     unitsWritten: lines.units_written || 'Written in {u}.',
@@ -175,6 +179,15 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
   const redraw = (el, rec, seedEl) => (onChange ? onChange() : render(el, rec, seedEl));
   let busy = null;                                    // the atom being written, while it's being written
   let failed = null;                                  // the atom whose last try failed (her line shows until the next try)
+  const whys = new Map();                              // atom → why its last try failed: 'timeout' | 'bot_check' | 'rate_limited' | 'error'
+  /** The line for a failed write-out, by reason. `other` is the line for anything but the check and the slow-down (the page's
+   *  own, the basket's own). The check line says "tick the box" only while a box is showing */
+  function failLine(id, other = L.failed) {
+    const reason = whys.get(id);
+    if (reason === 'rate_limited') return L.failedRate;
+    if (reason === 'bot_check') return checkShowing?.() ? L.failedCheck : L.failedCheckRetry;
+    return other;
+  }
   let openDiet = false;                               // the visitor opened "Anything to avoid? ›" on this page
   let moreDiets = false;                              // "More options" is open (stays open for the visit's page or checkout)
   let askOpen = false;                                // the checkout's diet question is showing (it stays while they choose)
@@ -283,7 +296,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
       return;
     }
     if (!left()) { el.innerHTML = `<p class="small">${esc(L.atCap)}</p>`; return; }
-    const oops = failed === rec.id ? `<p class="bk-failed" role="status">${esc(L.failed)}</p>` : '';
+    const oops = failed === rec.id ? `<p class="bk-failed" role="status">${esc(failLine(rec.id))}</p>` : '';
     const diet = [].concat(visit.get('dietary') || []);
     const ask = !diet.length && !mem.dietAsked;
     const offer = !diet.length && mem.dietAsked && !openDiet;     // asked before and not answered: a one-line way back in (UX T6)
@@ -319,9 +332,11 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
       else recipe = cleanRecipe(await res.json());
       if (!reason && !recipe) reason = 'error';
     } catch (err) {
-      reason = /timeout|abort/i.test(String(err?.message || err)) ? 'timeout' : /turnstile/i.test(String(err?.message || err)) ? 'bot_check' : 'error';
+      const msg = String(err?.message || err);   // the pass that never came is the check's failure; a slow write is a timeout
+      reason = /no visitor pass|turnstile/i.test(msg) ? 'bot_check' : /timeout|abort/i.test(msg) ? 'timeout' : 'error';
     }
     busy = null;
+    whys.delete(rec.id);
     if (recipe) {
       spend();
       recipe.units = payload.units || null;               // so its page can say how it's measured, and offer a re-write
@@ -332,7 +347,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
       onWritten?.(rec, recipe);
       if (!left()) { track?.('allowance_reached', { from }); onAllowanceReached?.(from); }
     } else {
-      failed = rec.id;
+      failed = rec.id; whys.set(rec.id, reason);
       track?.('recipe_full_failed', { atom: rec.id, room: rec.room, reason });
     }
     onLanded?.(rec);                                    // whoever's showing this recipe (cook mode) can update
@@ -395,5 +410,5 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
   }
   const dietAskReset = () => { askOpen = false; unitsAskOpen = false; };
 
-  return { render, written, addAsIs, writeNow, rewriteNow, dietAsk, unitsAsk, dietAskReset, get rewritesLeft() { return rwLeft(); }, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
+  return { render, written, addAsIs, writeNow, failLine, rewriteNow, dietAsk, unitsAsk, dietAskReset, get rewritesLeft() { return rwLeft(); }, get left() { return left(); }, get busy() { return !!busy; }, get busyFor() { return busy; }, clear() { mem = { recipes: {} }; save(); }, printRecipe };
 }

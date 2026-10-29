@@ -101,7 +101,7 @@ export function createCook({ written, sound, track, say, lines = {}, beforeOpen,
       const inflight = !hasFull && writer?.busyFor === rec.id;
       step.innerHTML = `<h3>${esc(L.need)}</h3><ul class="ck-needs">${needs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`
         + (inflight ? `<div class="ck-offer"><p>${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
-          : !hasFull && failedWrite ? `<p class="ck-quiet">${esc(L.failed)}</p>` : '')
+          : !hasFull && failedWrite ? `<p class="ck-quiet">${esc(writer?.failLine ? writer.failLine(rec.id, L.failed) : L.failed)}</p>` : '')
         + (onList && isKept?.(rec.id) ? `<p><button class="bk-outline ck-list">${esc(lines.shopping_list || 'Shopping list')}</button></p>` : '');
       step.querySelector('.ck-list')?.addEventListener('click', () => { close(); onList(rec); });
       step.classList.remove('long');

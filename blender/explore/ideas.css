@@ -634,6 +634,9 @@ html { overscroll-behavior: none; }   /* no pull-to-refresh under a swipe-down *
 .bs-st { grid-column: 1 / -1; padding: 0 0 6px 42px; font: italic 15px 'Crimson Pro', Georgia, serif; color: var(--ink-soft); }
 .bs-st .dots { display: inline-block; animation: blinkdots 1.2s infinite; letter-spacing: 2px; }
 .bs-fail { color: #7a3e1d; }
+/* The person check, brought into the basket while a write-out waits on it (genie.js placeCheck) */
+.bs-check { flex: none; padding: 8px 14px 4px; }
+.bs-check[hidden] { display: none; }
 .bs-write:disabled { opacity: .5; }
 .bs-done { list-style: none; padding: 0; margin: 4px 0 10px; }
 .bs-done li { min-height: 44px; display: flex; align-items: center; gap: 6px; color: var(--berry); }

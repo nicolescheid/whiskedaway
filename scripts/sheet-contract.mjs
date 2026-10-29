@@ -754,4 +754,60 @@ const JOURNEYS = [
     out.push(['history balanced', ok, note]);
     return out;
   } },
+  // A write-out that can't get the visitor pass (29 Oct): the basket says why, in Gemma's words, and the person check comes to the
+  // basket (its own slot) when Turnstile needs the visitor, with nothing spent from the 3 a day. A stand-in Turnstile that asks for
+  // a tick; the Worker routes are stubbed by the contract, so the pass never arrives
+  { id: 'a write-out waiting on the person check', async run(page) {
+    const out = [], entry = await marked(page);
+    const kept = await page.evaluate(() => {
+      const ex = window.__explore, a = ex.world.atoms.find(x => !x.complete && x.kind === 'recipe idea' && !ex.book.has(x.id)) || ex.world.atoms.find(x => !x.complete && !ex.book.has(x.id));
+      if (!a) return null;
+      ex.keepIdea(a.id, '', 'button');
+      return a.id;
+    });
+    if (!kept) return [['a leaflet to write', false]];
+    const left0 = await page.evaluate(() => window.__explore.writer.left);
+    // 1. the seam fails for want of a pass: the line says why (a check is on screen, so it says to tick the box)
+    await page.evaluate(() => { window.__checkShowing = true; window.__recipeFetch = async () => { throw new Error('turnstile: no visitor pass'); }; });
+    await page.click('#btn-book');
+    out.push(['the basket opens', await shown(page, '#basket-sheet')]);
+    await page.click(`#basket-sheet [data-tick="${kept}"]`);
+    await page.click('#basket-sheet .bs-write');
+    await page.waitForFunction(() => document.querySelector('#basket-sheet .bs-fail'), null, { timeout: 4000 }).catch(() => {});
+    const line = await page.evaluate(() => document.querySelector('#basket-sheet .bs-fail')?.textContent || '');
+    out.push(['it says why: a quick check that you are a person', /a person/i.test(line) && /tick the box/i.test(line), line]);
+    out.push(['it is still in the basket and the allowance is untouched', await page.evaluate(([id, l]) => !!document.querySelector('[data-tick="' + id + '"]') && window.__explore.writer.left === l, [kept, left0])]);
+    // 2. no check on screen: the same failure asks them to try again and tick a box if one appears
+    await page.evaluate(() => { window.__checkShowing = false; });
+    await page.click('#basket-sheet .bs-write');
+    await page.waitForFunction(() => /try again in a moment/i.test(document.querySelector('#basket-sheet .bs-fail')?.textContent || ''), null, { timeout: 4000 }).catch(() => {});
+    out.push(['with no box showing it does not say to tick one', await page.evaluate(() => /try again in a moment/i.test(document.querySelector('#basket-sheet .bs-fail')?.textContent || ''))]);
+    // 3. a Turnstile that needs the tick: the real recipeFetch brings the box into the basket's slot, inside the sheet and on screen
+    await page.evaluate(() => {
+      window.__checkShowing = undefined; window.__recipeFetch = undefined;
+      window.__stub = { renders: 0, opts: null };
+      window.turnstile = { render(el, opts) { window.__stub.renders++; window.__stub.opts = opts; el.dataset.stub = '1'; el.style.cssText = 'width:300px;height:65px;background:#ddd'; setTimeout(() => opts['before-interactive-callback'](), 20); return 'w' + window.__stub.renders; }, remove() {} };
+      sessionStorage.removeItem('wa-genie-pass');
+    });
+    await page.click('#basket-sheet .bs-write');
+    await page.waitForFunction(() => document.querySelector('#basket-sheet .bs-check .wa-check')?.style.display === 'flex', null, { timeout: 4000 }).catch(() => {});
+    const where = await page.evaluate(() => {
+      const slot = document.querySelector('#basket-sheet .bs-check'), w = slot?.querySelector('[data-stub]')?.getBoundingClientRect();
+      return { inSlot: !!w, visible: !!w && !slot.hidden && w.width > 0, onScreen: !!w && w.left >= 0 && w.right <= innerWidth && w.top >= 0 && w.bottom <= innerHeight, inert: !!slot?.closest('[inert]') };
+    });
+    out.push(['the person check is inside the basket', where.inSlot && where.visible, JSON.stringify(where)]);
+    out.push(['it is on screen and not inert', where.onScreen && !where.inert, JSON.stringify(where)]);
+    // The stand-in gives up (three errors): the line says to try again, the check goes, nothing is spent
+    await page.evaluate(() => { const o = window.__stub.opts; o['error-callback']('x'); o['error-callback']('x'); o['error-callback']('x'); });
+    await page.waitForFunction(() => document.querySelector('#basket-sheet .bs-fail') && !document.querySelector('#basket-sheet .bs-check [data-stub]'), null, { timeout: 4000 }).catch(() => {});
+    out.push(['the check leaves when it is done and the line shows', await page.evaluate(() => !document.querySelector('#basket-sheet .bs-check [data-stub]') && !!document.querySelector('#basket-sheet .bs-fail'))]);
+    out.push(['nothing was spent', await page.evaluate(l => window.__explore.writer.left === l, left0)]);
+    await page.evaluate(() => { delete window.turnstile; window.__recipeFetch = async () => new Response('{}'); });
+    await page.click('#basket-sheet .bk-close');
+    await page.waitForTimeout(400);
+    out.push(...await clean(page));
+    const [ok, note] = await sameEntry(page, entry);
+    out.push(['history balanced', ok, note]);
+    return out;
+  } },
 ];

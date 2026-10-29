@@ -173,7 +173,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   const body = $('.tl-body'), foot = $('.mx-foot');
-  let kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, layer = null, reply = '', prefilled = false, said = '';
+  let failedId = null, kind = null, from = null, at = 0, draft = {}, declined = new Set(), writing = false, failed = false, opener = null, layer = null, reply = '', prefilled = false, said = '';
   const steps = () => stepsFor(draft);
 
   const save = (step, v) => { visit.setDish(ROOM, step, v ?? null); };
@@ -247,7 +247,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
       body.innerHTML = `<p class="mx-dots">${[...steps(), 'write'].map((_, i) => `<i class="${i === at ? 'on' : 'done'}"></i>`).join('')}</p>
         <h3 class="tl-h">${esc(T.summary)}</h3>${jarRows()}${swapHtml()}
         ${writing ? `<div class="ck-offer"><p>${esc(T.writing)} <span class="dots" aria-hidden="true">• • •</span></p></div>`
-          : failed ? `<p class="small">${esc(T.failed)}</p>` : `<p class="small">${esc(left > 0 ? T.cap.replace('{n}', left) : T.capNone)}</p>`}`;
+          : failed ? `<p class="small">${esc(writer.failLine ? writer.failLine(failedId, T.failed) : T.failed)}</p>` : `<p class="small">${esc(left > 0 ? T.cap.replace('{n}', left) : T.capNone)}</p>`}`;
       foot.innerHTML = `<button class="bk-outline mx-back">${esc(T.back)}</button>${left > 0 && !writing ? `<button class="tl-done mx-write">${esc(T.write)}</button>` : ''}`;
     }
     body.querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
@@ -314,6 +314,7 @@ export function createChiaMix({ visit, lines = {}, writer, track, sound, beforeO
     writing = true; failed = false; draw();
     track?.('tell_set', { kind: 'mix', from });
     onStart?.(rec);                                           // the page knows the jar before the write-out lands (its notebook line)
+    failedId = rec.id;
     const full = await writer.writeNow(rec, 'mix');
     writing = false;
     if (!full) { failed = true; return draw(); }
