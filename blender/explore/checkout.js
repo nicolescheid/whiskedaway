@@ -56,7 +56,7 @@ export function createCheckout({ basket, writer, ribbons, lines = {}, track, buc
           ${running || (!ticked.has(x.id) && !isFree(x) && nPaid >= left()) ? 'disabled' : ''}><i></i>
           <span><b>${esc(x.title)}</b><small>${esc(r?.name || '')}${isFree(x) ? ` · <span class="bs-free">${esc(L.freeAsIs)}</span>` : ''}</small></span></label>
         ${st === 'writing' ? `<span class="bs-st" role="status">${esc(L.writing)} <span class="dots" aria-hidden="true">• • •</span></span>`
-          : st === 'failed' ? `<span class="bs-st bs-fail" role="status">${esc(L.failed)}</span>` : ''}
+          : st === 'failed' ? `<span class="bs-st bs-fail" role="status">${esc(writer.failLine ? writer.failLine(x.id, L.failed) : L.failed)}</span>` : ''}
         <span class="bs-acts"><button class="link" data-read="${esc(x.id)}" aria-expanded="${reading.has(x.id)}">${esc(reading.has(x.id) ? L.readLess : L.read)}</button>
           ${running ? '' : `<button class="link" data-out="${esc(x.id)}" aria-label="${esc(L.remove)}: ${esc(x.title)}">✕</button>`}</span>
         ${reading.has(x.id) ? leaflet(x) : ''}</li>`;

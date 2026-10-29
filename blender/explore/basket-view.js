@@ -22,6 +22,7 @@ export function createBasketView({ basket, checkout, chip, lines = {}, track, bu
     <div class="bk-box">
       <header class="bk-head"><h2 id="basket-title">${esc(lines.title || 'Your basket')}</h2>
         <button class="bk-close" aria-label="${esc(lines.close || 'Close the basket')}">✕</button></header>
+      <div class="bs-check" data-check-slot hidden></div>
       <section class="bk-page bs-page" tabindex="-1"></section>
     </div>`;
   document.body.appendChild(root);

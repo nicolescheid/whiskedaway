@@ -705,7 +705,7 @@ window.__door = frontDoor({ active: window.__doorActive, track });
 <script type="text/wa-module" id="wa-main">
 import { visit } from './explore/visit-state.js';
 import { sfx } from './explore/pano-times.js';
-import { genieFetch, getPass, GENIE_URL } from '../src/lib/genie.js';
+import { genieFetch, getPass, peekPass, placeCheck, onCheck, checkShowing, GENIE_URL } from '../src/lib/genie.js';
 import { track } from '../src/lib/analytics.js';
 import { stepBucket } from '../src/lib/analytics-events.js';
 import { book } from './explore/book.js';
@@ -912,7 +912,7 @@ delete state.sound;                        // sound on or off lives in explore/s
 // 23 Oct; Nicole, 24 Oct: all of them). Sweet Spells' sheets, the star chart and the Mix always do.
 const EVERY_WAY_KEEPS = ['kitchen', 'pantry', 'map', 'dietary', 'checkin', 'mood'];
 // What every module reads from the bootstrap (docs/code-map.md): the data, the visit, and a few helpers
-Object.assign(inn, { track, genieFetch, getPass, GENIE_URL, stepBucket,
+Object.assign(inn, { track, genieFetch, getPass, peekPass, placeCheck, onCheck, checkShowing, GENIE_URL, stepBucket,
                       AI, chiaWorld, sweetWorld, flWorld, gardenWorld, kitchenSpots, hallWorld, LINES, world, ROOMS, innMapData, foodMapData, atomsById, homeOf, $, esc, store, state, room, showRoomInUrl, EVERY_WAY_KEEPS });
 installTouch(inn);   // what a tap on a hotspot does: each module registers its own (inn.onTouch)
 installRooms(inn);   // time, season, the trail, moving between rooms, the hallway dial

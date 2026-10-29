@@ -21,14 +21,45 @@ import { kitchenPayload } from './kitchen.js';
 
 export function install(inn) {
   // "Write it out in full" (explore/writeout.js): the genie's recipe route, seeded by the card and the whole visit, 3 a visit
-  // A write-out through the genie: the visitor pass first, given up after 20 s (the person check can hang, QA on B1), then 45 s
-  // to write. Giving up throws a timeout, so writeout.js says it failed and doesn't count it
-  const PASS_WAIT = 20000;
+  // A write-out through the genie: the visitor pass first, then 45 s to write. Giving up on the pass throws a timeout (or the
+  // turnstile error), so writeout.js says why it failed and doesn't count it.
+  // The person check: when Turnstile needs the visitor to tick its box, it comes to the sheet that's open (a sheet covers Gemma's
+  // chat, where it first appears), and the wait stretches to give them time. It stays there while it needs them, even after
+  // a failure, so the retry works with no reload (the pass is cached the moment they tick)
+  const PASS_WAIT = 20000, CHECK_WAIT = 70000;
+  const CHECK_NOTE = 'One quick check that you’re a person, then I’ll write it.';
+  let wantPass = false, watching = null;
+  function bringCheck() {
+    const el = layers.top && layers.top.modal !== false ? layers.top.el : null;   // the sheet she's looking at, else the chat
+    if (!inn.placeCheck(el, CHECK_NOTE)) return;
+    clearInterval(watching);
+    if (el) watching = setInterval(() => {                                       // the sheet closed under it: home to the chat
+      if (el.hidden || !el.isConnected) { clearInterval(watching); inn.placeCheck(null); }
+      else if (!inn.placeCheck(el)) clearInterval(watching);                  // the check is done
+    }, 500);
+  }
+  inn.onCheck(showing => { if (showing && wantPass) bringCheck(); else if (!showing) wantPass = false; });
   async function recipeFetch(p) {
-    let timer;
-    try { await Promise.race([inn.getPass(), new Promise((_, no) => { timer = setTimeout(() => no(new Error('timeout: no visitor pass')), PASS_WAIT); })]); }
-    finally { clearTimeout(timer); }
-    return inn.genieFetch(p.rewrite ? '/rewrite' : '/recipe', p, { signal: AbortSignal.timeout(45000) });   // a re-write has its own route and limit
+    let pass = inn.peekPass?.() || null;
+    if (!pass) {
+      wantPass = true;
+      let timer, off;
+      try {
+        pass = await new Promise((ok, no) => {
+          const arm = ms => { clearTimeout(timer); timer = setTimeout(() => no(new Error('timeout: no visitor pass')), ms); };
+          arm(PASS_WAIT);
+          if (inn.checkShowing()) { bringCheck(); arm(CHECK_WAIT); }                 // it's already waiting for them, in the chat
+          off = inn.onCheck(showing => { if (showing) arm(CHECK_WAIT); });
+          inn.getPass().then(ok, no);
+        });
+      } finally { clearTimeout(timer); off?.(); }
+      if (pass) wantPass = false;
+    }
+    const init = { method: 'POST', signal: AbortSignal.timeout(45000), headers: { 'Content-Type': 'application/json', ...(pass ? { 'X-WA-Pass': pass } : {}) }, body: JSON.stringify(p) };
+    // No pass (Turnstile unavailable): ask anyway and let the Worker decide. It says 403, so the failure is "bot_check" with no
+    // second wait for a check (genieFetch would start one)
+    if (!pass) return fetch(`${inn.GENIE_URL}${p.rewrite ? '/rewrite' : '/recipe'}`, init).catch(() => { throw new Error('turnstile: no visitor pass'); });   // an unreachable Worker with no pass is still the check's failure
+    return inn.genieFetch(p.rewrite ? '/rewrite' : '/recipe', p, { signal: init.signal });   // a re-write has its own route and limit
   }
   // The room's own answers as the Worker reads them (four short ones): a real mix's jar size and add-ins go in `mix` instead
   const dishWords = r => { const d = visit.dish(r); return Object.fromEntries(Object.entries(d).filter(([k, v]) => !['mode', 'addins', ...(d.mode === 'real' ? ['topping'] : [])].includes(k) && typeof v === 'string')); };
@@ -51,6 +82,7 @@ export function install(inn) {
     fetchRecipe: payload => (window.__recipeFetch || recipeFetch)(payload),
     fetchRewrite: payload => (window.__recipeFetch || recipeFetch)(payload),      // the seam sees payload.rewrite
     units: unitsNow, setUnits: u => visit.set('units', u), swapsFor,
+    checkShowing: () => window.__checkShowing ?? inn.checkShowing(),      // test seam: say a check is on screen
     payloadFor: rec => ({
       tome_id: 'inn-idea', locale: navigator.language || 'en', room: rec.room, units: unitsNow(),
       idea: { name: rec.seed?.name || rec.title, kind: rec.kind, hook: rec.hook, key_ingredients: rec.key_ingredients || rec.seed?.ingredients || [],
