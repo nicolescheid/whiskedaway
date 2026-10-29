@@ -185,7 +185,7 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
   function failLine(id, other = L.failed) {
     const reason = whys.get(id);
     if (reason === 'rate_limited') return L.failedRate;
-    if (reason === 'bot_check' || reason === 'timeout') return checkShowing?.() ? L.failedCheck : L.failedCheckRetry;
+    if (reason === 'bot_check') return checkShowing?.() ? L.failedCheck : L.failedCheckRetry;
     return other;
   }
   let openDiet = false;                               // the visitor opened "Anything to avoid? ›" on this page
@@ -332,7 +332,8 @@ export function createWriteOut({ book, visit, lines = {}, fetchRecipe, fetchRewr
       else recipe = cleanRecipe(await res.json());
       if (!reason && !recipe) reason = 'error';
     } catch (err) {
-      reason = /timeout|abort/i.test(String(err?.message || err)) ? 'timeout' : /turnstile/i.test(String(err?.message || err)) ? 'bot_check' : 'error';
+      const msg = String(err?.message || err);   // the pass that never came is the check's failure; a slow write is a timeout
+      reason = /no visitor pass|turnstile/i.test(msg) ? 'bot_check' : /timeout|abort/i.test(msg) ? 'timeout' : 'error';
     }
     busy = null;
     whys.delete(rec.id);
