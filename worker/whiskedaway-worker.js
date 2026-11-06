@@ -4,7 +4,7 @@
 // The analytics allow-list, shared with the browser (docs/analytics-plan.md)
 import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
 import { kitchenLine, addinsLine, feelsLine } from './inn-extras.js';
-import { cacheKey, validRecipe, countKey, countWriteout, CACHE_TTL } from './writeout-cache.js';
+import { cacheKey, normaliseInnPayload, validRecipe, countKey, countWriteout, CACHE_TTL } from './writeout-cache.js';
 import { capFor, declaredTooLarge, readCapped, tooLargeLine, cleanWritePayload, cleanNavigatePayload } from './limits.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
@@ -617,7 +617,7 @@ async function handleRecipe(request, env, { rewrite = false, ctx = null } = {}) 
       const cap = capFor(rewrite ? '/rewrite' : '/recipe');
       const body = await readCapped(request, cap);
       if (body.tooLarge) return tooLarge(request, cap, body.counted);
-      const payload = cleanWritePayload(JSON.parse(body.text));   // every visitor-typed field cut to size (limits.js)
+      const payload = normaliseInnPayload(cleanWritePayload(JSON.parse(body.text)));   // every visitor-typed field cut to size (limits.js)
       // /rewrite only re-writes an Inn recipe; the Inn's page sends `rewrite` only there
       if (rewrite !== !!payload.rewrite || (rewrite && payload.tome_id !== 'inn-idea')) return jsonResponse({ error: 'bad_rewrite' }, 400);
       
@@ -733,7 +733,7 @@ async function handleRecipe(request, env, { rewrite = false, ctx = null } = {}) 
 // How many the write-out serves: the check-in's answer (1-6, 8 for a crowd), else 2
 const servingsOf = p => { const n = Math.round(Number(p?.servings)); return n >= 1 ? Math.min(12, n) : 2; };
 
-function buildUserMessage(payload) {
+export function buildUserMessage(payload) {
   const parts = [];
   
   parts.push(`Tome: ${payload.tome_id}`);
@@ -851,11 +851,8 @@ function buildUserMessage(payload) {
     if (list(idea.key_ingredients).length) parts.push(`Key ingredients: ${list(idea.key_ingredients).join(', ')}`);
     if (idea.method_short) parts.push(`The short version: ${txt(idea.method_short, 400)}`);
     if (idea.time) parts.push(`Time: ${txt(idea.time, 40)}`);
-    if (idea.why) parts.push(`Why it suits: ${txt(idea.why)}`);
     if (payload.energy) parts.push(`Energy today: ${txt(payload.energy, 40)} (keep the effort to match)`);
-    if (payload.weather) parts.push(`Weather: ${txt(payload.weather, 40)}`);
     if (payload.time_of_day) parts.push(`Time of day: ${txt(payload.time_of_day, 40)}`);
-    if (list(payload.theme, 2).length) parts.push(`The visit's theme: ${list(payload.theme, 2).join(', ')}`);
     if (list(payload.cuisines, 4).length) parts.push(`Cuisines they fancy: ${list(payload.cuisines, 4).join(', ')}`);
     if (list(payload.pantry_ingredients, 12).length) parts.push(payload.use_up
       ? `Use these up first, where they fit: ${list(payload.pantry_ingredients, 12).join(', ')}`
@@ -925,11 +922,12 @@ function buildUserMessage(payload) {
     parts.push(`Dietary restrictions: ${payload.dietary_restrictions.join(', ')}`);
   }
   
-  if (payload.allergies && payload.allergies.length > 0) {
+  // SEC-038: the Inn's prompt takes no free-text allergies or sourcing line (its allergy route is the keyed Dietary needs and keeping_off)
+  if (payload.tome_id !== 'inn-idea' && payload.allergies && payload.allergies.length > 0) {
     parts.push(`Allergies/avoid: ${payload.allergies.join(', ')}`);
   }
   
-  if (payload.sourcing_preference) {
+  if (payload.tome_id !== 'inn-idea' && payload.sourcing_preference) {
     parts.push(`Sourcing preference: ${payload.sourcing_preference}`);
   }
   
