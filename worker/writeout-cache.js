@@ -2,15 +2,23 @@
 // options as an earlier one is served from KV (WRITEOUT_CACHE) instead of a new Claude call. The key is a hash of everything that
 // shapes the recipe: the idea's own words (so a content edit misses), the room, measurements, servings, diet, kitchen, country words,
 // pantry, the Mix, Sweet Spells' answers, the check-in's effort and time, a re-write's recipe and swap, the model and PROMPT_VERSION.
-// Left out on purpose, as seasoning that would make every key unique: the weather, the visit's theme, the card's "why", and the
-// time of day outside Sweet Spells (whose room rule uses it). A visitor whose weather differs may read a tip written for another day.
+//
+// SEC-038 (6 Nov 2026): the rule is that no visitor-typed text reaches the inn-idea prompt unless it is in the key or has been checked
+// against a fixed list. normaliseInnPayload runs first on the inn-idea path, and the key and the prompt both see its output:
+//   - dietary_restrictions: trimmed, lowercased, deduped (so 'LOW-FODMAP' gets the FODMAP line, under the real low-fodmap key)
+//   - weather: kept only if it is one of the Inn's five weather labels, and then NOT sent to the prompt and NOT keyed (seasoning:
+//     keying it would multiply the keys by five for a tip that reads fine on another day)
+//   - time_of_day: kept only if it is one of the Inn's six time labels; used (and keyed) only in Sweet Spells, whose room rule suits the
+//     sweet to the time; dropped everywhere else
+//   - idea.why, theme, allergies, sourcing_preference: removed. The Inn never sends allergies or sourcing_preference (its allergy
+//     route is Dietary needs and keeping_off, both keyed); why and theme are seasoning the client still sends and the worker ignores.
 // Only validated recipes are kept, for 30 days. Unit tests: test/writeout-cache.test.mjs.
 //
 // Also the groundwork for server-side daily caps (the golden book): a per-day count of write-outs per visitor pass, keyed by an
 // HMAC of the pass's sid (never the sid itself), kept 3 days. Logged only, not enforced.
 
 /** Bump on any change to the Inn's prompt (INN_CONSTITUTION, buildUserMessage's inn-idea lines, inn-extras.js) or the model */
-export const PROMPT_VERSION = 'inn-2026-10-24b';
+export const PROMPT_VERSION = 'inn-2026-11-06a';
 export const CACHE_TTL = 30 * 24 * 3600;
 export const COUNT_TTL = 3 * 24 * 3600;
 
@@ -18,7 +26,26 @@ const s = (v, n = 400) => String(v ?? '').trim().slice(0, n);
 const low = (v, n) => s(v, n).toLowerCase();
 const arr = v => (Array.isArray(v) ? v : []);
 const sorted = (v, f = low) => [...new Set(arr(v).map(x => f(x, 80)).filter(Boolean))].sort();
+export const INN_WEATHERS = ['Rain', 'Fair', 'Change', 'Stormy', 'Very Dry'];   // inn.world.weathers labels (cuddlecore-world.json)
+export const INN_TIMES = ['Dawn', 'Morning', 'Midday', 'Evening', 'Dusk', 'Late night'];   // inn.world.times labels
 const num = v => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
+
+/**
+ * The inn-idea payload as the prompt and the cache key both see it (SEC-038). Other tomes pass through untouched.
+ * Returns a new object; the input is not changed.
+ */
+export function normaliseInnPayload(payload = {}) {
+  if (!payload || payload.tome_id !== 'inn-idea') return payload;
+  const p = { ...payload };
+  p.dietary_restrictions = sorted(p.dietary_restrictions);
+  const inList = (v, list) => list.find(x => x === s(v, 40));
+  const time = inList(p.time_of_day, INN_TIMES);
+  delete p.weather;   // seasoning: a label from INN_WEATHERS is the only kind the Inn sends, and none is wanted in the prompt or the key
+  if (time && p.room === 'sweet-spells') p.time_of_day = time; else delete p.time_of_day;
+  for (const k of ['theme', 'allergies', 'sourcing_preference']) delete p[k];
+  if (p.idea && typeof p.idea === 'object') { p.idea = { ...p.idea }; delete p.idea.why; }
+  return p;
+}
 
 /** JSON with object keys sorted at every level, so the same options always make the same string */
 export function stable(v) {
@@ -29,7 +56,7 @@ export function stable(v) {
 
 /** Everything about a write-out that shapes its text, normalised (order and case of sets don't matter) */
 export function keyParts(payload = {}, { model = '' } = {}) {
-  const p = payload, idea = p.idea || {}, mix = p.mix || {}, rw = p.rewrite || null;
+  const p = normaliseInnPayload(payload), idea = p.idea || {}, mix = p.mix || {}, rw = p.rewrite || null;
   return {
     v: PROMPT_VERSION, model, tome: s(p.tome_id, 40), room: s(p.room, 40),
     idea: { name: s(idea.name, 100), kind: s(idea.kind, 40), hook: s(idea.hook, 160), key: arr(idea.key_ingredients).map(x => low(x, 60)),
