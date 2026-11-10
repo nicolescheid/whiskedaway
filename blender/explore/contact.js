@@ -3,12 +3,22 @@
 // which allows whiskedaway.com cross-origin and does the rest: an Origin check, a honeypot, 3 a minute per IP, a Turnstile check
 // that fails closed, then Cloudflare Email Routing to her verified address. No address is in this page, so nothing to harvest.
 // The person check is the Praxilogue Turnstile widget (its hostnames must include whiskedaway.com), loaded only when the form
-// comes near the screen, through the same loader as the visitor pass (genie.js).
-
-import { loadTurnstile } from '../../src/lib/genie.js';
+// comes near the screen. If the visitor pass has already loaded Turnstile, that copy is used.
 
 const ENDPOINT = 'https://nicolescheid.com/api/contact';
 const SITEKEY = '0x4AAAAAAFxNOby5utiMYELC';   // the Praxilogue widget the contact Worker checks (public, not a secret)
+
+function loadTurnstile() {
+  if (window.turnstile) return Promise.resolve(window.turnstile);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    s.async = true;
+    s.onload = () => resolve(window.turnstile);
+    s.onerror = () => reject(new Error('turnstile_unavailable'));
+    document.head.appendChild(s);
+  });
+}
 
 export function install() {
   const form = document.getElementById('contact-form');

@@ -378,6 +378,7 @@
   #story .contact-status { margin: 0; font: 500 15px 'Quicksand', system-ui, sans-serif; min-height: 1.4em; }
   #story .contact-status.bad { color: #8b2a2a; }
   .chip.contact-btn { padding: 4px 8px; display: inline-flex; align-items: center; }
+  @media (max-height: 350px) { .chip.contact-btn { display: none; } }   /* a very short landscape phone: the bar would reach Flourish's clock; the story's form is still at /#contact */
   .chip.contact-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   #story .fd-foot { margin-top: 36px; padding-top: 16px; border-top: 1px solid rgba(139, 77, 92, .25); font: 500 14px 'Quicksand', system-ui, sans-serif;
                     display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
