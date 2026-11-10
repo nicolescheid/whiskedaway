@@ -64,6 +64,7 @@ NIGHT_VIEWS = {"spring": "24-outside-spring-night.png", "summer": "25-outside-su
                "autumn": "26-outside-autumn-night.png", "winter": "27-outside-winter-night.png"}
 OVERCAST = "kloofendal_overcast_puresky"
 SUNNY = S["hdri"] != OVERCAST
+ORDER_ = ["spring", "summer", "autumn", "winter"]
 WX = dict(plate=S["plate"], strength=1.0, sat=1.12, mul=None, haze=0.0, hdri=S["hdri"], sky=S["sky"], tint=None,
           clamp=None, sun=0.0, wet=0.0, roof_wet=S["wet"], frost=S["frost"], exposure=S["exposure"], lamps=False)
 if WEATHER == "change":
@@ -76,10 +77,34 @@ elif WEATHER == "rain":
 elif WEATHER == "stormy":
     WX.update(plate=WET_VIEWS[SEASON], strength=0.5, sat=0.85, mul=(0.9, 0.95, 1.05), hdri=OVERCAST, sky=0.5,
               wet=0.75, roof_wet=0.85, exposure=0.35, lamps=True)
+# The 11 Nov weathers (weathers11.py, plates from weather_plates.py: 30-57 by day, frost and snow 80-87 by night)
+NEW_WEATHERS = ("cloudy", "overcast", "changeable", "drizzle", "windy", "frost", "snow")
+if WEATHER in NEW_WEATHERS:
+    _i = NEW_WEATHERS.index(WEATHER)
+    WX.update(plate=f"{30 + _i * 4 + ORDER_.index(SEASON)}-outside-{SEASON}-{WEATHER}.png")
+if WEATHER == "cloudy":
+    WX.update(sat=1.0, strength=0.95, clamp=3.0, sun=0.6 if SUNNY else 0.0, sky=S["sky"] * 0.95, exposure=S["exposure"] + 0.15)
+elif WEATHER == "overcast":
+    WX.update(strength=0.9, sat=0.95, hdri=OVERCAST, sky=1.15, exposure=0.5)
+elif WEATHER == "changeable":
+    WX.update(sat=1.0, strength=0.92, clamp=2.5, sun=1.2 if SUNNY else 0.0, sky=S["sky"] * 1.05, wet=0.12,
+              exposure=S["exposure"] + 0.2)
+elif WEATHER == "drizzle":
+    WX.update(strength=0.95, sat=1.0, hdri=OVERCAST, sky=1.15, wet=0.25, roof_wet=0.4, exposure=0.55)
+elif WEATHER == "windy":
+    WX.update(sat=1.1)
+elif WEATHER == "frost":
+    WX.update(sat=0.95, tint=(0.92, 0.96, 1.04), frost=max(S["frost"], 0.35), roof_wet=0.0, exposure=S["exposure"] + 0.05)
+elif WEATHER == "snow":
+    WX.update(strength=1.0, sat=0.9, hdri=OVERCAST, sky=1.4, frost=max(S["frost"], 0.25), roof_wet=0.0, exposure=0.55,
+              lamps=True)
 if NIGHT:
     WX.update(plate=NIGHT_VIEWS[SEASON], strength=0.8, sat=1.0, mul=None, haze=0.0, hdri=OVERCAST, sky=0.03,
               tint=(0.55, 0.62, 1.0), clamp=None, sun=0.0, exposure=0.8, lamps=True)
-    if WEATHER not in ("rain", "stormy"):
+    if WEATHER in ("frost", "snow"):           # they lie on the garden after dark too
+        _i = NEW_WEATHERS.index(WEATHER)
+        WX.update(plate=f"{60 + _i * 4 + ORDER_.index(SEASON)}-outside-{SEASON}-night-{WEATHER}.png")
+    if WEATHER not in ("rain", "stormy", "drizzle"):
         WX.update(wet=0.0, roof_wet=S["wet"])
 # Dawn and dusk: --dawn / --dusk (timeofday.py), like night but warm: the garden plate regraded, a low warm sky,
 # the lamps lit, and a low sun from the lane end (dawn, east) or the sea end (dusk, west) along the house.
@@ -306,6 +331,64 @@ def frosty_glass(name, wet, frost):
     nt.links.new(mask.outputs["Result"], mix.inputs[0])
     nt.links.new(surface, mix.inputs[1])
     nt.links.new(ice.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def snow_dusting(m, bars_y, eaves_x):
+    """Snow lying on the roof glass along each glazing bar (world y in bars_y) and in a drift at the eaves (x past
+    eaves_x), broken up by noise; the panes between stay mostly clear so the sky still reads."""
+    nt = m.node_tree
+    out = nt.nodes["Material Output"]
+    surface = out.inputs["Surface"].links[0].from_socket
+    geo = nt.nodes.new("ShaderNodeTexCoord")       # object space: the mask stays put when garden_build moves the room
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(geo.outputs["Object"], sep.inputs["Vector"])
+    # distance to the nearest bar: |fract(y / step + 0.5) - 0.5| * step
+    step = bars_y[1] - bars_y[0]
+    t = nt.nodes.new("ShaderNodeMath"); t.operation = "MULTIPLY_ADD"
+    t.inputs[1].default_value, t.inputs[2].default_value = 1.0 / step, 0.5 - bars_y[0] / step
+    nt.links.new(sep.outputs["Y"], t.inputs[0])
+    fr = nt.nodes.new("ShaderNodeMath"); fr.operation = "FRACT"
+    nt.links.new(t.outputs[0], fr.inputs[0])
+    c = nt.nodes.new("ShaderNodeMath"); c.operation = "SUBTRACT"; c.inputs[1].default_value = 0.5
+    nt.links.new(fr.outputs[0], c.inputs[0])
+    ab = nt.nodes.new("ShaderNodeMath"); ab.operation = "ABSOLUTE"
+    nt.links.new(c.outputs[0], ab.inputs[0])
+    n = nt.nodes.new("ShaderNodeTexNoise")
+    n.inputs["Scale"].default_value = 14
+    n.inputs["Detail"].default_value = 8
+    nt.links.new(geo.outputs["Object"], n.inputs["Vector"])
+    wob = nt.nodes.new("ShaderNodeMath"); wob.operation = "MULTIPLY_ADD"        # ragged edges
+    wob.inputs[1].default_value, wob.inputs[2].default_value = 0.06 / step, -0.03 / step
+    nt.links.new(n.outputs["Fac"], wob.inputs[0])
+    d = nt.nodes.new("ShaderNodeMath"); d.operation = "SUBTRACT"
+    nt.links.new(ab.outputs[0], d.inputs[0])
+    nt.links.new(wob.outputs[0], d.inputs[1])
+    bars = nt.nodes.new("ShaderNodeMapRange")                                   # 1 on a bar's line, 0 by 4 cm off it
+    bars.inputs["From Min"].default_value, bars.inputs["From Max"].default_value = 0.04 / step, 0.015 / step
+    nt.links.new(d.outputs[0], bars.inputs["Value"])
+    eaves = nt.nodes.new("ShaderNodeMapRange")                                  # the drift along the low edge
+    eaves.inputs["From Min"].default_value, eaves.inputs["From Max"].default_value = eaves_x - 0.12, eaves_x + 0.05
+    nt.links.new(sep.outputs["X"], eaves.inputs["Value"])
+    en = nt.nodes.new("ShaderNodeMath"); en.operation = "MULTIPLY"
+    nt.links.new(eaves.outputs["Result"], en.inputs[0])
+    nt.links.new(n.outputs["Fac"], en.inputs[1])
+    en2 = nt.nodes.new("ShaderNodeMapRange")
+    en2.inputs["From Min"].default_value, en2.inputs["From Max"].default_value = 0.25, 0.45
+    nt.links.new(en.outputs[0], en2.inputs["Value"])
+    mx = nt.nodes.new("ShaderNodeMath"); mx.operation = "MAXIMUM"
+    nt.links.new(bars.outputs["Result"], mx.inputs[0])
+    nt.links.new(en2.outputs["Result"], mx.inputs[1])
+    snow = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    snow.inputs["Base Color"].default_value = (0.9, 0.92, 0.95, 1)
+    snow.inputs["Roughness"].default_value = 0.8
+    snow.inputs["Subsurface Weight"].default_value = 0.3
+    snow.inputs["Transmission Weight"].default_value = 0.55    # the sky glows through it, so it reads white from below
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(mx.outputs[0], mix.inputs[0])
+    nt.links.new(surface, mix.inputs[1])
+    nt.links.new(snow.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], out.inputs["Surface"])
     return m
 
@@ -1258,6 +1341,8 @@ def build():
     rz = 0.012
     poly("roof_glass", [(0.0, -0.02, ROOF_HI + rz), (0.0, L + 0.02, ROOF_HI + rz), (gx + 0.06, L + 0.02, roof_z(gx + 0.06) + rz),
                         (gx + 0.06, -0.02, roof_z(gx + 0.06) + rz)], roof_glass, shadow=False)
+    if WEATHER == "snow":                    # snow lying along the glazing bars and at the eaves
+        snow_dusting(roof_glass, [0.0, L / 10], gx - 0.15)
     for k in range(11):
         y = k * L / 10
         bar(f"rafter_{k}", (0.02, y, ROOF_HI - 0.03), (gx + 0.06, y, roof_z(gx + 0.06) - 0.03), 0.045 if 0 < k < 10 else 0.07, 0.07, sage)

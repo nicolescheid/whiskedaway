@@ -28,6 +28,7 @@ from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, cur
                      image_mat, look, mat, meshes_of, model, pano_camera, pbr, point_light, retint, sphere, srgb,
                      text, use_gpu, window_glass)
 import timeofday  # noqa: E402
+import weathers11  # noqa: E402
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
@@ -54,9 +55,12 @@ WEATHERS = {
     "very-dry": dict(view="18-lane-very-dry.png", sky=2.3, tint=(1.0, 0.92, 0.8), backdrop=1.1,
                      sun=(8.0, (1.0, 0.86, 0.66), 24, -25), bounce=(90, (1.0, 0.92, 0.82)), wet=0.0, fill=2, lamps=0.0, exposure=0.1),
 }
+_NEW_DAY, _NEW_NIGHT = weathers11.plates("lane", "lane-night")   # the 11 Nov weathers (weathers11.py)
+WEATHERS.update(weathers11.derive(WEATHERS, {w: {"view": v} for w, v in _NEW_DAY.items()}))
 WX = dict(WEATHERS[WEATHER])
 NIGHT_VIEWS = {"rain": "19-lane-night-rain.png", "fair": "20-lane-night-fair.png", "change": "21-lane-night-change.png",
                "stormy": "22-lane-night-stormy.png", "very-dry": "23-lane-night-very-dry.png"}
+NIGHT_VIEWS.update(_NEW_NIGHT)
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
               bounce=(4, (0.55, 0.62, 1.0)), fill=1.0, lamps=0.8, exposure=-0.1)
@@ -424,7 +428,7 @@ def build():
         box_span(name, x0, x1, y0, y1, 0, 0.16, paint, bevel=0.003)
 
     # ---- The bay window: three faces of cream casements on a panelled base, a window seat inside
-    window = window_glass("bay_glass", wet=WX["wet"])
+    window = window_glass("bay_glass", wet=WX["wet"], frost=WX.get("frost", 0.0), sill=SILL)
     panes = []
     for fi, (p, q) in enumerate(zip(BAY[:-1], BAY[1:])):
         lights = 3 if fi == 1 else 2

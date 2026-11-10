@@ -174,10 +174,12 @@ def emission_mat(name, path, strength=1.0, saturation=1.0):
     return m
 
 
-def window_glass(name, wet=0.0):
+def window_glass(name, wet=0.0, frost=0.0, sill=1.0):
     """Clear window glass. Rays go straight through (no refraction, no tint), with a faint Fresnel reflection,
     so the view outside stays sharp. A refractive glass box bends and blurs the view and reads as frosted.
-    wet: 0 dry .. 1 storm. Raindrops on the glass; only the drops refract, the glass between them stays clear."""
+    wet: 0 dry .. 1 storm. Raindrops on the glass; only the drops refract, the glass between them stays clear.
+    frost: 0 .. 1, ice feathering up from the sill (world height `sill`) and gone about 0.3 m above it, as on the
+    glasshouse's winter panes (glasshouse_build.frosty_glass)."""
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -237,6 +239,37 @@ def window_glass(name, wet=0.0):
         nt.links.new(surface, wetmix.inputs[1])
         nt.links.new(drop.outputs[0], wetmix.inputs[2])
         surface = wetmix.outputs[0]
+    if frost:
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(geo.outputs["Position"], sep.inputs["Vector"])
+        low = nt.nodes.new("ShaderNodeMapRange")          # thickest at the sill, gone a hand's span above (a rim, not a veil)
+        low.inputs["From Min"].default_value = sill + 0.3
+        low.inputs["From Max"].default_value = sill
+        nt.links.new(sep.outputs["Z"], low.inputs["Value"])
+        n = nt.nodes.new("ShaderNodeTexNoise")
+        n.inputs["Scale"].default_value = 9
+        n.inputs["Detail"].default_value = 12
+        nt.links.new(geo.outputs["Position"], n.inputs["Vector"])
+        add = nt.nodes.new("ShaderNodeMath")
+        add.operation = "MULTIPLY_ADD"
+        add.inputs[2].default_value = frost - 0.55
+        nt.links.new(n.outputs["Fac"], add.inputs[0])
+        nt.links.new(low.outputs["Result"], add.inputs[1])
+        fm = nt.nodes.new("ShaderNodeMapRange")
+        fm.inputs["From Min"].default_value = 0.0
+        fm.inputs["From Max"].default_value = 0.25
+        fm.inputs["To Max"].default_value = 0.6
+        nt.links.new(add.outputs[0], fm.inputs["Value"])
+        ice = nt.nodes.new("ShaderNodeBsdfPrincipled")
+        ice.inputs["Base Color"].default_value = (0.92, 0.95, 0.97, 1)
+        ice.inputs["Roughness"].default_value = 0.5
+        ice.inputs["Transmission Weight"].default_value = 0.6
+        icemix = nt.nodes.new("ShaderNodeMixShader")
+        nt.links.new(fm.outputs["Result"], icemix.inputs[0])
+        nt.links.new(surface, icemix.inputs[1])
+        nt.links.new(ice.outputs[0], icemix.inputs[2])
+        surface = icemix.outputs[0]
     nt.links.new(surface, out.inputs["Surface"])
     return m
 

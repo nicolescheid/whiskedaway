@@ -87,9 +87,30 @@ WEATHERS = {
                      rain=1, fire=False, shut=False, lawn=("#58763f", 0.4), exposure=0.6),
     "stormy":   dict(hdri=OVERCAST, sky=0.55, sun_az=0, plate="wet", strength=0.6, sat=0.9, mul=(0.85, 0.9, 1.0), haze=0.0,
                      wet=0.85, rain=2, fire=False, shut=True, lawn=("#4f6a3c", 0.45), exposure=0.7),
+    # The 11 Nov weathers (weathers11.py). rain 0.5: drizzle's fine streaks; "snow": flakes. wind: the shrubs, trees
+    # and tufts lean inland. frost / snow: white on the lawn's blades and the ground (snow also on slate and soil).
+    "cloudy":   dict(hdri=CLEAR, sky=0.8, sun_az=25, plate="cloudy", strength=0.95, sat=1.0, mul=None, haze=0.0, wet=0.0,
+                     rain=0, fire=True, shut=False, lawn=("#6c8c46", 0.35), exposure=0.42),
+    "overcast": dict(hdri=OVERCAST, sky=1.15, sun_az=0, plate="overcast", strength=0.92, sat=0.95, mul=None, haze=0.0,
+                     wet=0.05, rain=0, fire=True, shut=False, lawn=("#62804a", 0.38), exposure=0.58),
+    "changeable": dict(hdri=CLEAR, sky=0.95, sun_az=40, plate="changeable", strength=0.92, sat=1.0, mul=(0.96, 0.98, 1.0),
+                       haze=0.0, wet=0.15, rain=0, fire=True, shut=False, lawn=("#65874a", 0.36), exposure=0.4),
+    "drizzle":  dict(hdri=OVERCAST, sky=1.15, sun_az=0, plate="drizzle", strength=0.95, sat=0.95, mul=None, haze=0.05,
+                     wet=0.35, rain=0.5, fire=False, shut=False, lawn=("#5c7a42", 0.4), exposure=0.6),
+    "windy":    dict(hdri=CLEAR, sky=1.0, sun_az=25, plate="windy", strength=1.0, sat=1.1, mul=None, haze=0.0, wet=0.0,
+                     rain=0, fire=False, shut=True, lawn=("#6f8f45", 0.35), exposure=0.35, wind=8.0),
+    "frost":    dict(hdri=CLEAR, sky=0.95, sun_az=25, plate="frost", strength=1.0, sat=0.95, mul=(0.94, 0.98, 1.04),
+                     haze=0.05, wet=0.0, rain=0, fire=True, shut=False, lawn=("#b8c4c2", 0.55), exposure=0.35, frost=1.0),
+    "snow":     dict(hdri=OVERCAST, sky=1.35, sun_az=0, plate="snow", strength=1.0, sat=0.9, mul=None, haze=0.1, wet=0.0,
+                     rain="snow", fire=True, shut=True, lawn=("#eef1f4", 0.92), exposure=0.5, snow=1.0),
 }
 WX = dict(WEATHERS[WEATHER])
 PLATES = {"dry": "13-outside-spring.png", "wet": "20-outside-spring-wet.png", "night": "24-outside-spring-night.png"}
+_NEW = ("cloudy", "overcast", "changeable", "drizzle", "windy", "frost", "snow")
+PLATES.update({w: f"{30 + i * 4}-outside-spring-{w}.png" for i, w in enumerate(_NEW)})   # weather_plates.py
+if WEATHER in ("frost", "snow"):
+    PLATES["night"] = f"{60 + _NEW.index(WEATHER) * 4}-outside-spring-night-{WEATHER}.png"
+WIND = math.radians(WX.get("wind", 0.0))   # lean of the planted things, tops toward the lane (away from the sea)
 if NIGHT:
     # Late night: the same weather after dark, the string lights and the tent's lantern lit, embers in the oven
     WX.update(plate="night", strength=0.9, sat=1.0, mul=None, haze=0.0, sky=0.04, exposure=0.9)
@@ -101,9 +122,11 @@ TOD_TINT = (1, 1, 1, 1)
 TOD_SUN = None
 if TIME and not NIGHT:
     _t = timeofday.TIMES[TIME]
-    PLATES["tod"] = timeofday.plate(os.path.join(GH_PACK, PLATES["dry"]), os.path.join(GH_PACK, PLATES["night"]), TIME, "garden_spring")
+    _day = WX["plate"] if WEATHER in _NEW else "dry"          # the new weathers keep their own far view
+    PLATES["tod"] = timeofday.plate(os.path.join(GH_PACK, PLATES[_day]), os.path.join(GH_PACK, PLATES["night"]), TIME,
+                                    "garden_spring" if _day == "dry" else f"garden_spring_{WEATHER}")
     WX.update(plate="tod", strength=0.9, sat=1.0, mul=None, haze=0.0, hdri=OVERCAST, sky=_t["sky"] * 1.3, exposure=0.5,
-              wet=0.0, rain=0, fire=True, shut=False)
+              wet=0.0, rain="snow" if WEATHER == "snow" else 0, fire=True, shut=False)
     TOD_TINT = (*(c ** 2 for c in _t["tint"]), 1)
     TOD_SUN = (_t["sun"][0], _t["sun"][1], -45 if TIME == "dawn" else 45)
 LIT = NIGHT or bool(TIME)                  # string lights, lantern, the Inn's windows
@@ -229,7 +252,7 @@ def place(piece, loc, rot_z=0.0, scale=1.0, name=None, size=None):
     o.name = name or src.name + "_i"
     bpy.context.scene.collection.objects.link(o)
     s = scale if isinstance(scale, (tuple, list)) else (scale,) * 3
-    o.matrix_world = (Matrix.Translation(loc) @ Matrix.Rotation(math.radians(rot_z), 4, "Z")
+    o.matrix_world = (Matrix.Translation(loc) @ Matrix.Rotation(WIND, 4, "X") @ Matrix.Rotation(math.radians(rot_z), 4, "Z")
                       @ Matrix.Diagonal((*s, 1.0)) @ base)
     o.hide_render = o.hide_viewport = False
     return o
@@ -399,6 +422,13 @@ def build():
     lawn_c, lawn_mix = WX["lawn"]
     lawn = pbr("lawn", "leafy_grass", 2.5, tint=srgb(lawn_c), tint_mix=lawn_mix, rough_add=-0.3 * wet)
     soil = pbr("soil", "farm_soil", 1.0, tint=srgb("#3a2c20") if wet else None, tint_mix=0.4, rough_add=-0.3 * wet, bump=1.0)
+    if WX.get("snow"):       # snow lying on the roofs, the beds and the flags
+        slate = pbr("slate", "roof_slates_02", 1.6, tint=srgb("#e6eaee"), tint_mix=0.75)
+        soil = pbr("soil", "farm_soil", 1.0, tint=srgb("#e9edf0"), tint_mix=0.85, bump=0.6)
+        flags = pbr("brick", "terracotta_floor_tiles", 0.8, tint=srgb("#c3c8cc"), tint_mix=0.5)
+    elif WX.get("frost"):    # rime on the bare ground and the flags
+        soil = pbr("soil", "farm_soil", 1.0, tint=srgb("#a4adb2"), tint_mix=0.4, bump=1.0)
+        flags = pbr("brick", "terracotta_floor_tiles", 0.8, tint=srgb("#c9cfd2"), tint_mix=0.3)
     planks = pbr("bed_timber", "worn_planks", 1.2, tint=srgb("#8a7a64"), tint_mix=0.3)
     oak = pbr("oak", "wood_table_worn", 1.0, tint=srgb("#9c7b55"), tint_mix=0.3, rough_add=-0.2 * wet)
     sage = pbr("sage_table", "wood_table_worn", 1.0, tint=srgb("#8d9b80"), tint_mix=0.75, rough_add=-0.2 * wet)
@@ -967,7 +997,8 @@ def build_lawn(rnd, wet):
     p = nt.nodes["Principled BSDF"]
     info = nt.nodes.new("ShaderNodeHairInfo")
     ramp = nt.nodes.new("ShaderNodeValToRGB")
-    root_c, tip_c = {"very-dry": ("#6b6a2c", "#c9b86e")}.get(WEATHER, ("#2f4a1c", "#86a84a"))
+    root_c, tip_c = {"very-dry": ("#6b6a2c", "#c9b86e"), "frost": ("#3d5a3a", "#d3dcde"),
+                     "snow": ("#d4dbe0", "#f4f6f8")}.get(WEATHER, ("#2f4a1c", "#86a84a"))
     ramp.color_ramp.elements[0].color = srgb(root_c)
     ramp.color_ramp.elements[1].color = srgb(tip_c)
     nt.links.new(info.outputs["Intercept"], ramp.inputs["Fac"])
@@ -992,7 +1023,7 @@ def build_lawn(rnd, wet):
     st = ps.settings
     st.type = "HAIR"
     st.count = 40000 if QUICK else 160000
-    st.hair_length = 0.085 if WEATHER != "very-dry" else 0.06
+    st.hair_length = {"very-dry": 0.06, "snow": 0.035}.get(WEATHER, 0.085)   # snow: the tips poking through
     st.child_type = "INTERPOLATED"
     st.rendered_child_count = 4 if QUICK else 8
     st.child_length = 0.75
@@ -1031,8 +1062,9 @@ def indoors(p):
 
 def build_rain(rnd, heavy):
     """Rain: thin streaks facing the camera, falling a little slanted, thick near the camera and out to ~16 m."""
-    n = 7000 if heavy == 1 else 13000
-    length, slant = (0.32, 0.12) if heavy == 1 else (0.48, 0.35)
+    snow = heavy == "snow"
+    n = {0.5: 3500, 1: 7000, "snow": 9000}.get(heavy, 13000)
+    length, slant = {0.5: (0.2, 0.08), 1: (0.32, 0.12), "snow": (0.014, 0.25)}.get(heavy, (0.48, 0.35))
     wind = Vector((0.6, -0.35, 0)).normalized()
     verts, faces = [], []
     for k in range(n):
@@ -1043,7 +1075,7 @@ def build_rain(rnd, heavy):
         if p.z < GROUND or (ROOM and indoors(p)):
             continue
         d = (Vector((0, 0, -1)) + wind * slant).normalized() * length * rnd.uniform(0.7, 1.2)
-        w = 0.0009 + 0.0005 * r / 8
+        w = (0.0045 + 0.002 * r / 8) if snow else 0.0009 + 0.0005 * r / 8
         for axis in (Vector((1, 0, 0)), Vector((0, 1, 0))):   # two crossed ribbons: a streak from any side
             side = d.cross(axis).normalized() * w
             i = len(verts)
@@ -1055,10 +1087,10 @@ def build_rain(rnd, heavy):
     nt.nodes.remove(nt.nodes["Principled BSDF"])
     clear = nt.nodes.new("ShaderNodeBsdfTransparent")
     e = nt.nodes.new("ShaderNodeEmission")
-    e.inputs["Color"].default_value = (0.82, 0.86, 0.9, 1)
+    e.inputs["Color"].default_value = (0.95, 0.96, 0.98, 1) if snow else (0.82, 0.86, 0.9, 1)
     e.inputs["Strength"].default_value = 0.04 if NIGHT else 0.6 * WX["sky"]
     mix = nt.nodes.new("ShaderNodeMixShader")
-    mix.inputs[0].default_value = 0.18
+    mix.inputs[0].default_value = 0.85 if snow else 0.18
     nt.links.new(clear.outputs[0], mix.inputs[1])
     nt.links.new(e.outputs[0], mix.inputs[2])
     nt.links.new(mix.outputs[0], nt.nodes["Material Output"].inputs["Surface"])
