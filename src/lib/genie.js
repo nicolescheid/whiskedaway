@@ -19,7 +19,7 @@ const PASS_KEY = 'wa-genie-pass';
 
 let pending = null;
 
-function loadTurnstile() {
+export function loadTurnstile() {
   if (window.turnstile) return Promise.resolve(window.turnstile);
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');

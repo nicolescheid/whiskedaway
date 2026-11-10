@@ -263,8 +263,10 @@ export function frontDoor({ active, track }) {
     track('story_link');
   });
   // The bell card's "About the Inn" link (/?door=1#story) opens on the story, not the picture
-  if (location.hash === '#story') {
-    const land = () => toStory(false);
+  // The top bar's envelope (/?door=1#contact) opens on the contact form at the end of the story
+  if (location.hash === '#story' || location.hash === '#contact') {
+    const at = location.hash.slice(1);
+    const land = () => $(at === 'contact' ? 'contact' : 'story')?.scrollIntoView({ behavior: 'instant', block: 'start' });
     land();
     if (document.readyState !== 'complete') addEventListener('load', land, { once: true });   // again once the picture has its size
   }
