@@ -39,7 +39,7 @@ export function install(inn) {
       && (inn.state.aiRoom !== roomNow || now - (inn.state.aiAt || 0) >= AI_EVERY);
     if (useAI) { inn.state.aiCalls = (inn.state.aiCalls || 0) + 1; inn.state.aiAt = now; inn.state.aiRoom = roomNow; }
     // One new idea per step (two to start), so they come at the pace of the wander
-    const putOut = res => res.serve.filter(s => !inn.state.served.includes(s.atom) && !book.has(s.atom)).slice(0, inn.state.cards.length ? 1 : 2).forEach(s => serve(s, res.mode));
+    const putOut = res => res.serve.filter(s => !inn.state.served.includes(s.atom) && !book.has(s.atom) && !infoBlocked(s.atom)).slice(0, inn.state.cards.length ? 1 : 2).forEach(s => serve(s, res.mode));
     if (useAI) {
       // Hybrid: the room responds at once with the local reading (glow and new ideas), and Gemma
       // "types" while the AI reads the wander (the visitor pass and the model call can take many seconds).
@@ -56,7 +56,7 @@ export function install(inn) {
       if (r.fallback) inn.track('nav_fallback', { reason: /timeout|abort/i.test(r.fallback) ? 'timeout' : /429/.test(r.fallback) ? 'rate_limited'
                                                       : /403/.test(r.fallback) ? 'bot_check' : /navigate 5[0-9][0-9]/.test(r.fallback) ? 'upstream'   // the Worker or the model failed
                                                       : /navigate 4[0-9][0-9]/.test(r.fallback) ? 'rejected' : /fetch|network|load failed/i.test(r.fallback) ? 'network' : 'error' });
-      r = { ...r, serve: r.mode === 'ai' ? r.serve.filter(s => !inn.state.served.includes(s.atom) && !book.has(s.atom)).slice(0, 1) : [] };
+      r = { ...r, serve: r.mode === 'ai' ? r.serve.filter(s => !inn.state.served.includes(s.atom) && !book.has(s.atom) && !infoBlocked(s.atom)).slice(0, 1) : [] };
     }
     inn.state.result = r;
     // No builder words in view (brainstorm #6): if the AI can't help, Gemma says so once a visit, softly, in her own voice
@@ -140,6 +140,15 @@ export function install(inn) {
   }
   const sizeBucket = n => (n <= 0 ? '0' : n <= 2 ? '1-2' : n <= 5 ? '3-5' : n <= 10 ? '6-10' : '11+'); inn.sizeBucket = sizeBucket;
 
+  // Info cards (a "why it works" or an "ingredient story": no recipe) come only from touching an object that teaches
+  // (themes "learning" or "why": the dietary shelf, the spell books, the knife block...). Otherwise every idea is a recipe (Nicole, 11 Nov)
+  const isInfo = a => !!a && !a.recipe && ['why it works', 'ingredient story'].includes(a.kind);
+  const infoOk = () => {
+    const e = [...inn.state.trail].reverse().find(x => ['touch', 'linger', 'map'].includes(x.kind));
+    return e?.kind === 'touch' && (inn.world.objects[e.id]?.themes || []).some(t => t === 'learning' || t === 'why');
+  };
+  const infoBlocked = id => !infoOk() && isInfo(inn.world.atoms.find(a => a.id === id)); inn.infoBlocked = infoBlocked;
+
   // What steers the navigator besides the trail (recipe-book-ux.md §6b): never anything kept, served or clashing with a
   // dietary need; this visit's keeps weigh ×3 and older ones ×1; the pantry and cuisines add a bonus
   function steer() {
@@ -148,7 +157,7 @@ export function install(inn) {
       awayOk: !awayOut() || !!inn.state.awayLift?.[inn.homeOf(inn.state.room)],
       moodThemes: chiaData(inn.LINES).moods[visit.dish('chiapothecary', 'mood')]?.themes || [],   // not chia.data: steer() can run before it's made
       ...sweetSteer(visit),                                                                    // Sweet Spells' cravings and "no added sugar"
-      served: [...inn.state.served, ...kept.map(k => k.id), ...inn.world.atoms.filter(a => dietClash(a) || inn.likeClash?.(a) || !kitchenOk(a)).map(a => a.id)],
+      served: [...inn.state.served, ...kept.map(k => k.id), ...inn.world.atoms.filter(a => dietClash(a) || inn.likeClash?.(a) || !kitchenOk(a) || (isInfo(a) && !infoOk())).map(a => a.id)],
       book: { now: kept.filter(k => k.visit === book.visitId), before: kept.filter(k => k.visit !== book.visitId) },
       about: { pantry: inn.pantryNow().items, useUp: inn.pantryNow().useUp, cuisines: inn.cuisinesNow(), adventure: inn.foodMap?.adventure(), heritage: inn.foodMap?.heritage() || [], synonyms: inn.SYNONYMS,
                why: { ...inn.CW.why, ...inn.T.why }, cuisineLabel,
