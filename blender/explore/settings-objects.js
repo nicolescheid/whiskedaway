@@ -62,8 +62,8 @@ export function install(inn) {
   function tint() {
     const t = inn.timeNow(), w = inn.state.weather;
     let c = t === 'night' ? [0.42, 0.45, 0.6] : t === 'dawn' ? [1, 0.86, 0.74] : t === 'dusk' ? [0.98, 0.8, 0.66] : [1, 0.98, 0.95];
-    const flat = w === 'stormy' ? 0.72 : w === 'rain' ? 0.82 : w === 'change' ? 0.92 : 1;
-    return { rgb: c.map(x => x * flat), night: t === 'night', dim: w === 'stormy' || w === 'rain' };
+    const flat = { stormy: 0.72, rain: 0.82, drizzle: 0.86, overcast: 0.88, change: 0.92, snow: 0.94, changeable: 0.94, cloudy: 0.96, windy: 0.97 }[w] || 1;
+    return { rgb: c.map(x => x * flat), night: t === 'night', dim: ['stormy', 'rain', 'drizzle'].includes(w) };
   }
 
   function place(sprite, kind, s, k = 1, dx = 0, dy = 0) {

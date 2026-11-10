@@ -8,7 +8,7 @@ import { createEdgeHints } from './edge-hints.js';
 import { createTilt } from './tilt.js';
 import { saveData } from './data-budget.js';
 import { createErwina } from './erwina.js';
-import { usable } from './pano-times.js';
+import { usable, withLookalike, LOOKALIKE } from './pano-times.js';
 
 export function install(inn) {
   Object.assign(inn, { showWeather, showClock, buildHotspots, render, resize, lookTo });   // its functions, for the other modules (hoisted)
@@ -99,7 +99,8 @@ export function install(inn) {
     let shown = w;                                     // a room without this weather's render falls back to rain
     // Dawn, dusk and night try their own render first (explore/pano-times.js says which exist), then fall back, ending at the day render
     let preview = null, got = null;                    // got: [weather, tod] of the render on screen; tod null = the day render
-    for (const [cw, tod] of R.dayOnly || R.noNight ? [[w, null]] : usable(R, w, time)) {
+    // A weather whose renders haven't landed borrows its stand-in's (LOOKALIKE in pano-times.js), tinted below
+    for (const [cw, tod] of R.dayOnly || R.noNight ? withLookalike(w, x => [[x, null]]) : usable(R, w, time)) {
       preview = await loadTex(R.pano(cw, tod, false));
       if (preview) { got = [cw, tod]; break; }
     }
@@ -108,7 +109,8 @@ export function install(inn) {
     if (stale()) return;
     inn.$('tint').className = haveTod ? '' : time === 'night' ? 'night' : time === 'dawn' ? 'morning' : time === 'dusk' ? 'evening' : time === 'midday' ? '' : time;
     setThemeColor();
-    stage.className = stage.className.replace(/\s*wx-\S+/g, '') + (R.dayOnly || shown !== w ? ` wx-${w}` : '');
+    const standIn = got?.[0] === LOOKALIKE[w];
+    stage.className = stage.className.replace(/\s*wx-\S+/g, '') + (R.dayOnly || shown !== w || standIn ? ` wx-${w}` : '');
     if (preview) inn.erwina?.lightFrom(preview);          // she's lit from the pano on screen
     if (preview) fade && sphere.material.map ? crossFade(preview) : (showTex(preview), render());
     if (useFull) {

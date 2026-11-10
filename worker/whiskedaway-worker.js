@@ -6,6 +6,7 @@ import { cleanEvent, sourceParams } from '../src/lib/analytics-events.js';
 import { kitchenLine, addinsLine, feelsLine } from './inn-extras.js';
 import { cacheKey, normaliseInnPayload, validRecipe, countKey, countWriteout, CACHE_TTL } from './writeout-cache.js';
 import { capFor, declaredTooLarge, readCapped, tooLargeLine, cleanWritePayload, cleanNavigatePayload } from './limits.js';
+import { innWeather, CURRENT_FIELDS } from './inn-weather.js';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -564,7 +565,7 @@ export default {
     }
 
     // The Inn opens in the visitor's own weather (docs/local-weather.md): today's conditions near the rough
-    // location Cloudflare attaches to the request, from Open-Meteo, as one of the Inn's five weathers.
+    // location Cloudflare attaches to the request, from Open-Meteo, as one of the Inn's twelve weathers (inn-weather.js).
     // Only the weather goes back. Nothing is logged or kept, and anything that goes wrong just means no guess.
     if (request.method === 'GET' && new URL(request.url).pathname === '/local-weather') {
       return withCors(await handleLocalWeather(request, ctx), request, env);
@@ -1148,7 +1149,7 @@ async function handleLocalWeather(request, ctx) {
   try {
     const [la, lo] = area.split(',');
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}`
-      + '&current=weather_code,temperature_2m,precipitation,wind_gusts_10m&daily=sunrise,sunset&forecast_days=1&timezone=auto';
+      + `&current=${CURRENT_FIELDS}&daily=sunrise,sunset&forecast_days=1&timezone=auto`;
     const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
     if (!res.ok) return reply(null);
     const data = await res.json();
@@ -1163,16 +1164,6 @@ async function handleLocalWeather(request, ctx) {
   } catch {
     return reply(null);
   }
-}
-
-/** Open-Meteo's current conditions as one of the Inn's five weathers (WMO weather codes). */
-function innWeather({ weather_code: code, temperature_2m: temp, precipitation: rain, wind_gusts_10m: gusts }) {
-  if (code == null) return null;
-  if (code >= 95 || gusts >= 60) return 'stormy';                     // thunder, or a proper gale
-  if ((code >= 51 && code <= 86) || rain >= 0.2) return 'rain';       // drizzle, rain, snow, showers
-  if (temp >= 27) return 'very-dry';                                  // sweltering
-  if (code === 3 || code === 45 || code === 48) return 'change';      // grey skies and sea fog
-  return 'fair';                                                      // clear to partly cloudy
 }
 
 function allowedOrigins(env) {

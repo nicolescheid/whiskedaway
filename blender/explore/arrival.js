@@ -11,8 +11,15 @@ export function install(inn) {
   const GUESSED = {
     rain: "Hello, love. Looks like rain where you are. Is that right?",
     fair: "Hello, love. Clear skies where you are, by the look of it. Is that right?",
-    change: "Hello, love. Grey and still where you are, by the look of it. Is that right?",
+    cloudy: "Hello, love. A bit cloudy where you are, by the look of it. Is that right?",
+    windy: "Hello, love. Windy where you are, by the look of it. Is that right?",
+    overcast: "Hello, love. Grey skies where you are, by the look of it. Is that right?",
+    changeable: "Hello, love. Sun and showers where you are, by the look of it. Is that right?",
+    change: "Hello, love. Foggy where you are, by the look of it. Is that right?",
+    drizzle: "Hello, love. A bit of drizzle where you are, by the look of it. Is that right?",
     stormy: "Hello, love. Sounds wild out where you are. Is that right?",
+    snow: "Hello, love. Snow where you are, by the look of it. Is that right?",
+    frost: "Hello, love. Frosty where you are, by the look of it. Is that right?",
     'very-dry': "Hello, love. Hot and dry where you are, by the look of it. Is that right?",
   };
   function confirmGuess(also) {

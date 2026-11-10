@@ -1957,6 +1957,90 @@
     {"id":"gentle-nasi-goreng","room":"cuddlecore","kind":"recipe idea","spoons":1,"title":"Nasi goreng without the chilli","short":"Nasi goreng","icon":"🍛","ref":"the fried rice","hook":"Day-old rice fried with an egg and sweet soy.","time":15,"key_ingredients":["cooked rice","egg","kecap manis","spring onion","garlic"],"method_short":"Fry a little garlic in oil, add cold cooked rice and keep it moving until hot all the way through. Push it aside, scramble an egg until set, then stir in the kecap manis and spring onion. Leave out the chilli.","diet":["dairy-free","nut-free"],"cuisines":["Indonesian"],"feels":[],"mild_way_in":"Indonesian","appliances":["stove"],"appliances_checked":true,"themes":["comfort","unwell","quick","simple","low-spoons","cooking"],"seed":{"name":"Mild nasi goreng with egg","why":"Nasi goreng started as a way to use up yesterday's rice; this one is the mild version."},"body":"Fry a little garlic in oil, add cold cooked rice and keep it moving until hot all the way through. Push it aside, scramble an egg until set, then stir in the kecap manis and spring onion. Leave out the chilli."}
   ],
   "weathers": {
+    "fair": {
+      "label": "Sunny",
+      "chip": "Sunny",
+      "themes": [
+        "sunny",
+        "fresh",
+        "light",
+        "citrus",
+        "green"
+      ],
+      "moment": "Sunny, then. Clear skies, not a cloud about."
+    },
+    "cloudy": {
+      "label": "Cloudy",
+      "chip": "Cloudy",
+      "themes": [
+        "fresh",
+        "light",
+        "simple",
+        "green",
+        "calm"
+      ],
+      "moment": "A few clouds about. Nice soft light in here."
+    },
+    "windy": {
+      "label": "Windy",
+      "chip": "Windy",
+      "themes": [
+        "warming",
+        "hearty",
+        "cosy",
+        "simple",
+        "comfort"
+      ],
+      "moment": "Windy out there. Hear it in the eaves?"
+    },
+    "overcast": {
+      "label": "Overcast",
+      "chip": "Overcast",
+      "themes": [
+        "warming",
+        "comfort",
+        "simple",
+        "tea",
+        "slow"
+      ],
+      "moment": "Grey sky all over. A good day for something warm."
+    },
+    "changeable": {
+      "label": "Changeable",
+      "chip": "Changeable",
+      "themes": [
+        "simple",
+        "quick",
+        "fresh",
+        "warming",
+        "light"
+      ],
+      "moment": "Sun one minute, showers the next. It can't make up its mind."
+    },
+    "change": {
+      "label": "Foggy",
+      "chip": "Foggy",
+      "themes": [
+        "calm",
+        "gentle",
+        "simple",
+        "tea",
+        "slow"
+      ],
+      "moment": "Sea fog rolling in. Everything's gone quiet and soft."
+    },
+    "drizzle": {
+      "label": "Drizzle",
+      "chip": "Drizzly",
+      "themes": [
+        "rain",
+        "tea",
+        "gentle",
+        "warming",
+        "cosy"
+      ],
+      "moment": "Just a drizzle out there. Fine and soft."
+    },
     "rain": {
       "label": "Rain",
       "chip": "Rainy",
@@ -1968,30 +2052,6 @@
         "cosy"
       ],
       "moment": "Rain, then. I'll keep the kettle on."
-    },
-    "fair": {
-      "label": "Fair",
-      "chip": "Clear",
-      "themes": [
-        "sunny",
-        "fresh",
-        "light",
-        "citrus",
-        "green"
-      ],
-      "moment": "Fair weather. Clear skies, not a cloud about."
-    },
-    "change": {
-      "label": "Change",
-      "chip": "Misty",
-      "themes": [
-        "calm",
-        "gentle",
-        "simple",
-        "tea",
-        "slow"
-      ],
-      "moment": "Sea fog rolling in. Everything's gone quiet and soft."
     },
     "stormy": {
       "label": "Stormy",
@@ -2005,8 +2065,32 @@
       ],
       "moment": "Listen to that wind. Glad you're in here with me."
     },
+    "snow": {
+      "label": "Snow",
+      "chip": "Snowy",
+      "themes": [
+        "warming",
+        "hearty",
+        "winter",
+        "cosy",
+        "broth"
+      ],
+      "moment": "Snow! Come and look. I'll put something warm on."
+    },
+    "frost": {
+      "label": "Frosty",
+      "chip": "Frosty",
+      "themes": [
+        "warming",
+        "winter",
+        "comfort",
+        "tea",
+        "hearty"
+      ],
+      "moment": "A hard frost out there. Everything's gone white and crisp."
+    },
     "very-dry": {
-      "label": "Very Dry",
+      "label": "Dry",
       "chip": "Hot and dry",
       "themes": [
         "cooling",

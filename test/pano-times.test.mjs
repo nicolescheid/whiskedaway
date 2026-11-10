@@ -1,12 +1,29 @@
 // Dawn and dusk renders (blender/explore/pano-times.js): the list of what exists, and the fallback that never asks for what doesn't
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync } from 'node:fs';
-import { EXISTS, sfx, panoExists, candidates, usable } from '../blender/explore/pano-times.js';
+import { readdirSync, readFileSync } from 'node:fs';
+import { EXISTS, sfx, panoExists, candidates, usable, WEATHERS, LOOKALIKE } from '../blender/explore/pano-times.js';
 
 const OUT = new URL('../blender/out/', import.meta.url);
 const files = readdirSync(OUT);
-const WEATHERS = ['rain', 'fair', 'change', 'stormy', 'very-dry'];
+const FIRST_FIVE = ['rain', 'fair', 'change', 'stormy', 'very-dry'];
+
+test('the weathers: the world\'s barometer, in order, and every stand-in is one of the first five', () => {
+  const world = JSON.parse(readFileSync(new URL('../blender/explore/cuddlecore-world.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(world.weathers), WEATHERS);
+  assert.deepEqual(Object.keys(LOOKALIKE).sort(), WEATHERS.filter(w => !FIRST_FIVE.includes(w)).sort());
+  for (const to of Object.values(LOOKALIKE)) assert.ok(FIRST_FIVE.includes(to));
+  for (const w of FIRST_FIVE) assert.ok(WEATHERS.includes(w));
+});
+
+test('stand-ins: a new weather tries its own render first, then its stand-in\'s', () => {
+  const R = { pano: (w, t) => `out/x_pano_${w}${sfx(t)}.jpg` }, none = () => false;
+  assert.deepEqual(usable(R, 'drizzle', 'midday', none), [['drizzle', null], ['rain', null]]);
+  assert.deepEqual(usable(R, 'snow', 'night', none), [['snow', 'night'], ['snow', null], ['change', 'night'], ['change', null]]);
+  assert.deepEqual(usable(R, 'cloudy', 'dawn', u => u === 'out/x_pano_fair_dawn.jpg'), [['fair', 'dawn'], ['cloudy', null], ['fair', null]]);
+  assert.deepEqual(usable(R, 'rain', 'midday', none), [['rain', null]]);   // the first five have no stand-in
+  assert.equal(panoExists('out/cuddlecore_pano_frost_dawn.jpg'), false);   // a new weather's dawn isn't asked for until it's listed
+});
 
 test('names: night keeps its suffix, dawn and dusk take theirs', () => {
   assert.equal(sfx(true), '_night'); assert.equal(sfx('night'), '_night');
@@ -32,7 +49,7 @@ test('fallback: with the real list, never a name that is not on it, and the day 
   for (const pano of rooms) for (const time of ['dawn', 'dusk']) for (const w of WEATHERS) {
     const list = usable({ pano }, w, time);
     for (const [cw, t] of list) assert.ok(panoExists(pano(cw, t, false)));
-    assert.deepEqual(list.at(-1), [w, null]);
+    assert.deepEqual(list.at(-1), [LOOKALIKE[w] || w, null]);
   }
 });
 

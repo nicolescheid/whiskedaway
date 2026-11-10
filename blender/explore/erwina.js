@@ -25,17 +25,17 @@ const MAX_LINES = 2;          // Gemma mentions her at most this often a visit
 const SPOTS = {
   conservatory: {
     rooms: ['glasshouse'], camYaw: 90, at: [1.66, 2.565, 0.8], turn: -8, pose: 'sit',
-    when: s => !s.night && ['fair', 'very-dry', 'change'].includes(s.weather),          // the staging in the sun
+    when: s => !s.night && ['fair', 'cloudy', 'windy', 'changeable', 'frost', 'very-dry', 'change'].includes(s.weather),          // the staging in the sun
     // the lane oil lamp (glasshouse_build.oil_lamps) stands between her and the camera
     occluders: [{ cyl: [1.47, 2.55, 0.8, 0.05, 0.03] }, { cyl: [1.47, 2.55, 0.83, 0.022, 0.04] },
                 { cyl: [1.47, 2.55, 0.87, 0.045, 0.1] }, { cyl: [1.47, 2.55, 0.97, 0.012, 0.25] }],
     trace: 'hairs', hair: 0x6f7279, size: 0.55, tone: 1, shadow: true,     // the staging is close to the camera: a smaller tuft
     // the sun in these renders (glasshouse_build SUN_AZ): from the garden, a little lane-ward, high. She's backlit by it.
-    sun: { az: -35, el: 45, color: 0xffe0b0, k: s => ({ fair: 2.6, 'very-dry': 2.8, change: 1.6 })[s.weather] || 0 },
+    sun: { az: -35, el: 45, color: 0xffe0b0, k: s => ({ fair: 2.6, cloudy: 2, windy: 2.4, changeable: 1.8, frost: 2.2, 'very-dry': 2.8, change: 1.6 })[s.weather] || 0 },
   },
   flourish: {
     rooms: ['flourish'], camYaw: 0, at: [0.5, 3.85, 2.12], turn: 0, pose: 'curled', boxScale: 0.7,
-    when: s => ['rain', 'stormy'].includes(s.weather),                                  // curled up above the warm range
+    when: s => ['drizzle', 'rain', 'stormy', 'snow', 'frost'].includes(s.weather),                                  // curled up above the warm range
     // the hood's lower box (flourish_build: hood_low) hides the ledge she lies on
     occluders: [{ box: [0, 0.62, 3.17, 4.5, 1.98, 2.12] }],
     trace: 'hairs', hair: 0x666970, lift: 0.9, shadow: false,    // grey on the hood's white top; a tuft and a pressed patch where she lay
@@ -43,7 +43,7 @@ const SPOTS = {
   // The armchair by the back wall of Cuddlecore (cuddlecore_build: ArmChair_01, seat at 0.46 m): warm nights when the weather turns
   cuddlecore: {
     rooms: ['cuddlecore'], camYaw: 0, at: [0.85, -1.56, 0.47], turn: 0, pose: 'sit', boxScale: 0.7,
-    when: s => s.night && ['stormy', 'change'].includes(s.weather),
+    when: s => s.night && ['windy', 'overcast', 'change', 'stormy', 'snow'].includes(s.weather),
     occluders: [],
     trace: 'hairs', hair: 0x655d54, size: 1.1, tone: 0.85, shadow: true,
     sun: { at: [0.3, 0.2, 1.9], color: 0xffcf9a, k: s => (s.night ? 1.3 : 0) },        // the room's lamplight, from the middle
@@ -51,7 +51,7 @@ const SPOTS = {
   // The window seat in Sweet Spells' bay (sweet_spells_build: the seat cushion at 0.49 m), at its right end, clear of the spell table's props
   'sweet-spells': {
     rooms: ['sweet-spells'], camYaw: 180, at: [2.75, -0.2, 0.49], turn: 0, pose: 'sit', boxScale: 0.7,
-    when: s => !s.night && ['rain', 'change'].includes(s.weather),                       // watching the lane in the wet
+    when: s => !s.night && ['overcast', 'changeable', 'change', 'drizzle', 'rain'].includes(s.weather),                       // watching the lane in the wet
     occluders: [],
     trace: 'hairs', hair: 0x6e6064, size: 1.1, tone: 0.85, shadow: true,
     sun: { at: [2.2, 1.6, 2.3], color: 0xffe2bc, k: s => (s.night ? 0 : 1.5) },          // the room's light, from the middle: the bay behind her would leave her in silhouette
@@ -59,7 +59,7 @@ const SPOTS = {
   // The shop-window sill in the Chiapothecary (chiapothecary_build: sill at 0.95 m), between the jars and the plant
   chiapothecary: {
     rooms: ['chiapothecary'], camYaw: 0, at: [2.375, 0.17, 0.95], turn: 0, pose: 'sit', boxScale: 0.6,
-    when: s => !s.night && ['stormy', 'very-dry'].includes(s.weather),
+    when: s => !s.night && ['cloudy', 'windy', 'stormy', 'very-dry'].includes(s.weather),
     occluders: [],
     trace: 'hairs', hair: 0x6e6760, size: 1.1, tone: 0.85, shadow: true,
     sun: { at: [2.2, 2.2, 2.4], color: 0xfff0d8, k: s => (s.night ? 0 : 1.7) },          // the room's light on her face, not the window's behind her
