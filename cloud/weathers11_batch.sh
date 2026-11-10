@@ -25,4 +25,4 @@ for w in "$@"; do
 done
 J=$(IFS=';'; echo "${jobs[*]}")
 echo "[batch] $B $* : ${#jobs[@]} jobs"
-exec bash cloud/render.sh --build "${B%%-*}_build.py" --jobs "$J" --max-min 180
+exec bash cloud/render.sh --build "${B%%-*}_build.py" --jobs "$J" --max-min 180 ${GPU:+--gpu "$GPU"}   # GPU="NVIDIA RTX A5000": cheapest per frame
