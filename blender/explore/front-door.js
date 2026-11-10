@@ -65,6 +65,7 @@ export function frontDoor({ active, track }) {
             <li>The speaker beside the bell turns the sounds on. "Front door" takes you back outside.</li>
           </ul>
           <p><a href="/?door=1#story">About the Inn</a>: what it is, where the weather comes from, and what's kept.</p>
+          <p><a href="/?door=1#contact">Get in touch</a>: a question, an idea, or something that didn't work.</p>
         </div>
         <div class="welcome-btns"><button class="ok soft" id="welcome-tour" hidden>Show me round</button><button class="ok soft" id="welcome-chat" hidden>Sit down for a chat</button><button class="ok" id="welcome-ok">Come in</button></div>
       </div>`;
