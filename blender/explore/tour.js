@@ -1,6 +1,6 @@
 // The first-visit tour (Nicole, 23–24 Oct; first-visit-tour.md, tour-plan.md). After the door film, on a first visit only,
 // Gemma offers to show the visitor round. The tour is a walk on today's renders: at each door she says one line and the door
-// glows, with Next and Skip and a dot row. It passes through the Chiapothecary to the Conservatory and the garden door, says
+// glows, with Leave tour and a dot row. It passes through the Chiapothecary to the Conservatory and the garden door, says
 // once that the bar's Map goes anywhere, and ends at the foyer desk with why to check in.
 //   - a layer over a live room (layers.js, modal: false): Escape and Back end it like Skip; a tap on a door (or anything) ends
 //     it and the tap goes on, so you walk straight in; so does walking off by the Inn map
@@ -8,22 +8,27 @@
 //     so the tour never steers what Gemma serves
 //   - first visit: localStorage wa-tour-offered, set once offered (storage blocked: offered each visit, like the welcome).
 //     "Show me round" on the bell's card starts it for anyone (front-door.js sends wa-tour)
+// Self-running (Nicole, 11 Nov): no Next. The tour walks on by itself, resting at each stop long enough to read her line
+// (about 4-7 s by its length, plus the walk), and Leave tour ends it at any point. The desk keeps Check in and Later. Its
+// timers pause while the tab is hidden. With reduced motion the turns are instant but it still moves on by itself
 // Gemma's lines are content's: gemma-lines.json `tour`; these stand in for any it doesn't have.
 import { sound } from './sound.js';
 import { layers } from './layers.js';
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const OFFERED = 'wa-tour-offered';
-const DWELL = 3600, HOLD = 4500;   // ms at a door (once the view has turned to it) before it steps in; ms inside before it walks back out
+const DOOR = 2500, BEAT = 700;   // ms at a door (once the view has turned to it) before it steps in; ms between a stop and the walk on
+// How long a stop's line stays before the tour moves on: about 4 s for a short line, 7 s for a long one
+const readMs = line => Math.min(7000, Math.max(4000, 1500 + String(line || '').length * 38));
 const STAND_IN = {
-  offer: "First time at the Inn? I can show you round. It takes a minute.",
+  offer: "First time at the Inn? I can show you round. It takes a couple of minutes.",
   yes: 'Yes, give me the tour',
   started: 'This way, then.',
   no: "It's ok, I'll explore by myself",
   declined: "Right you are. Check in at the desk if you like. It helps me pick for you.",
   skipped: "Right you are. Ring the bell for the tour any time. Check in at the desk if you like.",
   later: "Right you are. The desk's here whenever you want it.",
-  next: 'Next', skip: 'Skip', checkin: 'Check in', notNow: 'Later', of: '{n} of {m}',
+  leave: 'Leave tour', checkin: 'Check in', notNow: 'Later', of: '{n} of {m}',
   stops: {
     cuddlecore: "Cuddlecore. For days you're not at your best: gentle food, little effort.",
     flourish: "Flourish. Proper meals from whole foods, when you've a bit more time.",
@@ -66,7 +71,7 @@ export function install(inn) {
   document.body.appendChild(root);
   const $ = s => root.querySelector(s);
   $('.tr-dots').innerHTML = STOPS.map(() => '<i></i>').join('');
-  let layer = null, at = -1, moving = false, home = null;   // home: where they stood when it started (Escape and Back return them)
+  let layer = null, at = -1, moving = false, home = null, pace = 1, trace = [];   // home: where they stood when it started (Escape and Back return them); pace: a test speeds the rests up; trace: the room at each stop
   inn.touring = false;
 
   const firstVisit = () => { try { return localStorage.getItem(OFFERED) !== '1'; } catch { return true; } };
@@ -85,6 +90,7 @@ export function install(inn) {
       inn.track('tour_offer', {});
       root.classList.add('offer');                     // the card says it (its line is a live region); the chat keeps no stale question
       $('.tr-line').textContent = T.offer;
+      $('.tr-next').hidden = false;
       $('.tr-next').textContent = T.yes;
       $('.tr-skip').textContent = T.no;
       root.hidden = false;
@@ -108,7 +114,23 @@ export function install(inn) {
   }
 
   let glowSpot = null, timers = [];   // glowSpot: the hotspot that glows (the door, or what's faced inside)
-  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+  const clearTimers = () => { timers.forEach(t => clearTimeout(t.id)); timers = []; };
+  // A rest before the next move. While the tab is hidden the rest stops, and picks up where it was when the guest comes back
+  function later(fn, ms) {
+    const t = { fn, left: ms * pace };
+    const run = () => { timers = timers.filter(x => x !== t); fn(); };
+    t.arm = () => { t.due = Date.now() + t.left; t.id = setTimeout(run, t.left); };
+    timers.push(t);
+    if (!document.hidden) t.arm(); else t.id = null;
+  }
+  document.addEventListener('visibilitychange', () => {
+    for (const t of timers) {
+      if (document.hidden && t.id != null) { clearTimeout(t.id); t.id = null; t.left = Math.max(0, t.due - Date.now()); }
+      else if (!document.hidden && t.id == null) t.arm();
+    }
+  });
+  // On to the next stop, unless the guest has left or the tour has moved on already
+  const onward = i => later(() => { if (inn.touring && at === i && !STOPS[i].last) go(i + 1); }, BEAT);
   function glow(on) {
     const s = STOPS[at];
     for (const h of inn.hotspots) h.el.classList.toggle('tour-glow', !!on && h.id === (glowSpot || s?.spot));
@@ -150,8 +172,9 @@ export function install(inn) {
     $('.tr-line').textContent = T.stops[s.line];
     [...$('.tr-dots').children].forEach((d, k) => d.classList.toggle('on', k <= i));
     $('.tr-count').textContent = T.of.replace('{n}', i + 1).replace('{m}', STOPS.length);
-    $('.tr-next').textContent = s.last ? T.checkin : T.next;
-    $('.tr-skip').textContent = s.last ? T.notNow : T.skip;
+    $('.tr-next').hidden = !s.last;                     // no Next: it walks on by itself. The desk asks Check in or Later
+    $('.tr-next').textContent = T.checkin;
+    $('.tr-skip').textContent = s.last ? T.notNow : T.leave;
     root.classList.toggle('last', !!s.last);
     place();
     if (s.room !== inn.state.room) {
@@ -164,8 +187,11 @@ export function install(inn) {
     await faceSpot(s.spot);
     if (my !== epoch) return;
     glow(true);
-    // Only a guest who stays at the door sees inside it, so a quick Next never fetches the room's picture
-    if (s.inside) timers.push(setTimeout(() => stepIn(i), DWELL));
+    trace.push(inn.state.room);
+    if (s.last) return;                                 // the desk waits for Check in or Later
+    // At a door it rests a moment, then steps inside; the rest of her line plays out in there
+    if (s.inside) later(() => stepIn(i), DOOR);
+    else later(() => onward(i), readMs(T.stops[s.line]));
   }
 
   // Step through the door: the room's own picture, arriving facing something characteristic; then, unless the next stop is in
@@ -186,7 +212,8 @@ export function install(inn) {
     if (my !== epoch) return;
     glowSpot = s.inside.face;
     glow(true);
-    if (!s.inside.keep) timers.push(setTimeout(() => stepOut(i), HOLD));
+    const rest = Math.max(3000, readMs(T.stops[s.line]) - DOOR + 1000);
+    later(() => (s.inside.keep ? onward(i) : stepOut(i)), rest);
   }
   async function stepOut(i) {
     const my = epoch;
@@ -204,6 +231,7 @@ export function install(inn) {
     await faceSpot(s.spot);
     if (my !== epoch) return;
     glow(true);
+    onward(i);
   }
 
   function start(src = 'arrival') {
@@ -213,15 +241,16 @@ export function install(inn) {
     inn.setChips([]);
     inn.touring = true;
     home = { room: inn.state.room, yaw: inn.look.yaw, pitch: inn.look.pitch };
+    trace = [];
     root.hidden = false;
     layer = layers.open({ el: root, name: 'tour', modal: false, close: how => end(how === 'outside' ? 'skip' : how) });
     inn.track('tour_start', { from: src });
     inn.chatLine('gemma', T.started);                 // her chat moves on from the offer (its line would sit there all tour)
     go(0);
     if (!reduce()) $('.tr-card').animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 250, easing: 'ease-out' });
-    $('.tr-next').focus({ preventScroll: true });
+    $('.tr-skip').focus({ preventScroll: true });       // Leave tour: the one button while it walks
   }
-  // how: finished (Check in or Later at the desk), skip, escape, back, door (a door tapped), tap (anything else), walk (the
+  // how: finished (Check in or Later at the desk), skip (Leave tour; the analytics name stays), escape, back, door (a door tapped), tap (anything else), walk (the
   // Inn map). Only Skip, Escape and Back say anything: a tap or a walk carries on into what was chosen
   function end(how) {
     if (!inn.touring) return;
@@ -255,7 +284,7 @@ export function install(inn) {
   }
   $('.tr-next').onclick = () => {
     if (offering) return start('arrival');
-    if (!STOPS[at]?.last) return go(at + 1);
+    if (!STOPS[at]?.last) return;                       // hidden while it walks
     end('finished');
     inn.tell.open('checkin', 'tour');                 // check-ins after a tour, against those without one
   };
@@ -291,5 +320,6 @@ export function install(inn) {
   // The top bar's Tour button (25 Oct): the same tour, for showing a friend
   inn.$('btn-tour')?.addEventListener('click', () => (offering ? start('bar') : layers.whenFree(() => start('bar'))));
 
-  inn.tour = { offer, start, end, get stop() { return at + 1; }, get walking() { return busy; }, get offering() { return offering; } };
+  inn.tour = { offer, start, end, get stop() { return at + 1; }, get walking() { return busy; }, get offering() { return offering; },
+    get trace() { return [...trace]; }, set pace(p) { pace = p; } };
 }

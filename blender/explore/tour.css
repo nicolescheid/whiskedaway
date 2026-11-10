@@ -1,4 +1,4 @@
-/* The first-visit tour (explore/tour.js): a small card under the bar with Gemma's line, the dots, Next and Skip. It sits over
+/* The first-visit tour (explore/tour.js): a small card under the bar with Gemma's line, the dots and Leave tour (Check in and Later at the desk). It sits over
    a live room, so only the card takes taps. The door she's talking about glows like a revealed spot, and so does the bar's
    Map at the garden stop. */
 .tour { position: fixed; left: 50%; transform: translateX(-50%); z-index: 18; width: min(440px, calc(100vw - 32px)); pointer-events: none; }
