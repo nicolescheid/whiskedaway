@@ -544,7 +544,7 @@
     },
     "_objects": "Gemma's line when the visitor touches the object, as its sheet opens (optional).",
     "checkin": {
-      "_about": "The check-in sheet (Ideas build, checkin-build). One wording set per answer for every door. {t} {n} {c} are filled from the option labels below, lower-cased mid-sentence. Every line under 100 characters.",
+      "_about": "The check-in sheet (Ideas build, checkin-build). One wording set per answer for every door. {t} {n} {c} are filled from the option labels below, lower-cased mid-sentence. Every line under 100 characters, except the weather row (Nicole's own words, 11 Nov).",
       "title": "Check in",
       "helper": "All optional. Skip anything you like.",
       "more": "A bit more",
@@ -553,7 +553,7 @@
         "time": "When it comes to cooking today, how's your patience?",
         "servings": "How many are you cooking for?",
         "confidence": "How do you feel in the kitchen?",
-        "weather": "Is this your weather?"
+        "weather": "The weather outside the inn's windows mirrors your real-life windows, but because the inn is magic you can change it to whatever you wish here."
       },
       "time": {
         "quick": "I'm short on patience",
@@ -2136,22 +2136,23 @@
     }
   },
   "tour": {
-    "_about": "The first-visit tour (explore/tour.js, tour-plan.md): the offer after the door film, one line at each stop, and her lines when it's declined, skipped or ends at the desk. The chips (yes, no) are Nicole's words. Every line under 100 characters, no health claims.",
-    "offer": "First time at the Inn? I can show you round. It takes a minute.",
+    "_about": "The first-visit tour (explore/tour.js, tour-plan.md): the offer after the door film, Gemma's piece at each stop (it walks on by itself, 11 Nov), and her lines when it's declined, skipped or ends at the desk. The chips (yes, no) are Nicole's words. Stop lines up to about 120 characters (4-7 s each), the rest under 100, no health claims.",
+    "offer": "First time at the Inn? I can show you round. It takes a couple of minutes.",
     "yes": "Yes, give me the tour",
     "started": "This way, then.",
     "no": "It's ok, I'll explore by myself",
     "declined": "Right you are. Check in at the desk if you like, and I can pick things that suit.",
     "skipped": "Right you are. Ring the bell for the tour any time. Check in at the desk if you like.",
     "later": "Right you are. Check in at the desk whenever you like, and I can pick things that suit.",
+    "leave": "Leave tour",
     "stops": {
-      "cuddlecore": "Cuddlecore. For days you're not at your best: gentle food, little effort.",
-      "flourish": "Flourish. Proper meals from whole foods, when you've a bit more time.",
-      "sweet-spells": "Sweet Spells. For the sweet tooth.",
-      "chiapothecary": "The Chiapothecary. Chia, your way, set ahead.",
-      "conservatory": "Through here, the Conservatory, part of the Chiapothecary. Herbs, the seasons, the garden beyond.",
-      "garden": "And the garden, for cooking outdoors. The Map up top takes you to any room.",
-      "desk": "Last stop. Check in here and I'll only suggest things that fit. It takes 20 seconds."
+      "cuddlecore": "Cuddlecore. For days you're not at your best: gentle food, little effort, and the cauldron does most of the work.",
+      "flourish": "Flourish. Proper meals from whole foods, for when you've a bit more time and want to cook something good.",
+      "sweet-spells": "Sweet Spells, for the sweet tooth. Cakes, bakes and little treats, from the spell table.",
+      "chiapothecary": "The Chiapothecary. Chia, your way: pick from the drawers tonight and it's set by the morning.",
+      "conservatory": "Through here, the Conservatory, part of the Chiapothecary. Herbs, what's in season, and the garden beyond the glass.",
+      "garden": "And the garden, for cooking outdoors. The Map up top takes you to any room, any time.",
+      "desk": "Last stop, the desk. Check in here and I'll only suggest things that fit you. It takes 20 seconds."
     }
   },
   "sitdown": {

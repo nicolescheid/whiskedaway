@@ -331,19 +331,22 @@ const tourAt = page => page.evaluate(() => window.__explore.tour.stop);
 const tourSettled = page => page.waitForFunction(() => !window.__explore.tour.walking, null, { timeout: 15000 }).catch(() => {});
 
 const JOURNEYS = [
-  // The whole tour: seven stops through the hall, the Chiapothecary and the Conservatory, back to the foyer desk; the room
-  // stays live behind it, the walk adds nothing to the trail, and Check in opens the check-in
+  // The whole tour: seven stops through the hall, the Chiapothecary and the Conservatory, back to the foyer desk, walking on by
+  // itself (11 Nov; rests sped up here); the room stays live behind it, the walk adds nothing to the trail, and Check in opens
+  // the check-in
   { id: 'the tour, start to desk', async run(page) {
     const out = [], entry = await marked(page);
     out.push(['Show me round starts the tour', await tourStart(page)]);
     const trail = await page.evaluate(() => window.__explore.state.trail.length);   // after the walk to the foyer, which is a real move
     out.push(['the room stays live behind it', await page.evaluate(() => !document.getElementById('stage')?.closest('[inert]'))]);
-    out.push(['focus on Next', await page.evaluate(() => document.activeElement?.classList.contains('tr-next'))]);
+    out.push(['focus on Leave tour', await page.evaluate(() => document.activeElement?.classList.contains('tr-skip'))]);
+    out.push(['no Next while it walks', await page.evaluate(() => document.querySelector('#tour .tr-next').hidden)]);
     out.push(['her chat moves on as it starts', await page.evaluate(() => { const ex = window.__explore; return [...ex.state.chat].reverse().find(m => m.who === 'gemma')?.text === (ex.lines.tour?.started || 'This way, then.'); })]);
-    const rooms = [];
-    for (let i = 0; i < 6; i++) { await tourSettled(page); rooms.push(await page.evaluate(() => window.__explore.state.room)); await page.click('#tour .tr-next'); await page.waitForTimeout(100); }
-    await tourSettled(page);
-    rooms.push(await page.evaluate(() => window.__explore.state.room));
+    await page.evaluate(() => { window.__explore.tour.pace = 0.1; });
+    await page.waitForFunction(() => window.__explore.tour.stop === 7 && !window.__explore.tour.walking, null, { timeout: 90000 }).catch(() => {});
+    const rooms = await page.evaluate(() => window.__explore.tour.trace);
+    await page.evaluate(() => { window.__explore.tour.pace = 1; });
+    out.push(['the desk offers Check in', await page.evaluate(() => !document.querySelector('#tour .tr-next').hidden)]);
     const want = ['hall-middle', 'hall-middle', 'hall-middle', 'hall-middle', 'chiapothecary', 'glasshouse', 'hall-entrance'];
     out.push(['walks the seven stops', JSON.stringify(rooms) === JSON.stringify(want), rooms.join(' > ')]);
     out.push(['the door it talks about glows', await page.evaluate(() => document.querySelector('.spot.tour-glow')?.dataset.spot === 'checkin-desk')]);
@@ -426,7 +429,6 @@ const JOURNEYS = [
     await offer(); await shown(page, '#tour');
     await page.click('#tour .tr-next');
     out.push(['Yes starts the tour', await page.evaluate(() => window.__explore.tour.stop === 1)]);
-    await page.click('#tour .tr-next');
     await page.waitForTimeout(400);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(600);
@@ -463,7 +465,6 @@ const JOURNEYS = [
     for (const way of ['skip', 'escape', 'back', 'door']) {
       const entry = await marked(page);
       if (!await tourStart(page)) { out.push([`the tour starts (${way})`, false]); continue; }
-      await page.click('#tour .tr-next');
       await tourSettled(page);                                // the slow turn to the next door
       if (way === 'skip') await page.click('#tour .tr-skip');
       else if (way === 'escape') await page.keyboard.press('Escape');
