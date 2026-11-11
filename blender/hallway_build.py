@@ -27,6 +27,7 @@ from whisked import (ART, OUT, area_light, blend_model, box, box_span, center_of
                      sphere, srgb, text, use_gpu, window_glass, fly_camera, key_rot_z, video_settings)
 
 import timeofday  # noqa: E402
+import weathers11  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
@@ -44,12 +45,20 @@ VIEWS = {"rain": "14-window-rain.png", "fair": "15-window-fair.png", "change": "
 SKY = {"rain": (1.1, 0.42, 70), "fair": (2.0, 0.66, 110), "change": (1.5, 0.5, 100),
        "stormy": (0.5, 0.27, 32), "very-dry": (2.3, 0.72, 100)}   # world strength, backdrop, window bounce W
 WET = {"rain": 0.5, "stormy": 0.75}   # raindrops on the sea window (whisked.window_glass)
+# The 11 Nov weathers (weathers11.py): the Cuddlecore plates 30-36 / 40-46, light between their neighbours'
+_NEW_DAY, _NEW_NIGHT = weathers11.plates("window", "night")
+VIEWS.update(_NEW_DAY)
+SKY.update({"cloudy": (1.6, 0.6, 95), "overcast": (1.4, 0.48, 90), "changeable": (1.75, 0.6, 100),
+            "drizzle": (1.2, 0.45, 75), "windy": (1.9, 0.64, 108), "frost": (1.9, 0.62, 105), "snow": (1.7, 0.6, 110)})
+WET.update({"changeable": 0.12, "drizzle": 0.25})
+FROST = {"frost": 0.3, "snow": 0.15}   # ice up from the sill of the sea window
 
 # Late night, as the kitchen does it: the kitchen's night view of the same coast in the sea window, a near-black
 # sky and fanlight, the lamps carrying the light. Rain still beads on the sea window in rain and storm.
 NIGHT = "--night" in ARGS
 NIGHT_VIEWS = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change": "21-night-change.png",
                "stormy": "22-night-stormy.png", "very-dry": "23-night-very-dry.png"}
+NIGHT_VIEWS.update(_NEW_NIGHT)
 if NIGHT:
     VIEWS = NIGHT_VIEWS
     SKY = {k: (0.04, 0.8, 5) for k in SKY}
@@ -350,7 +359,7 @@ def build():
     for z in (win_b + (zc - win_b) / 2, zc + (win_t - zc) / 2):
         box(f"sea_muntin_{z:.2f}", (0, wy, z), (win_r - win_l, 0.05, 0.025), paint)
     pane = box("sea_glass", (0, wy + 0.01, zc), (win_r - win_l, 0.006, win_t - win_b),
-               window_glass("sea_glass", wet=WET.get(WEATHER, 0.0)), bevel=0)
+               window_glass("sea_glass", wet=WET.get(WEATHER, 0.0), frost=FROST.get(WEATHER, 0.0), sill=win_b), bevel=0)
     pane.visible_shadow = False
     sky, backdrop_strength, bounce_w = SKY[WEATHER]
     bd_w, bd_h, bd_y = 11.4, 3.8, SEA + 4.2

@@ -26,6 +26,7 @@ from feels_objects import bell_jar, feels_mats, feels_tray, little_cage  # noqa:
 from tools import TOOLS, cup_and_saucer, tool_mats, water_glass  # noqa: E402
 from whisked import emission_mat, window_glass  # noqa: E402
 import timeofday  # noqa: E402
+import weathers11  # noqa: E402
 
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
@@ -48,6 +49,8 @@ WEATHERS = {
                      sun=(10.0, (1.0, 0.86, 0.66), 24, -20), bounce=(100, (1.0, 0.92, 0.82)), wet=0.0, flames=0.0,
                      fill=8, exposure=0.62),
 }
+_NEW_DAY, _NEW_NIGHT = weathers11.plates("window", "night")   # the 11 Nov weathers (weathers11.py)
+WEATHERS.update(weathers11.derive(WEATHERS, {w: {"view": v} for w, v in _NEW_DAY.items()}))
 WX = dict(WEATHERS[WEATHER])
 VIEW_SAT = 1.0   # backdrop saturation boost, per weather with view_sat
 
@@ -56,6 +59,7 @@ VIEW_SAT = 1.0   # backdrop saturation boost, per weather with view_sat
 NIGHT = "--night" in ARGS
 NIGHT_VIEWS = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change": "21-night-change.png",
                "stormy": "22-night-stormy.png", "very-dry": "23-night-very-dry.png"}
+NIGHT_VIEWS.update(_NEW_NIGHT)
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
               bounce=(5, (0.55, 0.62, 1.0)), flames=1.4, fill=7, exposure=0.85)
@@ -579,7 +583,7 @@ def build():
     card = mat("card", srgb("#efe6d2"), rough=0.9)
     book_colours = ["#6e3b3b", "#3f5543", "#8b6b3e", "#2f3e4f", "#7d4a5a", "#a08155", "#4d3a2a", "#c2a878", "#5b5048"]
 
-    window = window_glass("window_glass", wet=WX["wet"])
+    window = window_glass("window_glass", wet=WX["wet"], frost=WX.get("frost", 0.0), sill=1.05)
 
     # ---- Shell
     floor_obj = box("floor", (0, 0, -0.05), (W, D, 0.1), floor, bevel=0)

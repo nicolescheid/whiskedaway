@@ -33,6 +33,7 @@ from whisked import (ART, ASSETS, CHIA_EYE, CHIA_FROM_GH, GH_EYE, GH_PLATE, GLAZ
                      sage_paint, sphere, srgb, text, use_gpu, window_glass)
 
 import timeofday  # noqa: E402
+import weathers11  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
@@ -64,9 +65,12 @@ WEATHERS = {
                      sun=(7.0, (1.0, 0.86, 0.66), 26, -35), bounce=(80, (1.0, 0.92, 0.82)), wet=0.0, green=150, beyond=1.05,
                      fill=2, lamps=0.0, exposure=0.1),
 }
+_NEW_DAY, _NEW_NIGHT = weathers11.plates("lane", "lane-night")   # the 11 Nov weathers (weathers11.py)
+WEATHERS.update(weathers11.derive(WEATHERS, {w: {"view": v} for w, v in _NEW_DAY.items()}))
 WX = dict(WEATHERS[WEATHER])
 NIGHT_VIEWS = {"rain": "19-lane-night-rain.png", "fair": "20-lane-night-fair.png", "change": "21-lane-night-change.png",
                "stormy": "22-lane-night-stormy.png", "very-dry": "23-lane-night-very-dry.png"}
+NIGHT_VIEWS.update(_NEW_NIGHT)
 if NIGHT:
     WX.update(view=NIGHT_VIEWS[WEATHER], sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8, sun=None,
               bounce=(4, (0.55, 0.62, 1.0)), green=0, beyond=0.06, fill=1.2, lamps=0.9, exposure=-0.05)
@@ -392,7 +396,7 @@ def build():
         box_span(name, x0, x1, y0, y1, 0, 0.16, paint, bevel=0.003)
 
     # ---- The shop window: cream casements of small panes, a deep oak sill with jars of seeds
-    window = window_glass("shop_glass", wet=WX["wet"])
+    window = window_glass("shop_glass", wet=WX["wet"], frost=WX.get("frost", 0.0), sill=SILL)
     fw = 0.06                                                        # frame and post width
     for nm, x0, x1, z0, z1 in (("l", WIN_X0, WIN_X0 + fw, SILL, HEAD), ("r", WIN_X1 - fw, WIN_X1, SILL, HEAD),
                                ("b", WIN_X0, WIN_X1, SILL, SILL + fw), ("t", WIN_X0, WIN_X1, HEAD - fw, HEAD)):

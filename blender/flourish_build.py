@@ -34,6 +34,7 @@ from whisked import (ART, ASSETS, OUT, area_light, box, box_span, center_of, cyl
                      use_gpu, window_glass)
 
 import timeofday  # noqa: E402
+import weathers11  # noqa: E402
 ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 NO_RENDER = "--no-render" in ARGS
@@ -60,12 +61,19 @@ WEATHERS = {
                      backdrop=1.15, sun=(10.0, (1.0, 0.86, 0.66), 22, 22), bounce=(70, (1.0, 0.93, 0.84)), wet=0.0, lamps=0.0,
                      fill=7, exposure=0.55),
 }
+# The 11 Nov weathers (weathers11.py): the sea plates as Cuddlecore's, the garden door's from 50 on; at night the
+# garden door shares 29 except in frost and snow, which lie on the ground after dark too.
+_NEW_SEA, _NEW_SEA_NIGHT = weathers11.plates("window", "night")
+WEATHERS.update(weathers11.derive(WEATHERS, {w: {"sea": v, "garden": f"{50 + i}-garden-{w}.png"}
+                                             for i, (w, v) in enumerate(_NEW_SEA.items())}))
+NIGHT_GARDEN = {"frost": "65-garden-night-frost.png", "snow": "66-garden-night-snow.png"}
 WX = dict(WEATHERS[WEATHER])
 NIGHT_SEA = {"rain": "19-night-rain.png", "fair": "20-night-fair.png", "change": "21-night-change.png",
              "stormy": "22-night-stormy.png", "very-dry": "23-night-very-dry.png"}
+NIGHT_SEA.update(_NEW_SEA_NIGHT)
 if NIGHT:
     # Late night: the same weather after dark, every lamp lit
-    WX.update(sea=NIGHT_SEA[WEATHER], garden="29-garden-night.png", sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8,
+    WX.update(sea=NIGHT_SEA[WEATHER], garden=NIGHT_GARDEN.get(WEATHER, "29-garden-night.png"), sky=0.04, tint=(0.55, 0.62, 1.0), backdrop=0.8,
               sun=None, bounce=(4, (0.55, 0.62, 1.0)), lamps=1.4, fill=6, exposure=0.9)
 
 # Dawn and dusk: --dawn / --dusk (timeofday.py). The sea window faces west: the sun reaches it at dusk.
@@ -74,7 +82,7 @@ if TIME:
     _d = WEATHERS[WEATHER]
     WX.update(timeofday.look(TIME, WX, "dusk", 25, "lamps"))
     WX.update(sea=timeofday.plate(os.path.join(PACK, _d["sea"]), os.path.join(PACK, NIGHT_SEA[WEATHER]), TIME, f"flourish_sea_{WEATHER}"),
-              garden=timeofday.plate(os.path.join(PACK, _d["garden"]), os.path.join(PACK, "29-garden-night.png"), TIME, f"flourish_garden_{WEATHER}"))
+              garden=timeofday.plate(os.path.join(PACK, _d["garden"]), os.path.join(PACK, NIGHT_GARDEN.get(WEATHER, "29-garden-night.png")), TIME, f"flourish_garden_{WEATHER}"))
 
 W, D, H = 4.5, 4.5, 2.7
 EYE = 1.6
@@ -658,7 +666,7 @@ def build():
     beet_stem = mat("beet_stem", srgb("#8a2a3c"), rough=0.5)
     bean = mat("bean", srgb("#4f7a2c"), rough=0.45)
 
-    window = window_glass("glass_sea", wet=WX["wet"])
+    window = window_glass("glass_sea", wet=WX["wet"], frost=WX.get("frost", 0.0), sill=WIN_B)
 
     # ---- Shell. The sea and garden walls are outside walls (0.3 m), the hallway and front walls inside (0.15 m)
     box_span("floor", -0.3, W + 0.3, -0.3, D + 0.3, -0.1, 0, floor)
