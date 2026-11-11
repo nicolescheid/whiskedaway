@@ -22,7 +22,7 @@ test('stand-ins: a new weather tries its own render first, then its stand-in\'s'
   assert.deepEqual(usable(R, 'snow', 'night', none), [['snow', 'night'], ['snow', null], ['change', 'night'], ['change', null]]);
   assert.deepEqual(usable(R, 'cloudy', 'dawn', u => u === 'out/x_pano_fair_dawn.jpg'), [['fair', 'dawn'], ['cloudy', null], ['fair', null]]);
   assert.deepEqual(usable(R, 'rain', 'midday', none), [['rain', null]]);   // the first five have no stand-in
-  assert.equal(panoExists('out/cuddlecore_pano_frost_dawn.jpg'), false);   // a new weather's dawn isn't asked for until it's listed
+  assert.equal(panoExists('out/cuddlecore_pano_frost_dawn.jpg'), true);    // the new weathers' dawns are rendered and listed (11 Nov)
 });
 
 test('names: night keeps its suffix, dawn and dusk take theirs', () => {
