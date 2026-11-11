@@ -25,4 +25,13 @@ for w in "$@"; do
 done
 J=$(IFS=';'; echo "${jobs[*]}")
 echo "[batch] $B $* : ${#jobs[@]} jobs"
-exec bash cloud/render.sh --build "${B%%-*}_build.py" --jobs "$J" --max-min 180 ${GPU:+--gpu "$GPU"}   # GPU="NVIDIA RTX A5000": cheapest per frame
+# GPU types to try, in order (or GPU="..." for one). No 4090: on 11 Nov the 4090s Runpod gave us on unnamed
+# hosts took ~35 min to start and then timed out cloning from GitHub, three times (~US$2.2 for nothing).
+# The A5000 is the cheapest per frame. render.sh sweeps each type for stock before giving up on it.
+TRY=("${GPU:-NVIDIA RTX A5000}")
+[ -z "${GPU:-}" ] && TRY+=("NVIDIA RTX A6000" "NVIDIA A40" "NVIDIA L40S")
+for g in "${TRY[@]}"; do
+  bash cloud/render.sh --build "${B%%-*}_build.py" --jobs "$J" --max-min 180 --gpu "$g" && exit 0
+  echo "[batch] $g didn't work out; trying the next type"
+done
+exit 1
