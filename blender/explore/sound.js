@@ -282,46 +282,49 @@ const SCATTER = {
 
 // What each room sounds like, in this weather, at this hour, in this season
 function recipe(room, weather, { night = false, season = null } = {}) {
-  const wet = weather === 'rain' || weather === 'stormy', storm = weather === 'stormy', mist = weather === 'change';
+  // How hard it rains and blows: drizzle and changeable are lighter rain; windy is the storm's wind without the rain, snow a hush of it
+  const RAIN = { rain: 1, stormy: 1, drizzle: 0.45, changeable: 0.3 }, GUST = { stormy: 1, windy: 0.6, snow: 0.25 };
+  const wet = !!RAIN[weather], storm = weather === 'stormy', gust = !!GUST[weather], mist = weather === 'change';
+  const cold = weather === 'snow' || weather === 'frost', birdy = weather === 'fair' || weather === 'cloudy';
   const L = { steady: [], scatter: [] };
   const rain = (k = 1) => {
-    k *= storm ? 1.6 : 1;
+    k *= (storm ? 1.6 : 1) * RAIN[weather];
     L.steady.push({ type: 'highpass', freq: 900, q: 0.5, gain: 0.012 * k });
     L.scatter.push(['drop', k]);
   };
-  const wind = (k = 1) => L.steady.push({ freq: 420, q: 0.8, gain: 0.03 * k, sway: 220, swayHz: 0.08, swell: 0.8, swellHz: 0.07 });
+  const wind = (k = 1) => L.steady.push({ freq: 420, q: 0.8, gain: 0.03 * k * GUST[weather], sway: 220, swayHz: 0.08, swell: 0.8, swellHz: 0.07 });
   if (room === 'cuddlecore' || room === 'flourish') {
     if (room === 'cuddlecore') { L.steady.push({ type: 'lowpass', freq: 260, q: 0.5, gain: 0.03 }); L.scatter.push(['crackle', 1]); }   // the hearth
     else { L.steady.push({ type: 'lowpass', freq: 180, q: 0.5, gain: 0.02 }); L.scatter.push(['bubble', 0.5]); }   // the range, simmering
     if (wet) rain(0.7);
-    if (storm) wind(0.8);
+    if (gust) wind(0.8);
     if (mist) L.scatter.push(['drip', 0.8]);
-    if (weather === 'fair' && !night) L.scatter.push(['bird', 0.5]);
+    if (birdy && !night) L.scatter.push(['bird', 0.5]);
   } else if (room === 'glasshouse') {
     if (wet) rain(1.2);
-    if (storm) wind(0.7);
+    if (gust) wind(0.7);
     if (mist) L.scatter.push(['drip', 1]);
     L.scatter.push(['chime', storm ? 1.6 : 1]);
-    if (!wet && !night) {
+    if (!wet && !cold && !night) {
       L.scatter.push(['bird', 1]);
       if (season !== 'winter' && !mist) L.scatter.push(['bee', 1]);
     }
   } else if (room === 'sweet-spells') {
     L.steady.push({ type: 'lowpass', freq: 520, q: 0.6, gain: mist ? 0.015 : 0.025, swell: 0.9, swellHz: 0.13 });   // the sea down the lane
     if (wet) rain(0.8);
-    if (storm) wind(1);
+    if (gust) wind(1);
     if (mist) L.scatter.push(['drip', 0.6]);
   } else if (room.startsWith('garden')) {
     L.steady.push({ type: 'lowpass', freq: 520, q: 0.6, gain: mist ? 0.015 : 0.025, swell: 0.9, swellHz: 0.13 });   // the sea below the wall
     if (wet) rain(1.2);
-    if (storm) wind(1.2);
+    if (gust) wind(1.2);
     if (mist) L.scatter.push(['drip', 0.8]);
     if (!wet) L.scatter.push(['crackle', room === 'garden-camp' ? 1 : 0.4]);   // the fire pit (and the pizza oven's embers)
-    if (!wet && !night) L.scatter.push(['bird', 1]);
+    if (!wet && !cold && !night) L.scatter.push(['bird', 1]);
   } else if (room === 'chiapothecary') {
     L.scatter.push(['bubble', 1]);                // the flasks
     if (wet) rain(0.6);
-    if (storm) wind(0.6);
+    if (gust) wind(0.6);
     if (mist) L.scatter.push(['drip', 0.6]);
   } else {
     return null;                                  // the hallway: the clock is enough
@@ -417,10 +420,10 @@ function recording(url) {
 // `level` sets how loud it plays in this weather; `wind` winds it up first; `horn` plays it through a phonograph's horn.
 const SOUND = 'explore/assets/sound/';
 const MUSIC = {
-  'music-box': { room: 'sweet-spells', pick: s => s?.night ? 'brahms' : s?.weather === 'rain' || s?.weather === 'stormy' ? 'elise' : 'twinkle' },
+  'music-box': { room: 'sweet-spells', pick: s => s?.night ? 'brahms' : ['drizzle', 'rain', 'stormy'].includes(s?.weather) ? 'elise' : 'twinkle' },
   // The clockwork songbird sings a real tūī's song (DOC), bright in fair weather, quieter in rain, hushed in a storm
   songbird: { room: 'chiapothecary', wind: 3, src: () => `${SOUND}tui-song.mp3`,
-              level: s => s?.weather === 'stormy' ? 0.25 : s?.weather === 'fair' || s?.weather === 'very-dry' ? 1 : 0.6 },
+              level: s => ({ stormy: 0.25, windy: 0.4, snow: 0.4, fair: 1, cloudy: 1, 'very-dry': 1 })[s?.weather] ?? 0.6 },
   // The phonograph in Flourish: Grieg at dawn and in the morning, Vivaldi at midday, Dvořák in the evening and at night
   'fl-phonograph': { room: 'flourish', wind: 6, horn: true,
                      src: s => `${SOUND}${{ dawn: 'grieg-morning', morning: 'grieg-morning', midday: 'vivaldi-spring' }[s?.time] || 'dvorak-humoresque'}.mp3` },

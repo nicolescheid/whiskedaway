@@ -34,7 +34,17 @@ export const EXISTS = new Set([
   'sweet_spells_pano_fair_dawn',
   'sweet_spells_pano_fair_dusk',
 ]);
-const FILE = /(?:^|\/)([a-z_]+_pano_(?:[a-z-]+_)?(?:rain|fair|change|stormy|very-dry)_(?:dawn|dusk))(?:_preview|_4k)?\.jpg$/;
+
+/** The Inn's weathers (ids), in the barometer's order. Labels, chips and themes live in cuddlecore-world.json's weathers. */
+export const WEATHERS = ['fair', 'cloudy', 'windy', 'overcast', 'changeable', 'change', 'drizzle', 'rain', 'stormy', 'snow', 'frost', 'very-dry'];
+
+/**
+ * STAND-INS (11 Nov 2026): the weathers added after the first five, and the existing look each borrows while its own
+ * renders are missing (a 404 on its pano). Once art's renders land the room's own are found first and this goes unused.
+ */
+export const LOOKALIKE = { cloudy: 'fair', windy: 'fair', overcast: 'change', changeable: 'fair', drizzle: 'rain', frost: 'fair', snow: 'change' };
+
+const FILE = new RegExp(`(?:^|\\/)([a-z_]+_pano_(?:[a-z-]+_)?(?:${WEATHERS.join('|')})_(?:dawn|dusk))(?:_preview|_4k)?\\.jpg$`);
 
 /** The suffix a pano name takes for a time of day: true/'night' -> _night, 'dawn' -> _dawn, 'dusk' -> _dusk, falsy -> none. */
 export const sfx = t => t ? '_' + (t === true ? 'night' : t) : '';
@@ -46,7 +56,7 @@ export function panoExists(url) {
 }
 
 // Weathers whose light is near enough to fair's to borrow its dawn or dusk
-const FAIRISH = new Set(['fair', 'very-dry', 'change']);
+const FAIRISH = new Set(['fair', 'very-dry', 'change', 'cloudy', 'windy', 'changeable']);
 
 /**
  * The renders to try, best first, as [weather, tod] (tod: 'dawn' | 'dusk' | 'night' | null for the day render).
@@ -60,7 +70,14 @@ export function candidates(weather, time) {
   return time === 'dawn' ? [own, ...fair, day] : [own, ...fair, [weather, 'night'], day];
 }
 
+/** A weather's own candidates, then (for a weather in LOOKALIKE) its stand-in's, without repeats. */
+export function withLookalike(weather, list = candidates) {
+  const own = list(weather), alt = LOOKALIKE[weather] ? list(LOOKALIKE[weather]) : [];
+  const seen = new Set(own.map(c => c.join()));
+  return [...own, ...alt.filter(c => !seen.has(c.join()))];
+}
+
 /** The first candidate that can exist, given how a room names its panoramas: pano(weather, tod, full). */
 export function usable(R, weather, time, has = panoExists) {
-  return candidates(weather, time).filter(([w, t]) => (t !== 'dawn' && t !== 'dusk') || has(R.pano(w, t, false)));
+  return withLookalike(weather, w => candidates(w, time)).filter(([w, t]) => (t !== 'dawn' && t !== 'dusk') || has(R.pano(w, t, false)));
 }

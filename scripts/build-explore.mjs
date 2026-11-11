@@ -4,6 +4,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, readdirSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { WEATHERS } from '../blender/explore/pano-times.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = join(root, 'blender');
@@ -24,15 +25,17 @@ for (const f of shared) cpSync(join(root, 'src', 'lib', f), join(out, f));
 // Room data, navigator, Gemma's avatars (explore/assets/gemma, from art-inbox/gemma), sounds and the front door
 cpSync(join(src, 'explore'), join(out, 'explore'), { recursive: true });
 
+// The weathers (ids) come from explore/pano-times.js, so a new weather's renders ship as soon as they land
+const WX = WEATHERS.join('|');
 // Renders: every room and weather by day and night, the Conservatory's four seasons in every weather, their previews and the hotspots
 const keep = new RegExp([
-  /^cuddlecore_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
-  /^hallway_pano_(entrance|middle)_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
-  /^glasshouse_pano_(spring|summer|autumn|winter)_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
-  /^flourish_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
-  /^sweet_spells_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
-  /^chiapothecary_pano_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
-  /^garden_pano_(patio|camp)_(rain|fair|change|stormy|very-dry)(_night|_dawn|_dusk)?(_preview)?\.jpg$/.source,
+  String.raw`^cuddlecore_pano_(${WX})(_night|_dawn|_dusk)?(_preview)?\.jpg$`,
+  String.raw`^hallway_pano_(entrance|middle)_(${WX})(_night|_dawn|_dusk)?(_preview)?\.jpg$`,
+  String.raw`^glasshouse_pano_(spring|summer|autumn|winter)_(${WX})(_night|_dawn|_dusk)?(_preview)?\.jpg$`,
+  String.raw`^flourish_pano_(${WX})(_night|_dawn|_dusk)?(_preview)?\.jpg$`,
+  String.raw`^sweet_spells_pano_(${WX})(_night|_dawn|_dusk)?(_preview)?\.jpg$`,
+  String.raw`^chiapothecary_pano_(${WX})(_night|_dawn|_dusk)?(_preview)?\.jpg$`,
+  String.raw`^garden_pano_(patio|camp)_(${WX})(_night|_dawn|_dusk)?(_preview)?\.jpg$`,
   /^(cuddlecore|hallway|glasshouse|flourish|sweet_spells|chiapothecary|garden)_hotspots\.json$/.source,
 ].join('|'));
 const files = readdirSync(join(src, 'out')).filter(f => keep.test(f));

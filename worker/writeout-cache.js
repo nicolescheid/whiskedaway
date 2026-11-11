@@ -26,7 +26,7 @@ const s = (v, n = 400) => String(v ?? '').trim().slice(0, n);
 const low = (v, n) => s(v, n).toLowerCase();
 const arr = v => (Array.isArray(v) ? v : []);
 const sorted = (v, f = low) => [...new Set(arr(v).map(x => f(x, 80)).filter(Boolean))].sort();
-export const INN_WEATHERS = ['Rain', 'Fair', 'Change', 'Stormy', 'Very Dry'];   // inn.world.weathers labels (cuddlecore-world.json)
+export const INN_WEATHERS = ['Sunny', 'Cloudy', 'Windy', 'Overcast', 'Changeable', 'Foggy', 'Drizzle', 'Rain', 'Stormy', 'Snow', 'Frosty', 'Dry'];   // inn.world.weathers labels (cuddlecore-world.json)
 export const INN_TIMES = ['Dawn', 'Morning', 'Midday', 'Evening', 'Dusk', 'Late night'];   // inn.world.times labels
 const num = v => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
 

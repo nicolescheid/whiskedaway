@@ -9,7 +9,7 @@ import { pickIdea } from './idea-pick.js';
 export function install(inn) {
   inn.CAST_ROOMS.garden = 'table';                                  // centrepieces.js: gd-table casts with cast.table's lines
 
-  const wet = () => ['rain', 'stormy'].includes(inn.state.weather);
+  const wet = () => ['drizzle', 'rain', 'stormy'].includes(inn.state.weather);
   // An object's idea card, as touch.js does for food on the counters: best fit first, never one that clashes with a diet
   function showIdeas(obj) {
     if (!obj.ideas?.length) return;

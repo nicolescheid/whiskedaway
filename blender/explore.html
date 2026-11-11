@@ -131,6 +131,14 @@
   #stage.wx-stormy canvas { filter: saturate(.6) brightness(.72) contrast(1.05); }
   #stage.wx-change canvas { filter: saturate(.7) brightness(.95) contrast(.85); }
   #stage.wx-very-dry canvas { filter: saturate(1.1) brightness(1.05) sepia(.15); }
+  /* The weathers added 11 Nov, on their stand-in's render (LOOKALIKE in explore/pano-times.js) until their own land */
+  #stage.wx-cloudy canvas { filter: saturate(.88) brightness(.97); }
+  #stage.wx-windy canvas { filter: saturate(.92) contrast(1.04); }
+  #stage.wx-overcast canvas { filter: saturate(.7) brightness(.9) contrast(.92); }
+  #stage.wx-changeable canvas { filter: saturate(.85) brightness(.95) contrast(1.03); }
+  #stage.wx-drizzle canvas { filter: saturate(.85) brightness(.95); }
+  #stage.wx-snow canvas { filter: saturate(.5) brightness(1.08) contrast(.85); }
+  #stage.wx-frost canvas { filter: saturate(.7) brightness(1.04) contrast(.95) hue-rotate(-6deg); }
   button { font: inherit; color: inherit; cursor: pointer; }
 
   /* Hotspots */
@@ -270,6 +278,9 @@
   .dial button { flex: 1 1 30%; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 6px;
                  font: 600 13px 'Quicksand'; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
   .dial button.on { background: var(--berry); border-color: var(--berry); color: var(--parchment); }
+  /* The barometer's twelve weathers: three even columns, small enough for "Changeable" at 375 px */
+  #dial { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #dial button { padding: 10px 2px; font-size: 12px; letter-spacing: .02em; }
   .dial .your-time { display: block; margin-top: 2px; font: 500 10px 'Quicksand'; letter-spacing: .02em; text-transform: none; opacity: .8; }
   .dial button.mine:not(.on) { border-color: var(--berry-soft); }   /* the visitor's own time, marked whether or not it's in effect */
   /* A room's one-line description under its name: dial stations, the Map, and door hotspots (desktop only) */
